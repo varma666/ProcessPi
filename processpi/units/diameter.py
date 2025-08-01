@@ -1,0 +1,47 @@
+from .base import Variable
+
+class Diameter(Variable):
+    """
+    Represents a Diameter quantity.
+    Default SI unit: meters (m).
+
+    Example:
+    d1 = Diameter(100, "mm")
+    d2 = Diameter(4, "in")
+    """
+
+    _conversion = {
+        "m": 1,
+        "cm": 0.01,
+        "mm": 0.001,
+        "in": 0.0254,
+        "ft": 0.3048
+    }
+
+    def __init__(self, value, units="m"):
+        if value < 0:
+            raise ValueError("Diameter must be non-negative")
+        if units not in self._conversion:
+            raise TypeError(f"{units} is not a valid unit for Diameter")
+        base_value = round(value * self._conversion[units], 6)
+        super().__init__(base_value, "m")
+        self.original_value = value
+        self.original_unit = units
+
+    def to(self, target_unit):
+        if target_unit not in self._conversion:
+            raise TypeError(f"{target_unit} is not a valid unit for Diameter")
+        converted_value = self.value / self._conversion[target_unit]
+        return Diameter(round(converted_value, 6), target_unit)
+
+    def __add__(self, other):
+        if not isinstance(other, Diameter):
+            raise TypeError("Addition only supported between Diameter instances")
+        total = self.value + other.value
+        return Diameter(round(total, 6), "m")
+
+    def __eq__(self, other):
+        return isinstance(other, Diameter) and self.value == other.value
+
+    def __repr__(self):
+        return f"{self.original_value} {self.original_unit}"
