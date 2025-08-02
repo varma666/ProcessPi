@@ -3,26 +3,26 @@ from .base import Variable
 class ThermalConductivity(Variable):
     """
     Represents Thermal Conductivity of a material.
-    Default SI unit: W/m·K (Watts per meter-Kelvin)
+    Default SI unit: W/mK (Watts per meter-Kelvin)
 
     Example:
-    k = ThermalConductivity(0.5, "W/m·K")
+    k = ThermalConductivity(0.5, "W/mK")
     """
 
     _conversion = {
-        "W/m·K": 1,
-        "kW/m·K": 1000,
-        "cal/s·cm·°C": 418.4,       # 1 cal/s·cm·°C ≈ 418.4 W/m·K
-        "BTU/hr·ft·°F": 1.730735,   # 1 BTU/hr·ft·°F ≈ 1.730735 W/m·K
+        "W/mK": 1,
+        "kW/mK": 1000,
+        "cal/scmC": 418.4,       # 1 cal/s·cm·°C ≈ 418.4 W/m·K
+        "BTU/hrftF": 1.730735,   # 1 BTU/hr·ft·°F ≈ 1.730735 W/m·K
     }
 
-    def __init__(self, value, units="W/m·K"):
+    def __init__(self, value, units="W/mK"):
         if value < 0:
             raise ValueError("Thermal conductivity cannot be negative.")
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for ThermalConductivity")
         base_value = round(value * self._conversion[units], 6)
-        super().__init__(base_value, "W/m·K")
+        super().__init__(base_value, "W/mK")
         self.original_value = value
         self.original_unit = units
 
@@ -36,7 +36,7 @@ class ThermalConductivity(Variable):
         if not isinstance(other, ThermalConductivity):
             raise TypeError("Addition only supported between ThermalConductivity instances")
         total = self.value + other.value
-        return ThermalConductivity(round(total, 6), "W/m·K")
+        return ThermalConductivity(round(total, 6), "W/mK")
 
     def __eq__(self, other):
         return isinstance(other, ThermalConductivity) and self.value == other.value
