@@ -19,7 +19,7 @@ class SpecificHeat(Variable):
     }
 
     def __init__(self, value, units="kJ/kgK"):
-        if value <= 0:
+        if value < 0:
             raise ValueError("Specific heat must be positive.")
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for SpecificHeat")
