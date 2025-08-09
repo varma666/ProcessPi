@@ -16,4 +16,4 @@ class AcrylicAcid(Component):
     _viscosity_constants = [-28.12, 2280.2, 2.3956, 0, 0] 
     _thermal_conductivity_constants = [0.2441, -0.0002904, 0,0,0]
     _vapor_pressure_constants = [46.745, -6587.1, -3.2208, 0.00000052253, 2] 
-    _enthalpy_constants = [0, 0, 0,0, 0]  # Placeholder for enthalpy constants
+    _enthalpy_constants = [4.3756E-7, 2.2571,-4.5116,2.5738, 0]  # Placeholder for enthalpy constants
