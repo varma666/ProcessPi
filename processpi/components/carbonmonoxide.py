@@ -1,7 +1,5 @@
 from .base import Component
 from processpi.units import *
-
-
 class CarbonMonoxide(Component):
     name = "Carbon Monoxide"
     formula = "CO"
