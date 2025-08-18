@@ -1,4 +1,5 @@
-from processpi.calculations.base import CalculationBase
+from ..base import CalculationBase
+from ...units import *
 
 class PressureDropDarcy(CalculationBase):
     """
@@ -21,4 +22,4 @@ class PressureDropDarcy(CalculationBase):
         v = self._get_value(self.inputs["velocity"], "velocity")    # m/s
 
         delta_P = f * (L / D) * (rho * v**2 / 2)
-        return {"delta_P_Pa": delta_P}
+        return Pressure(delta_P, "Pa")  # Return result as Pressure object

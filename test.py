@@ -1,9 +1,10 @@
-from processpi.calculations.fluids.pump_power import PumpPower
-from processpi.units import *
+from processpi.calculations.thermodynamics.enthalpy_change import EnthalpyChange
+from processpi.calculations.thermodynamics.entropy_change import EntropyChange
+from processpi.calculations.thermodynamics.heat_of_vaporization import HeatOfVaporization
 from processpi.calculations.engine import CalculationEngine
 
 engine = CalculationEngine()
-engine.register_calculation("pump_power", PumpPower)
 
-result = engine.calculate("pump_power", flow_rate=VolumetricFlowRate(10,"m3/h"), head=Length(15,"m"), density=Density(1000,"kg/m3"), efficiency=0.4)
-print(result)
+engine.register_calculation("enthalpy_change", EnthalpyChange)
+engine.register_calculation("entropy_change", EntropyChange)
+engine.register_calculation("heat_of_vaporization", HeatOfVaporization)

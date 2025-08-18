@@ -1,4 +1,5 @@
-from processpi.calculations.base import CalculationBase
+from ..base import CalculationBase
+from ...units import *
 
 class ConductionHeatLoss(CalculationBase):
     """
@@ -22,4 +23,4 @@ class ConductionHeatLoss(CalculationBase):
         L = self._get_value(self.inputs["thickness"], "thickness")                        # m
 
         Q = k * A * ΔT / L
-        return {"heat_loss_W": Q}
+        return HeatFlux(Q, "W")

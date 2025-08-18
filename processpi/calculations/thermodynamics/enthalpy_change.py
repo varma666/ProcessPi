@@ -1,4 +1,5 @@
-from processpi.calculations.base import CalculationBase
+from ..base import CalculationBase
+from ...units import *
 
 class EnthalpyChange(CalculationBase):
     """
@@ -19,4 +20,4 @@ class EnthalpyChange(CalculationBase):
         T2 = self._get_value(self.inputs["temp_final"], "temp_final")        # °C or K
 
         ΔH = m * Cp * (T2 - T1)
-        return {"enthalpy_change_J": ΔH}
+        return EnthalpyChange(ΔH, "J")

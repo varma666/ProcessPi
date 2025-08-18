@@ -1,7 +1,5 @@
-"""Pump Power module for Process PI calculation engine."""
-
-# Implementation will be added here.
 from ..base import CalculationBase
+from ...units import *
 
 class PumpPower(CalculationBase):
     """

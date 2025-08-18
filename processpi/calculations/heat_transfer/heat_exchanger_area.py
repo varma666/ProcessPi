@@ -1,4 +1,5 @@
-from processpi.calculations.base import CalculationBase
+from ..base import CalculationBase
+from ...units import *
 
 class HeatExchangerArea(CalculationBase):
     """
@@ -22,4 +23,4 @@ class HeatExchangerArea(CalculationBase):
         ΔTlm = self._get_value(self.inputs["log_mean_temp_diff"], "log_mean_temp_diff")  # K
 
         A = Q / (U * ΔTlm)
-        return {"area_m2": A}
+        return Area(A, "m2")

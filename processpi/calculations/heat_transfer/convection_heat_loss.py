@@ -1,4 +1,5 @@
-from processpi.calculations.base import CalculationBase
+from ..base import CalculationBase
+from ...units import *
 
 class ConvectionHeatLoss(CalculationBase):
     """
@@ -19,4 +20,4 @@ class ConvectionHeatLoss(CalculationBase):
         ΔT = self._get_value(self.inputs["temp_difference"], "temp_difference")         # K
 
         Q = h * A * ΔT
-        return {"heat_loss_W": Q}
+        return HeatFlux(Q, "W")

@@ -1,4 +1,5 @@
-from processpi.calculations.base import CalculationBase
+from ..base import CalculationBase
+from ...units import *
 
 class ReynoldsNumber(CalculationBase):
     """
@@ -20,4 +21,4 @@ class ReynoldsNumber(CalculationBase):
         mu = self._get_value(self.inputs["viscosity"], "viscosity") # Pa·s
 
         Re = rho * v * D / mu
-        return {"Re": Re}
+        return Variable(Re, "dimensionless")
