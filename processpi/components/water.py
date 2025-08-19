@@ -19,12 +19,24 @@ class Water(Component):
     _vapor_pressure_constants = [73.649, -7258.2, -7.3037, 4.1653E-06, 2] 
     _enthalpy_constants = [5.2053E-7, 0.3199, -0.212, 0.25795, 0]  # Placeholder for enthalpy constants
 
-    def density(self, temperature:Temperature):
+    def density(self, temperature:Temperature = Temperature(35, "C")) -> Density:
         Tr = temperature.value / self._critical_temperature.value
         # Using a polynomial fit for density as a function of reduced temperature
         tou = 1 - Tr
         den = 17.863 + (58.606 * (tou**0.35)) -  (95.396 * (tou**(2/3))) + (213.89 * tou) - (141.26 * (tou**(4/3)))
         den = den *  self.molecular_weight
         return Density(den, "kg/m3")
+    def viscosity(self, temperature: Temperature = Temperature(35, "C")) -> Viscosity:
+        return super().viscosity(temperature)
 
-       
+    def specific_heat(self, temperature: Temperature = Temperature(35, "C")) -> SpecificHeat:
+           return super().specific_heat(temperature)
+
+    def thermal_conductivity(self, temperature: Temperature = Temperature(35, "C")) -> ThermalConductivity:
+        return super().thermal_conductivity(temperature)
+
+    def vapor_pressure(self, temperature: Temperature = Temperature(35, "C")) -> Pressure:
+        return super().vapor_pressure(temperature)
+
+    def enthalpy(self, temperature: Temperature = Temperature(35, "C")) -> HeatOfVaporization:
+        return super().enthalpy(temperature)

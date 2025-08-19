@@ -28,7 +28,7 @@ class FluidVelocity(CalculationBase):
 
     def calculate(self):
         Q = self._get_value(self.inputs["volumetric_flow_rate"], "volumetric_flow_rate")  # m³/s
-        D = self._get_value(self.inputs["diameter"], "diameter")  # m
+        D = self._get_value(self.inputs["diameter"], "diameter") / 1000  # m
 
         A = math.pi * (D**2) / 4.0   # cross-sectional area [m²]
         v = Q / A                    # velocity [m/s]

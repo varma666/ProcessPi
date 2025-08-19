@@ -17,7 +17,7 @@ class PressureDropDarcy(CalculationBase):
     def calculate(self):
         f = self._get_value(self.inputs["friction_factor"], "friction_factor")
         L = self._get_value(self.inputs["length"], "length")        # m
-        D = self._get_value(self.inputs["diameter"], "diameter")    # m
+        D = self._get_value(self.inputs["diameter"], "diameter")  / 1000    # m
         rho = self._get_value(self.inputs["density"], "density")    # kg/m³
         v = self._get_value(self.inputs["velocity"], "velocity")    # m/s
 

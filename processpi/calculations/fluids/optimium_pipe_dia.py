@@ -34,4 +34,4 @@ class OptimumPipeDiameter(CalculationBase):
         # Formula
         D_opt = 293 * (Q ** 0.53) * (rho ** -0.37)  # mm
 
-        return Length(D_opt / 1000, "optimum_diameter")  # converted to meters
+        return Diameter(D_opt , "mm")  

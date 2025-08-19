@@ -1,13 +1,19 @@
 # processpi/pipelines/engine.py
 
 from typing import Dict, Any, Type
-from processpi.calculations import (
+
+from .standards import *
+from ..components import *
+from ..units import *
+from ..calculations.fluids import (
     ReynoldsNumber,
     ColebrookWhite,
     OptimumPipeDiameter,
-    PressureDropDarcyWeisbach,
-    VelocityFromFlow,
+    PressureDropDarcy,
+    FluidVelocity ,
+    TypeOfFlow
 )
+
 from .pipes import Pipe
 
 
@@ -19,13 +25,13 @@ class PipelineEngine:
     flow, velocity, pressure drop, etc.
     """
 
-    def __init__(self, flowrate: float, fluid: Dict[str, Any], length: float, **kwargs):
+    def __init__(self, flowrate: VolumetricFlowRate, fluid: Component, length: float, **kwargs):
         """
         Initialize the engine.
 
         Args:
-            flowrate (float): Volumetric flow rate (m³/s).
-            fluid (dict): Fluid properties (dict containing density, viscosity, etc.).
+            flowrate (VolumetricFlowRate): Volumetric flow rate (m³/s).
+            fluid (Component): Fluid properties (density, viscosity, etc.).
             length (float): Pipeline length (m).
             kwargs: Additional pipeline design parameters.
         """
@@ -40,10 +46,13 @@ class PipelineEngine:
         Compute optimum diameter based on flow and fluid.
         """
         opt_dia = OptimumPipeDiameter(
-            flowrate=self.flowrate,
-            density=self.fluid["density"]
+            flow_rate=self.flowrate.to("m3/s"),
+            density=self.fluid.density()
         )
-        return opt_dia.compute()
+        calculated_diameter = opt_dia.calculate()
+        selected_diameter = get_nearest_diameter(calculated_diameter)
+        print(f"Calculated Optimum Diameter: {calculated_diameter}, Selected Diameter: {selected_diameter}")
+        return selected_diameter
 
     def assign_pipe(self, material: str = "CS", schedule: str = "40") -> Pipe:
         """
@@ -64,11 +73,11 @@ class PipelineEngine:
         """
         if not self.pipe:
             self.assign_pipe()
-        velocity_calc = VelocityFromFlow(
-            flowrate=self.flowrate,
-            diameter=self.pipe.internal_diameter() / 1000  # mm → m
+        velocity_calc = FluidVelocity(
+            volumetric_flow_rate=self.flowrate,
+            diameter=self.pipe.nominal_diameter # mm 
         )
-        return velocity_calc.compute()
+        return velocity_calc.calculate()
 
     def calculate_reynolds(self) -> float:
         """
@@ -76,12 +85,12 @@ class PipelineEngine:
         """
         velocity = self.calculate_velocity()
         re_calc = ReynoldsNumber(
-            density=self.fluid["density"],
+            density=self.fluid.density(),
             velocity=velocity,
-            diameter=self.pipe.internal_diameter() / 1000,
-            viscosity=self.fluid["viscosity"],
+            diameter=self.pipe.nominal_diameter,  # mm
+            viscosity=self.fluid.viscosity(),
         )
-        return re_calc.compute()
+        return re_calc.calculate()
 
     def calculate_pressure_drop(self) -> float:
         """
@@ -90,18 +99,19 @@ class PipelineEngine:
         re = self.calculate_reynolds()
         friction_calc = ColebrookWhite(
             reynolds_number=re,
-            relative_roughness=self.pipe.roughness / self.pipe.internal_diameter(),
+            roughness=self.pipe.roughness ,
+            diameter=self.pipe.nominal_diameter
         )
-        f = friction_calc.compute()
+        f = friction_calc.calculate()
 
-        dp_calc = PressureDropDarcyWeisbach(
+        dp_calc = PressureDropDarcy(
             friction_factor=f,
             length=self.pipe.length,
-            diameter=self.pipe.internal_diameter() / 1000,
-            density=self.fluid["density"],
+            diameter=self.pipe.nominal_diameter,  # mm
+            density=self.fluid.density(),
             velocity=self.calculate_velocity(),
         )
-        return dp_calc.compute()
+        return dp_calc.calculate()
 
     def run(self) -> Dict[str, Any]:
         """
@@ -114,7 +124,7 @@ class PipelineEngine:
             self.assign_pipe()
 
         results = {
-            "optimum_diameter_mm": self.pipe.internal_diameter(),
+            "optimum_diameter_in": self.pipe.nominal_diameter.to("in"),
             "velocity_m_s": self.calculate_velocity(),
             "reynolds_number": self.calculate_reynolds(),
             "pressure_drop_Pa": self.calculate_pressure_drop(),

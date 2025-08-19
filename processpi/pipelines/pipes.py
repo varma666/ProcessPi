@@ -62,3 +62,13 @@ class Pipe(PipelineBase):
             "insulation_thickness_mm": self.insulation_thickness,
             "insulation_material": self.insulation_material,
         }
+    def calculate(self):
+        """
+        Perform the pipeline calculation.
+        
+        Must be implemented by subclasses.
+
+        Returns:
+            dict: Results of the calculation in key-value format.
+        """
+        pass
