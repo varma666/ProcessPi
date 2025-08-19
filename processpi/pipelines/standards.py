@@ -87,7 +87,24 @@ RECOMMENDED_VELOCITIES: Dict[str, Union[Tuple[float, float], float]] = {
     "Inorganic liquids": (1.2, 1.8),
     "Inorganic gases and vapours": (15, 30),
 }
+# --------------------------
+# 🔹 Equivalent Lengths Equivalent Length / Diameter
+# --------------------------
 
+EQUIVALENT_LENGTHS = {
+    "gate_valve_open": (7, 10),          # fully open
+    "gate_valve_3_4_closed": (800, 1100),
+    "gate_valve_half_closed": (190, 290),
+    "globe_valve_open": (330, 480),
+    "angle_valve_open": (165, 220),
+    "plug_valve_open": 18,
+    "elbow_90_standard": 30,
+    "elbow_45_long": 5.8,
+    "elbow_45_short": 8.0,
+    "return_bend_medium": (39, 56),
+    "coupling_union": 0,                 # negligible
+    "tee_straight": 22,
+}
 # --------------------------
 # 🔹 Utility Functions
 # --------------------------
