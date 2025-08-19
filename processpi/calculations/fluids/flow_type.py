@@ -34,4 +34,4 @@ class TypeOfFlow(CalculationBase):
         else:
             flow_type = "Turbulent"
 
-        return flow_type
+        return StringUnit(flow_type, "flow_type")
