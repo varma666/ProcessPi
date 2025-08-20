@@ -3,6 +3,7 @@ class Variable:
     A generic physical variable with value and units.
     Should be subclassed for specific physical types.
     """
+
     def __init__(self, value: float, units: str):
         self.value = value
         self.units = units
@@ -14,7 +15,14 @@ class Variable:
         return f"<{self.__class__.__name__}: {self.value} {self.units}>"
 
     def __eq__(self, other):
-        return isinstance(other, self.__class__) and self.to_base() == other.to_base()
+        return (
+            isinstance(other, self.__class__) and
+            self.to_base() == other.to_base()
+        )
+
+    def __hash__(self):
+        # Use tuple of class name + normalized value (in base units) for immutability
+        return hash((self.__class__.__name__, self.to_base()))
 
     def to(self, target_units: str):
         raise NotImplementedError("Override this method in subclass.")

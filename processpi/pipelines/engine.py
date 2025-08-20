@@ -1,6 +1,7 @@
 # processpi/pipelines/engine.py
 
 from typing import Dict, Any, Optional, List, Tuple, Union
+from ..units import *
 
 from ..components import Component
 from ..calculations.fluids import (
@@ -27,66 +28,64 @@ class PipelineEngine:
 
     # -------------------- Unitless helpers --------------------
 
-    def _get_flowrate(self) -> float:
+    def _get_flowrate(self) -> VolumetricFlowRate:
         if "flowrate" not in self.data:
             raise ValueError("flowrate is required (at least at the network/entry level).")
-        return float(self.data["flowrate"])  # m3/s
+        return self.data["flowrate"]
 
-    def _get_density(self) -> float:
+    def _get_density(self) -> Density:
         if "density" in self.data:
-            return float(self.data["density"])
+            return self.data["density"]
         if "fluid" in self.data and isinstance(self.data["fluid"], Component):
-            return float(self.data["fluid"].density())
+            return self.data["fluid"].density()
         raise ValueError("Provide density or a fluid Component.")
 
-    def _get_viscosity(self) -> float:
+    def _get_viscosity(self) -> Viscosity:
         if "viscosity" in self.data:
-            return float(self.data["viscosity"])
+            return self.data["viscosity"]
         if "fluid" in self.data and isinstance(self.data["fluid"], Component):
-            return float(self.data["fluid"].viscosity())
+            return self.data["fluid"].viscosity()   
         raise ValueError("Provide viscosity or a fluid Component.")
 
     # -------------------- Pipe-level calcs --------------------
 
-    def _internal_diameter_m(self, pipe: Pipe) -> float:
+    def _internal_diameter_m(self, pipe: Pipe) -> Diameter:
         if hasattr(pipe, "internal_diameter"):
-            return float(pipe.internal_diameter()) / 1000.0  # mm → m
-        return float(pipe.nominal_diameter)  # assume already meters
+            return pipe.internal_diameter  # mm → m
+        return pipe.nominal_diameter  # assume already meters
 
-    def _velocity(self, q_m3s: float, pipe: Pipe) -> float:
-        return float(FluidVelocity(q_m3s, self._internal_diameter_m(pipe)).calculate())
+    def _velocity(self, q_m3s: float, pipe: Pipe) -> Velocity:
+        
+        return FluidVelocity(volumetric_flow_rate=q_m3s, diameter=self._internal_diameter_m(pipe)).calculate()
 
-    def _reynolds(self, v: float, pipe: Pipe) -> float:
-        return float(
-            ReynoldsNumber(
+    def _reynolds(self, v: float, pipe: Pipe) :
+        return ReynoldsNumber(
+                                density=self._get_density(),
+                                velocity=v,
+                                diameter=self._internal_diameter_m(pipe),
+                                viscosity=self._get_viscosity(),
+                                ).calculate()
+        
+
+    def _friction_factor(self, Re: float, pipe: Pipe) :
+        return ColebrookWhite(
+                                    reynolds_number=Re,
+                                    roughness=float(pipe.roughness),
+                                    diameter=self._internal_diameter_m(pipe),
+                                ).calculate()
+        
+
+    def _major_loss_dp(self, f: float, v: float, pipe: Pipe) :
+        return PressureDropDarcy(
+            friction_factor=f,
+            length=float(pipe.length),
+            diameter=self._internal_diameter_m(pipe),
                 density=self._get_density(),
                 velocity=v,
-                diameter=self._internal_diameter_m(pipe),
-                viscosity=self._get_viscosity(),
             ).calculate()
-        )
+        
 
-    def _friction_factor(self, Re: float, pipe: Pipe) -> float:
-        return float(
-            ColebrookWhite(
-                reynolds_number=Re,
-                roughness=float(pipe.roughness) / 1000.0,  # mm → m
-                diameter=self._internal_diameter_m(pipe),
-            ).calculate()
-        )
-
-    def _major_loss_dp(self, f: float, v: float, pipe: Pipe) -> float:
-        return float(
-            PressureDropDarcy(
-                friction_factor=f,
-                length=float(pipe.length),
-                diameter=self._internal_diameter_m(pipe),
-                density=self._get_density(),
-                velocity=v,
-            ).calculate()
-        )
-
-    def _minor_loss_dp(self, K: float, v: float) -> float:
+    def _minor_loss_dp(self, K: float, v: float):
         rho = self._get_density()
         return float(K) * 0.5 * rho * (v**2)
 

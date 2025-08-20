@@ -81,7 +81,7 @@ class PipelineNetwork:
                     f"from {element.start_node.name} → {element.end_node.name}\n"
                 )
             elif isinstance(element, Fitting):
-                desc += f"{indent}  Fitting: {element.fitting_type}, K={element.K}, at {element.node.name}\n"
+                desc += f"{indent}  Fitting: {element.fitting_type},  at {element.node.name}\n"
             elif isinstance(element, PipelineNetwork):
                 desc += element.describe(level + 1)
         return desc
@@ -100,9 +100,9 @@ class PipelineNetwork:
             elif isinstance(element, PipelineNetwork):
                 if element.connection_type == "parallel":
                     schematic += f"{indent}  ┌── Parallel ──┐\n"
-                    schematic += element.ascii_schematic(level + 2)
+                    schematic += element.schematic(level + 2)
                     schematic += f"{indent}  └──────────────┘\n"
                 else:
-                    schematic += element.ascii_schematic(level + 1)
+                    schematic += element.schematic(level + 1)
 
         return schematic

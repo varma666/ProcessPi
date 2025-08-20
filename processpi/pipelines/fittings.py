@@ -3,7 +3,7 @@
 from typing import Optional, Dict
 from .base import PipelineBase
 from ..units import *
-from .standards import FITTING_EQUIVALENT_LENGTHS
+from .standards import EQUIVALENT_LENGTHS
 
 
 class Fitting(PipelineBase):
@@ -25,7 +25,7 @@ class Fitting(PipelineBase):
         self.fitting_type = fitting_type
         self.diameter = diameter
         self.quantity = quantity
-        self.le_factor = FITTING_EQUIVALENT_LENGTHS.get(fitting_type, None)
+        self.le_factor = EQUIVALENT_LENGTHS.get(fitting_type, None)
 
     def equivalent_length(self) -> Optional[float]:
         """
@@ -51,3 +51,13 @@ class Fitting(PipelineBase):
             "le_factor": self.le_factor,
             "equivalent_length_m": self.equivalent_length(),
         }
+    def calculate(self):
+        """
+        Perform the pipeline calculation.
+        
+        Must be implemented by subclasses.
+
+        Returns:
+            dict: Results of the calculation in key-value format.
+        """
+        pass

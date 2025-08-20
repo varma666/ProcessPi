@@ -28,6 +28,10 @@ class Diameter(Variable):
         self.original_value = value
         self.original_unit = units
 
+    def to_base(self) -> float:
+        """Return the base (SI) value in meters."""
+        return self.value
+
     def to(self, target_unit):
         if target_unit not in self._conversion:
             raise TypeError(f"{target_unit} is not a valid unit for Diameter")
@@ -41,7 +45,14 @@ class Diameter(Variable):
         return Diameter(round(total, 6), "m")
 
     def __eq__(self, other):
-        return isinstance(other, Diameter) and self.value == other.value
+        return (
+            isinstance(other, self.__class__) and
+            self.to_base() == other.to_base()
+        )
+
+    def __hash__(self):
+        # hash on immutable tuple
+        return hash((self.__class__.__name__, round(self.to_base(), 9)))
 
     def __repr__(self):
         return f"{self.original_value} {self.original_unit}"

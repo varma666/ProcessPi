@@ -59,29 +59,101 @@ STANDARD_SIZES = [Diameter(0.25,"in"),
 # 🔹 Pipe Size Database
 # Nominal Diameter (mm) → { Schedule → (Wall Thickness mm, ID mm) }
 # --------------------------
-PIPE_SCHEDULES: Dict[int, Dict[str, Tuple[float, float]]] = {
-    25: {   # 1" pipe
-        "40": (3.38, 21.3),   # (thickness, ID)
-        "80": (4.55, 20.2),
+PIPE_SCHEDULES: Dict[Diameter, Dict[str, Tuple[Length, Diameter]]] = {
+    Diameter(0.25,"in"): {  # 1/4"
+        "40": (Length(2.77,"mm"), Diameter(6.35,"mm")),
+        "80": (Length(3.02,"mm"), Diameter(5.49,"mm")),
     },
-    50: {   # 2" pipe
-        "40": (3.91, 52.5),
-        "80": (5.54, 50.3),
+    Diameter(0.5,"in"): {  # 1/2"
+        "40": (Length(2.77,"mm"), Diameter(15.8,"mm")),
+        "80": (Length(3.73,"mm"), Diameter(13.8,"mm")),
     },
-    100: {  # 4" pipe
-        "40": (6.02, 102.3),
-        "80": (8.56, 97.2),
+    Diameter(0.75,"in"): {  # 3/4"
+        "40": (Length(2.87,"mm"), Diameter(20.9,"mm")),
+        "80": (Length(3.91,"mm"), Diameter(18.8,"mm")),
     },
-    150: {  # 6" pipe
-        "40": (7.11, 154.1),
-        "80": (10.97, 146.3),
+    Diameter(1,"in"): {  # 1"
+        "40": (Length(3.38,"mm"), Diameter(26.6,"mm")),
+        "80": (Length(4.55,"mm"), Diameter(24.3,"mm")),
     },
-    200: {  # 8" pipe
-        "40": (8.18, 202.7),
-        "80": (12.70, 193.7),
+    Diameter(1.5,"in"): {  # 1-1/2"
+        "40": (Length(3.68,"mm"), Diameter(40.9,"mm")),
+        "80": (Length(5.08,"mm"), Diameter(37.5,"mm")),
     },
-    # 🔹 Extend as required (up to 48” or DN1200)
+    Diameter(2,"in"): {  # 2"
+        "40": (Length(3.91,"mm"), Diameter(52.5,"mm")),
+        "80": (Length(5.54,"mm"), Diameter(49.3,"mm")),
+    },
+    Diameter(2.5,"in"): {  # 2-1/2"
+        "40": (Length(5.16,"mm"), Diameter(62.7,"mm")),
+        "80": (Length(7.01,"mm"), Diameter(59.5,"mm")),
+    },
+    Diameter(3,"in"): {  # 3"
+        "40": (Length(5.49,"mm"), Diameter(77.9,"mm")),
+        "80": (Length(7.62,"mm"), Diameter(73.7,"mm")),
+    },
+    Diameter(4,"in"): {  # 4"
+        "40": (Length(6.02,"mm"), Diameter(102.3,"mm")),
+        "80": (Length(8.56,"mm"), Diameter(97.2,"mm")),
+    },
+    Diameter(5,"in"): {  # 5"
+        "40": (Length(6.55,"mm"), Diameter(127.3,"mm")),
+        "80": (Length(9.53,"mm"), Diameter(121.9,"mm")),
+    },
+    Diameter(6,"in"): {  # 6"
+        "40": (Length(7.11,"mm"), Diameter(154.1,"mm")),
+        "80": (Length(10.97,"mm"), Diameter(146.3,"mm")),
+    },
+    Diameter(8,"in"): {  # 8"
+        "40": (Length(8.18,"mm"), Diameter(202.7,"mm")),
+        "80": (Length(12.70,"mm"), Diameter(193.7,"mm")),
+    },
+    Diameter(10,"in"): {  # 10"
+        "40": (Length(9.27,"mm"), Diameter(254.5,"mm")),
+        "80": (Length(15.09,"mm"), Diameter(242.8,"mm")),
+    },
+    Diameter(12,"in"): {  # 12"
+        "40": (Length(10.31,"mm"), Diameter(303.2,"mm")),
+        "80": (Length(17.48,"mm"), Diameter(289.1,"mm")),
+    },
+    Diameter(14,"in"): {  # 14"
+        "40": (Length(11.13,"mm"), Diameter(333.4,"mm")),
+        "80": (Length(19.05,"mm"), Diameter(318.5,"mm")),
+    },
+    Diameter(15,"in"): {  # 15"
+        "40": (Length(11.91,"mm"), Diameter(359.1,"mm")),
+        "80": (Length(19.05,"mm"), Diameter(338.9,"mm")),
+    },
+    Diameter(20,"in"): {  # 20"
+        "40": (Length(12.70,"mm"), Diameter(508.0,"mm")),
+        "80": (Length(23.01,"mm"), Diameter(482.6,"mm")),
+    },
+    Diameter(25,"in"): {  # 25"
+        "40": (Length(15.88,"mm"), Diameter(635.0,"mm")),
+        "80": (Length(24.61,"mm"), Diameter(584.2,"mm")),
+    },
+    Diameter(30,"in"): {  # 30"
+        "40": (Length(15.88,"mm"), Diameter(762.0,"mm")),
+        "80": (Length(27.78,"mm"), Diameter(730.0,"mm")),
+    },
+    Diameter(35,"in"): {  # 35"
+        "40": (Length(19.05,"mm"), Diameter(889.0,"mm")),
+        "80": (Length(28.58,"mm"), Diameter(850.0,"mm")),
+    },
+    Diameter(40,"in"): {  # 40"
+        "40": (Length(19.05,"mm"), Diameter(1016.0,"mm")),
+        "80": (Length(31.75,"mm"), Diameter(965.0,"mm")),
+    },
+    Diameter(45,"in"): {  # 45"
+        "40": (Length(19.05,"mm"), Diameter(1143.0,"mm")),
+        "80": (Length(31.75,"mm"), Diameter(1092.0,"mm")),
+    },
+    Diameter(50,"in"): {  # 50"
+        "40": (Length(19.05,"mm"), Diameter(1270.0,"mm")),
+        "80": (Length(31.75,"mm"), Diameter(1219.0,"mm")),
+    },
 }
+
 
 # --------------------------
 # 🔹 Recommended Fluid Velocities (m/s)
@@ -138,8 +210,8 @@ EQUIVALENT_LENGTHS = {
 # 🔹 Utility Functions
 # --------------------------
 def get_internal_diameter(
-    nominal_diameter: int, schedule: str
-) -> Optional[float]:
+    nominal_diameter: Diameter, schedule: str
+):
     """Returns internal diameter for a given nominal diameter and schedule."""
     if nominal_diameter not in PIPE_SCHEDULES:
         return None

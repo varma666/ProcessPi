@@ -33,6 +33,7 @@ class Pipe(PipelineBase):
         self.material = material
         self.length = length
         self.roughness = get_roughness(self.material)
+        self.internal_diameter = get_internal_diameter(self.nominal_diameter, self.schedule)
 
     def cross_sectional_area(self) -> float:
         """
@@ -58,9 +59,8 @@ class Pipe(PipelineBase):
             "material": self.material,
             "length_m": self.length,
             "roughness_mm": self.roughness,
-            "internal_diameter_mm": self.internal_diameter(),
-            "insulation_thickness_mm": self.insulation_thickness,
-            "insulation_material": self.insulation_material,
+            "internal_diameter_mm": self.internal_diameter,
+            
         }
     def calculate(self):
         """
