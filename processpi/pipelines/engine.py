@@ -51,7 +51,7 @@ class PipelineEngine:
         )
         calculated_diameter = opt_dia.calculate()
         selected_diameter = get_nearest_diameter(calculated_diameter)
-        print(f"Calculated Optimum Diameter: {calculated_diameter}, Selected Diameter: {selected_diameter}")
+        #print(f"Calculated Optimum Diameter: {calculated_diameter}, Selected Diameter: {selected_diameter}")
         return selected_diameter
 
     def assign_pipe(self, material: str = "CS", schedule: str = "40") -> Pipe:
@@ -75,7 +75,7 @@ class PipelineEngine:
             self.assign_pipe()
         velocity_calc = FluidVelocity(
             volumetric_flow_rate=self.flowrate,
-            diameter=self.pipe.nominal_diameter # mm 
+            diameter=self.pipe.nominal_diameter # m
         )
         return velocity_calc.calculate()
 
@@ -87,7 +87,7 @@ class PipelineEngine:
         re_calc = ReynoldsNumber(
             density=self.fluid.density(),
             velocity=velocity,
-            diameter=self.pipe.nominal_diameter,  # mm
+            diameter=self.pipe.nominal_diameter,  # m
             viscosity=self.fluid.viscosity(),
         )
         return re_calc.calculate()
@@ -107,7 +107,7 @@ class PipelineEngine:
         dp_calc = PressureDropDarcy(
             friction_factor=f,
             length=self.pipe.length,
-            diameter=self.pipe.nominal_diameter,  # mm
+            diameter=self.pipe.nominal_diameter,  # m
             density=self.fluid.density(),
             velocity=self.calculate_velocity(),
         )

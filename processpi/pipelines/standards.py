@@ -31,29 +31,29 @@ ROUGHNESS: Dict[str, float] = {
 # 🔹 Pipe Standard Sizes (in)
 # --------------------------
 
-STANDARD_SIZES = [Length(0.25,"in"),
-                  Length(0.5,"in"),
-                  Length(0.75,"in"),
-                  Length(1,"in"),
-                  Length(1.5,"in"),
-                  Length(2,"in"),
-                  Length(2.5,"in"),
-                  Length(3,"in"),
-                  Length(4,"in"),
-                  Length(5,"in"),
-                  Length(6,"in"),
-                  Length(8,"in"),
-                  Length(10,"in"),
-                  Length(12,"in"),
-                  Length(14,"in"),
-                  Length(15,"in"),
-                  Length(20,"in"),
-                  Length(25,"in"),
-                  Length(30,"in"),
-                  Length(35,"in"),
-                  Length(40,"in"),
-                  Length(45,"in"),
-                  Length(50,"in")]
+STANDARD_SIZES = [Diameter(0.25,"in"),
+                  Diameter(0.5,"in"),
+                  Diameter(0.75,"in"),
+                  Diameter(1,"in"),
+                  Diameter(1.5,"in"),
+                  Diameter(2,"in"),
+                  Diameter(2.5,"in"),
+                  Diameter(3,"in"),
+                  Diameter(4,"in"),
+                  Diameter(5,"in"),
+                  Diameter(6,"in"),
+                  Diameter(8,"in"),
+                  Diameter(10,"in"),
+                  Diameter(12,"in"),
+                  Diameter(14,"in"),
+                  Diameter(15,"in"),
+                  Diameter(20,"in"),
+                  Diameter(25,"in"),
+                  Diameter(30,"in"),
+                  Diameter(35,"in"),
+                  Diameter(40,"in"),
+                  Diameter(45,"in"),
+                  Diameter(50,"in")]
 
 # --------------------------
 # 🔹 Pipe Size Database
@@ -170,10 +170,13 @@ def get_recommended_velocity(service: str) -> Optional[Union[float, Tuple[float,
 def get_nearest_diameter(calculated_diameter: Diameter) -> Diameter:
     """
     Returns the nearest standard diameter for a given calculated diameter.
-    """
     if calculated_diameter not in STANDARD_SIZES:
         return calculated_diameter
 
+    """
+    
     # Find the nearest standard diameter
-    nearest = min(STANDARD_SIZES, key=lambda x: abs(x.value - calculated_diameter))
-    return Diameter(nearest.value)
+    nearest = min(STANDARD_SIZES, key=lambda x: abs(x.value - calculated_diameter.value))
+    #print(f"Nearest standard diameter for {calculated_diameter.value} mm is {nearest.value} mm")
+    #print(type(nearest))
+    return nearest

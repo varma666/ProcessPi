@@ -30,7 +30,7 @@ class ColebrookWhite(CalculationBase):
         # Laminar flow check
         if Re < 2000:
             f = 64.0 / Re
-            return Dimensionless(f, "friction_factor")
+            return Dimensionless(f)
 
         # Initial guess
         f = 0.02

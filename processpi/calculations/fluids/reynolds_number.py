@@ -17,7 +17,7 @@ class ReynoldsNumber(CalculationBase):
     def calculate(self):
         rho = self._get_value(self.inputs["density"], "density")    # kg/m³
         v = self._get_value(self.inputs["velocity"], "velocity")    # m/s
-        D = self._get_value(self.inputs["diameter"], "diameter") / 1000   # m
+        D = self._get_value(self.inputs["diameter"], "diameter")    # m
         mu = self._get_value(self.inputs["viscosity"], "viscosity") # Pa·s
 
         Re = rho * v * D / mu

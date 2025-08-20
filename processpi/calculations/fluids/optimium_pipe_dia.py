@@ -28,10 +28,12 @@ class OptimumPipeDiameter(CalculationBase):
                 raise ValueError(f"Missing required input: {key}")
 
     def calculate(self):
-        Q = self._get_value(self.inputs["flow_rate"], "flow_rate")  # m³/s
-        rho = self._get_value(self.inputs["density"], "density")    # kg/m³
+        Q_volumetric = self._get_value(self.inputs["flow_rate"], "flow_rate")  # m³/s
+        rho = self._get_value(self.inputs["density"], "density")  # kg/m³
+        Q = Q_volumetric * rho  # kg/s
 
         # Formula
         D_opt = 293 * (Q ** 0.53) * (rho ** -0.37)  # mm
+        #print(f"Calculated Optimum Diameter: {D_opt} mm")
 
         return Diameter(D_opt , "mm")  
