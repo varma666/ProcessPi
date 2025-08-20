@@ -6,9 +6,7 @@ from .fittings import Fitting
 
 
 class Node:
-    """
-    Node represents a junction or endpoint in the pipeline network.
-    """
+    """Node represents a junction or endpoint in the pipeline network."""
     def __init__(self, name: str, elevation: float = 0.0):
         self.name = name
         self.elevation = elevation
@@ -62,13 +60,7 @@ class PipelineNetwork:
         self.elements.append(fitting)
 
     def add_subnetwork(self, subnetwork: "PipelineNetwork", connection_type: str):
-        """
-        Add a subnetwork (series or parallel).
-        
-        Args:
-            subnetwork (PipelineNetwork): The sub-network to add.
-            connection_type (str): 'series' or 'parallel'
-        """
+        """Add a subnetwork (series or parallel)."""
         if connection_type not in ["series", "parallel"]:
             raise ValueError("connection_type must be 'series' or 'parallel'")
         subnetwork.connection_type = connection_type
@@ -93,3 +85,24 @@ class PipelineNetwork:
             elif isinstance(element, PipelineNetwork):
                 desc += element.describe(level + 1)
         return desc
+
+    # ---------------- ASCII Schematic ----------------
+    def schematic(self, level: int = 0) -> str:
+        """Generate ASCII schematic representation of the pipeline network."""
+        indent = "  " * level
+        schematic = f"{indent}[{self.name}] ({self.connection_type or 'series'})\n"
+
+        for element in self.elements:
+            if isinstance(element, Pipe):
+                schematic += f"{indent}  {element.start_node.name} --({element.nominal_diameter}mm)--> {element.end_node.name}\n"
+            elif isinstance(element, Fitting):
+                schematic += f"{indent}  [Fitting: {element.fitting_type} at {element.node.name}]\n"
+            elif isinstance(element, PipelineNetwork):
+                if element.connection_type == "parallel":
+                    schematic += f"{indent}  ┌── Parallel ──┐\n"
+                    schematic += element.ascii_schematic(level + 2)
+                    schematic += f"{indent}  └──────────────┘\n"
+                else:
+                    schematic += element.ascii_schematic(level + 1)
+
+        return schematic
