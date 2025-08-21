@@ -1,8 +1,7 @@
-# processpi/pipelines/network.py
-
 from typing import List, Dict, Union, Optional
 from .pipes import Pipe
 from .fittings import Fitting
+from .pumps import Pump   # <-- Import Pump class
 
 
 class Node:
@@ -18,7 +17,7 @@ class Node:
 class PipelineNetwork:
     """
     Framework for defining a process pipeline network consisting of pipes,
-    fittings, and sub-networks in series or parallel.
+    fittings, pumps, and sub-networks in series or parallel.
 
     NOTE:
         - This class does not perform calculations.
@@ -29,7 +28,7 @@ class PipelineNetwork:
     def __init__(self, name: str):
         self.name = name
         self.nodes: Dict[str, Node] = {}
-        self.elements: List[Union[Pipe, Fitting, "PipelineNetwork"]] = []
+        self.elements: List[Union[Pipe, Fitting, Pump, "PipelineNetwork"]] = []
         self.connection_type: Optional[str] = None  # 'series' or 'parallel'
 
     # ---------------- Node Management ----------------
@@ -59,6 +58,14 @@ class PipelineNetwork:
         fitting.node = self.nodes[at_node]
         self.elements.append(fitting)
 
+    def add_pump(self, pump: Pump, start_node: str, end_node: str):
+        """Add a pump between two nodes."""
+        if start_node not in self.nodes or end_node not in self.nodes:
+            raise ValueError("Both start_node and end_node must exist in the network.")
+        pump.start_node = self.nodes[start_node]
+        pump.end_node = self.nodes[end_node]
+        self.elements.append(pump)
+
     def add_subnetwork(self, subnetwork: "PipelineNetwork", connection_type: str):
         """Add a subnetwork (series or parallel)."""
         if connection_type not in ["series", "parallel"]:
@@ -80,8 +87,14 @@ class PipelineNetwork:
                     f"{element.length} m, {element.material}, "
                     f"from {element.start_node.name} → {element.end_node.name}\n"
                 )
+            elif isinstance(element, Pump):
+                desc += (
+                    f"{indent}  Pump: {element.pump_type}, "
+                    f"from {element.start_node.name} → {element.end_node.name}, "
+                    f"Head={element.head} m, Power={element.power} kW\n"
+                )
             elif isinstance(element, Fitting):
-                desc += f"{indent}  Fitting: {element.fitting_type},  at {element.node.name}\n"
+                desc += f"{indent}  Fitting: {element.fitting_type}, at {element.node.name}\n"
             elif isinstance(element, PipelineNetwork):
                 desc += element.describe(level + 1)
         return desc
@@ -95,6 +108,8 @@ class PipelineNetwork:
         for element in self.elements:
             if isinstance(element, Pipe):
                 schematic += f"{indent}  {element.start_node.name} --({element.nominal_diameter}mm)--> {element.end_node.name}\n"
+            elif isinstance(element, Pump):
+                schematic += f"{indent}  {element.start_node.name} ==[Pump:{element.pump_type}]==> {element.end_node.name}\n"
             elif isinstance(element, Fitting):
                 schematic += f"{indent}  [Fitting: {element.fitting_type} at {element.node.name}]\n"
             elif isinstance(element, PipelineNetwork):
