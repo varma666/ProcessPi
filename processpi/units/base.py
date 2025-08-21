@@ -20,6 +20,29 @@ class Variable:
             self.to_base() == other.to_base()
         )
 
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __lt__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.to_base() < other.to_base()
+
+    def __le__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.to_base() <= other.to_base()
+
+    def __gt__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.to_base() > other.to_base()
+
+    def __ge__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+        return self.to_base() >= other.to_base()
+
     def __hash__(self):
         # Use tuple of class name + normalized value (in base units) for immutability
         return hash((self.__class__.__name__, self.to_base()))

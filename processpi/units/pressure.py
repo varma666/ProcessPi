@@ -26,25 +26,32 @@ class Pressure(Variable):
             raise ValueError("Pressure must be non-negative")
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for Pressure")
-        base_value = round(value * self._conversion[units], 4)
-        super().__init__(base_value, "Pa")
-        self.original_value = value
-        self.original_unit = units
+        super().__init__(value, units)
+
+    def to_base(self):
+        """Convert to base SI unit (Pa)."""
+        return self.value * self._conversion[self.units]
+
+    def from_base(self, base_value: float, target_units: str):
+        """Convert from Pa to target units."""
+        if target_units not in self._conversion:
+            raise TypeError(f"{target_units} is not a valid unit for Pressure")
+        return base_value / self._conversion[target_units]
 
     def to(self, target_unit):
-        if target_unit not in self._conversion:
-            raise TypeError(f"{target_unit} is not a valid unit for Pressure")
-        converted_value = self.value / self._conversion[target_unit]
+        """Return new Pressure in target units."""
+        base_value = self.to_base()
+        converted_value = self.from_base(base_value, target_unit)
         return Pressure(round(converted_value, 4), target_unit)
 
     def __add__(self, other):
         if not isinstance(other, Pressure):
             raise TypeError("Addition only supported between Pressure instances")
-        total = self.value + other.value
-        return Pressure(round(total, 4), "Pa")
+        total_base = self.to_base() + other.to_base()
+        return Pressure(self.from_base(total_base, "Pa"), "Pa")
 
     def __eq__(self, other):
-        return isinstance(other, Pressure) and self.value == other.value
+        return isinstance(other, Pressure) and self.to_base() == other.to_base()
 
     def __repr__(self):
-        return f"{self.original_value} {self.original_unit}"
+        return f"{self.value} {self.units}"

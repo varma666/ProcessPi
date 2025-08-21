@@ -207,6 +207,31 @@ EQUIVALENT_LENGTHS = {
     "tee_straight": 22,
 }
 # --------------------------
+# 🔹 K Factors
+# --------------------------
+
+K_FACTORS = {
+    "gate_valve_open": 0.15,            # fully open
+    "gate_valve_3_4_closed": 17.0,
+    "gate_valve_half_closed": 9.5,
+    "globe_valve_open": 10.0,
+    "angle_valve_open": 5.0,
+    "plug_valve_open": 0.4,
+    "elbow_90_standard": 0.9,
+    "elbow_45_long": 0.35,
+    "elbow_45_short": 0.4,
+    "return_bend_medium": 2.2,
+    "coupling_union": 0.08,
+    "tee_straight": 0.6,
+    "tee_branch": 1.8,                  # flow through branch
+    "sudden_contraction": 0.42,
+    "sudden_expansion": 1.0,            # (1 - (d/D)^2)^2, here avg
+    "entrance_sharp": 0.5,
+    "entrance_rounded": 0.04,
+    "exit": 1.0,
+}
+
+# --------------------------
 # 🔹 Utility Functions
 # --------------------------
 def get_internal_diameter(
