@@ -1,8 +1,8 @@
 from typing import List, Dict, Union, Optional
 from .pipes import Pipe
 from .fittings import Fitting
-from .pumps import Pump   # <-- Import Pump class
-
+from .vessel import Vessel
+from .pump import Pump
 
 class Node:
     """Node represents a junction or endpoint in the pipeline network."""
@@ -66,6 +66,14 @@ class PipelineNetwork:
         pump.end_node = self.nodes[end_node]
         self.elements.append(pump)
 
+    def add_vessel(self, vessel: Vessel, inlet_node: str, outlet_node: str):
+        """Add a vessel with inlet and outlet nodes to the network."""
+        if inlet_node not in self.nodes or outlet_node not in self.nodes:
+            raise ValueError("Both inlet_node and outlet_node must exist in the network.")
+        vessel.add_inlet(self.nodes[inlet_node])
+        vessel.add_outlet(self.nodes[outlet_node])
+        self.elements.append(vessel)
+
     def add_subnetwork(self, subnetwork: "PipelineNetwork", connection_type: str):
         """Add a subnetwork (series or parallel)."""
         if connection_type not in ["series", "parallel"]:
@@ -93,6 +101,13 @@ class PipelineNetwork:
                     f"from {element.start_node.name} → {element.end_node.name}, "
                     f"Head={element.head} m, Power={element.power} kW\n"
                 )
+
+            elif isinstance(element, Vessel):
+                inlets = ", ".join([n.name for n in element.inlet_nodes])
+                outlets = ", ".join([n.name for n in element.outlet_nodes])
+                desc += f"{indent}  Vessel: {element.name}, Volume={element.volume} m³, P={element.pressure} bar, T={element.temperature}°C\n"
+                desc += f"{indent}    Inlets: {inlets}\n"
+                desc += f"{indent}    Outlets: {outlets}\n"
             elif isinstance(element, Fitting):
                 desc += f"{indent}  Fitting: {element.fitting_type}, at {element.node.name}\n"
             elif isinstance(element, PipelineNetwork):
@@ -110,6 +125,12 @@ class PipelineNetwork:
                 schematic += f"{indent}  {element.start_node.name} --({element.nominal_diameter}mm)--> {element.end_node.name}\n"
             elif isinstance(element, Pump):
                 schematic += f"{indent}  {element.start_node.name} ==[Pump:{element.pump_type}]==> {element.end_node.name}\n"
+
+            elif isinstance(element, Vessel):
+                for inlet in element.inlet_nodes:
+                    schematic += f"{indent}  {inlet.name} --> [Vessel: {element.name}]\n"
+                for outlet in element.outlet_nodes:
+                    schematic += f"{indent}  [Vessel: {element.name}] --> {outlet.name}\n"
             elif isinstance(element, Fitting):
                 schematic += f"{indent}  [Fitting: {element.fitting_type} at {element.node.name}]\n"
             elif isinstance(element, PipelineNetwork):
