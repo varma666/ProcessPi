@@ -31,35 +31,44 @@ class PipelineNetwork:
     # ---------------- Node Management ----------------
     def add_node(self, name: str, elevation: float = 0.0) -> Node:
         """Add a node (junction) to the network."""
+        if name in self.nodes:
+            raise ValueError(f"Node '{name}' already exists in the network.")
         node = Node(name, elevation)
         self.nodes[name] = node
         return node
 
     def get_node(self, name: str) -> Node:
         """Fetch an existing node by name."""
+        if name not in self.nodes:
+            raise KeyError(f"Node '{name}' does not exist in the network.")
         return self.nodes[name]
 
     # ---------------- Edge Management ----------------
     def add_edge(self, component: Union[Pipe, Pump, Vessel, Equipment], start_node: str, end_node: str = None):
         """
-        General-purpose method to add a connection (edge) between nodes.
-        - For Pipe and Pump: requires start_node and end_node.
-        - For Vessel and Equipment: requires both inlet and outlet nodes.
+        Add a connection (edge) between nodes with strict validation.
         """
         if start_node not in self.nodes:
             raise ValueError(f"Start node '{start_node}' not found in network.")
+
+        # Prevent start=end self-loops
+        if end_node and start_node == end_node:
+            raise ValueError(f"Cannot create self-loop on node '{start_node}'.")
+
         if isinstance(component, (Pipe, Pump)):
-            if end_node not in self.nodes:
+            if not end_node or end_node not in self.nodes:
                 raise ValueError(f"End node '{end_node}' not found in network.")
             component.start_node = self.nodes[start_node]
             component.end_node = self.nodes[end_node]
+
         elif isinstance(component, (Vessel, Equipment)):
-            if end_node not in self.nodes:
+            if not end_node or end_node not in self.nodes:
                 raise ValueError(f"Outlet node '{end_node}' not found in network.")
             component.add_inlet(self.nodes[start_node])
             component.add_outlet(self.nodes[end_node])
+
         else:
-            raise TypeError(f"Unsupported component type for add_edge: {type(component).__name__}")
+            raise TypeError(f"Unsupported component type '{type(component).__name__}'.")
 
         self.elements.append(component)
 
@@ -67,7 +76,7 @@ class PipelineNetwork:
     def add_fitting(self, fitting: Fitting, at_node: str):
         """Add a fitting at a specific node."""
         if at_node not in self.nodes:
-            raise ValueError("Node must exist in the network.")
+            raise ValueError(f"Node '{at_node}' must exist in the network.")
         fitting.node = self.nodes[at_node]
         self.elements.append(fitting)
 
@@ -75,8 +84,32 @@ class PipelineNetwork:
         """Add a subnetwork (series or parallel)."""
         if connection_type not in ["series", "parallel"]:
             raise ValueError("connection_type must be 'series' or 'parallel'")
+        if subnetwork is self:
+            raise ValueError("Cannot add the network as a subnetwork of itself.")
         subnetwork.connection_type = connection_type
         self.elements.append(subnetwork)
+
+    # ---------------- Validation ----------------
+    def validate(self):
+        """Check for common network errors and raise descriptive exceptions."""
+        errors = []
+
+        # Check for unconnected nodes
+        connected = set()
+        for elem in self.elements:
+            if isinstance(elem, (Pipe, Pump)):
+                connected.update([elem.start_node.name, elem.end_node.name])
+            elif isinstance(elem, (Vessel, Equipment)):
+                connected.update([n.name for n in elem.inlet_nodes])
+                connected.update([n.name for n in elem.outlet_nodes])
+
+        for node_name in self.nodes:
+            if node_name not in connected:
+                errors.append(f"Node '{node_name}' is not connected to any component.")
+
+        if errors:
+            raise ValueError("Network validation failed:\n" + "\n".join(errors))
+        return True
 
     # ---------------- Description ----------------
     def describe(self, level: int = 0) -> str:
@@ -122,7 +155,6 @@ class PipelineNetwork:
         """Generate ASCII schematic representation of the pipeline network."""
         indent = "  " * level
         schematic = f"{indent}[{self.name}] ({self.connection_type or 'series'})\n"
-
         for element in self.elements:
             if isinstance(element, Pipe):
                 schematic += f"{indent}  {element.start_node.name} --({element.nominal_diameter}mm)--> {element.end_node.name}\n"
@@ -147,5 +179,4 @@ class PipelineNetwork:
                     schematic += f"{indent}  └──────────────┘\n"
                 else:
                     schematic += element.schematic(level + 1)
-
         return schematic
