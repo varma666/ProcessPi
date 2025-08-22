@@ -137,57 +137,69 @@ class PipelineEngine:
 
 
     # -------------------- Series evaluation --------------------
-    def _compute_series(self, elements: List[Any], q_m3s: VolumetricFlowRate) -> Tuple[Pressure, List[Dict[str, Any]]]:
+    def _compute_series(self, series_list, flow_rate, fluid):
+        """
+        Compute pressure drop and flow parameters for a series of pipeline elements.
+        Supports: Pipes, Pumps, Equipment, and Vessels.
+        """
         results = []
-        dp_total = Pressure(0.0, "Pa")
-        last_v = None
-        last_pipe = None  # Track last pipe for fittings
-
-        for e in elements:
-            if isinstance(e, Pipe):
-                last_pipe = e
-                v = self._velocity(q_m3s, e)
-                Re = self._reynolds(v, e)
-                f = self._friction_factor(Re, e)
-                dp = self._major_loss_dp(f, v, e)
+        dp_total = Pressure(0, "Pa")
+    
+        for element in series_list:
+            # --- Handle Pipe ---
+            if isinstance(element, Pipe):
+                pipe_result = self.pipe_calculation(element, flow_rate, fluid)
+                dp_total += pipe_result["pressure_drop"]
                 results.append({
                     "type": "pipe",
-                    "name": getattr(e, "name", "pipe"),
-                    "diameter_m": self._internal_diameter_m(e),
-                    "velocity_m_s": v,
-                    "reynolds_number": Re,
-                    "friction_factor": f,
-                    "pressure_drop_Pa": dp,
+                    "name": getattr(element, "name", "pipe"),
+                    "length": element.length,
+                    "diameter": element.diameter,
+                    "pressure_drop_Pa": pipe_result["pressure_drop"],
+                    "reynolds": pipe_result["reynolds"],
+                    "friction_factor": pipe_result["friction_factor"]
                 })
-                dp_total += dp
-                last_v = v
+    
+            # --- Handle Pump (Head Gain) ---
+            elif isinstance(element, Pump):
+                pump_gain = element.head_gain.to("Pa")  # convert pump head gain to Pa
+                dp_total -= pump_gain  # subtracting pump gain from total system loss
+                results.append({
+                    "type": "pump",
+                    "name": getattr(element, "name", "pump"),
+                    "head_gain_Pa": pump_gain
+                })
+    
+            # --- Handle Equipment (Pressure Drop) ---
+            elif isinstance(element, Equipment):
+                eq_dp = element.pressure_drop.to("Pa") if element.pressure_drop else Pressure(0, "Pa")
+                dp_total += eq_dp
+                results.append({
+                    "type": "equipment",
+                    "name": getattr(element, "name", "equipment"),
+                    "pressure_drop_Pa": eq_dp
+                })
+    
+            # --- Handle Vessel (Static Head or Minimal Drop) ---
+            elif isinstance(element, Vessel):
+                vessel_dp = element.pressure_drop.to("Pa") if element.pressure_drop else Pressure(0, "Pa")
+                dp_total += vessel_dp
+                results.append({
+                    "type": "vessel",
+                    "name": getattr(element, "name", "vessel"),
+                    "pressure_drop_Pa": vessel_dp
+                })
+    
+            # --- Unknown Component ---
+            else:
+                raise TypeError(f"Unsupported element type: {type(element).__name__}")
+    
+        return {
+            "type": "series",
+            "pressure_drop_total_Pa": dp_total,
+            "elements": results
+        }
 
-            elif isinstance(e, Fitting):
-                if last_v is None or last_pipe is None:
-                    results.append({
-                        "type": "fitting",
-                        "name": getattr(e, "fitting_type", "fitting"),
-                        "K": getattr(e, "K", None),
-                        "pressure_drop_Pa": None,
-                    })
-                else:
-                    current_d = self._internal_diameter_m(last_pipe)
-                    f_val = self._friction_factor(self._reynolds(last_v, last_pipe), last_pipe)
-                    dp_k = self._minor_loss_dp(e, last_v, f_val, current_d)
-                    results.append({
-                        "type": "fitting",
-                        "name": getattr(e, "fitting_type", "fitting"),
-                        "K": getattr(e, "K", None),
-                        "pressure_drop_Pa": dp_k,
-                    })
-                    dp_total += dp_k
-
-            elif isinstance(e, PipelineNetwork):
-                dp_sub, sub_pipes, sub_branches = self._compute_network(e, q_m3s)
-                results.extend(sub_pipes)
-                dp_total += dp_sub
-
-        return dp_total, results
 
     # -------------------- Parallel evaluation --------------------
     def _resolve_parallel_flows(self, net: PipelineNetwork, q_m3s: VolumetricFlowRate, branches: List[Any]) -> List[float]:
