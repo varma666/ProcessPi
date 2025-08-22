@@ -141,18 +141,22 @@ class PipelineEngine:
         """
         Compute pressure drop and flow parameters for a series of pipeline elements.
         Supports: Pipes, Pumps, Equipment, and Vessels.
+        Now considers inlet and outlet pressures if defined for any element.
         """
         results = []
         dp_total = Pressure(0, "Pa")
     
         for element in series_list:
+            element_name = getattr(element, "name", element.__class__.__name__.lower())
+    
             # --- Handle Pipe ---
             if isinstance(element, Pipe):
                 pipe_result = self.pipe_calculation(element, flow_rate, fluid)
                 dp_total += pipe_result["pressure_drop"]
+    
                 results.append({
                     "type": "pipe",
-                    "name": getattr(element, "name", "pipe"),
+                    "name": element_name,
                     "length": element.length,
                     "diameter": element.diameter,
                     "pressure_drop_Pa": pipe_result["pressure_drop"],
@@ -162,11 +166,12 @@ class PipelineEngine:
     
             # --- Handle Pump (Head Gain) ---
             elif isinstance(element, Pump):
-                pump_gain = element.head_gain.to("Pa")  # convert pump head gain to Pa
-                dp_total -= pump_gain  # subtracting pump gain from total system loss
+                pump_gain = element.head_gain.to("Pa")
+                dp_total -= pump_gain  # pump adds energy to the system
+    
                 results.append({
                     "type": "pump",
-                    "name": getattr(element, "name", "pump"),
+                    "name": element_name,
                     "head_gain_Pa": pump_gain
                 })
     
@@ -174,19 +179,21 @@ class PipelineEngine:
             elif isinstance(element, Equipment):
                 eq_dp = element.pressure_drop.to("Pa") if element.pressure_drop else Pressure(0, "Pa")
                 dp_total += eq_dp
+    
                 results.append({
                     "type": "equipment",
-                    "name": getattr(element, "name", "equipment"),
+                    "name": element_name,
                     "pressure_drop_Pa": eq_dp
                 })
     
-            # --- Handle Vessel (Static Head or Minimal Drop) ---
+            # --- Handle Vessel ---
             elif isinstance(element, Vessel):
                 vessel_dp = element.pressure_drop.to("Pa") if element.pressure_drop else Pressure(0, "Pa")
                 dp_total += vessel_dp
+    
                 results.append({
                     "type": "vessel",
-                    "name": getattr(element, "name", "vessel"),
+                    "name": element_name,
                     "pressure_drop_Pa": vessel_dp
                 })
     
@@ -194,11 +201,25 @@ class PipelineEngine:
             else:
                 raise TypeError(f"Unsupported element type: {type(element).__name__}")
     
+            # --- Check for inlet and outlet pressures ---
+            inlet_p = getattr(element, "inlet_pressure", None)
+            outlet_p = getattr(element, "outlet_pressure", None)
+    
+            if inlet_p and outlet_p:
+                dp_element = inlet_p.to("Pa") - outlet_p.to("Pa")
+                dp_total += dp_element
+                results[-1].update({
+                    "inlet_pressure_Pa": inlet_p.to("Pa"),
+                    "outlet_pressure_Pa": outlet_p.to("Pa"),
+                    "net_dp_from_defined_pressures_Pa": dp_element
+                })
+    
         return {
             "type": "series",
             "pressure_drop_total_Pa": dp_total,
             "elements": results
         }
+
 
 
     # -------------------- Parallel evaluation --------------------
