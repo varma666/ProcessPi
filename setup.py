@@ -7,7 +7,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setup(
     name="processpi",  # Make sure this matches your PyPI package name
-    version="0.1.0",
+    version="0.1.1",
     author="Raviteja Varma Nadimpalli",
     author_email="your_email@example.com",  # replace with your email
     description="Python toolkit for chemical engineering simulations, equipment design, and unit conversions",
