@@ -252,6 +252,77 @@ class PipelineEngine:
         D_new = sqrt(4.0 * A_new / pi)   # meters
         pipe.internal_diameter = Diameter(D_new * 1000.0, "mm")
 
+    # --- Unit helpers (inside PipelineEngine) ---
+    def _as_pressure(self, maybe_pressure, default_unit="Pa"):
+        """Accept Pressure, float, or None and return a Pressure (or None)."""
+        if maybe_pressure is None:
+            return None
+        if isinstance(maybe_pressure, Pressure):
+            return maybe_pressure
+        # assume float in default_unit
+        return Pressure(float(maybe_pressure), default_unit)
+    
+    def _pump_gain_pa(self, pump) -> Pressure:
+        """
+        Convert your Pump (head in m or pressures) to a pressure 'gain' (Pa).
+        Priority:
+          - If both inlet/outlet pressures exist -> use their difference
+          - Else if head exists -> rho*g*H
+          - Else -> 0 Pa
+        """
+        rho = getattr(pump, "density", None) or self._get_density().value
+        g = 9.81
+        pin = getattr(pump, "inlet_pressure", None)
+        pout = getattr(pump, "outlet_pressure", None)
+        if pin is not None and pout is not None:
+            return (self._as_pressure(pout).to("Pa") - self._as_pressure(pin).to("Pa"))
+        head = getattr(pump, "head", 0.0) or 0.0
+        return Pressure(rho * g * float(head), "Pa")
+    
+    def _equipment_dp_pa(self, eq) -> Pressure:
+        """
+        Your Equipment stores pressure_drop in 'bar' (float).
+        Convert to Pressure in Pa.
+        """
+        dp_bar = getattr(eq, "pressure_drop", 0.0) or 0.0
+        return Pressure(float(dp_bar), "bar").to("Pa")
+    
+    def _fitting_dp_pa(self, fitting, v: Velocity, f: Optional[float], d: Diameter) -> Pressure:
+        """
+        Compute minor loss from your Fitting using total_K() or equivalent_length().
+        """
+        rho = self._get_density().value
+        v_val = v.value if hasattr(v, "value") else float(v)
+        # Try K-method first
+        Ktot = None
+        try:
+            Ktot = fitting.total_K()
+        except Exception:
+            Ktot = None
+        if Ktot is not None:
+            return Pressure(0.5 * rho * v_val * v_val * float(Ktot), "Pa")
+    
+        # Fallback: equivalent length method
+        Le = None
+        try:
+            Le = fitting.equivalent_length()
+        except Exception:
+            Le = None
+        if Le is not None:
+            # We need friction factor for Le/D method. If not passed, recompute here.
+            if f is None:
+                # compute f using pipe diameter 'd'
+                Re = self._reynolds(v, type("Tmp", (), {"roughness": 0.0, "length": Length(1.0, "m")})())  # roughness ignored here
+                f_val = self._friction_factor(Re, type("Tmp", (), {"roughness": 0.0})())
+            else:
+                f_val = f
+            d_m = d.to("m").value
+            return Pressure(float(f_val) * (float(Le) / d_m) * 0.5 * rho * v_val * v_val, "Pa")
+    
+        # Neither K nor Le available => no minor loss accounted
+        return Pressure(0.0, "Pa")
+
+
     # -------------------- Primitive calcs ------------------------------------
 
     def _reynolds(self, v: Velocity, pipe: Pipe):
@@ -331,67 +402,117 @@ class PipelineEngine:
             "minor_dp": dp_minor,
         }
 
-    def _compute_series(self, series_list: List[Any], flow_rate: Optional[VolumetricFlowRate]) -> Tuple[Pressure, List[Dict[str, Any]]]:
-        results: List[Dict[str, Any]] = []
-        dp_total = Pressure(0.0, "Pa")
-
+    def _compute_series(self, series_list, flow_rate, fluid):
+        results = []
+        dp_total = Pressure(0, "Pa")
+    
+        # Precompute a working velocity/diameter if there is at least one pipe
+        # (needed for fittings). We update this on the fly for each pipe.
+        current_d: Optional[Diameter] = None
+        current_v: Optional[Velocity] = None
+        current_f: Optional[float] = None
+    
         for element in series_list:
-            name = getattr(element, "name", element.__class__.__name__.lower())
-
-            # Pipe
+            element_name = getattr(element, "name", getattr(element, "fitting_type", element.__class__.__name__.lower()))
+    
+            # --- Pipe ---
             if isinstance(element, Pipe):
                 calc = self._pipe_calculation(element, flow_rate)
                 dp_total += calc["pressure_drop"]
+                current_d = self._internal_diameter_m(element)
+                current_v = calc["velocity"]
+                # friction factor for this pipe (useful for subsequent fittings via Le/D)
+                current_f = calc["friction_factor"]
+    
                 results.append({
                     "type": "pipe",
-                    "name": name,
+                    "name": element_name,
                     "length": element.length,
-                    "diameter": self._internal_diameter_m(element),
-                    "velocity": calc["velocity"],
-                    "reynolds": calc["reynolds"],
-                    "friction_factor": calc["friction_factor"],
+                    "diameter": current_d,
                     "pressure_drop_Pa": calc["pressure_drop"],
-                    "major_dp_Pa": calc["major_dp"],
-                    "minor_dp_Pa": calc["minor_dp"],
+                    "reynolds": calc["reynolds"],
+                    "friction_factor": current_f,
+                    "velocity": current_v,
                 })
-
-            # Pump-like (duck-typed by head_gain)
-            elif hasattr(element, "head_gain") and element.head_gain is not None:
-                gain = element.head_gain.to("Pa")
-                dp_total -= gain
-                results.append({"type": "pump", "name": name, "head_gain_Pa": gain})
-
-            # Equipment/Vessel/Fitting-like (duck-typed by pressure_drop)
-            elif hasattr(element, "pressure_drop"):
-                eq_dp = element.pressure_drop.to("Pa") if element.pressure_drop else Pressure(0.0, "Pa")
+    
+            # --- Pump (your Pump class) ---
+            elif element.__class__.__name__ == "Pump":
+                pump_gain = self._pump_gain_pa(element)  # Pa
+                dp_total -= pump_gain  # pump adds energy
+                results.append({
+                    "type": "pump",
+                    "name": element_name,
+                    "head_gain_Pa": pump_gain,
+                    "head_m": getattr(element, "head", None),
+                    "efficiency": getattr(element, "efficiency", None),
+                })
+    
+            # --- Equipment (your Equipment class with pressure_drop in bar) ---
+            elif element.__class__.__name__ == "Equipment":
+                eq_dp = self._equipment_dp_pa(element)
                 dp_total += eq_dp
                 results.append({
-                    "type": getattr(element, "equipment_type", "equipment"),
-                    "name": name,
-                    "pressure_drop_Pa": eq_dp
+                    "type": "equipment",
+                    "name": getattr(element, "name", element_name),
+                    "pressure_drop_Pa": eq_dp,
                 })
-
-            # Nested network
+    
+            # --- Fitting (minor loss) ---
+            elif isinstance(element, Fitting):
+                # We need a velocity & diameter context. If none yet, try to derive from engine-level flowrate.
+                if current_d is None or current_v is None:
+                    # try derive from any pipe dimension on fitting or engine diameter
+                    d_for_fit = None
+                    if hasattr(element, "diameter") and element.diameter:
+                        d_for_fit = element.diameter if isinstance(element.diameter, Diameter) else Diameter(float(element.diameter), "mm")
+                    else:
+                        d_for_fit = self._internal_diameter_m()  # could compute via optimum if single-line
+                    q = flow_rate or self._maybe_flowrate()
+                    current_v = FluidVelocity(volumetric_flow_rate=q, diameter=d_for_fit).calculate()
+                    current_d = d_for_fit
+                    # friction factor unknown; pass None (method will recompute if needed)
+                    current_f = None
+    
+                dp_fit = self._fitting_dp_pa(element, current_v, current_f, current_d)
+                dp_total += dp_fit
+                results.append({
+                    "type": "fitting",
+                    "name": element_name,
+                    "pressure_drop_Pa": dp_fit,
+                    "using": "K" if element.total_K() is not None else ("Le" if element.equivalent_length() is not None else "none"),
+                    "quantity": getattr(element, "quantity", 1),
+                })
+    
+            # --- Vessel (no default ΔP; acts as connection/boundary unless later extended) ---
+            elif element.__class__.__name__ == "Vessel":
+                # treat as zero-ΔP pass-through unless you decide to add a vessel ΔP later
+                results.append({
+                    "type": "vessel",
+                    "name": getattr(element, "name", element_name),
+                    "pressure_drop_Pa": Pressure(0.0, "Pa"),
+                    "note": "No default ΔP; boundary/holdup element.",
+                })
+    
+            # --- Nested Networks (unchanged) ---
             elif isinstance(element, PipelineNetwork):
-                dp_nested, nested_elems, _ = self._compute_network(element, flow_rate)
-                dp_total += dp_nested
-                results.extend(nested_elems)
-
+                # Handled by _compute_network (this path normally won't show up here)
+                raise TypeError("Nested networks should be handled in _compute_network, not _compute_series.")
+    
             else:
-                raise TypeError(f"Unsupported element type in series: {type(element).__name__}")
-
-            # Optional explicit inlet/outlet pressures on the element
+                raise TypeError(f"Unsupported element type: {type(element).__name__}")
+    
+            # --- Optional inlet/outlet pressures on any element (duck-typed) ---
             inlet_p = getattr(element, "inlet_pressure", None)
             outlet_p = getattr(element, "outlet_pressure", None)
             if inlet_p is not None and outlet_p is not None:
-                dp_elem = inlet_p.to("Pa") - outlet_p.to("Pa")
-                dp_total += dp_elem
+                dp_element = self._as_pressure(inlet_p).to("Pa") - self._as_pressure(outlet_p).to("Pa")
+                dp_total += dp_element
                 results[-1].update({
-                    "inlet_pressure_Pa": inlet_p.to("Pa"),
-                    "outlet_pressure_Pa": outlet_p.to("Pa"),
-                    "net_dp_from_defined_pressures_Pa": dp_elem
+                    "inlet_pressure_Pa": self._as_pressure(inlet_p).to("Pa"),
+                    "outlet_pressure_Pa": self._as_pressure(outlet_p).to("Pa"),
+                    "net_dp_from_defined_pressures_Pa": dp_element
                 })
-
+    
         return dp_total, results
 
     def _resolve_parallel_flows(self, net: PipelineNetwork, q_m3s: VolumetricFlowRate, branches: List[Any]) -> List[float]:
