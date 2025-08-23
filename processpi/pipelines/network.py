@@ -1,4 +1,6 @@
-from typing import List, Dict, Union, Optional
+from __future__ import annotations
+from typing import List, Dict, Union, Optional, Any
+
 from .pipes import Pipe
 from .fittings import Fitting
 from .vessel import Vessel
@@ -16,17 +18,76 @@ class Node:
         return f"Node({self.name}, elevation={self.elevation})"
 
 
+# A branch in a parallel block can be either a PipelineNetwork or a single element
+Branch = Union["PipelineNetwork", Pipe, Fitting, Pump, Vessel, Equipment]
+
+
 class PipelineNetwork:
     """
     Framework for defining a process pipeline network consisting of pipes,
     fittings, pumps, vessels, equipment, and sub-networks.
+
+    This version supports both node/edge construction AND composable
+    series/parallel blocks compatible with the PipelineEngine:
+      - connection_type: "series" (default) or "parallel"
+      - elements: a list of elements or child PipelineNetwork objects
     """
 
-    def __init__(self, name: str):
+    # ---------------- Init ----------------
+    def __init__(self, name: str, connection_type: Optional[str] = "series"):
+        if connection_type not in (None, "series", "parallel"):
+            raise ValueError("connection_type must be 'series' or 'parallel' (or None which defaults to 'series').")
         self.name = name
         self.nodes: Dict[str, Node] = {}
-        self.elements: List[Union[Pipe, Fitting, Pump, Vessel, Equipment, "PipelineNetwork"]] = []
-        self.connection_type: Optional[str] = None  # 'series' or 'parallel'
+        self.elements: List[Branch] = []
+        self.connection_type: str = connection_type or "series"
+
+    # ---------------- Convenience constructors (engine-friendly) -------------
+    @staticmethod
+    def series(name: str, *elements: Branch) -> "PipelineNetwork":
+        """Create a series block populated with elements."""
+        net = PipelineNetwork(name=name, connection_type="series")
+        net.elements.extend(elements)
+        return net
+
+    @staticmethod
+    def parallel(name: str, *branches: Branch) -> "PipelineNetwork":
+        """Create a parallel block populated with branch elements or child networks."""
+        net = PipelineNetwork(name=name, connection_type="parallel")
+        net.elements.extend(branches)
+        return net
+
+    # ---------------- Composable builders ------------------------------------
+    def add(self, *elements: Branch) -> "PipelineNetwork":
+        """Append one or more elements to the current block (series or parallel)."""
+        self.elements.extend(elements)
+        return self
+
+    def add_series(self, *elements: Branch) -> "PipelineNetwork":
+        """
+        Add a series group. If the current block is series, append directly.
+        If current block is parallel, wrap as a child series network (a branch).
+        """
+        if self.connection_type == "series":
+            self.elements.extend(elements)
+            return self
+        series_child = PipelineNetwork(name=f"{self.name}-series-{len(self.elements)+1}", connection_type="series")
+        series_child.elements.extend(elements)
+        self.elements.append(series_child)
+        return self
+
+    def add_parallel(self, *branches: Branch) -> "PipelineNetwork":
+        """
+        Add a parallel group. If current block is parallel, append as new branches.
+        If current block is series, wrap as a child parallel network (one element).
+        """
+        if self.connection_type == "parallel":
+            self.elements.extend(branches)
+            return self
+        par_child = PipelineNetwork(name=f"{self.name}-parallel-{len(self.elements)+1}", connection_type="parallel")
+        par_child.elements.extend(branches)
+        self.elements.append(par_child)
+        return self
 
     # ---------------- Node Management ----------------
     def add_node(self, name: str, elevation: float = 0.0) -> Node:
@@ -47,6 +108,7 @@ class PipelineNetwork:
     def add_edge(self, component: Union[Pipe, Pump, Vessel, Equipment], start_node: str, end_node: str = None):
         """
         Add a connection (edge) between nodes with strict validation.
+        Edges added here are automatically appended to this block's elements.
         """
         if start_node not in self.nodes:
             raise ValueError(f"Start node '{start_node}' not found in network.")
@@ -81,7 +143,10 @@ class PipelineNetwork:
         self.elements.append(fitting)
 
     def add_subnetwork(self, subnetwork: "PipelineNetwork", connection_type: str):
-        """Add a subnetwork (series or parallel)."""
+        """
+        Add a subnetwork (series or parallel) as a child element.
+        This preserves compatibility with existing code that constructs subnetworks separately.
+        """
         if connection_type not in ["series", "parallel"]:
             raise ValueError("connection_type must be 'series' or 'parallel'")
         if subnetwork is self:
@@ -94,14 +159,23 @@ class PipelineNetwork:
         """Check for common network errors and raise descriptive exceptions."""
         errors = []
 
-        # Check for unconnected nodes
+        # Collect connected node names from elements in this block only
         connected = set()
         for elem in self.elements:
             if isinstance(elem, (Pipe, Pump)):
-                connected.update([elem.start_node.name, elem.end_node.name])
+                if getattr(elem, "start_node", None) and getattr(elem, "end_node", None):
+                    connected.update([elem.start_node.name, elem.end_node.name])
             elif isinstance(elem, (Vessel, Equipment)):
-                connected.update([n.name for n in elem.inlet_nodes])
-                connected.update([n.name for n in elem.outlet_nodes])
+                for n in getattr(elem, "inlet_nodes", []) or []:
+                    connected.add(n.name)
+                for n in getattr(elem, "outlet_nodes", []) or []:
+                    connected.add(n.name)
+            elif isinstance(elem, PipelineNetwork):
+                # recurse into child blocks for validation too
+                try:
+                    elem.validate()
+                except ValueError as e:
+                    errors.append(f"In subnetwork '{elem.name}': {e}")
 
         for node_name in self.nodes:
             if node_name not in connected:
@@ -121,62 +195,68 @@ class PipelineNetwork:
         for element in self.elements:
             if isinstance(element, Pipe):
                 desc += (
-                    f"{indent}  Pipe: {element.nominal_diameter} mm, "
-                    f"{element.length} m, {element.material}, "
+                    f"{indent}  Pipe: {getattr(element, 'nominal_diameter', 'NA')} mm, "
+                    f"{getattr(element, 'length', 'NA')} m, {getattr(element, 'material', 'NA')}, "
                     f"from {element.start_node.name} → {element.end_node.name}\n"
                 )
             elif isinstance(element, Pump):
                 desc += (
-                    f"{indent}  Pump: {element.pump_type}, "
+                    f"{indent}  Pump: {getattr(element, 'pump_type', 'Generic')}, "
                     f"from {element.start_node.name} → {element.end_node.name}, "
-                    f"Head={element.head} m, Power={element.power} kW\n"
+                    f"Head={getattr(element, 'head', 'NA')} m, Power={getattr(element, 'power', 'NA')} kW\n"
                 )
             elif isinstance(element, Vessel):
-                inlets = ", ".join([n.name for n in element.inlet_nodes])
-                outlets = ", ".join([n.name for n in element.outlet_nodes])
-                desc += f"{indent}  Vessel: {element.name}, Volume={element.volume} m³, P={element.pressure} bar, T={element.temperature}°C\n"
-                desc += f"{indent}    Inlets: {inlets}\n"
-                desc += f"{indent}    Outlets: {outlets}\n"
+                inlets = ", ".join([n.name for n in getattr(element, "inlet_nodes", [])])
+                outlets = ", ".join([n.name for n in getattr(element, "outlet_nodes", [])])
+                desc += f"{indent}  Vessel: {getattr(element, 'name', 'Vessel')}, Volume={getattr(element, 'volume', 'NA')} m³, P={getattr(element, 'pressure', 'NA')} bar, T={getattr(element, 'temperature', 'NA')}°C\n"
+                desc += f"{indent}    Inlets: {inlets or '—'}\n"
+                desc += f"{indent}    Outlets: {outlets or '—'}\n"
             elif isinstance(element, Equipment):
-                inlets = ", ".join([n.name for n in element.inlet_nodes])
-                outlets = ", ".join([n.name for n in element.outlet_nodes])
-                desc += (f"{indent}  Equipment: {element.name}, ΔP={element.pressure_drop} bar, "
-                         f"Type={element.description or 'Generic'}\n")
-                desc += f"{indent}    Inlet(s): {inlets}\n"
-                desc += f"{indent}    Outlet(s): {outlets}\n"
+                inlets = ", ".join([n.name for n in getattr(element, "inlet_nodes", [])])
+                outlets = ", ".join([n.name for n in getattr(element, "outlet_nodes", [])])
+                desc += (f"{indent}  Equipment: {getattr(element, 'name', 'Equipment')}, "
+                         f"ΔP={getattr(element, 'pressure_drop', 'NA')} bar, "
+                         f"Type={getattr(element, 'description', 'Generic')}\n")
+                desc += f"{indent}    Inlet(s): {inlets or '—'}\n"
+                desc += f"{indent}    Outlet(s): {outlets or '—'}\n"
             elif isinstance(element, Fitting):
-                desc += f"{indent}  Fitting: {element.fitting_type}, at {element.node.name}\n"
+                where = getattr(element, 'node', None)
+                at = where.name if where else "unknown"
+                desc += f"{indent}  Fitting: {getattr(element, 'fitting_type', 'Fitting')}, at {at}\n"
             elif isinstance(element, PipelineNetwork):
                 desc += element.describe(level + 1)
         return desc
 
-    # ---------------- ASCII Schematic ----------------
-    def schematic(self, level: int = 0) -> str:
-        """Generate ASCII schematic representation of the pipeline network."""
-        indent = "  " * level
-        schematic = f"{indent}[{self.name}] ({self.connection_type or 'series'})\n"
-        for element in self.elements:
-            if isinstance(element, Pipe):
-                schematic += f"{indent}  {element.start_node.name} --({element.nominal_diameter}mm)--> {element.end_node.name}\n"
-            elif isinstance(element, Pump):
-                schematic += f"{indent}  {element.start_node.name} ==[Pump:{element.pump_type}]==> {element.end_node.name}\n"
-            elif isinstance(element, Vessel):
-                for inlet in element.inlet_nodes:
-                    schematic += f"{indent}  {inlet.name} --> [Vessel: {element.name}]\n"
-                for outlet in element.outlet_nodes:
-                    schematic += f"{indent}  [Vessel: {element.name}] --> {outlet.name}\n"
-            elif isinstance(element, Equipment):
-                for inlet in element.inlet_nodes:
-                    schematic += f"{indent}  {inlet.name} --> [Equipment: {element.name}]\n"
-                for outlet in element.outlet_nodes:
-                    schematic += f"{indent}  [Equipment: {element.name}] --> {outlet.name}\n"
-            elif isinstance(element, Fitting):
-                schematic += f"{indent}  [Fitting: {element.fitting_type} at {element.node.name}]\n"
-            elif isinstance(element, PipelineNetwork):
-                if element.connection_type == "parallel":
-                    schematic += f"{indent}  ┌── Parallel ──┐\n"
-                    schematic += element.schematic(level + 2)
-                    schematic += f"{indent}  └──────────────┘\n"
+    # ---------------- ASCII Schematic (engine-friendly) ----------------------
+    def _schematic_lines(self, prefix: str = "") -> List[str]:
+        lines: List[str] = []
+        header = f"{prefix}{self.name} [{self.connection_type}]"
+        lines.append(header)
+        child_prefix = prefix + "  "
+        if self.connection_type == "series":
+            for i, el in enumerate(self.elements, start=1):
+                if isinstance(el, PipelineNetwork):
+                    lines.extend(el._schematic_lines(child_prefix))
                 else:
-                    schematic += element.schematic(level + 1)
-        return schematic
+                    label = getattr(el, "name", el.__class__.__name__)
+                    lines.append(f"{child_prefix}{i}. {label}")
+        else:  # parallel
+            for i, br in enumerate(self.elements, start=1):
+                if isinstance(br, PipelineNetwork):
+                    lines.append(f"{child_prefix}(branch {i})")
+                    lines.extend(br._schematic_lines(child_prefix + "  "))
+                else:
+                    label = getattr(br, "name", br.__class__.__name__)
+                    lines.append(f"{child_prefix}├─(branch {i}) {label}")
+        return lines
+
+    def schematic(self, level: int = 0) -> str:
+        """
+        Generate ASCII schematic representation of the pipeline network.
+        Kept compatible with the PipelineEngine which calls `network.schematic()`.
+        """
+        return "\n".join(self._schematic_lines())
+
+    # ---------------- Python niceties ----------------------------------------
+    def __repr__(self) -> str:
+        return f"PipelineNetwork(name={self.name!r}, type={self.connection_type!r}, elements={len(self.elements)})"
