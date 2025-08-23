@@ -181,6 +181,21 @@ class PipelineNetwork:
             if node_name not in connected:
                 errors.append(f"Node '{node_name}' is not connected to any component.")
 
+        # in PipelineNetwork.validate()
+        for elem in self.elements:
+            if isinstance(elem, Fitting):
+                if not isinstance(elem.diameter, Diameter):
+                    errors.append(f"Fitting '{elem.fitting_type}' requires 'diameter' as Diameter unit.")
+                if elem.total_K() is None and elem.equivalent_length() is None:
+                    errors.append(f"Fitting '{elem.fitting_type}' has neither K nor equivalent length in standards.")
+            if elem.__class__.__name__ == "Pump":
+                if (getattr(elem, "head", 0) in (None, 0)) and not (getattr(elem, "inlet_pressure", None) and getattr(elem, "outlet_pressure", None)):
+                    errors.append("Pump requires either (inlet & outlet pressures) or a non-zero head.")
+            if elem.__class__.__name__ == "Equipment":
+                if getattr(elem, "pressure_drop", 0.0) is None:
+                    errors.append(f"Equipment '{getattr(elem, 'name', 'equipment')}' requires 'pressure_drop' (bar).")
+
+
         if errors:
             raise ValueError("Network validation failed:\n" + "\n".join(errors))
         return True
