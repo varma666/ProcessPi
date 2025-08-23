@@ -4,7 +4,7 @@ from typing import List, Dict, Union, Optional, Any
 from .pipes import Pipe
 from .fittings import Fitting
 from .vessel import Vessel
-from .pump import Pump
+from .pumps import Pump
 from .equipment import Equipment
 
 
