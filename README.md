@@ -32,7 +32,7 @@
 </p>
 
 <p align="center">
-  <em>Built with ❤️ for chemical engineers, students, and researchers.</em>
+  <em>Built with ❤️ for chemical engineers.</em>
 </p>
 
 ---
