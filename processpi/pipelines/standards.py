@@ -230,7 +230,26 @@ K_FACTORS = {
     "entrance_rounded": 0.04,
     "exit": 1.0,
 }
-
+# --------------------------
+# 🔹 Pump Efficiencies
+# --------------------------
+PUMP_EFFICIENCIES = {
+    "centrifugal_single_stage": 0.70,     # Typical 65-75%
+    "centrifugal_multistage": 0.80,       # Typical 75-85%
+    "vertical_turbine": 0.82,             # Typical 80-85%
+    "gear_pump": 0.75,                    # Typical 70-80%
+    "screw_pump": 0.80,                   # Typical 75-85%
+    "diaphragm_pump": 0.60,               # Typical 50-65%
+    "peristaltic_pump": 0.55,             # Typical 50-60%
+    "progressive_cavity_pump": 0.75,      # Typical 70-80%
+    "reciprocating_piston_pump": 0.85,    # Typical 80-90%
+    "axial_flow_pump": 0.75,              # Typical 70-80%
+    "mixed_flow_pump": 0.78,              # Typical 75-80%
+    "magnetic_drive_pump": 0.65,          # Typical 60-70%
+    "regenerative_turbine_pump": 0.55,    # Typical 50-60%
+    "jet_pump": 0.35,                     # Typical 30-40%
+    "hand_pump": 0.20,                    # Very low efficiency
+}
 # --------------------------
 # 🔹 Utility Functions
 # --------------------------

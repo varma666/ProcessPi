@@ -17,6 +17,7 @@ from .heat_transfer_coefficient import HeatTransferCoefficient
 from .thermal_resistance import ThermalResistance
 from .heat_flux import HeatFlux
 from .heat_of_vaporization import HeatOfVaporization
+from .power import Power
 __all__ = ["Length", 
            "Velocity", 
            "Density", 
@@ -35,4 +36,5 @@ __all__ = ["Length",
            "ThermalResistance", 
            "HeatFlux", 
            "HeatOfVaporization",
-           "Dimensionless"]
+           "Dimensionless",
+           "Power"]

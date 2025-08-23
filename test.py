@@ -1,42 +1,43 @@
+from processpi.pipelines.network import PipelineNetwork
+from processpi.pipelines.pipes import Pipe
+from processpi.units import *
+
+pipe = Pipe(length=Length(100, "m"), nominal_diameter=Diameter(3,"in"))
+
+net = PipelineNetwork(name="Single Straight Pipeline")
+net.add_pipe(pipe)
+
+from processpi.pipelines.engine import PipelineEngine
+
+engine = PipelineEngine(network=net)
 from processpi.components import Water
 fluid = Water()
-from processpi.units import VolumetricFlowRate
-flowrate = VolumetricFlowRate(10, "m3/h")
-from processpi.pipelines.engine import PipelineEngine
-from processpi.pipelines.pipes import Pipe
-from processpi.pipelines.network import PipelineNetwork
-from processpi.pipelines.fittings import Fitting
-from processpi.units import *
-main_net = PipelineNetwork("Main Network")
+flow_rate = VolumetricFlowRate(10, "m3/h")
+engine.fit(
+        fluid=fluid,
+        flow_rate=flow_rate,
+        inlet_pressure=Pressure(600_000, "Pa"),
+        outlet_pressure=Pressure(101_325, "Pa"),
+        temperature=Temperature(50, "C")
+    )
+engine.run()
+engine.summary()
 
-        # Add nodes
-main_net.add_node("A", elevation=0)
-main_net.add_node("B", elevation=5)
-main_net.add_node("C", elevation=10)
-main_net.add_node("D", elevation=8)
 
-        # Add pipes in series
-main_net.add_pipe(Pipe(nominal_diameter=Diameter(4,"in"), length=50, schedule="40",material="CS"), "A", "B")
-main_net.add_pipe(Pipe(nominal_diameter=Diameter(6,"in"), length=75, schedule="40",material="CS"), "B", "C")
+net = PipelineNetwork("Main")
+pipe = Pipe(length=Length(800, "m"))
+net.add_pipe(pipe, diameter=None, roughness=0.000045)
+net.add_fitting("elbow_90", count=8, k_value=0.75)
+net.add_fitting("butterfly_valve", count=1, k_value=2.0)
+net.add_fitting("flow_nozzle", count=1, k_value=1.5)
 
-        # Add fitting
-main_net.add_fitting(Fitting(fitting_type="elbow_90_standard",diameter=Diameter(6,"in")), "B")
-
-        # Create a parallel subnetwork between C and D
-parallel_net = PipelineNetwork("Parallel Branch")
-parallel_net.add_node("C")
-parallel_net.add_node("D")
-
-parallel_net.add_pipe(Pipe(nominal_diameter=Diameter(80,"mm"), length=40, material="CS", schedule="40"), "C", "D")
-parallel_net.add_pipe(Pipe(nominal_diameter=Diameter(120,"mm"), length=30, material="CS", schedule="40"), "C", "D")
-
-        # Add the subnetwork as parallel
-main_net.add_subnetwork(parallel_net, connection_type="parallel")
-engine = PipelineEngine(
-            flowrate=VolumetricFlowRate(0.01, "m3/s"),
-            fluid=Water(),
-            network=main_net,
-        )
-result = engine.run()
-result.summary()
+engine = PipelineEngine(network=net)
+engine.fit(
+        fluid={"density": 1.87, "viscosity": 0.016e-3},
+        flow_rate=(1000*1000)/86400,  # 1000 t/day -> ~11.57 kg/s
+        inlet_pressure=24000,
+        outlet_pressure=101325,
+        temperature=60
+    )
+engine.run()
 engine.summary()

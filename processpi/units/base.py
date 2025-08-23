@@ -47,6 +47,26 @@ class Variable:
         # Use tuple of class name + normalized value (in base units) for immutability
         return hash((self.__class__.__name__, self.to_base()))
 
+    # -------------------------------
+    # Arithmetic operations
+    # -------------------------------
+    def __add__(self, other):
+        """Add two variables of the same subclass."""
+        if not isinstance(other, self.__class__):
+            raise TypeError(f"Addition is only supported between {self.__class__.__name__} objects")
+        base_sum = self.to_base() + other.to_base()
+        return self.from_base(base_sum, self.units)
+
+    def __sub__(self, other):
+        """Subtract two variables of the same subclass."""
+        if not isinstance(other, self.__class__):
+            raise TypeError(f"Subtraction is only supported between {self.__class__.__name__} objects")
+        base_diff = self.to_base() - other.to_base()
+        return self.from_base(base_diff, self.units)
+
+    # -------------------------------
+    # Conversion placeholders
+    # -------------------------------
     def to(self, target_units: str):
         raise NotImplementedError("Override this method in subclass.")
 

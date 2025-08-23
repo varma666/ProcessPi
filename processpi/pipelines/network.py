@@ -6,6 +6,7 @@ from .fittings import Fitting
 from .vessel import Vessel
 from .pumps import Pump
 from .equipment import Equipment
+from ..units import *
 
 
 class Node:
@@ -58,7 +59,7 @@ class PipelineNetwork:
         return net
 
     # ---------------- Composable builders ------------------------------------
-    def add(self, *elements: Branch) -> "PipelineNetwork":
+    def add_pipe(self, *elements: Branch) -> "PipelineNetwork":
         """Append one or more elements to the current block (series or parallel)."""
         self.elements.extend(elements)
         return self

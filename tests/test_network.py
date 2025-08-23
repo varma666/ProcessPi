@@ -68,6 +68,8 @@ def test_pipeline_network_schematic_output():
     assert "Parallel Branch" in schematic
 
 
+
+
 if __name__ == "__main__":
     # Run manual debug mode
     net = build_sample_network()

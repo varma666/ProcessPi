@@ -628,6 +628,7 @@ class PipelineEngine:
         if inlet_p is not None and outlet_p_target is not None:
             required_system_dp = inlet_p.to("Pa") - outlet_p_target.to("Pa")
             calc_dp = results["summary"]["total_pressure_drop_Pa"] if results["mode"] == "network" else results["pressure_drop_Pa"]
+            #print(type(required_system_dp), type(calc_dp))
             residual_dp = required_system_dp - calc_dp
             results["residual_dp_Pa"] = residual_dp
 
