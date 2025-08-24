@@ -1,7 +1,7 @@
 # processpi/calculations/fluids/optimum_pipe_diameter.py
 from ..base import CalculationBase
 from ...units import *
-from ...pipelines.standards import get_nearest_diameter
+#
 
 class OptimumPipeDiameter(CalculationBase):
     """
@@ -29,6 +29,7 @@ class OptimumPipeDiameter(CalculationBase):
                 raise ValueError(f"Missing required input: {key}")
 
     def calculate(self):
+        from ...pipelines.standards import get_nearest_diameter
         # Get inputs
         Q_volumetric = self._get_value(self.inputs["flow_rate"], "flow_rate")  # m³/s
         rho = self._get_value(self.inputs["density"], "density")  # kg/m³

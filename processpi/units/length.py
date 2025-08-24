@@ -15,7 +15,8 @@ class Length(Variable):
         "cm": 0.01,
         "mm": 0.001,
         "in": 0.0254,
-        "ft": 0.3048
+        "ft": 0.3048,
+        "km": 1000
     }
 
     def __init__(self, value, units="m"):
@@ -45,3 +46,7 @@ class Length(Variable):
 
     def __repr__(self):
         return f"{self.original_value} {self.original_unit}"
+
+    def __str__(self):
+        # Ensure print() uses the same human-friendly format
+        return f"{round(self.original_value, 6)} {self.original_unit}"

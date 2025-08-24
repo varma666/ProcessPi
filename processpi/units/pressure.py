@@ -27,6 +27,8 @@ class Pressure(Variable):
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for Pressure")
         super().__init__(value, units)
+        self.original_value = value
+        self.original_unit = units
 
     def to_base(self):
         """Convert to base SI unit (Pa)."""
@@ -46,3 +48,7 @@ class Pressure(Variable):
 
     def __repr__(self):
         return f"{self.value} {self.units}"
+
+    def __str__(self):
+        # Ensure print() uses the same human-friendly format
+        return f"{round(self.original_value, 6)} {self.original_unit}"

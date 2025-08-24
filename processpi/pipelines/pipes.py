@@ -23,19 +23,20 @@ class Pipe(PipelineBase):
 
     def __init__(
         self,
-        nominal_diameter: Diameter,
+        nominal_diameter: Optional[Diameter] = None,
         schedule: str = "40",
         material: str = "CS",
         length: Optional[Length] = None,
         inlet_pressure: Optional[Pressure] = None,
         outlet_pressure: Optional[Pressure] = None,
+        internal_diameter: Optional[Diameter] = None,
     ):
         self.nominal_diameter = nominal_diameter
         self.schedule = schedule
         self.material = material
         self.length = length or Length(1.0, "m")  # default 1 meter
         self.roughness = get_roughness(self.material)
-        self.internal_diameter = get_internal_diameter(self.nominal_diameter, self.schedule)
+        self.internal_diameter = internal_diameter or get_internal_diameter(self.nominal_diameter, self.schedule)
         self.inlet_pressure = inlet_pressure  # user can set this explicitly
         self.outlet_pressure = outlet_pressure  # user can set this explicitly
 

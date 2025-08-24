@@ -18,7 +18,14 @@ class ReynoldsNumber(CalculationBase):
         rho = self._get_value(self.inputs["density"], "density")    # kg/m³
         v = self._get_value(self.inputs["velocity"], "velocity")    # m/s
         D = self._get_value(self.inputs["diameter"], "diameter")    # m
-        mu = self._get_value(self.inputs["viscosity"], "viscosity") # Pa·s
+        viscosity = self.inputs["viscosity"]
 
-        Re = rho * v * D / mu
+        if viscosity.viscosity_type == "dynamic":
+            mu = self._get_value(viscosity.to("Pa·s"), "viscosity")  # Pa·s
+            Re = rho * v * D / mu
+        else:
+            nu = self._get_value(viscosity.to("m2/s"), "viscosity")  # m²/s
+            Re = v * D / nu
+
         return Dimensionless(Re)
+

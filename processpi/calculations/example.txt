@@ -1,0 +1,113 @@
+"""#Example 1
+from processpi.calculations import CalculationEngine
+from processpi.units import *
+# Define inputs
+volumetric_flow_rate = VolumetricFlowRate(3000, 'gal/min')
+diameter = Diameter(15.5, 'in')
+# Start the Engine  
+engine = CalculationEngine()
+result = engine.calculate(name="fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+print(result.to("ft/s"))  # Convert to ft/s for display """
+""" #Example 2
+from processpi.calculations import CalculationEngine
+from processpi.units import *
+# Define inputs
+volumetric_flow_rate = VolumetricFlowRate(75, 'L/s')
+diameter = Diameter(180, 'mm')
+# Start the Engine  
+engine = CalculationEngine()
+result = engine.calculate(name="fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+print(result) """
+""" #Example 3
+from processpi.calculations import CalculationEngine
+from processpi.units import *
+# Define inputs
+volumetric_flow_rate = VolumetricFlowRate(6000, 'gal/min')
+diameter = Diameter(19.25, 'in')
+# Start the Engine  
+engine = CalculationEngine()
+velocity = engine.calculate(name="fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+print(velocity.to("ft/s"))
+density = Density(998, 'kg/m3')
+viscosity = Viscosity(1.0, 'cSt')
+nre = engine.calculate(name="reynolds_number", density=density, velocity=velocity, diameter=diameter, viscosity=viscosity)
+print(nre) """
+""" #Example 4
+from processpi.calculations import CalculationEngine
+from processpi.units import *
+# Define inputs
+volumetric_flow_rate = VolumetricFlowRate(640, 'm3/h')
+diameter = Diameter(380, 'mm')
+# Start the Engine  
+engine = CalculationEngine()
+velocity = engine.calculate(name="fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+print(velocity)
+density = Density(998, 'kg/m3')
+viscosity = Viscosity(1.0, 'cSt')
+nre = engine.calculate(name="reynolds_number", density=density, velocity=velocity, diameter=diameter, viscosity=viscosity)
+print(nre) """
+""" # Example 5
+from processpi.calculations import CalculationEngine
+engine = CalculationEngine()
+# Declare Inputs
+from processpi.units import *
+volumetric_flow_rate = VolumetricFlowRate(3000,"gal/min")
+diameter = Diameter(15.25,"in")
+roughness = Length(0.002,"in")
+density = Density(998,"kg/m3")
+viscosity = Viscosity(1.0,"cP")
+velocity = engine.calculate("fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+print(velocity)
+nre = engine.calculate("nre", density=density, velocity=velocity, diameter=diameter, viscosity=viscosity)
+print(nre)
+result = engine.calculate("pressure_drop_colebrookwhite", diameter=diameter, roughness=roughness, reynolds_number=nre)
+print(result) """
+""" # Example 6
+from processpi.calculations import CalculationEngine
+engine = CalculationEngine()
+# Declare Inputs
+from processpi.units import *
+volumetric_flow_rate = VolumetricFlowRate(3000,"gal/min")
+diameter = Diameter(15.25,"in")
+roughness = Length(0.002,"in")
+density = Density(998,"kg/m3")
+viscosity = Viscosity(1.0,"cP")
+velocity = engine.calculate("fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+print(velocity)
+nre = engine.calculate("nre", density=density, velocity=velocity, diameter=diameter, viscosity=viscosity)
+print(nre)
+friction_factor = engine.calculate("friction_factor_colebrookwhite", diameter=diameter, roughness=roughness, reynolds_number=nre)
+print(friction_factor)
+length = Length(1000,"ft")
+pressure_drop = engine.calculate("pressure_drop_darcy", friction_factor=friction_factor, length=length, diameter=diameter, density=density, velocity=velocity)
+print(pressure_drop.to("psi")) """
+""" # Example 7
+from processpi.calculations import CalculationEngine
+engine = CalculationEngine()
+# Declare Inputs
+from processpi.units import *
+volumetric_flow_rate = VolumetricFlowRate(34000,"m3/h")
+diameter = Diameter(2,"m")
+roughness = Length(0.05,"mm")
+density = Density(998,"kg/m3")
+viscosity = Viscosity(1.0,"cP")
+velocity = engine.calculate("fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+print(velocity)
+nre = engine.calculate("nre", density=density, velocity=velocity, diameter=diameter, viscosity=viscosity)
+print(nre)
+friction_factor = engine.calculate("friction_factor_colebrookwhite", diameter=diameter, roughness=roughness, reynolds_number=nre)
+print(friction_factor)
+length = Length(5,"km")
+pressure_drop = engine.calculate("pressure_drop_darcy", friction_factor=friction_factor, length=length, diameter=diameter, density=density, velocity=velocity)
+print(pressure_drop.to("kPa")) """
+""" # Example 8
+from processpi.calculations import CalculationEngine
+engine = CalculationEngine()
+# Declare Inputs
+from processpi.units import *
+volumetric_flow_rate = VolumetricFlowRate(3000,"gal/min")
+diameter = Diameter(15.25,"in")
+density = Density(998,"kg/m3")
+length = Length(1000,"ft")
+pressure_drop = engine.calculate("pressure_drop_hazen_williams", length=length, flow_rate=volumetric_flow_rate, diameter=diameter, density=density, coefficient=120)
+print(pressure_drop.to("psi")) """

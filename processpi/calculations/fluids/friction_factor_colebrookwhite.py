@@ -24,8 +24,8 @@ class ColebrookWhite(CalculationBase):
 
     def calculate(self):
         Re = self._get_value(self.inputs["reynolds_number"], "reynolds_number")
-        D = self._get_value(self.inputs["diameter"], "diameter")  / 1000  # m
-        eps = self._get_value(self.inputs["roughness"], "roughness")   # m
+        D = self._get_value(self.inputs["diameter"], "diameter")  # m
+        eps = self._get_value(self.inputs["roughness"], "roughness")   # mm
 
         # Laminar flow check
         if Re < 2000:

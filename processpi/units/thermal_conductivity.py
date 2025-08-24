@@ -13,7 +13,7 @@ class ThermalConductivity(Variable):
         "W/mK": 1,
         "kW/mK": 1000,
         "cal/scmC": 418.4,       # 1 cal/s·cm·°C ≈ 418.4 W/m·K
-        "BTU/hrftF": 1.730735,   # 1 BTU/hr·ft·°F ≈ 1.730735 W/m·K
+        "BTU/hftF": 1.730735,   # 1 BTU/hr·ft·°F ≈ 1.730735 W/m·K
     }
 
     def __init__(self, value, units="W/mK"):
@@ -43,3 +43,7 @@ class ThermalConductivity(Variable):
 
     def __repr__(self):
         return f"{self.original_value} {self.original_unit}"
+
+    def __str__(self):
+        # Ensure print() uses the same human-friendly format
+        return f"{round(self.original_value, 6)} {self.original_unit}"

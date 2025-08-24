@@ -17,7 +17,7 @@ class Power(Variable):
         "kW": 1000,           # kilowatt to watt
         "MW": 1_000_000,      # megawatt to watt
         "hp": 745.7,          # mechanical horsepower to watt
-        "Btu/h": 0.29307107,  # BTU per hour to watt
+        "BTU/h": 0.29307107,  # BTU per hour to watt
     }
 
     def __init__(self, value, units="W"):
@@ -47,3 +47,7 @@ class Power(Variable):
 
     def __repr__(self):
         return f"{self.original_value} {self.original_unit}"
+
+    def __str__(self):
+        # Ensure print() uses the same human-friendly format
+        return f"{round(self.original_value, 6)} {self.original_unit}"
