@@ -6,28 +6,25 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 setup(
-    name="processpi",  # Make sure this matches your PyPI package name
+    name="processpi",  
     version="0.1.1",
     author="Raviteja Varma Nadimpalli",
-    author_email="your_email@example.com",  # replace with your email
+    author_email="processpi.dev@gmail.com",  
     description="Python toolkit for chemical engineering simulations, equipment design, and unit conversions",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/varma666/ProcessPi",  # replace with your repo URL
+    url="https://github.com/varma666/ProcessPi",  
     packages=find_packages(exclude=["tests*", "docs*"]),
     python_requires=">=3.8",
     install_requires=[
-        # Add your package dependencies here, e.g.:
-        # "numpy>=1.25",
-        # "scipy>=1.11",
-        # "pandas>=2.1"
+        
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",  # adjust license if needed
         "Operating System :: OS Independent",
         "Intended Audience :: Science/Research",
-        "Topic :: Scientific/Engineering :: Chemistry",
+        "Topic :: Scientific/Engineering :: Chemical Engineering",
     ],
     project_urls={
         "Bug Tracker": "https://github.com/varma666/ProcessPi/issues",
