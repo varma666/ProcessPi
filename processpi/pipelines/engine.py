@@ -124,16 +124,40 @@ class PipelineEngine:
         """Retrieves density, preferring direct input, then from a `Component` object."""
         if "density" in self.data and self.data["density"] is not None:
             return self.data["density"]
+        
         if "fluid" in self.data and isinstance(self.data["fluid"], Component):
-            return self.data["fluid"].density()
+            fluid = self.data["fluid"]
+            
+            # Check if the density attribute exists
+            if hasattr(fluid, 'density'):
+                density_attr = getattr(fluid, 'density')
+                
+                # If it's a method, call it. Otherwise, return the property directly.
+                if callable(density_attr):
+                    return density_attr()
+                else:
+                    return density_attr
+    
         raise ValueError("Provide density or a fluid Component (with .density()).")
-
+    
     def _get_viscosity(self) -> Viscosity:
         """Retrieves viscosity, preferring direct input, then from a `Component` object."""
         if "viscosity" in self.data and self.data["viscosity"] is not None:
             return self.data["viscosity"]
+            
         if "fluid" in self.data and isinstance(self.data["fluid"], Component):
-            return self.data["fluid"].viscosity()
+            fluid = self.data["fluid"]
+            
+            # Check if the viscosity attribute exists
+            if hasattr(fluid, 'viscosity'):
+                viscosity_attr = getattr(fluid, 'viscosity')
+                
+                # If it's a method, call it. Otherwise, return the property directly.
+                if callable(viscosity_attr):
+                    return viscosity_attr()
+                else:
+                    return viscosity_attr
+    
         raise ValueError("Provide viscosity or a fluid Component (with .viscosity()).")
 
     def _infer_flowrate(self) -> VolumetricFlowRate:
