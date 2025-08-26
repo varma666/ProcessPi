@@ -475,39 +475,50 @@ RECOMMENDED_VELOCITIES = {
 # --------------------------
 
 EQUIVALENT_LENGTHS = {
-    "gate_valve_open": (7, 10),          # fully open
-    "gate_valve_3_4_closed": (800, 1100),
-    "gate_valve_half_closed": (190, 290),
-    "globe_valve_open": (330, 480),
-    "angle_valve_open": (165, 220),
-    "plug_valve_open": 18,
-    "elbow_90_standard": 30,
-    "elbow_45_long": 5.8,
-    "elbow_45_short": 8.0,
-    "return_bend_medium": (39, 56),
-    "coupling_union": 0,                 # negligible
-    "tee_straight": 22,
+    "gate_valve": 8,
+    "globe_valve": 340,
+    "angle_valve": 55,
+    "ball_valve": 3,
+    "plug_valve_straightway": 18,
+    "plug_valve_3_way_through_flow": 30,
+    "plug_valve_branch_flow": 90,
+    "swing_check_valve": 100,
+    "lift_check_valve": 600,
+    "standard_elbow_90_deg": 30,
+    "standard_elbow_45_deg": 16,
+    "long_radius_90_deg": 16,
+    "standard_tee_through_flow": 20,
+    "standard_tee_through_branch": 60,
+    "miter_bends_alpha_0": 2,
+    "miter_bends_alpha_30": 8,
+    "miter_bends_alpha_60": 25,
+    "miter_bends_alpha_90": 60
 }
 # --------------------------
 # 🔹 K Factors
 # --------------------------
 
 K_FACTORS = {
-    "gate_valve_open": 0.15,            # fully open
-    "gate_valve_3_4_closed": 17.0,
-    "gate_valve_half_closed": 9.5,
-    "globe_valve_open": 10.0,
-    "angle_valve_open": 5.0,
-    "plug_valve_open": 0.4,
-    "elbow_90_standard": 0.9,
-    "elbow_45_long": 0.35,
-    "elbow_45_short": 0.4,
-    "return_bend_medium": 2.2,
-    "coupling_union": 0.08,
-    "tee_straight": 0.6,
-    "tee_branch": 1.8,                  # flow through branch
+    "gate_valve": 0.15,
+    "globe_valve": 10.0,
+    "angle_valve": 5.0,
+    "ball_valve": 0.05,
+    "plug_valve_straightway": 0.4,
+    "plug_valve_3_way_through_flow": 0.6,
+    "plug_valve_branch_flow": 1.8,
+    "swing_check_valve": 2.0,
+    "lift_check_valve": 10.0,
+    "standard_elbow_90_deg": 0.9,
+    "standard_elbow_45_deg": 0.4,
+    "long_radius_90_deg": 0.9,
+    "standard_tee_through_flow": 0.6,
+    "standard_tee_through_branch": 1.8,
+    "miter_bends_alpha_0": 0.04,
+    "miter_bends_alpha_30": 0.16,
+    "miter_bends_alpha_60": 0.5,
+    "miter_bends_alpha_90": 1.2,
     "sudden_contraction": 0.42,
-    "sudden_expansion": 1.0,            # (1 - (d/D)^2)^2, here avg
+    "sudden_expansion": 1.0,
     "entrance_sharp": 0.5,
     "entrance_rounded": 0.04,
     "exit": 1.0,
