@@ -1,27 +1,24 @@
-# processpi/pipelines/engine.py
-
+# processpi/pipelines/engine.py (partial)
 from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-# Package-local imports expected in your project. Adjust if your paths differ.
 from ..units import (
     Diameter, Length, Pressure, Density, Viscosity, VolumetricFlowRate, Velocity
 )
-from .pipelineresults import PipelineResults  # wrapper/DTO (assumed to exist in your project)
-from ..components import Component            # fluids with .density() / .viscosity() / optional .service_type
+from .pipelineresults import PipelineResults
+from ..components import Component
 from ..calculations.fluids.optimium_pipe_dia import OptimumPipeDiameter
-from ..pipelines.standards import get_recommended_velocity
-from ..calculations.fluids import (
-    ReynoldsNumber,
-    ColebrookWhite,
-    PressureDropDarcy,
-    FluidVelocity,
+from ..pipelines.standards import (
+    get_recommended_velocity,
+    get_standard_pipe_data,
+    list_available_pipe_diameters,
+    get_roughness,
+    get_internal_diameter
 )
 from .pipes import Pipe
 from .fittings import Fitting
+from .equipment import Equipment
 from .network import PipelineNetwork
-
-Number = Union[int, float]
 
 class PipelineEngine:
     """
@@ -385,6 +382,50 @@ class PipelineEngine:
         # Neither K nor Le available, so no minor loss is accounted for.
         return Pressure(0.0, "Pa")
 
+    def _solve_for_diameter(self, available_dp: Pressure, **kwargs: Any) -> PipelineResults:
+        """
+        Internal helper method to solve the inverse problem.
+        This function's logic is the same as the public `solve_for_diameter`
+        method from the previous response.
+        """
+        available_dp_pa = self._as_pressure(available_dp).to("Pa").value
+        
+        standard_diameters = list_available_pipe_diameters()
+        
+        if not standard_diameters:
+            raise ValueError("No standard pipe diameters available to search.")
+        
+        for nominal_d in standard_diameters:
+            pipe_data = get_standard_pipe_data(nominal_d, '40')
+            internal_d = pipe_data["internal_diameter"]
+            
+            pipe_instance = Pipe(
+                name="Solution Pipe",
+                nominal_diameter=nominal_d,
+                schedule='40',
+                length=kwargs.get("length", Length(1, 'm')),
+                material=kwargs.get("material", "CS")
+            )
+            
+            test_config = {**kwargs}
+            test_config["pipe"] = pipe_instance
+            test_config["diameter"] = internal_d
+            
+            test_engine = PipelineEngine().fit(**test_config)
+            test_results = test_engine.run()
+            
+            calculated_dp = test_results.get_summary()["total_pressure_drop_Pa"]
+            
+            if calculated_dp <= available_dp_pa:
+                test_results.add_info("solution_found", f"Chosen diameter: {nominal_d}")
+                test_results.add_info("calculated_dp", calculated_dp)
+                test_results.add_info("available_dp", available_dp_pa)
+                return test_results
+
+        raise ValueError(
+            "No standard pipe size found that can handle the flow within the available pressure drop."
+        )
+
 
     # -------------------- Primitive calcs ------------------------------------
 
@@ -661,100 +702,101 @@ class PipelineEngine:
 
     def run(self) -> PipelineResults:
         """
-        Executes the fluid dynamic calculations based on the fitted inputs.
-        This is the main public method that initiates the simulation.
-        
-        Returns:
-            PipelineResults: A data transfer object containing all
-                             the calculation results.
+        Calculates the fluid flow properties and pressure drop of the system.
+        Automatically solves for pipe diameter if a pipe size is not provided
+        and a pressure drop constraint is available.
         """
-        results: Dict[str, Any] = {}
         network = self.data.get("network")
+        pipe = self.data.get("pipe")
+        diameter = self.data.get("diameter")
+        available_dp = self.data.get("available_dp") or self.data.get("target_outlet_pressure")
 
-        # Get the total inlet flow. This is a common starting point for all calcs.
-        q_in: Optional[VolumetricFlowRate] = None
-        try:
-            q_in = self._infer_flowrate()
-        except ValueError:
-            # In some cases, like pure pressure-driven flow, flowrate may not be given.
-            pass
+        # Condition 1: Check if this is an inverse problem (single-pipe mode)
+        # It's an inverse problem if:
+        #   - We are NOT in network mode
+        #   - A pipe or diameter is NOT specified
+        #   - An available pressure drop IS specified
+        is_inverse_problem = (
+            network is None and
+            pipe is None and
+            diameter is None and
+            available_dp is not None
+        )
 
-        # Execute calculation based on whether a network is provided.
-        if isinstance(network, PipelineNetwork):
-            # Network mode
-            if q_in is None:
-                raise ValueError("Network mode requires flowrate (or sufficient info to infer it).")
-            
-            total_dp, element_results, branch_summaries = self._compute_network(network, q_in)
-            
-            results["mode"] = "network"
-            results["summary"] = {"inlet_flow_m3_s": q_in, "total_pressure_drop_Pa": total_dp}
-            results["elements"] = element_results
-            if branch_summaries:
-                results["parallel_sections"] = branch_summaries
-            if hasattr(network, "schematic"):
-                results["schematic"] = network.schematic()
-
-        else:
-            # Single-pipe mode
-            pipe = self._ensure_pipe()
-            v = self._maybe_velocity(pipe)
-            Re = self._reynolds(v, pipe)
-            f = self._friction_factor(Re, pipe)
-            dp_major = self._major_loss_dp(f, v, pipe)
-
-            # Minor losses from the engine-level fittings list.
-            dp_minor = Pressure(0.0, "Pa")
-            for ft in self.data.get("fittings", []):
-                dp_minor += self._minor_loss_dp(ft, v, f=f, d=self._internal_diameter_m(pipe))
-
-            dp_total = dp_major + dp_minor
-
-            results["mode"] = "single"
-            results["pipe"] = {
-                "internal_diameter": self._internal_diameter_m(pipe),
-                "length": pipe.length,
-            }
-            results["velocity_m_s"] = v
-            results["reynolds_number"] = Re
-            results["friction_factor"] = f
-            results["pressure_drop_Pa"] = dp_total
-            results["major_dp_Pa"] = dp_major
-            results["minor_dp_Pa"] = dp_minor
-
-        # --- Post-calculation analysis (e.g., residual DP for control valves) ---
-        inlet_p = self.data.get("inlet_pressure")
-        outlet_p_target = self.data.get("target_outlet_pressure") or self.data.get("outlet_pressure")
-        available_dp = self.data.get("available_dp")
-
-        # Case 1: Inlet and outlet pressures are given. Calculate total system DP.
-        if inlet_p is not None and outlet_p_target is not None:
-            inlet_p = self._as_pressure(inlet_p).to("Pa")
-            outlet_p_target = self._as_pressure(outlet_p_target).to("Pa")
-            # Calculate the total change across the system from boundary conditions.
-            system_dp_pa = inlet_p - outlet_p_target
-            
-            # Any difference is the "unaccounted" or residual DP.
-            residual_dp = system_dp_pa - total_dp
-            results["residual_dp_Pa"] = residual_dp
-            results["total_system_dp_from_boundaries"] = system_dp_pa
-            # For a control valve, the residual DP is what's "available" for it.
-            # We add a specific field for clarity.
-            results["available_dp_for_valve_Pa"] = residual_dp
-
-        # Case 2: Only available DP for a valve is given.
-        elif available_dp is not None:
-            available_dp = self._as_pressure(available_dp).to("Pa")
-            required_dp = total_dp
-            results["required_dp_Pa"] = required_dp
-            results["available_dp_for_valve_Pa"] = available_dp
-            # Check if the available DP is sufficient.
-            if required_dp > available_dp:
-                results["warnings"] = "Required DP exceeds available DP."
+        if is_inverse_problem:
+            # Automatically switch to the inverse-problem solver
+            return self._solve_for_diameter(available_dp, **self.data)
         
-        # Store the results and return the DTO.
-        self._results = PipelineResults(results)
-        return self._results
+        # Condition 2: Regular forward simulation
+        # It's a forward problem if:
+        #   - A pipe/diameter is specified, or we are in network mode.
+        #   - If a pipe is not specified, the engine will use the optimum diameter calculation
+        #     if a flow rate is provided (as in the original implementation).
+        else:
+            results: Dict[str, Any] = {}
+            q_in: Optional[VolumetricFlowRate] = None
+            try:
+                q_in = self._infer_flowrate()
+            except ValueError:
+                pass
+            
+            # --- Forward Simulation Logic (Same as your original run() method) ---
+            if isinstance(network, PipelineNetwork):
+                if q_in is None:
+                    raise ValueError("Network mode requires flowrate (or sufficient info to infer it).")
+                total_dp, element_results, branch_summaries = self._compute_network(network, q_in)
+                results["mode"] = "network"
+                results["summary"] = {"inlet_flow_m3_s": q_in, "total_pressure_drop_Pa": total_dp}
+                results["elements"] = element_results
+                if branch_summaries:
+                    results["parallel_sections"] = branch_summaries
+                if hasattr(network, "schematic"):
+                    results["schematic"] = network.schematic()
+            else: # single-pipe mode
+                pipe_instance = self._ensure_pipe()
+                v = self._maybe_velocity(pipe_instance)
+                Re = self._reynolds(v, pipe_instance)
+                f = self._friction_factor(Re, pipe_instance)
+                dp_major = self._major_loss_dp(f, v, pipe_instance)
+                dp_minor = Pressure(0.0, "Pa")
+                for ft in self.data.get("fittings", []):
+                    dp_minor += self._minor_loss_dp(ft, v, f=f, d=self._internal_diameter_m(pipe_instance))
+                total_dp = dp_major + dp_minor
+                results["mode"] = "single"
+                results["pipe"] = {
+                    "internal_diameter": self._internal_diameter_m(pipe_instance),
+                    "length": pipe_instance.length,
+                }
+                results["velocity_m_s"] = v
+                results["reynolds_number"] = Re
+                results["friction_factor"] = f
+                results["pressure_drop_Pa"] = total_dp
+                results["major_dp_Pa"] = dp_major
+                results["minor_dp_Pa"] = dp_minor
+
+            # ... (the rest of the run() method for handling final pressure checks)
+            inlet_p = self.data.get("inlet_pressure")
+            outlet_p_target = self.data.get("target_outlet_pressure") or self.data.get("outlet_pressure")
+            available_dp_val = self.data.get("available_dp")
+            
+            if inlet_p is not None and outlet_p_target is not None:
+                inlet_p = self._as_pressure(inlet_p).to("Pa")
+                outlet_p_target = self._as_pressure(outlet_p_target).to("Pa")
+                system_dp_pa = inlet_p - outlet_p_target
+                required_dp = total_dp.to("Pa").value
+                residual_dp = system_dp_pa.to("Pa").value - required_dp
+                results["residual_dp_Pa"] = residual_dp
+                results["total_system_dp_from_boundaries"] = system_dp_pa.to("Pa").value
+            elif available_dp_val is not None:
+                available_dp_val = self._as_pressure(available_dp_val).to("Pa").value
+                required_dp = total_dp.to("Pa").value
+                results["required_dp_Pa"] = required_dp
+                results["available_dp_for_valve_Pa"] = available_dp_val
+                if required_dp > available_dp_val:
+                    results["warnings"] = "Required DP exceeds available DP."
+            
+            self._results = PipelineResults(results)
+            return self._results
 
     def summary(self) -> None:
         """
