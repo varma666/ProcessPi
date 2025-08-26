@@ -221,6 +221,10 @@ class PipelineEngine:
     ) -> None:
         """If fluid.service_type has a recommended velocity, optionally resize pipe to hit midpoint."""
         service = getattr(self.data.get("fluid"), "service_type", None)
+        service = getattr(self.data.get("fluid"), "service_type", None)
+        if service:
+            service = service.strip().lower()
+
         if not service:
             return
         rec = get_recommended_velocity(service)
