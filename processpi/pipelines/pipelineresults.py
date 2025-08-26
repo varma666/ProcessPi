@@ -1,95 +1,127 @@
 # processpi/pipelines/pipelineresults.py
 
-from typing import Dict, Any
-from ..units import Diameter, Length, Pressure
+from typing import Dict, Any, Union, List
+from ..units import Pressure, UnitfulValue
+
 
 class PipelineResults:
-    def __init__(self, results: dict):
-        self.results = results
+    """
+    A class for managing and presenting the results of a pipeline flow
+    simulation.
 
-    def summary(self):
-        """Print a clean, human-readable summary of the last run."""
-        results = self.results
-        if not results:
-            print("No results available. Run the engine first.")
+    This class encapsulates the raw dictionary of results from the calculation
+    engine and provides methods to format and display them in a clean,
+    human-readable manner, including a summary and detailed breakdown.
+    """
+
+    def __init__(self, results: Dict[str, Any]):
+        """
+        Initializes the PipelineResults instance.
+
+        Args:
+            results (Dict[str, Any]): The dictionary containing all
+                                      calculation results from the engine.
+        """
+        self.results: Dict[str, Any] = results
+
+    def __bool__(self) -> bool:
+        """
+        Allows the object to be evaluated as a boolean, returning True if
+        there are any results and False otherwise.
+        """
+        return bool(self.results)
+
+    def summary(self) -> None:
+        """
+        Prints a clean, human-readable summary of the last simulation run.
+
+        This method organizes the results into logical sections for easy
+        interpretation, handling different data types (e.g., plain numbers,
+        UnitfulValue objects) gracefully.
+        """
+        if not self.results:
+            print("No results available. The simulation has not been run or failed.")
             return
 
         print("\n=== Pipeline Summary ===")
+        print(f"Network Name: {self.results.get('network_name', 'N/A')}")
+        print(f"Simulation Mode: {self.results.get('mode', 'N/A').capitalize()}")
 
-        # -------------------- Network summary --------------------
-        summary = results.get("summary", {})
-        if summary:
-            inlet_flow = summary.get("inlet_flow_m3_s")
-            total_dp = summary.get("total_pressure_drop_Pa")
-            if inlet_flow:
-                fval = inlet_flow.value if hasattr(inlet_flow, "value") else inlet_flow
-                print(f"Inlet Flow: {fval:.3f} m³/s")
-            if total_dp:
-                fval = total_dp.value if hasattr(total_dp, "value") else total_dp
-                print(f"Total Pressure Drop: {fval:.2f} Pa")
+        # -------------------- High-level Network Summary --------------------
+        summary_data = self.results.get("summary", {})
+        if summary_data:
+            print("\n--- Network Performance ---")
+            
+            # Use a helper function for consistent printing of UnitfulValue objects
+            def print_unitful(label: str, unitful_value: Optional[UnitfulValue], precision: int):
+                if unitful_value is not None:
+                    # Check if the value is a UnitfulValue object or a raw number
+                    if hasattr(unitful_value, "value") and hasattr(unitful_value, "unit"):
+                        val_str = f"{unitful_value.value:.{precision}f}"
+                        unit_str = unitful_value.unit
+                        print(f"{label:<25}{val_str} {unit_str}")
+                    else:
+                        print(f"{label:<25}{unitful_value:.{precision}f}")
+                else:
+                    print(f"{label:<25}N/A")
 
-        # -------------------- Single Pipe Mode --------------------
-        if results.get("mode") == "single":
-            pipe_data = results.get("pipe", {})
-            d = pipe_data.get("internal_diameter")
-            l = pipe_data.get("length")
-            v = results.get("velocity_m_s")
-            Re = results.get("reynolds_number")
-            f = results.get("friction_factor")
-            dp = results.get("pressure_drop_Pa")
+            print_unitful("Inlet Flow Rate:", summary_data.get("inlet_flow"), 3)
+            print_unitful("Outlet Flow Rate:", summary_data.get("outlet_flow"), 3)
+            print_unitful("Total Pressure Drop:", summary_data.get("total_pressure_drop"), 2)
+            print_unitful("Total Head Loss:", summary_data.get("total_head_loss"), 2)
+            print_unitful("Total Power Required:", summary_data.get("total_power_required"), 2)
+            
+        # -------------------- Detailed Component Breakdown --------------------
+        components_data = self.results.get("components", [])
+        if components_data:
+            print("\n--- Component Details ---")
+            
+            for component in components_data:
+                comp_type = component.get("type", "N/A")
+                comp_name = component.get("name", f"{comp_type.capitalize()}").ljust(15)
+                
+                if comp_type == "pipe":
+                    length = component.get("length")
+                    length_str = f"{length.value:.1f} {length.unit}" if hasattr(length, "value") else "N/A"
+                    print(f"\n{comp_name} - {comp_type}")
+                    print(f"  Length: {length_str:<20}")
+                    self._print_component_details(component)
+                
+                elif comp_type == "fitting":
+                    print(f"\n{comp_name} - {comp_type}")
+                    print(f"  Quantity: {component.get('quantity', 1):<18}")
+                    self._print_component_details(component)
+                    
+                elif comp_type in ["pump", "vessel", "equipment"]:
+                    print(f"\n{comp_name} - {comp_type}")
+                    self._print_component_details(component)
 
-            print("\n--- Single Pipe ---")
-            if d:
-                print(f"Pipe Internal Diameter: {d.value:.2f} mm")
-            if l:
-                print(f"Pipe Length: {l.value:.2f} m")
-            if v:
-                print(f"Velocity: {v.value:.3f} m/s")
-            if Re is not None:
-                re_val = Re.value if hasattr(Re, "value") else Re
-                print(f"Reynolds Number: {re_val:.0f}")
-            if f is not None:
-                fval = f.value if hasattr(f, "value") else f
-                print(f"Friction Factor: {fval:.4f}")
-            if dp:
-                print(f"Pressure Drop: {dp.value:.2f} Pa")
+        # -------------------- ASCII Schematic --------------------
+        schematic_str = self.results.get("schematic")
+        if schematic_str:
+            print("\n=== Network Schematic ===")
+            print(schematic_str)
+            
+    def _print_component_details(self, component: Dict[str, Any]) -> None:
+        """Helper method to print common component details consistently."""
+        
+        # Helper for a single line print
+        def print_detail(label: str, value: Any, precision: int = 2):
+            if value is not None:
+                if hasattr(value, "value") and hasattr(value, "unit"):
+                    val_str = f"{value.value:.{precision}f}"
+                    unit_str = value.unit
+                    print(f"  {label:<22}{val_str} {unit_str}")
+                else:
+                    print(f"  {label:<22}{value}")
 
-        # -------------------- Network / Multiple Pipes --------------------
-        pipes = results.get("pipes", [])
-        if pipes:
-            print("\n--- Pipe & Fitting Details ---")
-            for p in pipes:
-                if p["type"] == "pipe":
-                    d = p.get("diameter_m")
-                    v = p.get("velocity_m_s")
-                    Re = p.get("reynolds_number")
-                    f = p.get("friction_factor")
-                    dp = p.get("pressure_drop_Pa")
-                    print(f"\nPipe: {p.get('name','pipe')}")
-                    if d:
-                        d_val = d.value if hasattr(d, "value") else d
-                        print(f"  Diameter: {d_val:.2f} mm")
-                    if v:
-                        v_val = v.value if hasattr(v, "value") else v
-                        print(f"  Velocity: {v_val:.3f} m/s")
-                    if Re is not None:
-                        re_val = Re.value if hasattr(Re, "value") else Re
-                        print(f"  Reynolds #: {re_val:.0f}")
-                    if f is not None:
-                        f_val = f.value if hasattr(f, "value") else f
-                        print(f"  Friction Factor: {f_val:.4f}")
-                    if dp:
-                        dp_val = dp.value if hasattr(dp, "value") else dp
-                        print(f"  Pressure Drop: {dp_val:.2f} Pa")
-                elif p["type"] == "fitting":
-                    dp = p.get("pressure_drop_Pa")
-                    print(f"\nFitting: {p.get('name','fitting')}")
-                    print(f"  K-factor: {p.get('K')}")
-                    if dp:
-                        dp_val = dp.value if hasattr(dp, "value") else dp
-                        print(f"  Pressure Drop: {dp_val:.2f} Pa")
+        print_detail("Pressure Drop:", component.get("pressure_drop"))
+        print_detail("Velocity:", component.get("velocity"))
+        print_detail("Reynolds Number:", component.get("reynolds_number"), 0)
+        print_detail("Friction Factor:", component.get("friction_factor"), 4)
+        print_detail("Head Loss:", component.get("head_loss"))
+        print_detail("Power:", component.get("power"))
 
-        # -------------------- Schematic --------------------
-        if "schematic" in results:
-            print("\n=== Schematic ===")
-            print(results["schematic"])
+    def to_dict(self) -> Dict[str, Any]:
+        """Returns the raw results dictionary for programmatic access."""
+        return self.results
