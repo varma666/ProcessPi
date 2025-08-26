@@ -122,42 +122,32 @@ class PipelineEngine:
 
     def _get_density(self) -> Density:
         """Retrieves density, preferring direct input, then from a `Component` object."""
+        # 1. Check for a direct input value in the engine data.
         if "density" in self.data and self.data["density"] is not None:
             return self.data["density"]
         
+        # 2. Check the fluid Component object for a density property.
         if "fluid" in self.data and isinstance(self.data["fluid"], Component):
             fluid = self.data["fluid"]
-            
-            # Check if the density attribute exists
             if hasattr(fluid, 'density'):
-                density_attr = getattr(fluid, 'density')
-                
-                # If it's a method, call it. Otherwise, return the property directly.
-                if callable(density_attr):
-                    return density_attr()
-                else:
-                    return density_attr
-    
+                return fluid.density  # Direct access to the property is all you need.
+        
+        # 3. Raise an error if no density can be found.
         raise ValueError("Provide density or a fluid Component (with .density()).")
     
     def _get_viscosity(self) -> Viscosity:
         """Retrieves viscosity, preferring direct input, then from a `Component` object."""
+        # 1. Check for a direct input value in the engine data.
         if "viscosity" in self.data and self.data["viscosity"] is not None:
             return self.data["viscosity"]
-            
+        
+        # 2. Check the fluid Component object for a viscosity property.
         if "fluid" in self.data and isinstance(self.data["fluid"], Component):
             fluid = self.data["fluid"]
-            
-            # Check if the viscosity attribute exists
             if hasattr(fluid, 'viscosity'):
-                viscosity_attr = getattr(fluid, 'viscosity')
-                
-                # If it's a method, call it. Otherwise, return the property directly.
-                if callable(viscosity_attr):
-                    return viscosity_attr()
-                else:
-                    return viscosity_attr
-    
+                return fluid.viscosity # Direct access to the property is all you need.
+        
+        # 3. Raise an error if no viscosity can be found.
         raise ValueError("Provide viscosity or a fluid Component (with .viscosity()).")
 
     def _infer_flowrate(self) -> VolumetricFlowRate:
