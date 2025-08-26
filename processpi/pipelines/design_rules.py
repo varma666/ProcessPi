@@ -1,91 +1,92 @@
-# processpi/pipelines/design_rules.py
-
 """
-Pipeline Design Rules Module
+Design rules module for ProcessPi pipelines.
 
-This module defines pipeline design rules inspired by industry practices 
-(similar to Aspen). It does not contain calculation logic directly, 
-but instead integrates functions from processpi.calculations to validate 
-pipeline designs against engineering standards.
-
-Each function acts as a design "rule" or "check".
+This module defines reusable validation rules for pipeline steps, ensuring that each step
+is well-formed, inputs/outputs are consistent, and parameters meet expected requirements.
 """
 
-from processpi.calculations.fluids.reynolds_number import ReynoldsNumber
-from processpi.calculations.fluids.friction_factor import ColebrookWhite
-from processpi.calculations.fluids.flow_type import FlowType
-from processpi.calculations.fluids.optimum_pipe_diameter import OptimumPipeDiameter
-from processpi.calculations.pressure.drop import PressureDrop  # assumed module
-from processpi.calculations.velocity import Velocity           # assumed module
+from typing import Any, Dict, List, Callable, Tuple
 
+class DesignRuleError(Exception):
+    """Custom exception for design rule violations."""
+    pass
 
-def check_flow_regime(velocity: float, diameter: float, density: float, viscosity: float) -> str:
+class DesignRules:
     """
-    Rule: Determine if flow is laminar, transition, or turbulent.
+    Provides static design rule checks for pipeline steps and configurations.
     """
-    Re = ReynoldsNumber(velocity, diameter, density, viscosity).calculate()
-    return FlowType(Re).calculate()
 
+    @staticmethod
+    def validate_step_name(name: str) -> None:
+        """
+        Ensures that the step name is valid (non-empty and alphanumeric with underscores).
+        """
+        if not name or not name.replace("_", "").isalnum():
+            raise DesignRuleError(f"Invalid step name '{name}'. Must be alphanumeric with underscores.")
 
-def check_pressure_drop(flowrate: float, diameter: float, length: float, density: float, viscosity: float, roughness: float) -> float:
-    """
-    Rule: Calculate pressure drop across the pipeline.
-    """
-    return PressureDrop(flowrate, diameter, length, density, viscosity, roughness).calculate()
+    @staticmethod
+    def validate_inputs_outputs(inputs: List[str], outputs: List[str]) -> None:
+        """
+        Ensures that inputs and outputs are lists of non-empty strings and do not overlap.
+        """
+        if not all(isinstance(i, str) and i.strip() for i in inputs):
+            raise DesignRuleError("All input names must be non-empty strings.")
+        if not all(isinstance(o, str) and o.strip() for o in outputs):
+            raise DesignRuleError("All output names must be non-empty strings.")
+        if set(inputs) & set(outputs):
+            raise DesignRuleError("Inputs and outputs cannot overlap.")
 
+    @staticmethod
+    def validate_parameters(params: Dict[str, Any], required: List[str] = None) -> None:
+        """
+        Ensures that required parameters are present.
+        """
+        required = required or []
+        missing = [p for p in required if p not in params]
+        if missing:
+            raise DesignRuleError(f"Missing required parameters: {', '.join(missing)}")
 
-def check_friction_factor(Re: float, diameter: float, roughness: float) -> float:
-    """
-    Rule: Calculate friction factor using Colebrook-White.
-    """
-    return ColebrookWhite(Re, diameter, roughness).calculate()
+    @staticmethod
+    def validate_callable(func: Callable, name: str = "") -> None:
+        """
+        Ensures that a provided function or callable is valid.
+        """
+        if not callable(func):
+            raise DesignRuleError(f"Step '{name}' has invalid function. Must be callable.")
 
+    @staticmethod
+    def validate_pipeline_consistency(steps: List[Dict[str, Any]]) -> None:
+        """
+        Checks that pipeline steps are connected properly, with consistent data flow.
+        """
+        produced = set()
+        for step in steps:
+            name = step.get("name", "<unnamed>")
+            inputs = step.get("inputs", [])
+            outputs = step.get("outputs", [])
 
-def recommend_optimum_diameter(flowrate: float, density: float) -> float:
-    """
-    Rule: Recommend optimum diameter based on economic sizing correlation.
-    """
-    return OptimumPipeDiameter(flowrate, density).calculate()
+            # Ensure all inputs were produced by previous steps
+            for i in inputs:
+                if i not in produced:
+                    raise DesignRuleError(f"Step '{name}' references input '{i}' not produced by previous steps.")
 
+            # Track produced outputs
+            for o in outputs:
+                if o in produced:
+                    raise DesignRuleError(f"Output '{o}' produced multiple times in the pipeline.")
+                produced.add(o)
 
-def check_velocity_limits(velocity: float, fluid_type: str = "liquid") -> bool:
-    """
-    Rule: Check if velocity is within recommended design limits.
+    @staticmethod
+    def summary() -> Dict[str, str]:
+        """
+        Returns a summary of available design rules.
+        """
+        return {
+            "validate_step_name": "Step name must be alphanumeric and may include underscores.",
+            "validate_inputs_outputs": "Inputs and outputs must be unique non-empty strings and not overlap.",
+            "validate_parameters": "Required parameters must be present in step configuration.",
+            "validate_callable": "Each step must define a callable function.",
+            "validate_pipeline_consistency": "Pipeline steps must have consistent data flow and no duplicate outputs.",
+        }
 
-    Typical guidelines:
-    - Liquids: 1–3 m/s (avoid erosion/cavitation)
-    - Gases/steam: 10–20 m/s
-    """
-    if fluid_type.lower() == "liquid":
-        return 1.0 <= velocity <= 3.0
-    elif fluid_type.lower() in ["gas", "steam"]:
-        return 10.0 <= velocity <= 20.0
-    return False
-
-
-def check_pressure_drop_limit(pressure_drop: float, limit: float = 10.0) -> bool:
-    """
-    Rule: Ensure pressure drop per 100 m of pipe length is within design limits (default 10 kPa/100 m).
-    """
-    return pressure_drop <= limit
-
-
-def check_design_compliance(flowrate: float, diameter: float, length: float, density: float, viscosity: float, roughness: float, fluid_type: str = "liquid") -> dict:
-    """
-    Perform a complete design compliance check.
-    Returns a dictionary summarizing pass/fail status of all rules.
-    """
-    velocity = Velocity(flowrate, diameter).calculate()
-    Re = ReynoldsNumber(velocity, diameter, density, viscosity).calculate()
-    flow_regime = FlowType(Re).calculate()
-    friction_factor = ColebrookWhite(Re, diameter, roughness).calculate()
-    pressure_drop = PressureDrop(flowrate, diameter, length, density, viscosity, roughness).calculate()
-    optimum_d = OptimumPipeDiameter(flowrate, density).calculate()
-
-    return {
-        "flow_regime": flow_regime,
-        "velocity_ok": check_velocity_limits(velocity, fluid_type),
-        "pressure_drop_ok": check_pressure_drop_limit(pressure_drop),
-        "friction_factor": friction_factor,
-        "optimum_diameter_mm": optimum_d,
-    }
+__all__ = ["DesignRules", "DesignRuleError"]
