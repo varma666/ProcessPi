@@ -23,7 +23,6 @@ from .network import PipelineNetwork
 
 Number = Union[int, float]
 
-
 class PipelineEngine:
     """
     The main simulation engine for ProcessPI, designed to calculate fluid flow
@@ -50,13 +49,12 @@ class PipelineEngine:
       for a control valve or other equipment based on system constraints.
 
     Example usage:
-    >>> from processpi.components.fluids import WaterComponent
     >>> engine = PipelineEngine().fit(
     ...       flowrate=VolumetricFlowRate(10, 'm^3/hr'),
     ...       fluid=WaterComponent(),
     ...       pipe=Pipe(internal_diameter=Diameter(150, 'mm'), length=Length(50, 'm'))
     ... ).run()
-    >>> print(engine.results.summary)
+    >>> engine.print_summary()
     """
 
     # -------------------- INIT / FIT --------------------
@@ -65,9 +63,10 @@ class PipelineEngine:
         Initializes the engine. Optionally accepts configuration data directly.
 
         Args:
-            **kwargs: Configuration keyword arguments for the `fit` method.
+            **kwargs: Configuration keyword arguments.
         """
         self.data: Dict[str, Any] = {}
+        self._results: Optional[PipelineResults] = None
         # If kwargs are provided, perform the fitting step immediately.
         if kwargs:
             self.fit(**kwargs)
@@ -122,7 +121,7 @@ class PipelineEngine:
     # -------------------- Internal getters / inference ------------------------
 
     def _get_density(self) -> Density:
-        """Retrieves the fluid density from the input data or a fluid component."""
+        """Retrieves density, preferring direct input, then from a `Component` object."""
         if "density" in self.data and self.data["density"] is not None:
             return self.data["density"]
         if "fluid" in self.data and isinstance(self.data["fluid"], Component):
@@ -130,7 +129,7 @@ class PipelineEngine:
         raise ValueError("Provide density or a fluid Component (with .density()).")
 
     def _get_viscosity(self) -> Viscosity:
-        """Retrieves the fluid viscosity from the input data or a fluid component."""
+        """Retrieves viscosity, preferring direct input, then from a `Component` object."""
         if "viscosity" in self.data and self.data["viscosity"] is not None:
             return self.data["viscosity"]
         if "fluid" in self.data and isinstance(self.data["fluid"], Component):
@@ -165,7 +164,6 @@ class PipelineEngine:
         # 3) Calculate from velocity & diameter
         vel = self.data.get("velocity")
         d = self.data.get("diameter")
-        # Check for diameter on the top level or inside a Pipe object.
         if vel is not None and (d is not None or isinstance(self.data.get("pipe"), Pipe)):
             if d is None:
                 d = self._internal_diameter_m(self.data.get("pipe"))
@@ -229,7 +227,7 @@ class PipelineEngine:
     def _internal_diameter_m(self, pipe: Optional[Pipe] = None) -> Diameter:
         """
         Fetches the internal diameter in meters from a pipe object or the
-        engine's data. Falls back to an optimum diameter if necessary.
+        engine's data. Falls back to an an optimum diameter if necessary.
         """
         pipe = pipe or self.data.get("pipe")
         if pipe:
@@ -362,9 +360,6 @@ class PipelineEngine:
         if Le is not None:
             if f is None:
                 # Recompute friction factor if not provided (needed for Le/D method).
-                # This is a bit of a hack since `_reynolds` needs a pipe object,
-                # but we're just calculating for a single fitting.
-                # A better long-term solution might involve a dedicated minor loss calc class.
                 Re = self._reynolds(v, type("Tmp", (), {"roughness": 0.0, "length": Length(1.0, "m")})())
                 f_val = self._friction_factor(Re, type("Tmp", (), {"roughness": 0.0})())
             else:
@@ -409,15 +404,8 @@ class PipelineEngine:
     def _minor_loss_dp(self, fitting: Fitting, v: Velocity, f: Optional[float] = None, d: Optional[Diameter] = None) -> Pressure:
         """
         Computes the minor pressure loss for a fitting.
-        
-        Args:
-            fitting (Fitting): The fitting object.
-            v (Velocity): The fluid velocity.
-            f (Optional[float]): The friction factor. Can be provided for the Le method.
-            d (Optional[Diameter]): The pipe internal diameter. Can be provided for the Le method.
-
-        Returns:
-            Pressure: The calculated pressure drop in Pascals.
+        This is a re-implementation of _fitting_dp_pa with slightly different
+        logic to handle the `fitting.K` and `fitting.Le` attributes directly.
         """
         rho = self._get_density()
         v_val = v.value if hasattr(v, "value") else float(v)
@@ -664,7 +652,7 @@ class PipelineEngine:
         
         Returns:
             PipelineResults: A data transfer object containing all
-                              the calculation results.
+                             the calculation results.
         """
         results: Dict[str, Any] = {}
         network = self.data.get("network")
@@ -724,27 +712,41 @@ class PipelineEngine:
         inlet_p = self.data.get("inlet_pressure")
         outlet_p_target = self.data.get("target_outlet_pressure") or self.data.get("outlet_pressure")
         available_dp = self.data.get("available_dp")
-        
-        if inlet_p is not None and outlet_p_target is not None:
-            inlet_pa = self._as_pressure(inlet_p, "bar").to("Pa").value
-            outlet_pa = self._as_pressure(outlet_p_target, "bar").to("Pa").value
-            required_dp = (inlet_pa - outlet_pa)
-            if "summary" in results:
-                results["summary"]["required_pressure_drop_Pa"] = Pressure(required_dp, "Pa")
-                results["summary"]["residual_pressure_drop_Pa"] = required_dp - total_dp.to("Pa").value
-            else:
-                results["required_pressure_drop_Pa"] = Pressure(required_dp, "Pa")
-                results["residual_pressure_drop_Pa"] = required_dp - dp_total.to("Pa").value
 
+        # Case 1: Inlet and outlet pressures are given. Calculate total system DP.
+        if inlet_p is not None and outlet_p_target is not None:
+            inlet_p = self._as_pressure(inlet_p).to("Pa")
+            outlet_p_target = self._as_pressure(outlet_p_target).to("Pa")
+            # Calculate the total change across the system from boundary conditions.
+            system_dp_pa = inlet_p - outlet_p_target
+            
+            # Any difference is the "unaccounted" or residual DP.
+            residual_dp = system_dp_pa - total_dp
+            results["residual_dp_Pa"] = residual_dp
+            results["total_system_dp_from_boundaries"] = system_dp_pa
+            # For a control valve, the residual DP is what's "available" for it.
+            # We add a specific field for clarity.
+            results["available_dp_for_valve_Pa"] = residual_dp
+
+        # Case 2: Only available DP for a valve is given.
         elif available_dp is not None:
-            available_pa = self._as_pressure(available_dp, "bar").to("Pa")
-            if "summary" in results:
-                results["summary"]["available_pressure_drop_Pa"] = available_pa
-                results["summary"]["residual_pressure_drop_Pa"] = available_pa.to("Pa") - total_dp.to("Pa")
-            else:
-                results["available_pressure_drop_Pa"] = available_pa
-                results["residual_pressure_drop_Pa"] = available_pa.to("Pa") - dp_total.to("Pa")
+            available_dp = self._as_pressure(available_dp).to("Pa")
+            required_dp = total_dp
+            results["required_dp_Pa"] = required_dp
+            results["available_dp_for_valve_Pa"] = available_dp
+            # Check if the available DP is sufficient.
+            if required_dp > available_dp:
+                results["warnings"] = "Required DP exceeds available DP."
         
-        # Save a reference to the results object.
-        self.results = PipelineResults(results)
-        return self.results
+        # Store the results and return the DTO.
+        self._results = PipelineResults(results)
+        return self._results
+
+    def summary(self) -> None:
+        """
+        Prints a concise, human-readable summary of the last simulation run.
+        Requires that `run()` has been called.
+        """
+        if self._results is None:
+            raise ValueError("No results to summarize. Call run() first.")
+        self._results.summary()
