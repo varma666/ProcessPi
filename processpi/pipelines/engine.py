@@ -1,24 +1,26 @@
-# processpi/pipelines/engine.py (partial)
 from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+# Assuming these units and components are defined in your project
 from ..units import (
     Diameter, Length, Pressure, Density, Viscosity, VolumetricFlowRate, Velocity
 )
 from .pipelineresults import PipelineResults
 from ..components import Component
 from ..calculations.fluids.optimium_pipe_dia import OptimumPipeDiameter
-from ..pipelines.standards import (
+from .standards import (
     get_recommended_velocity,
     get_standard_pipe_data,
     list_available_pipe_diameters,
     get_roughness,
-    get_internal_diameter
+    get_internal_diameter,
+    get_k_factor
 )
 from .pipes import Pipe
 from .fittings import Fitting
 from .equipment import Equipment
 from .network import PipelineNetwork
+from .piping_costs import PipeCostModel
 
 class PipelineEngine:
     """
@@ -426,6 +428,82 @@ class PipelineEngine:
             "No standard pipe size found that can handle the flow within the available pressure drop."
         )
 
+    def _optimize_network_for_size(self, network: PipelineNetwork, available_dp: Pressure) -> PipelineResults:
+        """
+        Internal helper method to optimize pipe sizes in a network.
+        It uses an iterative approach to find the most cost-effective solution
+        that meets the pressure drop constraint.
+        """
+        cost_model = self.data.get("cost_model") or PipeCostModel.default_steel_model()
+        max_iterations = 100
+        
+        pipes_to_optimize: List[Pipe] = [
+            p for p in network.get_all_pipes() if p.nominal_diameter is None
+        ]
+        
+        if not pipes_to_optimize:
+            raise ValueError("No pipes found in the network to optimize. All pipes have a specified diameter.")
+
+        standard_diameters_in = [d.to('in').value for d in list_available_pipe_diameters()]
+        
+        initial_diameter_in = standard_diameters_in[0]
+        for p in pipes_to_optimize:
+            p.nominal_diameter = Diameter(initial_diameter_in, 'in')
+        
+        calculated_dp = float('inf')
+        iterations = 0
+
+        # Main Optimization Loop
+        while calculated_dp > available_dp.to('Pa').value and iterations < max_iterations:
+            results = self.fit(network=network).run()
+            calculated_dp = results.get_summary()['total_pressure_drop_Pa']
+            
+            if calculated_dp > available_dp.to('Pa').value:
+                # Find the most hydraulically stressed pipe and increase its size
+                max_dp_pipe = None
+                max_dp = -1
+                pipe_summary = results.get_summary().get('pipes_summary', [])
+                
+                for pipe_data in pipe_summary:
+                    if pipe_data.get('pressure_drop', 0) > max_dp and pipe_data.get('diameter', 0) in standard_diameters_in:
+                        max_dp = pipe_data['pressure_drop']
+                        max_dp_pipe = pipe_data
+                
+                if max_dp_pipe:
+                    target_pipe = next((p for p in pipes_to_optimize if p.name == max_dp_pipe['name']), None)
+                    if target_pipe:
+                        current_dia_in = target_pipe.nominal_diameter.to('in').value
+                        try:
+                            current_idx = standard_diameters_in.index(current_dia_in)
+                            if current_idx + 1 < len(standard_diameters_in):
+                                target_pipe.nominal_diameter = Diameter(standard_diameters_in[current_idx + 1], 'in')
+                            else:
+                                raise ValueError("Could not find a solution. Even the largest pipe size is insufficient.")
+                        except ValueError:
+                            # Diameter not in standard list, increase to next standard size
+                            next_dia_in = next((d for d in standard_diameters_in if d > current_dia_in), None)
+                            if next_dia_in:
+                                target_pipe.nominal_diameter = Diameter(next_dia_in, 'in')
+                            else:
+                                raise ValueError("Could not find a solution. Even the largest pipe size is insufficient.")
+                else:
+                    raise ValueError("Could not find a solution. All pipes are at max size or issue with data.")
+            
+            iterations += 1
+
+        if calculated_dp > available_dp.to('Pa').value:
+             raise ValueError(f"Failed to converge on a solution within {max_iterations} iterations. Final DP: {calculated_dp} Pa.")
+
+        # Final check and return results
+        final_results = self.fit(network=network).run()
+        final_results.add_info("Optimization Results", {
+            "Total Cost": cost_model.calculate_network_cost(network),
+            "Iterations": iterations,
+            "Final DP": final_results.get_summary()['total_pressure_drop_Pa'],
+            "Target DP": available_dp.to('Pa').value,
+        })
+        return final_results
+
 
     # -------------------- Primitive calcs ------------------------------------
 
@@ -703,100 +781,80 @@ class PipelineEngine:
     def run(self) -> PipelineResults:
         """
         Calculates the fluid flow properties and pressure drop of the system.
-        Automatically solves for pipe diameter if a pipe size is not provided
-        and a pressure drop constraint is available.
+        Automatically solves for pipe sizes if they are missing and a pressure
+        drop constraint is available.
         """
         network = self.data.get("network")
         pipe = self.data.get("pipe")
         diameter = self.data.get("diameter")
-        available_dp = self.data.get("available_dp") or self.data.get("target_outlet_pressure")
+        available_dp = self.data.get("available_dp")
 
-        # Condition 1: Check if this is an inverse problem (single-pipe mode)
-        # It's an inverse problem if:
-        #   - We are NOT in network mode
-        #   - A pipe or diameter is NOT specified
-        #   - An available pressure drop IS specified
-        is_inverse_problem = (
-            network is None and
-            pipe is None and
-            diameter is None and
-            available_dp is not None
-        )
+        # 1. Check for network optimization case
+        if network is not None and available_dp is not None:
+            pipes = network.get_all_pipes()
+            if any(p.nominal_diameter is None for p in pipes):
+                # This is the trigger: a network with missing sizes and a DP constraint
+                return self._optimize_network_for_size(network, available_dp)
 
-        if is_inverse_problem:
-            # Automatically switch to the inverse-problem solver
+        # 2. Check for single-pipe sizing case
+        is_single_pipe_sizing = (network is None and pipe is None and diameter is None and available_dp is not None)
+        if is_single_pipe_sizing:
             return self._solve_for_diameter(available_dp, **self.data)
         
-        # Condition 2: Regular forward simulation
-        # It's a forward problem if:
-        #   - A pipe/diameter is specified, or we are in network mode.
-        #   - If a pipe is not specified, the engine will use the optimum diameter calculation
-        #     if a flow rate is provided (as in the original implementation).
-        else:
-            results: Dict[str, Any] = {}
-            q_in: Optional[VolumetricFlowRate] = None
-            try:
-                q_in = self._infer_flowrate()
-            except ValueError:
-                pass
-            
-            # --- Forward Simulation Logic (Same as your original run() method) ---
-            if isinstance(network, PipelineNetwork):
-                if q_in is None:
-                    raise ValueError("Network mode requires flowrate (or sufficient info to infer it).")
-                total_dp, element_results, branch_summaries = self._compute_network(network, q_in)
-                results["mode"] = "network"
-                results["summary"] = {"inlet_flow_m3_s": q_in, "total_pressure_drop_Pa": total_dp}
-                results["elements"] = element_results
-                if branch_summaries:
-                    results["parallel_sections"] = branch_summaries
-                if hasattr(network, "schematic"):
-                    results["schematic"] = network.schematic()
-            else: # single-pipe mode
-                pipe_instance = self._ensure_pipe()
-                v = self._maybe_velocity(pipe_instance)
-                Re = self._reynolds(v, pipe_instance)
-                f = self._friction_factor(Re, pipe_instance)
-                dp_major = self._major_loss_dp(f, v, pipe_instance)
-                dp_minor = Pressure(0.0, "Pa")
-                for ft in self.data.get("fittings", []):
-                    dp_minor += self._minor_loss_dp(ft, v, f=f, d=self._internal_diameter_m(pipe_instance))
-                total_dp = dp_major + dp_minor
-                results["mode"] = "single"
-                results["pipe"] = {
-                    "internal_diameter": self._internal_diameter_m(pipe_instance),
-                    "length": pipe_instance.length,
-                }
-                results["velocity_m_s"] = v
-                results["reynolds_number"] = Re
-                results["friction_factor"] = f
-                results["pressure_drop_Pa"] = total_dp
-                results["major_dp_Pa"] = dp_major
-                results["minor_dp_Pa"] = dp_minor
+        # 3. Handle regular forward simulation (single pipe or network)
+        q_in: Optional[VolumetricFlowRate] = None
+        try:
+            q_in = self._infer_flowrate()
+        except ValueError:
+            pass
+        
+        results: Dict[str, Any] = {}
+        
+        if isinstance(network, PipelineNetwork):
+            total_dp, element_results, branch_summaries, pipe_summary = self._compute_network(network, q_in)
+            results["mode"] = "network"
+            results["summary"] = {"inlet_flow_m3_s": q_in, "total_pressure_drop_Pa": total_dp}
+            results["elements"] = element_results
+            if branch_summaries:
+                results["parallel_sections"] = branch_summaries
+            if pipe_summary:
+                results["pipes_summary"] = pipe_summary
 
-            # ... (the rest of the run() method for handling final pressure checks)
-            inlet_p = self.data.get("inlet_pressure")
-            outlet_p_target = self.data.get("target_outlet_pressure") or self.data.get("outlet_pressure")
-            available_dp_val = self.data.get("available_dp")
+        else: # single-pipe mode
+            pipe_instance = self._ensure_pipe()
+            v = self._maybe_velocity(pipe_instance)
+            Re = self._reynolds(v, pipe_instance)
+            f = self._friction_factor(Re, pipe_instance)
             
-            if inlet_p is not None and outlet_p_target is not None:
-                inlet_p = self._as_pressure(inlet_p).to("Pa")
-                outlet_p_target = self._as_pressure(outlet_p_target).to("Pa")
-                system_dp_pa = inlet_p - outlet_p_target
-                required_dp = total_dp.to("Pa").value
-                residual_dp = system_dp_pa.to("Pa").value - required_dp
-                results["residual_dp_Pa"] = residual_dp
-                results["total_system_dp_from_boundaries"] = system_dp_pa.to("Pa").value
-            elif available_dp_val is not None:
-                available_dp_val = self._as_pressure(available_dp_val).to("Pa").value
-                required_dp = total_dp.to("Pa").value
-                results["required_dp_Pa"] = required_dp
-                results["available_dp_for_valve_Pa"] = available_dp_val
-                if required_dp > available_dp_val:
-                    results["warnings"] = "Required DP exceeds available DP."
+            dp_major = self._major_loss_dp(f, v, pipe_instance)
+            dp_minor = Pressure(0.0, "Pa")
             
-            self._results = PipelineResults(results)
-            return self._results
+            for ft in self.data.get("fittings", []):
+                k = get_k_factor(ft.fitting_type)
+                dp_minor += self._minor_loss_dp(ft, v, k=k, f=f, d=self._internal_diameter_m(pipe_instance))
+            
+            # Handle equipment DP
+            dp_equipment = Pressure(0.0, "Pa")
+            for eq in self.data.get("equipment", []):
+                dp_equipment += eq.pressure_drop
+            
+            total_dp = dp_major + dp_minor + dp_equipment
+            
+            results["mode"] = "single"
+            results["pipe"] = {
+                "internal_diameter": self._internal_diameter_m(pipe_instance),
+                "length": pipe_instance.length,
+            }
+            results["velocity_m_s"] = v
+            results["reynolds_number"] = Re
+            results["friction_factor"] = f
+            results["pressure_drop_Pa"] = total_dp
+            results["major_dp_Pa"] = dp_major
+            results["minor_dp_Pa"] = dp_minor
+            results["equipment_dp_Pa"] = dp_equipment
+
+        self._results = PipelineResults(results)
+        return self._results
 
     def summary(self) -> None:
         """
