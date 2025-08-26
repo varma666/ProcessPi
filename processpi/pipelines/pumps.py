@@ -1,6 +1,8 @@
-from typing import Optional, Dict, Union
+# processpi/pipelines/pumps.py
+
+from typing import Optional, Dict, Union, Any
 from .base import PipelineBase
-from ..units import Power, Pressure
+from ..units import Power, Pressure, UnitfulValue, FlowRate, Density, Length
 from .standards import PUMP_EFFICIENCIES
 
 
@@ -9,75 +11,143 @@ class Pump(PipelineBase):
     Represents a pump in a pipeline system.
 
     Attributes:
+        name (str): The name of the pump.
         pump_type (str): Type of pump (e.g., 'centrifugal', 'positive_displacement').
-        flow_rate (float): Volumetric flow rate (m³/s).
-        head (float): Pump head (m), calculated automatically from pressures if provided.
-        density (float): Fluid density (kg/m³). Default = 1000 (water).
-        efficiency (float): Pump efficiency (0 < η ≤ 1). Loaded from standards if available.
-        inlet_pressure (Pressure): Inlet pressure to the pump.
-        outlet_pressure (Pressure): Outlet pressure from the pump.
+        flow_rate (Optional[FlowRate]): Volumetric flow rate.
+        head (Optional[Length]): Pump head, representing the energy added per unit
+                                 weight of fluid.
+        density (Density): Fluid density.
+        efficiency (float): Pump efficiency (0 < η <= 1).
+        inlet_pressure (Optional[Pressure]): Inlet pressure to the pump.
+        outlet_pressure (Optional[Pressure]): Outlet pressure from the pump.
+        start_node (Optional[Any]): The node object at the pump's inlet.
+        end_node (Optional[Any]): The node object at the pump's outlet.
     """
 
     def __init__(
         self,
+        name: str,
         pump_type: str,
-        flow_rate: float,
-        head: Optional[float] = None,
-        density: float = 1000,
+        flow_rate: Optional[FlowRate] = None,
+        head: Optional[Length] = None,
+        density: Optional[Density] = None,
         efficiency: Optional[float] = None,
         inlet_pressure: Optional[Pressure] = None,
         outlet_pressure: Optional[Pressure] = None,
     ):
-        self.pump_type = pump_type
-        self.flow_rate = flow_rate
-        self.density = density
-        self.inlet_pressure = inlet_pressure
-        self.outlet_pressure = outlet_pressure
+        """
+        Initializes a Pump instance.
 
-        # Calculate head from pressure difference if available
-        if outlet_pressure and inlet_pressure:
+        Args:
+            name (str): A unique name for the pump.
+            pump_type (str): The general type of the pump.
+            flow_rate (Optional[FlowRate]): The design flow rate.
+            head (Optional[Length]): The required head to be provided by the pump.
+            density (Optional[Density]): The fluid density. Defaults to 1000 kg/m³.
+            efficiency (Optional[float]): The pump's efficiency. Defaults to a
+                                          standard value based on pump type.
+            inlet_pressure (Optional[Pressure]): The pressure at the pump inlet.
+            outlet_pressure (Optional[Pressure]): The pressure at the pump outlet.
+
+        Raises:
+            ValueError: If neither head nor inlet/outlet pressures are provided.
+        """
+        super().__init__(name)
+
+        if head is None and (inlet_pressure is None or outlet_pressure is None):
+            raise ValueError(
+                "A Pump must be initialized with either 'head' or both 'inlet_pressure' and 'outlet_pressure'."
+            )
+        
+        self.pump_type: str = pump_type
+        self.flow_rate: Optional[FlowRate] = flow_rate
+        self.density: Density = density or Density(1000, "kg/m³")
+        self.inlet_pressure: Optional[Pressure] = inlet_pressure
+        self.outlet_pressure: Optional[Pressure] = outlet_pressure
+
+        # Calculate head if pressures are provided, otherwise use the provided head.
+        if inlet_pressure and outlet_pressure:
             dp_pa = (outlet_pressure.to("Pa").value - inlet_pressure.to("Pa").value)
-            self.head = dp_pa / (density * 9.81)
+            # Head H = ΔP / (ρ * g)
+            calculated_head_m = dp_pa / (self.density.to("kg/m³").value * 9.81)
+            self.head: Length = Length(calculated_head_m, "m")
         else:
-            self.head = head or 0.0  # Default head to 0 if neither pressures nor head provided
+            self.head: Optional[Length] = head or Length(0.0, "m")
 
-        self.efficiency = efficiency or PUMP_EFFICIENCIES.get(pump_type, 0.7)
+        self.efficiency: float = efficiency or PUMP_EFFICIENCIES.get(pump_type, 0.7)
 
-    def hydraulic_power(self) -> float:
+        # Node connections (set by the network builder)
+        self.start_node: Optional[Any] = None
+        self.end_node: Optional[Any] = None
+
+    def hydraulic_power(self) -> Optional[Power]:
         """
-        Calculate the hydraulic power required by the pump.
-        Formula:
-            P_h = ρ * g * Q * H   (W)
+        Calculates the hydraulic power (fluid power) delivered by the pump.
+        Formula: P_h = ρ * g * Q * H
+        
+        Returns:
+            Optional[Power]: The hydraulic power as a Power object (W), or None if
+                             flow rate or head is not defined.
         """
+        if self.flow_rate is None or self.head is None:
+            return None
+            
         g = 9.81  # m/s²
-        return self.density * g * self.flow_rate * self.head
+        power_W = (
+            self.density.to("kg/m³").value
+            * g
+            * self.flow_rate.to("m³/s").value
+            * self.head.to("m").value
+        )
+        return Power(power_W, "W")
 
-    def brake_power(self) -> float:
+    def brake_power(self) -> Optional[Power]:
         """
-        Calculate the brake power required considering efficiency.
-        Formula:
-            P_b = P_h / η   (W)
+        Calculates the brake power (shaft power) required to drive the pump,
+        considering its efficiency.
+        Formula: P_b = P_h / η
+        
+        Returns:
+            Optional[Power]: The brake power as a Power object (W), or None if
+                             hydraulic power cannot be calculated.
         """
-        return self.hydraulic_power() / self.efficiency if self.efficiency > 0 else 0.0
+        hydraulic_p = self.hydraulic_power()
+        if hydraulic_p is None:
+            return None
+        
+        if self.efficiency <= 0:
+            return Power(float('inf'), "W")  # Infinite power for zero efficiency
+        
+        brake_p_W = hydraulic_p.to("W").value / self.efficiency
+        return Power(brake_p_W, "W")
 
-    def to_dict(self) -> Dict[str, Union[str, float]]:
+    def to_dict(self) -> Dict[str, Any]:
         """
-        Export pump properties and calculations as a dictionary.
+        Exports pump properties and calculations as a dictionary for reporting.
         """
         return {
-            "pump_type": self.pump_type,
-            "flow_rate_m3s": self.flow_rate,
-            "density_kgm3": self.density,
+            "name": self.name,
+            "type": self.pump_type,
+            "head": self.head.to_dict() if self.head else None,
+            "flow_rate": self.flow_rate.to_dict() if self.flow_rate else None,
+            "density": self.density.to_dict(),
             "efficiency": self.efficiency,
-            "head_m": self.head,
-            "hydraulic_power_W": self.hydraulic_power(),
-            "brake_power_W": self.brake_power(),
-            "inlet_pressure_Pa": self.inlet_pressure.to("Pa").value if self.inlet_pressure else None,
-            "outlet_pressure_Pa": self.outlet_pressure.to("Pa").value if self.outlet_pressure else None,
+            "hydraulic_power": self.hydraulic_power().to_dict() if self.hydraulic_power() else None,
+            "brake_power": self.brake_power().to_dict() if self.brake_power() else None,
+            "inlet_pressure": self.inlet_pressure.to_dict() if self.inlet_pressure else None,
+            "outlet_pressure": self.outlet_pressure.to_dict() if self.outlet_pressure else None,
         }
 
-    def calculate(self):
+    def __repr__(self) -> str:
+        """Provides a developer-friendly string representation of the object."""
+        return (
+            f"Pump(name='{self.name}', type='{self.pump_type}', "
+            f"head={self.head}, efficiency={self.efficiency})"
+        )
+
+    def calculate(self) -> Dict[str, Any]:
         """
-        Perform calculations and return results.
+        This method serves as a wrapper to perform calculations and return
+        the results as a dictionary.
         """
         return self.to_dict()
