@@ -158,36 +158,61 @@ PIPE_SCHEDULES: Dict[Diameter, Dict[str, Tuple[Length, Diameter]]] = {
 # --------------------------
 # 🔹 Recommended Fluid Velocities (m/s)
 # --------------------------
-RECOMMENDED_VELOCITIES: Dict[str, Union[Tuple[float, float], float]] = {
-    "Water - Pump suction": (0.3, 1.5),
-    "Water - Pump discharge": (2.0, 3.0),
-    "Water - Average service": (1.0, 2.5),
+RECOMMENDED_VELOCITIES = {
+    # ---- Generalized Categories ----
+    "organic_liquids": (1.0, 2.0),
+    "inorganic_liquids": (1.0, 2.5),
+    "oils": (0.5, 1.5),
+    "gases": (10.0, 20.0),
+    "vapours": (15.0, 30.0),
 
-    "Steam - 0 to 2 atm g, saturated": (20, 30),
-    "Steam - 2 to 10 atm g, saturated": (30, 50),
-    "Steam - Superheated <10 atm g": (20, 50),
-    "Steam - Superheated >10 atm g": (30, 75),
-
-    "Vacuum lines": (100, 125),
-
-    "Air - 0 to 2 atm g": 20,
-    "Air - >2 atm g or above": 30,
-
-    "Ammonia - Liquid": 1.8,
-    "Ammonia - Gas": 30,
-
-    "Organic liquids and oils": (1.8, 2.0),
-    "Natural gas": (25, 35),
-
-    "Chlorine - Liquid": 1.5,
-    "Chlorine - Gas": (10, 25),
-
-    "Hydrochloric acid - Liquid": 1.5,
-    "Hydrochloric acid - Gas": 10,
-
-    "Inorganic liquids": (1.2, 1.8),
-    "Inorganic gases and vapours": (15, 30),
+    # ---- Specific Chemicals ----
+    "water": (1.0, 2.5),
+    "acetic_acid": (1.0, 2.0),
+    "acetone": (1.0, 2.0),
+    "acrylic_acid": (1.0, 2.0),
+    "air": (10.0, 20.0),
+    "ammonia": (8.0, 15.0),
+    "benzene": (1.0, 2.0),
+    "benzoic_acid": (1.0, 2.0),
+    "bromine": (0.8, 1.5),
+    "butane": (10.0, 18.0),
+    "carbon_dioxide": (8.0, 15.0),
+    "carbon_monoxide": (8.0, 15.0),
+    "carbon_tetrachloride": (0.8, 1.5),
+    "chlorine": (5.0, 10.0),
+    "chlorobenzene": (1.0, 2.0),
+    "chloroform": (0.8, 1.5),
+    "chloromethane": (8.0, 15.0),
+    "cyanogen": (8.0, 15.0),
+    "cyclohexane": (1.0, 2.0),
+    "ethane": (10.0, 20.0),
+    "ethanol": (1.0, 2.0),
+    "ethyl_acetate": (1.0, 2.0),
+    "ethylene": (10.0, 20.0),
+    "fluorine": (5.0, 10.0),
+    "fluorobenzene": (1.0, 2.0),
+    "formic_acid": (1.0, 2.0),
+    "helium_4": (20.0, 40.0),
+    "hydrogen_chloride": (8.0, 15.0),
+    "hydrogen_cyanide": (8.0, 15.0),
+    "hydrogen_sulfide": (8.0, 15.0),
+    "methane": (10.0, 20.0),
+    "methanol": (1.0, 2.0),
+    "neon": (15.0, 30.0),
+    "nitrogen": (10.0, 20.0),
+    "nitrous_oxide": (8.0, 15.0),
+    "nitric_oxide": (8.0, 15.0),
+    "oxygen": (10.0, 20.0),
+    "ozone": (8.0, 15.0),
+    "phenol": (1.0, 2.0),
+    "propane": (10.0, 18.0),
+    "propionic_acid": (1.0, 2.0),
+    "styrene": (1.0, 2.0),
+    "sulfur_dioxide": (8.0, 15.0),
+    "toluene": (1.0, 2.0),
 }
+
 # --------------------------
 # 🔹 Equivalent Lengths Equivalent Length / Diameter
 # --------------------------
@@ -278,10 +303,16 @@ def get_roughness(material: str) -> float:
 
 def get_recommended_velocity(service: str) -> Optional[Union[float, Tuple[float, float]]]:
     """
-    Returns recommended velocity (m/s) for a given service type.
-    Can be a single value or a range (tuple).
+    Returns recommended velocity (m/s) for a given chemical or general service.
+
+    Args:
+        service (str): Chemical name or general category (lowercase, underscores for spaces)
+
+    Returns:
+        float or tuple: Recommended velocity (m/s) as single value or range.
     """
-    return RECOMMENDED_VELOCITIES.get(service, None)
+    key = service.strip().lower().replace(" ", "_")
+    return RECOMMENDED_VELOCITIES.get(key, None)
 
 def get_nearest_diameter(calculated_diameter: Diameter) -> Diameter:
     """
