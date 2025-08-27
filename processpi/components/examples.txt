@@ -1,0 +1,140 @@
+"""
+Example usage of the ProcessPI `Component` interface.
+
+Covers:
+1. Acetone at 35 °C
+2. Acetone at 60 °C (unit conversion demo)
+3. Generic Organic Liquid
+4. Generic Inorganic Liquid
+5. Generic Gas
+6. Oil at elevated temperature
+7. Vapor with custom properties override
+8. Quick comparison between two fluids
+9. Water at room temperature
+10. Toluene at 50 °C
+11. Methanol at 30 °C
+"""
+
+from processpi.components.acetone import Acetone
+from processpi.components.organic_liquid import OrganicLiquid
+from processpi.components.inorganic_liquid import InorganicLiquid
+from processpi.components.gas import Gas
+from processpi.components.oil import Oil
+from processpi.components.vapor import Vapor
+from processpi.components.water import Water
+from processpi.components.toluene import Toluene
+from processpi.components.methanol import Methanol
+from processpi.units import Temperature, Density, Viscosity, SpecificHeat
+
+# ----------------------------------------------------------------------
+# 1. Acetone at default temperature (35 °C)
+# ----------------------------------------------------------------------
+acetone = Acetone(temperature=Temperature(35, "C"))
+print(f"\n--- Acetone at {acetone.temperature.to('C').value} °C ---")
+print(f"Density: {acetone.density().to('kg/m3').value:.2f} kg/m³")
+print(f"Viscosity: {acetone.viscosity().to('Pa·s').value:.6f} Pa·s")
+print(f"Specific Heat: {acetone.specific_heat().to('J/kgK').value:.2f} J/kg·K")
+print(f"Thermal Conductivity: {acetone.thermal_conductivity().to('W/mK').value:.4f} W/m·K")
+print(f"Vapor Pressure: {acetone.vapor_pressure().to('Pa').value:.2f} Pa")
+print(f"Enthalpy of Vaporization: {acetone.enthalpy().to('J/kg').value:.2f} J/kg")
+
+# ----------------------------------------------------------------------
+# 2. Acetone at higher temperature with unit conversion
+# ----------------------------------------------------------------------
+acetone_high = Acetone(temperature=Temperature(60, "C"))
+print(f"\n--- Acetone at {acetone_high.temperature.to('C').value} °C ---")
+print(f"Density (lb/ft³): {acetone_high.density().to('lb/ft3').value:.2f} lb/ft³")
+print(f"Viscosity (cP): {acetone_high.viscosity().to('cP').value:.4f} cP")
+
+# ----------------------------------------------------------------------
+# 3. Generic Organic Liquid
+# ----------------------------------------------------------------------
+organic = OrganicLiquid(temperature=Temperature(40, "C"))
+print(f"\n--- Organic Liquid at {organic.temperature.to('C').value} °C ---")
+print(f"Density: {organic.density().to('kg/m3').value:.2f} kg/m³")
+print(f"Viscosity: {organic.viscosity().to('Pa·s').value:.6f} Pa·s")
+print(f"Specific Heat: {organic.specific_heat().to('J/kgK').value:.2f} J/kg·K")
+
+# ----------------------------------------------------------------------
+# 4. Generic Inorganic Liquid
+# ----------------------------------------------------------------------
+inorganic = InorganicLiquid(temperature=Temperature(50, "C"))
+print(f"\n--- Inorganic Liquid at {inorganic.temperature.to('C').value} °C ---")
+print(f"Density: {inorganic.density().to('kg/m3').value:.2f} kg/m³")
+print(f"Viscosity: {inorganic.viscosity().to('Pa·s').value:.6f} Pa·s")
+print(f"Specific Heat: {inorganic.specific_heat().to('J/kgK').value:.2f} J/kg·K")
+
+# ----------------------------------------------------------------------
+# 5. Generic Gas
+# ----------------------------------------------------------------------
+gas = Gas(temperature=Temperature(100, "C"))
+print(f"\n--- Generic Gas at {gas.temperature.to('C').value} °C ---")
+print(f"Density: {gas.density().to('kg/m3').value:.4f} kg/m³")
+print(f"Viscosity: {gas.viscosity().to('Pa·s').value:.8f} Pa·s")
+print(f"Specific Heat: {gas.specific_heat().to('J/kgK').value:.2f} J/kg·K")
+
+# ----------------------------------------------------------------------
+# 6. Oil at elevated temperature
+# ----------------------------------------------------------------------
+oil = Oil(temperature=Temperature(150, "C"))
+print(f"\n--- Oil at {oil.temperature.to('C').value} °C ---")
+print(f"Density: {oil.density().to('kg/m3').value:.2f} kg/m³")
+print(f"Viscosity (cP): {oil.viscosity().to('cP').value:.2f} cP")
+print(f"Specific Heat: {oil.specific_heat().to('J/kgK').value:.2f} J/kg·K")
+
+# ----------------------------------------------------------------------
+# 7. Vapor with custom overrides
+# ----------------------------------------------------------------------
+custom_vapor = Vapor(
+    temperature=Temperature(120, "C"),
+    density=Density(0.7, "kg/m3"),
+    viscosity=Viscosity(0.00002, "Pa·s"),
+    specific_heat=SpecificHeat(1900, "J/kgK"),
+)
+print(f"\n--- Custom Vapor at {custom_vapor.temperature.to('C').value} °C ---")
+print(f"Density (overridden): {custom_vapor.density().to('kg/m3').value:.4f} kg/m³")
+print(f"Viscosity (overridden): {custom_vapor.viscosity().to('Pa·s').value:.8f} Pa·s")
+print(f"Specific Heat (overridden): {custom_vapor.specific_heat().to('J/kgK').value:.2f} J/kg·K")
+
+# ----------------------------------------------------------------------
+# 8. Quick comparison: Organic vs. Inorganic Liquid
+# ----------------------------------------------------------------------
+print("\n--- Organic vs. Inorganic Liquid at 50 °C ---")
+organic_50 = OrganicLiquid(temperature=Temperature(50, "C"))
+inorganic_50 = InorganicLiquid(temperature=Temperature(50, "C"))
+print(f"Organic Liquid Density: {organic_50.density().to('kg/m3').value:.2f} kg/m³")
+print(f"Inorganic Liquid Density: {inorganic_50.density().to('kg/m3').value:.2f} kg/m³")
+print(f"Organic Viscosity: {organic_50.viscosity().to('Pa·s').value:.6f} Pa·s")
+print(f"Inorganic Viscosity: {inorganic_50.viscosity().to('Pa·s').value:.6f} Pa·s")
+
+# ----------------------------------------------------------------------
+# 9. Water at room temperature
+# ----------------------------------------------------------------------
+water = Water(temperature=Temperature(25, "C"))
+print(f"\n--- Water at {water.temperature.to('C').value} °C ---")
+print(f"Density: {water.density().to('kg/m3').value:.2f} kg/m³")
+print(f"Viscosity: {water.viscosity().to('Pa·s').value:.6f} Pa·s")
+print(f"Specific Heat: {water.specific_heat().to('J/kgK').value:.2f} J/kg·K")
+print(f"Thermal Conductivity: {water.thermal_conductivity().to('W/mK').value:.4f} W/m·K")
+print(f"Vapor Pressure: {water.vapor_pressure().to('Pa').value:.2f} Pa")
+
+# ----------------------------------------------------------------------
+# 10. Toluene at 50 °C
+# ----------------------------------------------------------------------
+toluene = Toluene(temperature=Temperature(50, "C"))
+print(f"\n--- Toluene at {toluene.temperature.to('C').value} °C ---")
+print(f"Density: {toluene.density().to('kg/m3').value:.2f} kg/m³")
+print(f"Viscosity: {toluene.viscosity().to('Pa·s').value:.6f} Pa·s")
+print(f"Specific Heat: {toluene.specific_heat().to('J/kgK').value:.2f} J/kg·K")
+print(f"Vapor Pressure: {toluene.vapor_pressure().to('Pa').value:.2f} Pa")
+
+# ----------------------------------------------------------------------
+# 11. Methanol at 30 °C
+# ----------------------------------------------------------------------
+methanol = Methanol(temperature=Temperature(30, "C"))
+print(f"\n--- Methanol at {methanol.temperature.to('C').value} °C ---")
+print(f"Density: {methanol.density().to('kg/m3').value:.2f} kg/m³")
+print(f"Viscosity: {methanol.viscosity().to('Pa·s').value:.6f} Pa·s")
+print(f"Specific Heat: {methanol.specific_heat().to('J/kgK').value:.2f} J/kg·K")
+print(f"Thermal Conductivity: {methanol.thermal_conductivity().to('W/mK').value:.4f} W/m·K")
+print(f"Vapor Pressure: {methanol.vapor_pressure().to('Pa').value:.2f} Pa")

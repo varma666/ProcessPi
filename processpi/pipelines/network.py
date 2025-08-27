@@ -8,8 +8,7 @@ from .fittings import Fitting
 from .vessel import Vessel
 from .pumps import Pump
 from .equipment import Equipment
-from ..units import Diameter, UnitfulValue
-
+from ..units import *
 
 class Node:
     """
@@ -29,8 +28,8 @@ class Node:
         """
         self.name: str = name
         self.elevation: float = elevation
-        self.pressure: Optional[UnitfulValue] = None
-        self.flow_rate: Optional[UnitfulValue] = None
+        self.pressure: Optional[Pressure] = None
+        self.flow_rate: Optional[VolumetricFlowRate] = None
         self.connected_components: List[Any] = []
 
     def __repr__(self):

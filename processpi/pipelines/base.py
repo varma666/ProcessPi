@@ -1,109 +1,91 @@
 # processpi/pipelines/base.py
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 
 class PipelineBase(ABC):
     """
-    Abstract base class for all pipeline-related calculations in the ProcessPI
-    simulation suite.
+    Abstract base class for all pipeline-related components and calculations
+    in the ProcessPI simulation suite.
 
-    This class provides a common interface and a set of utility methods for
-    handling input parameters and validating them. Subclasses must inherit from
-    this class and implement the `calculate` method to perform their specific
-    calculations.
-
-    Notes:
-        - Parameter handling and validation are kept generic to allow for
-          diverse types of pipeline calculations (e.g., pressure drop,
-          flow rate, pump sizing).
-        - Specific pipe attributes like diameter, schedule, roughness, and material
-          are not handled here. They should be managed by specialized classes,
-          such as those in `pipes.py`, which will then pass the necessary
-          parameters to the calculation classes.
+    Provides:
+        - A unified way to store metadata like `name`
+        - A flexible params dictionary for input configuration
+        - Utility methods for safe parameter access and validation
     """
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, name: Optional[str] = None, **kwargs: Any) -> None:
         """
-        Initializes a pipeline calculation instance with input parameters.
-
-        The parameters are stored in a dictionary, providing a flexible way
-        to pass various inputs without a fixed signature.
+        Initialize a pipeline component or calculation with metadata and parameters.
 
         Args:
-            **kwargs: Arbitrary keyword arguments representing the input
-                      parameters for the calculation.
+            name (str, optional): Descriptive name of this pipeline object.
+            **kwargs (Any): Arbitrary parameters for configuration.
         """
+        self.name: str = name or self.__class__.__name__
         self.params: Dict[str, Any] = kwargs
 
+    # -------------------------------------------------------------------------
+    # Abstract method that must be implemented by all subclasses
+    # -------------------------------------------------------------------------
     @abstractmethod
     def calculate(self) -> Dict[str, Any]:
         """
-        Abstract method to perform the core pipeline calculation.
+        Perform the core calculation for the pipeline object.
 
-        Subclasses must override this method with their specific
-        calculation logic.
+        Must be implemented by subclasses.
 
         Returns:
-            dict: A dictionary containing the results of the calculation,
-                  with string keys and any type of value.
+            dict: A dictionary containing calculation results.
         """
         pass
 
+    # -------------------------------------------------------------------------
+    # Utility methods
+    # -------------------------------------------------------------------------
     def get_param(self, key: str, default: Any = None) -> Any:
         """
-        Safely retrieves an input parameter from the stored parameters.
-
-        This method prevents `KeyError` by returning a default value if the
-        parameter is not found.
+        Retrieve a parameter safely with a default fallback.
 
         Args:
-            key (str): The name of the parameter to retrieve.
-            default (Any, optional): The value to return if the key is not
-                                     found. Defaults to None.
+            key (str): Parameter name.
+            default (Any, optional): Value to return if key not found.
 
         Returns:
-            Any: The value of the specified parameter or the default value.
+            Any: The parameter value or default.
         """
         return self.params.get(key, default)
 
     def validate_required(self, required_keys: list[str]) -> None:
         """
-        Ensures that all specified required parameters are present.
-
-        If any key in the `required_keys` list is missing from the instance's
-        parameters, a `ValueError` is raised.
+        Validate that required parameters are present in `self.params`.
 
         Args:
-            required_keys (list[str]): A list of string names for the
-                                       parameters that are mandatory for
-                                       the calculation.
+            required_keys (list[str]): Required parameter names.
 
         Raises:
-            ValueError: If one or more required parameters are missing from
-                        the `self.params` dictionary.
+            ValueError: If any required parameters are missing.
         """
         missing = [k for k in required_keys if k not in self.params]
         if missing:
-            # Joins the missing keys into a single, comma-separated string for a
-            # clear error message.
             raise ValueError(f"Missing required parameters: {', '.join(missing)}")
 
     def _getattr(self, attr_name: str, default: Any = None) -> Any:
         """
-        Safely retrieves an attribute from the pipeline instance itself.
-
-        This is a protected helper method (`_` prefix) and is useful for
-        accessing attributes that might be dynamically set on the object
-        itself, as opposed to input parameters stored in `self.params`.
+        Safely retrieve an attribute from the instance itself.
 
         Args:
-            attr_name (str): The name of the attribute to fetch.
-            default (Any, optional): The value to return if the attribute
-                                     is not found. Defaults to None.
+            attr_name (str): Attribute name.
+            default (Any, optional): Value to return if not found.
 
         Returns:
-            Any: The value of the attribute or the provided default.
+            Any: Attribute value or default.
         """
         return getattr(self, attr_name, default)
+
+    def __repr__(self) -> str:
+        """
+        Developer-friendly representation of the object.
+        """
+        return f"<{self.__class__.__name__} name='{self.name}' params={self.params}>"

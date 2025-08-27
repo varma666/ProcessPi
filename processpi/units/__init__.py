@@ -18,6 +18,7 @@ from .thermal_resistance import ThermalResistance
 from .heat_flux import HeatFlux
 from .heat_of_vaporization import HeatOfVaporization
 from .power import Power
+from .base import Variable  
 __all__ = ["Length", 
            "Velocity", 
            "Density", 
@@ -37,4 +38,6 @@ __all__ = ["Length",
            "HeatFlux", 
            "HeatOfVaporization",
            "Dimensionless",
-           "Power"]
+           "Power",
+           "Variable"
+]

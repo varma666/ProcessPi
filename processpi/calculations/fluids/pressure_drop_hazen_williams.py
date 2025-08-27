@@ -2,7 +2,7 @@ from ..base import CalculationBase
 from ...units import *
 
 class PressureDropHazenWilliams(CalculationBase):
-    """
+    r"""
     A class to calculate the pressure drop in a pipe using the Hazen–Williams equation.
 
     The Hazen–Williams equation is an empirical formula for calculating head loss

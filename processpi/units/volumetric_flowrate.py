@@ -1,4 +1,6 @@
 from .base import Variable
+from .mass_flowrate import MassFlowRate
+from .density import Density
 
 class VolumetricFlowRate(Variable):
     """
@@ -54,3 +56,12 @@ class VolumetricFlowRate(Variable):
     def __str__(self):
         # Ensure print() uses the same human-friendly format
         return f"{round(self.original_value, 6)} {self.original_unit}"
+    
+    
+    @classmethod
+    def from_mass_flow(cls, mass_flow: "MassFlowRate", density: "Density"):
+        """
+        Convert a mass flow rate to volumetric flow rate using density.
+        Q_vol = m_dot / rho
+        """
+        return cls(mass_flow.value / density.value, "m3/s")

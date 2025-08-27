@@ -2,7 +2,7 @@
 
 from typing import Optional, Dict, Union, Any
 from .base import PipelineBase
-from ..units import Power, Pressure, UnitfulValue, FlowRate, Density, Length
+from ..units import *                   
 from .standards import PUMP_EFFICIENCIES
 
 
@@ -28,7 +28,7 @@ class Pump(PipelineBase):
         self,
         name: str,
         pump_type: str,
-        flow_rate: Optional[FlowRate] = None,
+        flow_rate: Optional[VolumetricFlowRate] = None,
         head: Optional[Length] = None,
         density: Optional[Density] = None,
         efficiency: Optional[float] = None,
@@ -60,7 +60,7 @@ class Pump(PipelineBase):
             )
         
         self.pump_type: str = pump_type
-        self.flow_rate: Optional[FlowRate] = flow_rate
+        self.flow_rate: Optional[VolumetricFlowRate] = flow_rate
         self.density: Density = density or Density(1000, "kg/m³")
         self.inlet_pressure: Optional[Pressure] = inlet_pressure
         self.outlet_pressure: Optional[Pressure] = outlet_pressure

@@ -75,3 +75,16 @@ class Variable:
 
     def from_base(self, base_value: float, target_units: str):
         raise NotImplementedError("Override this method in subclass.")
+    
+    def __format__(self, format_spec):
+        """
+        Formats the VolumetricFlowRate object based on the given format specifier.
+        """
+        # Get the value to be formatted.
+        value = self.value
+        
+        # Apply the format specifier to the numeric value.
+        formatted_value = format(value, format_spec)
+        
+        # Combine the formatted value and the unit.
+        return f"{formatted_value} {self.units}"

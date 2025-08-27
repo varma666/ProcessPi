@@ -1,7 +1,7 @@
 # processpi/pipelines/standards.py
 
 from typing import Dict, Tuple, Optional, Union, List, Any
-from ..units import Diameter, Length, UnitfulValue
+from ..units import *
 
 """
 Pipeline Standards Module
@@ -543,11 +543,11 @@ def get_thickness(nominal_diameter: Diameter, schedule: str) -> Optional[Length]
     return PIPE_SCHEDULES[nominal_diameter].get(schedule, (None, None, None))[0]
 
 
-def get_roughness(material: str) -> UnitfulValue:
+def get_roughness(material: str) -> Variable:
     """Returns roughness for given material. Defaults if not found."""
-    # This function is updated to return a UnitfulValue to match the Pipe class.
+    # This function is updated to return a Variable to match the Pipe class.
     roughness_mm = ROUGHNESS.get(material, ROUGHNESS["Other"])
-    return UnitfulValue(roughness_mm, "mm")
+    return Variable(roughness_mm, "mm")
 
 
 def get_recommended_velocity(service: str) -> Optional[Union[float, Tuple[float, float]]]:
@@ -587,3 +587,65 @@ def get_standard_pipe_data(
         "outer_diameter": data[1],
         "internal_diameter": data[2],
     }
+
+def get_k_factor(fitting_type: str) -> float:
+    """
+    Retrieve the standard K-factor (loss coefficient) for a given fitting type.
+
+    Args:
+        fitting_type (str): Name of the fitting, should match one of the keys in K_FACTORS.
+
+    Returns:
+        float: The K-factor for the fitting type, or 0.0 if not found.
+    """
+    return K_FACTORS.get(fitting_type.lower(), 0.0)
+
+# --------------------------
+# 🔹 Utility functions
+# --------------------------
+
+def list_available_pipe_diameters() -> list[Diameter]:
+    """
+    Returns a list of all available standard nominal pipe diameters.
+    """
+    return STANDARD_SIZES
+
+
+def get_standard_pipe_data(nominal_d: Diameter, schedule: str = 'STD') -> dict:
+    """
+    Retrieves standard pipe data for a given nominal diameter and schedule.
+
+    Args:
+        nominal_d (Diameter): Nominal diameter of the pipe (e.g., Diameter(2, 'in'))
+        schedule (str): Pipe schedule (default is '40')
+
+    Returns:
+        dict: {
+            "wall_thickness": Length,
+            "outer_diameter": Diameter,
+            "internal_diameter": Diameter
+        }
+
+    Raises:
+        ValueError: If the nominal diameter or schedule is not found in the database.
+    """
+    # Look up the schedule data for this nominal diameter
+    schedule_data = PIPE_SCHEDULES.get(nominal_d)
+    if schedule_data is None:
+        raise ValueError(f"No data found for nominal diameter {nominal_d}")
+
+    # Look up the requested schedule
+    #print(schedule_data)
+    pipe_tuple = schedule_data.get(schedule)
+    if pipe_tuple is None:
+        raise ValueError(f"No data found for nominal diameter {nominal_d} with schedule {schedule}")
+
+    wall_thickness, outer_diameter, internal_diameter = pipe_tuple
+    return {
+        "wall_thickness": wall_thickness,
+        "outer_diameter": outer_diameter,
+        "internal_diameter": internal_diameter
+    }
+
+def get_standard_pipe_schedules() -> list[str]:
+    return ["STD", "5S", "10S", "S10", "S20", "S40", "S60", "XS", "80S", "S120", "S140", "S160", "XXS"]
