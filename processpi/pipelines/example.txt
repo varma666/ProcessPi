@@ -12,7 +12,8 @@ model.fit(
     internal_diameter=internal_diameter
 )
 result = model.run()
-result.summary() """
+#result.summary()
+print(result.velocity.to("ft/s")) """
 """ # Example 2
 from processpi.pipelines import PipelineEngine
 from processpi.components import Water
@@ -27,7 +28,8 @@ model.fit(
     internal_diameter=internal_diameter
 )
 result = model.run()
-model.summary() """
+#result.summary()
+print(result.velocity) """
 """ # Example 3
 from processpi.pipelines import PipelineEngine
 from processpi.components import Water
@@ -35,14 +37,18 @@ from processpi.units import *
 fluid = Water()
 flow_rate = VolumetricFlowRate(640, 'm3/h')
 internal_diameter = Diameter(380, 'mm')
+density = Density(1000, 'kg/m3')
+viscosity = Viscosity(1.0, 'cSt')
 model = PipelineEngine()
 model.fit(
     fluid=fluid,
     flow_rate=flow_rate,
-    internal_diameter=internal_diameter
+    internal_diameter=internal_diameter,
+    density=density,
+    viscosity=viscosity
 )
 result = model.run()
-model.summary() """
+print(result.velocity.to("m/s"), result.reynolds) """
 """ # Example 4
 from processpi.pipelines import PipelineEngine
 from processpi.components import Water
@@ -50,15 +56,19 @@ from processpi.units import *
 fluid = Water()
 flow_rate = VolumetricFlowRate(6000, 'gal/min')
 internal_diameter = Diameter(19.25, 'in')
+density = Density(1000, 'kg/m3')
+viscosity = Viscosity(1.0, 'cSt')
 model = PipelineEngine()
 model.fit(
     fluid=fluid,
     flow_rate=flow_rate,
-    internal_diameter=internal_diameter
+    internal_diameter=internal_diameter,
+    density=density,
+    viscosity=viscosity
 )
 result = model.run()
-model.summary()
-vel = Velocity(2.016017, 'm/s').to('ft/s')
+print(result.velocity.to("ft/s"), result.reynolds)
+
 print(vel) """
 
 from processpi.pipelines.engine import PipelineEngine

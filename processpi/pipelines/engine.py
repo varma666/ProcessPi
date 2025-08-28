@@ -22,10 +22,9 @@ from .equipment import Equipment
 from .network import PipelineNetwork
 from .piping_costs import PipeCostModel
 from ..calculations.fluids import (
-    FluidVelocity, ReynoldsNumber, PressureDropDarcy, OptimumPipeDiameter, PressureDropFanning, ColebrookWhite
+    FluidVelocity, ReynoldsNumber, PressureDropDarcy, OptimumPipeDiameter, PressureDropFanning, ColebrookWhite, PressureDropHazenWilliams
 )
-# Hazen-Williams calculator (user provided module)
-from ..calculations.pressure_drop.hazen_williams import PressureDropHazenWilliams
+
 
 # ------------------------------- Constants ---------------------------------
 G = 9.80665  # m/s^2
@@ -104,14 +103,12 @@ class PipelineEngine:
 
     # ---------------------- Configuration / Fit ----------------------------
     def fit(self, **kwargs: Any) -> "PipelineEngine":
-        """Configure engine inputs. Converts and normalizes keys/aliases.
-        Expected keys (examples): fluid=Component OR density, viscosity; network=PipelineNetwork; pipe=Pipe; flowrate=VolumetricFlowRate or mass_flowrate=MassFlowRate; available_dp=Pressure
-        """
+        """Configure engine inputs. Converts and normalizes keys/aliases."""
         self.data = dict(kwargs)
 
         # Aliases
         alias_map = {
-            "flowrate": ["flow_rate", "q", "Q"],
+            "flowrate": ["flow_rate", "q", "Q","flowrate"],
             "mass_flowrate": ["mass_flow", "m_dot", "mdot"],
             "velocity": ["v"],
             "diameter": ["dia", "D", "nominal_diameter", "internal_diameter"],
@@ -131,19 +128,25 @@ class PipelineEngine:
         self.data.setdefault("flow_split", {})
         self.data.setdefault("tolerance_m3s", DEFAULT_FLOW_TOL)
         self.data.setdefault("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
-        # calculation method: 'darcy_weisbach' or 'hazen_williams'
         self.data.setdefault("method", "darcy_weisbach")
-        # optional hw coefficient default (can be overridden per-pipe)
         self.data.setdefault("hw_coefficient", 130.0)
-        # solver preference: 'auto'|'matrix'|'hardy_cross'
         self.data.setdefault("solver", "auto")
 
-        # validate network type if present
+        # Validate network type
         net = self.data.get("network")
         if net is not None and not isinstance(net, PipelineNetwork):
             raise TypeError("`network` must be a PipelineNetwork instance.")
 
+        # Explicitly bind normalized attributes for internal use
+        self.flowrate = self.data.get("flowrate")
+        self.diameter = self.data.get("diameter")
+        self.velocity = self.data.get("velocity")
+        #self.internal_diameter = self.data.get("internal_diameter")
+        self.mass_flowrate = self.data.get("mass_flowrate")
+        # print(self)
+
         return self
+
 
     # ---------------------- Fluid properties --------------------------------
     def _get_density(self) -> Density:
@@ -186,6 +189,23 @@ class PipelineEngine:
             self.data["flowrate"] = q
             return q
         raise ValueError("Unable to infer flowrate. Provide 'flowrate' or 'mass_flowrate' or ('velocity' and 'diameter').")
+    
+    def _maybe_velocity(self, pipe):
+        """
+        Ensures velocity is available. If not explicitly provided, 
+        calculates velocity using volumetric flow rate and pipe diameter.
+        """
+        if hasattr(pipe, "velocity") and pipe.velocity is not None:
+            return pipe.velocity
+        elif hasattr(pipe, "flow_rate") and hasattr(pipe, "diameter"):
+            area = math.pi * (pipe.diameter.value ** 2) / 4.0
+            velocity_value = pipe.flow_rate.value / area
+            return Velocity(velocity_value, pipe.flow_rate.unit + "/" + pipe.diameter.unit)
+        else:
+            raise ValueError(
+                "Insufficient data: cannot calculate velocity without diameter and flow rate."
+            )
+
 
     # ---------------------- Diameter resolution -----------------------------
     def _resolve_internal_diameter(self, pipe: Optional[Pipe] = None) -> Diameter:
@@ -199,6 +219,7 @@ class PipelineEngine:
                 return d if isinstance(d, Diameter) else Diameter(float(d), "m")
         d = self.data.get("diameter")
         if d is not None:
+            print(d)
             return d if isinstance(d, Diameter) else _ensure_diameter_obj(d, self.data.get("assume_mm_for_numbers", True))
         # fallback compute optimum for single pipe
         q = self._infer_flowrate()
@@ -251,7 +272,7 @@ class PipelineEngine:
         v = self.data.get("velocity")
         if v is None:
             q = flow_rate or self._infer_flowrate()
-            v = FluidVelocity(volumetric_flow_rate=q, diameter=self._internal_diameter_m(pipe)).calculate()
+            v = FluidVelocity(volumetric_flow_rate=q, diameter=self._resolve_internal_diameter(pipe)).calculate()
         else:
             if not isinstance(v, Velocity):
                 v = Velocity(float(v), "m/s")
@@ -260,7 +281,7 @@ class PipelineEngine:
         q_used = flow_rate or self._infer_flowrate()
 
         # Friction / Reynolds / f
-        Re = self._reynolds(v, pipe)
+        Re = self._reynolds(v, pipe.internal_diameter or self._resolve_internal_diameter(pipe))
         material = getattr(pipe, "material", None)
         f = None
         method = self.data.get("method", "darcy_weisbach").lower()
@@ -273,7 +294,7 @@ class PipelineEngine:
                     "length": pipe.length or Length(1.0, "m"),
                     "flow_rate": q_used,
                     "coefficient": hw_coeff,
-                    "diameter": self._internal_diameter_m(pipe),
+                    "diameter": self._resolve_internal_diameter(pipe),
                     "density": self._get_density(),
                 }
             )
@@ -282,12 +303,12 @@ class PipelineEngine:
             f = None
         else:
             # Darcy–Weisbach path
-            f = self._friction_factor(Re, self._internal_diameter_m(pipe), material)
-            dp_major = self._major_dp_pa(f, pipe.length or Length(1.0, "m"), self._internal_diameter_m(pipe), v)
+            f = self._friction_factor(Re, self._resolve_internal_diameter(pipe), material)
+            dp_major = self._major_dp_pa(f, pipe.length or Length(1.0, "m"), self._resolve_internal_diameter(pipe), v)
 
         # Minor losses
         dp_minor = Pressure(0.0, "Pa")
-        d = self._internal_diameter_m(pipe)
+        d = self._resolve_internal_diameter(pipe)
         fittings: List[Fitting] = []
         if hasattr(pipe, "fittings") and isinstance(pipe.fittings, list):
             fittings = pipe.fittings
@@ -673,48 +694,43 @@ class PipelineEngine:
         available_dp = self.data.get("available_dp")
         rho = self._get_density().value
 
-        # Sizing mode when available_dp provided
+        # Network sizing mode
         if isinstance(net, PipelineNetwork) and available_dp is not None:
             if any(p.nominal_diameter is None for p in net.get_all_pipes()):
-                return self._solve_for_diameter(available_dp, **self.data)
+                return self._solve_for_diameter(**self.data)
 
+        # Single-pipe sizing mode
         if net is None and pipe is None and diameter is None and available_dp is not None:
-            return self._solve_for_diameter(available_dp, **self.data)
+            return self._solve_for_diameter(**self.data)
 
+        # If diameter provided, just create pipe object and set velocity
         if diameter is not None and pipe is None and net is None:
             self.pipe = self._ensure_pipe_object()
             self.pipe.internal_diameter = diameter
-            velocity = self._maybe_velocity(pipe=self.pipe)
+            velocity = self._velocity(self._infer_flowrate(), diameter)
             if velocity is not None:
                 self.pipe.velocity = velocity
 
         q_in = self._infer_flowrate()
         tol = self.data.get("tolerance_m3s", DEFAULT_FLOW_TOL)
-
         results_out: Dict[str, Any] = {"mode": None, "summary": {}, "components": []}
 
         if isinstance(net, PipelineNetwork):
-            # If sizing requested, map ideal diameters to standards first (simple approach)
-            available_dp = self.data.get("available_dp")
+            # Network solver
             if available_dp is not None and any(p.nominal_diameter is None for p in net.get_all_pipes()):
                 for p in net.get_all_pipes():
                     if p.nominal_diameter is None:
-                        q_branch = self._infer_flowrate() / len(net.get_all_pipes()) if len(net.get_all_pipes()) else q_in
+                        q_branch = q_in / len(net.get_all_pipes()) if len(net.get_all_pipes()) else q_in
                         ideal = OptimumPipeDiameter(flow_rate=q_branch, density=self._get_density()).calculate().to("m").value
                         label, dstd = self._select_standard_diameter(ideal)
                         p.nominal_diameter = dstd
 
             solved = self._solve_network_dual(net, q_in, tol)
             reports = solved.get("reports", [])
-
             comp_list = [r.as_dict() for r in reports]
-            total_dp_pa = 0.0
-            total_elev_pa = 0.0
-            for r in comp_list:
-                if r.get("pressure_drop_Pa"):
-                    total_dp_pa += float(r.get("pressure_drop_Pa"))
-                if r.get("elevation_loss_Pa"):
-                    total_elev_pa += float(r.get("elevation_loss_Pa"))
+
+            total_dp_pa = sum(float(r.get("pressure_drop_Pa", 0.0)) for r in comp_list)
+            total_elev_pa = sum(float(r.get("elevation_loss_Pa", 0.0)) for r in comp_list)
             total_head_m = total_dp_pa / (rho * G)
             pump_eff = self.data.get("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
             shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff)
@@ -733,38 +749,49 @@ class PipelineEngine:
             results_out["components"] = comp_list
 
         else:
-            # Single pipe mode
-            results_out["mode"] = "single_pipe"
-            pipe_instance = self._ensure_pipe_object()
-            rep, calc = self._calc_single_pipe(pipe_instance, q_in)
-            total_dp = calc["pressure_drop"]
-            total_dp_pa = total_dp.to("Pa").value
-            total_head = total_dp_pa / (rho * G)
-            pump_eff = self.data.get("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
-            shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff)
+            # Single pipe without sizing
+            if diameter is not None:
+                pipe_instance = self._ensure_pipe_object()
+                calc = self._pipe_calculation(pipe_instance, q_in)
+                total_dp_pa = calc["pressure_drop"].to("Pa").value
+                total_head = total_dp_pa / (rho * G)
+                pump_eff = self.data.get("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
+                shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff)
 
-            results_out["summary"] = {
-                "flow_m3s": q_in.value,
-                "total_pressure_drop_Pa": total_dp_pa,
-                "total_head_m": total_head,
-                "pump_shaft_power_kW": shaft_power_kw,
-            }
-            results_out["components"] = [{
-                "type": "pipe",
-                "name": pipe_instance.name,
-                "length": pipe_instance.length,
-                "diameter": self._internal_diameter_m(pipe_instance),
-                "velocity": calc["velocity"],
-                "reynolds": calc["reynolds"],
-                "friction_factor": calc["friction_factor"],
-                "major_dp": calc["major_dp"],
-                "minor_dp": calc["minor_dp"],
-                "elevation_dp": calc["elevation_dp"],
-                "total_dp": calc["pressure_drop"],
-            }]
+                results_out["mode"] = "single_pipe"
+                results_out["summary"] = {
+                    "flow_m3s": q_in.value,
+                    "total_pressure_drop_Pa": total_dp_pa,
+                    "total_head_m": total_head,
+                    "pump_shaft_power_kW": shaft_power_kw,
+                }
+                results_out["components"] = [{
+                    "type": "pipe",
+                    "name": pipe_instance.name,
+                    "length": pipe_instance.length,
+                    "diameter": self._resolve_internal_diameter(pipe_instance),
+                    "velocity": calc["velocity"],
+                    "reynolds": calc["reynolds"],
+                    "friction_factor": calc["friction_factor"],
+                    "major_dp": calc["major_dp"],
+                    "minor_dp": calc["minor_dp"],
+                    "elevation_dp": calc["elevation_dp"],
+                    "total_dp": calc["pressure_drop"],
+                }]
+            else:
+                # Diameter missing → sizing required
+                if available_dp is None:
+                    raise ValueError("available_dp is required for diameter sizing.")
+                results_out = self._solve_for_diameter(**self.data).to_dict()
 
         self._results = PipelineResults(results_out)
         return self._results
+
+    def summary(self) -> Optional[PipelineResults]:
+        if not self._results:
+            print("No results available for summary.")
+            return None
+        return self._results.summary()
 
     # ---------------------- Backwards compatibility / helpers ---------------
     def _ensure_pipe_object(self) -> Pipe:
@@ -785,10 +812,73 @@ class PipelineEngine:
         self.data["pipe"] = p
         return p
 
-    # The following methods are preserved from earlier implementations and used above:
-    # _maybe_velocity, _solve_for_diameter, _optimize_network_for_size, _get_fluid_properties,
-    # _solve_network (legacy), _reynolds, _friction_factor, _major_loss_dp, _minor_loss_dp, etc.
-    # If your previous engine file contained additional helper definitions, keep them in place
-    # or merge with these implementations.
+# ---------------------- Diameter helper ---------------------------------
+    def _resolve_internal_diameter(self, pipe: Pipe) -> Diameter:
+        if pipe.internal_diameter:
+            return pipe.internal_diameter
+        if pipe.nominal_diameter:
+            return pipe.nominal_diameter
+        if self.diameter:
+            return _ensure_diameter_obj(self.diameter)
+        # fallback to optimum calculation
+        opt_d = OptimumPipeDiameter(self._infer_flowrate(), self._get_density()).calculate()
+        label, std_d = self._select_standard_diameter(opt_d.to("m").value)
+        return Diameter(std_d, "m")
 
-# End of file
+    def _select_standard_diameter(self, ideal_d_m: float) -> Tuple[str, float]:
+        # nearest standard nominal diameter
+        standard_list = list_available_pipe_diameters()
+        nearest = min(standard_list, key=lambda x: abs(x - ideal_d_m))
+        label = f"{nearest} mm"
+        return label, nearest
+    
+    def _solve_for_diameter(self, **kwargs):
+        # Get required inputs
+        fluid = kwargs.get("fluid") or self.data.get("fluid")
+        flow_rate = self._infer_flowrate()
+        available_dp = kwargs.get("available_dp") or self.data.get("available_dp")
+        
+        if not all([fluid, flow_rate, available_dp]):
+            raise ValueError("available_dp, flow_rate, and fluid are required for diameter sizing.")
+        
+        # Create or ensure pipe object
+        pipe_instance = self._ensure_pipe_object()
+        
+        # Perform calculation (simplified for sizing)
+        calc = self._pipe_calculation(pipe_instance, flow_rate)
+        
+        total_dp_pa = calc["pressure_drop"].to("Pa").value
+        rho = fluid.density().value
+        G = 9.80665
+        total_head = total_dp_pa / (rho * G)
+        pump_eff = kwargs.get("pump_efficiency", 0.75)
+        shaft_power_kw = (total_dp_pa * flow_rate.value) / (1000.0 * pump_eff)
+        
+        results_out = {
+            "network_name": pipe_instance.name,
+            "mode": "single_pipe",
+            "summary": {
+                "flow_m3s": flow_rate.value,
+                "total_pressure_drop_Pa": total_dp_pa,
+                "total_head_m": total_head,
+                "pump_shaft_power_kW": shaft_power_kw,
+                "velocity": calc["velocity"],
+                "reynolds": calc["reynolds"],
+                "friction_factor": calc["friction_factor"],
+            },
+            "components": [{
+                "type": "pipe",
+                "name": pipe_instance.name,
+                "length": pipe_instance.length,
+                "diameter": self._resolve_internal_diameter(pipe_instance),
+                "velocity": calc["velocity"],
+                "reynolds": calc["reynolds"],
+                "friction_factor": calc["friction_factor"],
+                "major_dp": calc["major_dp"],
+                "minor_dp": calc["minor_dp"],
+                "elevation_dp": calc["elevation_dp"],
+                "total_dp": calc["pressure_drop"],
+            }],
+        }
+        
+        return PipelineResults(results_out)

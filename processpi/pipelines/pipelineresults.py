@@ -2,131 +2,131 @@ from typing import Dict, Any, List, Optional
 from tabulate import tabulate
 
 class PipelineResults:
-    """Manages pipeline simulation results with summaries and detailed component breakdowns."""
+    """Manages pipeline simulation results using ProcessPI units and detailed component breakdowns."""
 
     def __init__(self, results: Dict[str, Any]):
         self.results: Dict[str, Any] = results
-        self._all_simulation_results = results.get("all_simulation_results", [])
-        self._target_dp = results.get("target_dp")
+        self.network_name: str = results.get("network_name", "N/A")
+        self.mode: str = results.get("mode", "single_pipe")
+        self.residual_dp = results.get("residual_dp", 0)
+        self._all_simulation_results: List[Dict[str, Any]] = []
 
-    def __bool__(self) -> bool:
-        return bool(self.results)
+        # Flatten input results to internal list
+        if "all_simulation_results" in results:
+            self._all_simulation_results = results["all_simulation_results"]
+        elif "summary" in results and "components" in results:
+            summary = results["summary"]
+            comps = results["components"]
+            self._all_simulation_results = [{
+                "network_name": self.network_name,
+                "mode": self.mode,
+                "summary": {
+                    "inlet_flow": summary.get("flow_m3s"),
+                    "outlet_flow": summary.get("flow_m3s"),
+                    "total_pressure_drop": summary.get("total_pressure_drop_Pa"),
+                    "total_head_loss": summary.get("total_head_m"),
+                    "total_power_required": summary.get("pump_shaft_power_kW"),
+                    "velocity": comps[0].get("velocity") if comps else None,
+                    "reynolds": comps[0].get("reynolds") if comps else None,
+                    "friction_factor": comps[0].get("friction_factor") if comps else None,
+                },
+                "residual_dp": self.residual_dp,
+                "components": comps,
+            }]
 
-    # -------------------- Formatting helpers --------------------
+        first_result = self._all_simulation_results[0] if self._all_simulation_results else {}
+        summary_data = first_result.get("summary", {})
+
+        # Store as ProcessPI variables for calculations
+        self.inlet_flow = summary_data.get("inlet_flow")
+        self.outlet_flow = summary_data.get("outlet_flow")
+        self.total_pressure_drop = summary_data.get("total_pressure_drop")
+        self.total_head_loss = summary_data.get("total_head_loss")
+        self.total_power_required = summary_data.get("total_power_required")
+        self.velocity = summary_data.get("velocity")
+        self.reynolds = summary_data.get("reynolds")
+        self.friction_factor = summary_data.get("friction_factor")
+        self.components: List[Dict[str, Any]] = first_result.get("components", [])
+
+    # -------------------- Console formatting --------------------
     @staticmethod
-    def _format_pressure(val: Optional[Any]) -> str:
-        if val is None:
-            return "N/A"
-        v = getattr(val, "value", val)
-        if v >= 1e6:
-            return f"{v / 1e6:.2f} MPa"
-        elif v >= 1e3:
-            return f"{v / 1e3:.2f} kPa"
-        return f"{v:.2f} Pa"
+    def _format_pressure(val) -> str:
+        return f"{val:.2f}" if val is not None else "N/A"
 
     @staticmethod
-    def _format_power(val: Optional[Any]) -> str:
-        if val is None:
-            return "N/A"
-        v = getattr(val, "value", val)
-        if v >= 1e3:
-            return f"{v / 1e3:.2f} kW"
-        return f"{v:.2f} W"
+    def _format_power(val) -> str:
+        return f"{val:.2f}" if val is not None else "N/A"
 
     @staticmethod
-    def _get_value(val: Any) -> Any:
-        return getattr(val, "value", val)
+    def _format_velocity(val) -> str:
+        return f"{val:.3f}" if val is not None else "N/A"
+
+    @staticmethod
+    def _format_reynolds(val) -> str:
+        return f"{val:.2f}" if val is not None else "N/A"
+
+    @staticmethod
+    def _format_friction(val) -> str:
+        return f"{val:.4f}" if val is not None else "N/A"
 
     # -------------------- Main summaries --------------------
-    def summary(self, top_n: Optional[int] = None) -> List[Dict[str, Any]]:
-        if top_n is None or top_n == 1:
-            optimum_result = self.get_optimum_result()
-            if not optimum_result:
-                print("No optimum result found.")
-                return []
+    def summary(self) -> List[Dict[str, Any]]:
+        if not self._all_simulation_results:
+            print("No simulation results available.")
+            return []
 
-            summary_data = optimum_result.get("summary", {})
-            residual_dp = optimum_result.get("residual_dp", 0)
+        summaries = []
+        for idx, result in enumerate(self._all_simulation_results):
+            summary_data = result.get("summary", {})
+            residual_dp = result.get("residual_dp", 0)
 
-            print("\n=== Optimum Pipeline Summary ===")
-            print(f"Network Name: {optimum_result.get('network_name', 'N/A')}")
-            print(f"Simulation Mode: {optimum_result.get('mode', 'N/A').capitalize()}")
-            print(f"Inlet Flow Rate: {summary_data.get('inlet_flow', 0):.3f} m³/s")
-            print(f"Outlet Flow Rate: {summary_data.get('outlet_flow', 0):.3f} m³/s")
+            print(f"\n=== Pipeline Result {idx+1} ({result.get('network_name', 'N/A')}) ===")
+            print(f"Mode: {result.get('mode', 'N/A').capitalize()}")
+            print(f"Inlet Flow: {summary_data.get('inlet_flow', 0):.3f} m³/s")
+            print(f"Outlet Flow: {summary_data.get('outlet_flow', 0):.3f} m³/s")
             print(f"Total Pressure Drop: {self._format_pressure(summary_data.get('total_pressure_drop'))}")
             print(f"Total Head Loss: {summary_data.get('total_head_loss', 0):.2f} m")
             print(f"Total Power Required: {self._format_power(summary_data.get('total_power_required'))}")
+            print(f"Velocity: {self._format_velocity(summary_data.get('velocity'))}")
+            print(f"Reynolds Number: {self._format_reynolds(summary_data.get('reynolds'))}")
+            print(f"Friction Factor: {self._format_friction(summary_data.get('friction_factor'))}")
             if residual_dp:
-                print(f"Residual ΔP available for control valve: {residual_dp:.3f} kPa")
+                print(f"Residual ΔP: {residual_dp:.3f} kPa")
 
-            return [{
-                "network_name": optimum_result.get("network_name"),
-                "simulation_mode": optimum_result.get("mode"),
-                "inlet_flow": self._get_value(summary_data.get("inlet_flow", 0)),
-                "outlet_flow": self._get_value(summary_data.get("outlet_flow", 0)),
-                "total_pressure_drop": self._get_value(summary_data.get("total_pressure_drop", 0)),
-                "total_head_loss": self._get_value(summary_data.get("total_head_loss", 0)),
-                "total_power_required": self._get_value(summary_data.get("total_power_required", 0)),
-                "residual_dp": residual_dp,
-            }]
-
-        # Top N results in tabular form
-        top_results = self.get_top_n_results(top_n)
-        if not top_results:
-            print(f"No top {top_n} results found.")
-            return []
-
-        table = []
-        summaries = []
-        for i, result in enumerate(top_results):
-            summary_data = result.get("summary", {})
-            residual_dp = result.get("residual_dp", 0)
             summaries.append({
                 "network_name": result.get("network_name"),
                 "simulation_mode": result.get("mode"),
-                "inlet_flow": self._get_value(summary_data.get("inlet_flow", 0)),
-                "outlet_flow": self._get_value(summary_data.get("outlet_flow", 0)),
-                "total_pressure_drop": self._get_value(summary_data.get("total_pressure_drop", 0)),
-                "total_head_loss": self._get_value(summary_data.get("total_head_loss", 0)),
-                "total_power_required": self._get_value(summary_data.get("total_power_required", 0)),
+                "inlet_flow": summary_data.get("inlet_flow"),
+                "outlet_flow": summary_data.get("outlet_flow"),
+                "total_pressure_drop": summary_data.get("total_pressure_drop"),
+                "total_head_loss": summary_data.get("total_head_loss"),
+                "total_power_required": summary_data.get("total_power_required"),
+                "velocity": summary_data.get("velocity"),
+                "reynolds": summary_data.get("reynolds"),
+                "friction_factor": summary_data.get("friction_factor"),
                 "residual_dp": residual_dp,
             })
-            table.append([
-                i + 1,
-                result.get("network_name", "N/A"),
-                result.get("mode", "N/A").capitalize(),
-                f"{summary_data.get('inlet_flow', 0):.3f}",
-                f"{summary_data.get('outlet_flow', 0):.3f}",
-                self._format_pressure(summary_data.get("total_pressure_drop")),
-                f"{summary_data.get('total_head_loss', 0):.2f}",
-                self._format_power(summary_data.get("total_power_required")),
-                f"{residual_dp:.3f}"
-            ])
-
-        headers = ["#", "Network", "Mode", "Inlet Flow (m³/s)", "Outlet Flow (m³/s)",
-                   "Pressure Drop", "Head Loss (m)", "Power", "Residual ΔP (kPa)"]
-        print(f"\n=== Top {top_n} Pipeline Simulation Results ===")
-        print(tabulate(table, headers=headers, tablefmt="grid"))
-
         return summaries
 
-    # -------------------- Component details --------------------
-    def detailed_summary(self, top_n: Optional[int] = 1) -> None:
-        top_results = self.get_top_n_results(top_n)
-        if not top_results:
-            print(f"No results available for detailed summary of top {top_n}.")
+    # -------------------- Detailed component summaries --------------------
+    def detailed_summary(self) -> None:
+        if not self._all_simulation_results:
+            print("No simulation results available.")
             return
 
-        for idx, result in enumerate(top_results):
+        for idx, result in enumerate(self._all_simulation_results):
             summary_data = result.get("summary", {})
             residual_dp = result.get("residual_dp", 0)
             print(f"\n=== Detailed Components for Result {idx+1} ({result.get('network_name', 'N/A')}) ===")
-            print(f"Simulation Mode: {result.get('mode', 'N/A').capitalize()}")
+            print(f"Mode: {result.get('mode', 'N/A').capitalize()}")
             print(f"Inlet Flow: {summary_data.get('inlet_flow', 0):.3f} m³/s, "
                   f"Outlet Flow: {summary_data.get('outlet_flow', 0):.3f} m³/s, "
                   f"Total Pressure Drop: {self._format_pressure(summary_data.get('total_pressure_drop'))}, "
                   f"Residual ΔP: {residual_dp:.3f} kPa, "
-                  f"Power: {self._format_power(summary_data.get('total_power_required'))}")
+                  f"Power: {self._format_power(summary_data.get('total_power_required'))}, "
+                  f"Velocity: {self._format_velocity(summary_data.get('velocity'))}, "
+                  f"Re: {self._format_reynolds(summary_data.get('reynolds'))}, "
+                  f"Friction Factor: {self._format_friction(summary_data.get('friction_factor'))}")
 
             components_data = result.get("components", [])
             if components_data:
@@ -135,40 +135,18 @@ class PipelineResults:
                     comp_table.append([
                         comp.get("name") or comp.get("type", "Component"),
                         comp.get("type"),
-                        self._format_pressure(comp.get("pressure_drop")),
+                        comp.get("total_dp") or comp.get("pressure_drop"),
                         comp.get("velocity"),
-                        comp.get("reynolds_number"),
+                        comp.get("reynolds"),
                         comp.get("friction_factor"),
-                        comp.get("head_loss"),
-                        self._format_power(comp.get("power")),
+                        comp.get("major_dp"),
+                        comp.get("minor_dp"),
+                        comp.get("elevation_dp"),
                     ])
-                headers = ["Name", "Type", "Pressure Drop", "Velocity", "Re", "Friction Factor", "Head Loss", "Power"]
+                headers = ["Name", "Type", "Pressure Drop", "Velocity", "Re", "Friction Factor",
+                           "Major ΔP", "Minor ΔP", "Elevation ΔP"]
                 print(tabulate(comp_table, headers=headers, tablefmt="grid"))
 
-    # -------------------- Raw results & utility --------------------
+    # -------------------- Raw results --------------------
     def to_dict(self) -> Dict[str, Any]:
         return self.results
-
-    def add_info(self, key: str, value: Any) -> None:
-        self.results.setdefault("extra_info", {})[key] = value
-
-    # -------------------- Selection helpers --------------------
-    def get_optimum_result(self, target_dp: Optional[Any] = None) -> Optional[Dict[str, Any]]:
-        top_results = self.get_top_n_results(1, target_dp)
-        return top_results[0] if top_results else None
-
-    def get_top_n_results(self, n: int, target_dp: Optional[Any] = None) -> List[Dict[str, Any]]:
-        target = target_dp or self._target_dp
-        if not self._all_simulation_results or not target:
-            return []
-        try:
-            target_pa = target.to("Pa").value
-        except (AttributeError, NotImplementedError):
-            return []
-
-        valid_results = [r for r in self._all_simulation_results if 'total_pressure_drop' in r.get('summary', {})]
-        sorted_results = sorted(
-            valid_results,
-            key=lambda x: abs(x['summary']['total_pressure_drop'].to("Pa").value - target_pa)
-        )
-        return sorted_results[:n]

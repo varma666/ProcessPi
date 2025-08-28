@@ -21,8 +21,17 @@ from .reynolds_number import ReynoldsNumber
 from .optimium_pipe_dia import OptimumPipeDiameter
 from .velocity import FluidVelocity
 from .friction_factor_colebrookwhite import ColebrookWhite
+from .pressure_drop_hazen_williams import PressureDropHazenWilliams
 from .flow_type import TypeOfFlow
 
 # Define the public API of the module. This list specifies which objects are accessible
 # when a user imports the package using `from process_pi_engine import *`.
-__all__ = ["PressureDropDarcy", "PressureDropFanning", "PumpPower", "ReynoldsNumber", "OptimumPipeDiameter", "FluidVelocity", "ColebrookWhite", "TypeOfFlow"]
+__all__ = ["PressureDropDarcy",
+           "PressureDropFanning", 
+           "PumpPower", 
+           "ReynoldsNumber", 
+           "OptimumPipeDiameter", 
+           "FluidVelocity", 
+           "ColebrookWhite", 
+           "PressureDropHazenWilliams", 
+           "TypeOfFlow"]
