@@ -41,6 +41,8 @@ from .piping_costs import PipeCostModel
 from ..calculations.fluids import (
     FluidVelocity, ReynoldsNumber, PressureDropDarcy, OptimumPipeDiameter, PressureDropFanning, ColebrookWhite
 )
+# Hazen-Williams calculator (user provided module)
+from ..calculations.pressure_drop.hazen_williams import PressureDropHazenWilliams
 
 # ------------------------------- Constants ---------------------------------
 G = 9.80665  # m/s^2
@@ -143,6 +145,8 @@ class PipelineEngine:
         self.data.setdefault("flow_split", {})
         self.data.setdefault("tolerance_m3s", DEFAULT_FLOW_TOL)
         self.data.setdefault("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
+        # calculation method: 'darcy_weisbach' or 'hazen_williams'
+        self.data.setdefault("method", "darcy_weisbach")
 
         # validate network type if present
         net = self.data.get("network")
