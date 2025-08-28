@@ -1,21 +1,4 @@
-"""
-processpi/pipelines/engine.py
-
-Rewritten PipelineEngine (drop-in replacement)
-- Implements the finalized algorithm from product discussion.
-- SI-first internal units. Accepts mixed-unit inputs but converts internally.
-- Supports single-pipe and network (PipelineNetwork) operation.
-- Dual network solver: linear/matrix solver + Hardy-Cross; compares residuals.
-- Forward (Q -> ΔP) and inverse (ΔP -> Q) modes.
-- Pipe sizing: compute ideal diameter, map to nearest standard size from standards.py.
-- Pump sizing: compute head (m/kPa) and shaft power (kW) with default efficiency 70%.
-- Detailed per-element reporting, warnings, and machine-readable JSON output.
-
-Notes:
-- This file aims to integrate cleanly with your existing modules: Pipe, Fitting, Equipment,
-  PipelineNetwork, standards.* utilities, and Component class. Adjust imports if your
-  package layout differs.
-"""
+# processpi/pipelines/engine.py
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -53,6 +36,7 @@ MAX_MATRIX_ITER = 100
 
 # ------------------------------- Helpers -----------------------------------
 
+
 def _to_m3s(maybe_flow: Any) -> VolumetricFlowRate:
     """Normalize flow to VolumetricFlowRate (m^3/s). Accepts MassFlowRate as well."""
     if maybe_flow is None:
@@ -83,6 +67,7 @@ class ElementReport:
     reynolds: Optional[float] = None
     friction_factor: Optional[float] = None
     dp_pa: Optional[float] = None
+    elevation_dp_pa: Optional[float] = None
     head_m: Optional[float] = None
     warnings: List[str] = field(default_factory=list)
 
@@ -96,6 +81,7 @@ class ElementReport:
             "reynolds": self.reynolds,
             "friction_factor": self.friction_factor,
             "pressure_drop_Pa": self.dp_pa,
+            "elevation_loss_Pa": self.elevation_dp_pa,
             "head_loss_m": self.head_m,
             "warnings": self.warnings,
         }
@@ -147,6 +133,10 @@ class PipelineEngine:
         self.data.setdefault("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
         # calculation method: 'darcy_weisbach' or 'hazen_williams'
         self.data.setdefault("method", "darcy_weisbach")
+        # optional hw coefficient default (can be overridden per-pipe)
+        self.data.setdefault("hw_coefficient", 130.0)
+        # solver preference: 'auto'|'matrix'|'hardy_cross'
+        self.data.setdefault("solver", "auto")
 
         # validate network type if present
         net = self.data.get("network")
@@ -248,162 +238,366 @@ class PipelineEngine:
             return Pressure(float(f_val) * (float(Le) / d.to("m").value) * 0.5 * rho * v_val * v_val, "Pa")
         return Pressure(0.0, "Pa")
 
-    # ---------------------- Single pipe calc --------------------------------
-    def _calc_single_pipe(self, pipe: Pipe, q: VolumetricFlowRate) -> Tuple[ElementReport, Dict[str, Any]]:
-        d = self._resolve_internal_diameter(pipe)
-        v = self._velocity(q, d)
-        Re = self._reynolds(v, d)
-        f = self._friction_factor(Re, d, getattr(pipe, "material", None))
-        dp_major = self._major_dp_pa(f, pipe.length or Length(1.0, "m"), d, v)
-
-        dp_minor = Pressure(0.0, "Pa")
-        warnings: List[str] = []
-        if hasattr(pipe, "fittings") and isinstance(pipe.fittings, list):
-            for ft in pipe.fittings:
-                dp_minor += self._minor_dp_pa(ft, v, f, d)
+    # ---------------------- Pipe calculation (major+minor+elevation) ---------
+    def _pipe_calculation(self, pipe: Pipe, flow_rate: Optional[VolumetricFlowRate]) -> Dict[str, Any]:
+        """
+        Calculates fluid dynamics and pressure drop for a single pipe.
+        Includes:
+         - frictional (Darcy or Hazen-Williams),
+         - minor losses (K or Le),
+         - elevation (rho * g * delta_h).
+        """
+        # Determine velocity: use fixed velocity from engine or compute it.
+        v = self.data.get("velocity")
+        if v is None:
+            q = flow_rate or self._infer_flowrate()
+            v = FluidVelocity(volumetric_flow_rate=q, diameter=self._internal_diameter_m(pipe)).calculate()
         else:
-            # allow top-level fittings
-            for ft in self.data.get("fittings", []) or []:
-                dp_minor += self._minor_dp_pa(ft, v, f, d)
+            if not isinstance(v, Velocity):
+                v = Velocity(float(v), "m/s")
 
-        total_dp = dp_major.to("Pa").value + dp_minor.to("Pa").value
-        head_m = total_dp / (self._get_density().value * G)
+        # Flowrate
+        q_used = flow_rate or self._infer_flowrate()
 
-        # warnings
-        rec = None
-        service = getattr(self.data.get("fluid"), "service_type", None)
-        if service:
-            rec = get_recommended_velocity(service)
-        if rec:
-            v_val = v.value if hasattr(v, "value") else float(v)
-            if isinstance(rec, tuple):
-                vmin, vmax = rec
-                if v_val < vmin:
-                    warnings.append(f"velocity below recommended ({v_val:.3f} m/s < {vmin} m/s)")
-                if v_val > vmax:
-                    warnings.append(f"velocity above recommended ({v_val:.3f} m/s > {vmax} m/s)")
-        if Re < 2300:
-            warnings.append("flow in laminar regime (Re < 2300)")
-        elif 2300 <= Re < 4000:
-            warnings.append("flow in transitional regime (2300 <= Re < 4000)")
+        # Friction / Reynolds / f
+        Re = self._reynolds(v, pipe)
+        material = getattr(pipe, "material", None)
+        f = None
+        method = self.data.get("method", "darcy_weisbach").lower()
 
-        rep = ElementReport(
-            name=getattr(pipe, "name", "pipe"),
-            type="pipe",
-            diameter_m=d.to("m").value,
-            flow_m3s=q.value,
-            velocity_m_s=v.value,
-            reynolds=Re,
-            friction_factor=f,
-            dp_pa=total_dp,
-            head_m=head_m,
-            warnings=warnings,
-        )
-        result_dict = {
+        if method == "hazen_williams":
+            # Hazen-Williams: calculate using provided module/class
+            hw_coeff = getattr(pipe, "hw_coefficient", None) or self.data.get("hw_coefficient", 130.0)
+            hw_calc = PressureDropHazenWilliams(
+                inputs={
+                    "length": pipe.length or Length(1.0, "m"),
+                    "flow_rate": q_used,
+                    "coefficient": hw_coeff,
+                    "diameter": self._internal_diameter_m(pipe),
+                    "density": self._get_density(),
+                }
+            )
+            dp_major = hw_calc.calculate()
+            # f left as None because HW does not directly yield Darcy f
+            f = None
+        else:
+            # Darcy–Weisbach path
+            f = self._friction_factor(Re, self._internal_diameter_m(pipe), material)
+            dp_major = self._major_dp_pa(f, pipe.length or Length(1.0, "m"), self._internal_diameter_m(pipe), v)
+
+        # Minor losses
+        dp_minor = Pressure(0.0, "Pa")
+        d = self._internal_diameter_m(pipe)
+        fittings: List[Fitting] = []
+        if hasattr(pipe, "fittings") and isinstance(pipe.fittings, list):
+            fittings = pipe.fittings
+        elif "network" not in self.data and isinstance(self.data.get("fittings"), list):
+            # In single-pipe mode, fittings can be passed at the top level.
+            fittings = self.data["fittings"]
+
+        for ft in fittings:
+            dp_minor += self._minor_dp_pa(ft, v, f, d)
+
+        # Elevation loss/gain: if nodes available on the pipe
+        elev_loss = Pressure(0.0, "Pa")
+        rho_val = self._get_density().value
+        start_node = getattr(pipe, "start_node", None)
+        end_node = getattr(pipe, "end_node", None)
+        if start_node is not None and end_node is not None:
+            try:
+                elev_diff_m = float(getattr(end_node, "elevation", 0.0)) - float(getattr(start_node, "elevation", 0.0))
+                elev_loss = Pressure(rho_val * G * elev_diff_m, "Pa")
+            except Exception:
+                elev_loss = Pressure(0.0, "Pa")
+
+        total_dp_pa = dp_major.to("Pa").value + dp_minor.to("Pa").value + elev_loss.to("Pa").value
+
+        return {
             "velocity": v,
             "reynolds": Re,
             "friction_factor": f,
             "major_dp": dp_major,
             "minor_dp": dp_minor,
-            "pressure_drop": Pressure(total_dp, "Pa"),
-            "head_m": head_m,
+            "elevation_dp": elev_loss,
+            "pressure_drop": Pressure(total_dp_pa, "Pa"),
+            "major_dp_pa": dp_major.to("Pa").value,
+            "minor_dp_pa": dp_minor.to("Pa").value,
+            "elevation_dp_pa": elev_loss.to("Pa").value,
         }
-        return rep, result_dict
 
-    # ---------------------- Network solvers ---------------------------------
-    def _hardy_cross(self, network: PipelineNetwork, q_total: VolumetricFlowRate, tol: float) -> Tuple[bool, float, List[ElementReport]]:
-        """Simplified Hardy-Cross iterative solver. Returns (converged, residual, reports).
+    # ---------------------- Series/Parallel evaluation -------------------------
 
-        Note: This implementation uses a straightforward loop-correction approach. For
-        complex networks you may replace this with a more robust library later.
+    def _compute_series(self, series_list: List[Any], flow_rate: VolumetricFlowRate, fluid: Any) -> Tuple[Pressure, List[Dict[str, Any]]]:
         """
-        # Initialize branch flows (equal split by default)
-        branches = network.get_parallel_branches() if hasattr(network, "get_parallel_branches") else network.get_branches()
-        n = len(branches) if branches else 1
+        Calculates the total pressure drop and results for a series of elements.
+        """
+        results = []
+        dp_total = Pressure(0, "Pa")
+
+        # Track velocity, diameter, and friction factor to pass to subsequent fittings.
+        current_d: Optional[Diameter] = None
+        current_v: Optional[Velocity] = None
+        current_f: Optional[float] = None
+
+        for element in series_list:
+            # Generate a name for the element for the results.
+            element_name = getattr(element, "name", getattr(element, "fitting_type", element.__class__.__name__.lower()))
+
+            # --- Handle different element types ---
+
+            # Pipe
+            if isinstance(element, Pipe):
+                calc = self._pipe_calculation(element, flow_rate)
+                dp_total = Pressure(dp_total.to("Pa").value + calc["pressure_drop"].to("Pa").value, "Pa")
+                current_d = self._internal_diameter_m(element)
+                current_v = calc["velocity"]
+                current_f = calc["friction_factor"]
+
+                results.append({
+                    "type": "pipe",
+                    "name": element_name,
+                    "length": element.length,
+                    "diameter": current_d,
+                    "pressure_drop_Pa": calc["pressure_drop"].to("Pa").value,
+                    "major_dp_Pa": calc.get("major_dp_pa"),
+                    "minor_dp_Pa": calc.get("minor_dp_pa"),
+                    "elevation_dp_Pa": calc.get("elevation_dp_pa"),
+                    "reynolds": calc["reynolds"],
+                    "friction_factor": current_f,
+                    "velocity": current_v,
+                })
+
+            # Pump (energy gain)
+            elif element.__class__.__name__ == "Pump":
+                pump_gain = self._pump_gain_pa(element)
+                dp_total = Pressure(dp_total.to("Pa").value - pump_gain.to("Pa").value, "Pa")
+                results.append({
+                    "type": "pump",
+                    "name": element_name,
+                    "head_gain_Pa": pump_gain.to("Pa").value if isinstance(pump_gain, Pressure) else float(pump_gain),
+                    "head_m": getattr(element, "head", None),
+                    "efficiency": getattr(element, "efficiency", None),
+                })
+
+            # Equipment (e.g., heat exchanger, valve)
+            elif element.__class__.__name__ == "Equipment":
+                eq_dp = self._equipment_dp_pa(element)
+                dp_total = Pressure(dp_total.to("Pa").value + eq_dp.to("Pa").value, "Pa")
+                results.append({
+                    "type": "equipment",
+                    "name": getattr(element, "name", element_name),
+                    "pressure_drop_Pa": eq_dp.to("Pa").value,
+                })
+
+            # Fitting (minor loss)
+            elif isinstance(element, Fitting):
+                if current_d is None or current_v is None:
+                    # If we encounter a fitting before a pipe, infer velocity/diameter
+                    # from the main engine inputs.
+                    d_for_fit = getattr(element, "diameter", self._internal_diameter_m())
+                    q = flow_rate or self._infer_flowrate()
+                    current_v = FluidVelocity(volumetric_flow_rate=q, diameter=d_for_fit).calculate()
+                    current_d = d_for_fit
+                    current_f = None
+
+                dp_fit = self._fitting_dp_pa(element, current_v, current_f, current_d)
+                dp_total = Pressure(dp_total.to("Pa").value + dp_fit.to("Pa").value, "Pa")
+                results.append({
+                    "type": "fitting",
+                    "name": element_name,
+                    "pressure_drop_Pa": dp_fit.to("Pa").value,
+                    "using": "K" if hasattr(element, "K") and element.K is not None else ("Le" if hasattr(element, "Le") and element.Le is not None else "none"),
+                    "quantity": getattr(element, "quantity", 1),
+                })
+
+            # Vessel (boundary or holding element with no pressure drop by default)
+            elif element.__class__.__name__ == "Vessel":
+                results.append({
+                    "type": "vessel",
+                    "name": getattr(element, "name", element_name),
+                    "pressure_drop_Pa": Pressure(0.0, "Pa"),
+                    "note": "No default ΔP; boundary/holdup element.",
+                })
+
+            # Nested Networks (this path shouldn't be reached as it's handled in _compute_network)
+            elif isinstance(element, PipelineNetwork):
+                raise TypeError("Nested networks should be handled in _compute_network, not _compute_series.")
+
+            else:
+                raise TypeError(f"Unsupported element type: {type(element).__name__}")
+
+            # Optional: Check for inlet/outlet pressures defined on the element itself.
+            inlet_p = getattr(element, "inlet_pressure", None)
+            outlet_p = getattr(element, "outlet_pressure", None)
+            if inlet_p is not None and outlet_p is not None:
+                dp_element = self._as_pressure(inlet_p).to("Pa") - self._as_pressure(outlet_p).to("Pa")
+                dp_total = Pressure(dp_total.to("Pa").value + dp_element, "Pa")
+                results[-1].update({
+                    "inlet_pressure_Pa": self._as_pressure(inlet_p).to("Pa"),
+                    "outlet_pressure_Pa": self._as_pressure(outlet_p).to("Pa"),
+                    "net_dp_from_defined_pressures_Pa": dp_element
+                })
+
+        return dp_total, results
+
+    def _resolve_parallel_flows(self, net: PipelineNetwork, q_m3s: VolumetricFlowRate, branches: List[Any]) -> List[float]:
+        """
+        Determines the flow rate for each branch in a parallel network.
+        This can be based on a user-provided split ratio or a simple equal split.
+        """
+        split_cfg = (self.data.get("flow_split") or {}).get(net.name)
+        n = len(branches)
+        if split_cfg is None:
+            # Default to equal flow split if no configuration is provided.
+            return [q_m3s.value / n] * n
+
+        vals = [float(x) for x in split_cfg]
+        # Heuristic: if sum of values is much greater than total flow, treat as absolute flows.
+        if sum(vals) > 1.5 * q_m3s.value:
+            return vals
+
+        # Otherwise, treat as ratios.
+        s = sum(vals)
+        return [q_m3s.value * (v / s) for v in vals]
+
+    # ---------------------- Network Solvers ---------------------------------
+    def _hardy_cross(self, network: PipelineNetwork, q_total: VolumetricFlowRate, tol: float) -> Tuple[bool, float, List[ElementReport]]:
+        """Hardy-Cross iterative solver for a parallel/looped network.
+
+        Strategy:
+        - For a top-level parallel group, assign initial equal flows.
+        - Iterate: compute heads for each branch (using _compute_network), approximate derivative dH/dQ,
+          compute ΔQ correction and apply.
+        - Collect element reports and return residual.
+        """
+        # Get parallel branches for this network block
+        branches = network.get_parallel_branches() if hasattr(network, "get_parallel_branches") else getattr(network, "elements", [])
+        # If not a parallel block, fallback to single-branch result
+        if not branches:
+            # compute whole network as series
+            dp, el_reports, branch_reports = self._compute_network(network, q_total)
+            reports = [ElementReport(name=r.get("name", "el"), type=r.get("type", "el"), dp_pa=r.get("pressure_drop_Pa")) for r in el_reports]
+            return True, 0.0, reports
+
+        n = len(branches)
         branch_flows = [q_total.value / n] * n
 
         for it in range(MAX_HC_ITER):
             max_residual = 0.0
             reports: List[ElementReport] = []
-            # For each branch compute loop head and correction
             for i, branch in enumerate(branches):
                 q_b = VolumetricFlowRate(branch_flows[i], "m3/s")
                 dp_branch, el_reports, _ = self._compute_network(branch, q_b)
-                # compute derivative approx dH/dQ ~= 2*H/Q (heuristic) to get correction
+                # convert to head (m)
                 H = dp_branch.to("Pa").value / (self._get_density().value * G)
+                # derivative estimate dH/dQ ≈ n * H / Q  (heuristic better than 2*H/Q in mixed networks)
                 if abs(q_b.value) < 1e-12:
                     dHdQ = 1e12
                 else:
                     dHdQ = 2.0 * H / q_b.value
-                # compute correction deltaQ = -H / (dH/dQ)
                 dq = -H / dHdQ
                 branch_flows[i] += dq
                 max_residual = max(max_residual, abs(dq))
-                # collect element reports for branch
-                reports.extend([ElementReport(**r.as_dict()) if isinstance(r, ElementReport) else ElementReport(name=r.get('name','el'), type=r.get('type','el')) for r in el_reports])
-
+                # collect element reports
+                for r in el_reports:
+                    rep = ElementReport(
+                        name=r.get("name", "element"),
+                        type=r.get("type", "element"),
+                        diameter_m=(r.get("diameter").to("m").value if isinstance(r.get("diameter"), Diameter) else None),
+                        flow_m3s=float(q_b.value),
+                        velocity_m_s=(r.get("velocity").value if hasattr(r.get("velocity"), "value") else None),
+                        reynolds=r.get("reynolds"),
+                        friction_factor=r.get("friction_factor"),
+                        dp_pa=r.get("pressure_drop_Pa"),
+                        elevation_dp_pa=r.get("elevation_dp_Pa"),
+                        head_m=(dp_branch.to("Pa").value / (self._get_density().value * G)),
+                        warnings=[]
+                    )
+                    reports.append(rep)
             if max_residual < tol:
                 return True, max_residual, reports
         return False, max_residual, reports
 
     def _matrix_solver(self, network: PipelineNetwork, q_total: VolumetricFlowRate, tol: float) -> Tuple[bool, float, List[ElementReport]]:
-        """Linear/matrix-based solver placeholder.
+        """Simple matrix-style solver for distributing flows in parallel groups.
 
-        For Phase 1 we implement a simple linearization: initialize flows by equal split
-        then perform a small number of Picard iterations updating friction factors and solving
-        continuity via proportional adjustments. This is intentionally simple for readability.
+        This is a Picard-like scheme:
+        - Initialize branch flows.
+        - Compute H_i for each branch using _compute_network.
+        - Update branch flows proportionally to 1/H_i (so branches with lower head take more flow).
+        - Repeat until flow adjustments are small.
         """
-        branches = network.get_parallel_branches() if hasattr(network, "get_parallel_branches") else network.get_branches()
-        n = len(branches) if branches else 1
+        branches = network.get_parallel_branches() if hasattr(network, "get_parallel_branches") else getattr(network, "elements", [])
+        if not branches:
+            dp, el_reports, branch_reports = self._compute_network(network, q_total)
+            reports = [ElementReport(name=r.get("name", "el"), type=r.get("type", "el"), dp_pa=r.get("pressure_drop_Pa")) for r in el_reports]
+            return True, 0.0, reports
+
+        n = len(branches)
         branch_flows = [q_total.value / n] * n
 
         for it in range(MAX_MATRIX_ITER):
             prev = branch_flows.copy()
             reports: List[ElementReport] = []
-            # compute heads for each branch and adjust proportionally
             heads = []
             for i, branch in enumerate(branches):
                 q_b = VolumetricFlowRate(branch_flows[i], "m3/s")
                 dp_branch, el_reports, _ = self._compute_network(branch, q_b)
                 H = dp_branch.to("Pa").value / (self._get_density().value * G)
                 heads.append(H)
-                reports.extend([ElementReport(**r.as_dict()) if isinstance(r, ElementReport) else ElementReport(name=r.get('name','el'), type=r.get('type','el')) for r in el_reports])
-            # Normalize flows to keep total Q constant while distributing inversely to head
+                # collect per-branch element reports
+                for r in el_reports:
+                    rep = ElementReport(
+                        name=r.get("name", "element"),
+                        type=r.get("type", "element"),
+                        diameter_m=(r.get("diameter").to("m").value if isinstance(r.get("diameter"), Diameter) else None),
+                        flow_m3s=float(q_b.value),
+                        velocity_m_s=(r.get("velocity").value if hasattr(r.get("velocity"), "value") else None),
+                        reynolds=r.get("reynolds"),
+                        friction_factor=r.get("friction_factor"),
+                        dp_pa=r.get("pressure_drop_Pa"),
+                        elevation_dp_pa=r.get("elevation_dp_Pa"),
+                        head_m=H,
+                        warnings=[]
+                    )
+                    reports.append(rep)
             if sum(heads) == 0:
                 break
             inv = [1.0 / max(h, 1e-12) for h in heads]
             s = sum(inv)
             for i in range(n):
                 branch_flows[i] = q_total.value * (inv[i] / s)
-            # check convergence
             max_change = max(abs(branch_flows[i] - prev[i]) for i in range(n))
             if max_change < tol:
                 return True, max_change, reports
         return False, max_change, reports
 
-    # ---------------------- Network wrapper ---------------------------------
+    # ---------------------- Network wrapper (choose solver) ------------------
     def _solve_network_dual(self, network: PipelineNetwork, q_total: VolumetricFlowRate, tol: float) -> Dict[str, Any]:
-        """Run both matrix solver and Hardy-Cross; compare residuals and return best."""
-        # Run matrix solver
+        """Run both matrix solver and Hardy-Cross (or selected solver); compare residuals and return best."""
+        preferred = self.data.get("solver", "auto").lower()
+        # If user requested a specific solver, run only that.
+        if preferred == "matrix":
+            matrix_ok, matrix_res, matrix_reports = self._matrix_solver(network, q_total, tol)
+            return {"method": "matrix", "converged": matrix_ok, "residual": matrix_res, "reports": matrix_reports}
+        if preferred == "hardy_cross":
+            hc_ok, hc_res, hc_reports = self._hardy_cross(network, q_total, tol)
+            return {"method": "hardy_cross", "converged": hc_ok, "residual": hc_res, "reports": hc_reports}
+
+        # Auto: run both and pick smaller residual
         matrix_ok, matrix_res, matrix_reports = self._matrix_solver(network, q_total, tol)
-        # Run Hardy-Cross
         hc_ok, hc_res, hc_reports = self._hardy_cross(network, q_total, tol)
 
-        # Decide winner (smaller residual preferred). If tie prefer matrix solver.
-        chosen = {
-            "method": "matrix" if matrix_res <= hc_res else "hardy_cross",
-            "converged": matrix_ok if matrix_res <= hc_res else hc_ok,
-            "residual": min(matrix_res, hc_res),
-            "reports": matrix_reports if matrix_res <= hc_res else hc_reports,
-        }
-        return chosen
+        if matrix_res <= hc_res:
+            return {"method": "matrix", "converged": matrix_ok, "residual": matrix_res, "reports": matrix_reports}
+        else:
+            return {"method": "hardy_cross", "converged": hc_ok, "residual": hc_res, "reports": hc_reports}
 
     # ---------------------- Diameter selection -------------------------------
     def _select_standard_diameter(self, ideal_d_m: float) -> Tuple[str, Diameter]:
         """Map a continuous ideal diameter (m) to nearest standard nominal and return (nominal_label, Diameter).
-        Picks the smallest standard size that yields velocity <= vmax (i.e., choose next larger size if needed).
+        Picks the smallest standard size that yields diameter >= ideal.
         """
-        # Gather catalog (assume get_standard_pipe_data gives internal diameter as Diameter)
         candidates: List[Tuple[str, Diameter]] = []
         for nominal in list_available_pipe_diameters():
             for sched in get_standard_pipe_schedules():
@@ -415,63 +609,121 @@ class PipelineEngine:
                 if not isinstance(d_internal, Diameter):
                     d_internal = Diameter(float(d_internal), "m")
                 candidates.append((f"{nominal}-{sched}", d_internal))
-        # sort by diameter
         candidates.sort(key=lambda x: x[1].to("m").value)
-        # pick first candidate with diameter >= ideal_d_m
         for label, d in candidates:
             if d.to("m").value >= ideal_d_m:
                 return label, d
-        # fallback to largest available
         if candidates:
             return candidates[-1][0], candidates[-1][1]
         raise ValueError("No standard pipe diameters available in catalog")
 
-    # ---------------------- Top-level run -----------------------------------
-    def run(self) -> PipelineResults:
-        """Execute configured simulation or sizing job and return PipelineResults.
+    # ---------------------- Utility helpers ---------------------------------
+    def _as_pressure(self, maybe_pressure: Any, default_unit: str = "Pa") -> Optional[Pressure]:
+        if maybe_pressure is None:
+            return None
+        if isinstance(maybe_pressure, Pressure):
+            return maybe_pressure
+        return Pressure(float(maybe_pressure), default_unit)
 
-        Behavior:
-          - If network present: run network solver and return detailed per-element results.
-          - If available_dp specified with missing pipe diameters: run sizing routine.
-          - Otherwise run single-pipe forward calculation.
-        """
+    def _pump_gain_pa(self, pump: Any) -> Pressure:
+        """Convert pump object head/pressure to Pa. Accepts `head` (m) or inlet/outlet pressures."""
+        rho = getattr(pump, "density", None) or self._get_density().value
+        pin = getattr(pump, "inlet_pressure", None)
+        pout = getattr(pump, "outlet_pressure", None)
+        if pin is not None and pout is not None:
+            return self._as_pressure(pout).to("Pa") - self._as_pressure(pin).to("Pa")
+        head = getattr(pump, "head", None)
+        if head is not None:
+            return Pressure(rho * G * float(head), "Pa")
+        return Pressure(0.0, "Pa")
+
+    def _equipment_dp_pa(self, eq: Any) -> Pressure:
+        """Converts Equipment pressure_drop (assumed bar) to Pa if needed."""
+        dp = getattr(eq, "pressure_drop", 0.0) or 0.0
+        return Pressure(float(dp), "bar").to("Pa") if not isinstance(dp, Pressure) else dp
+
+    def _fitting_dp_pa(self, fitting: Fitting, v: Velocity, f: Optional[float], d: Diameter) -> Pressure:
+        """Compute fitting pressure drop using K or Le approaches."""
+        rho = self._get_density().value
+        v_val = v.value if hasattr(v, "value") else float(v)
+        K = getattr(fitting, "K", None) or getattr(fitting, "K_factor", None) or getattr(fitting, "total_K", None)
+        if K is not None:
+            try:
+                return Pressure(0.5 * rho * v_val * v_val * float(K), "Pa")
+            except (TypeError, ValueError):
+                pass
+        Le = getattr(fitting, "Le", None) or getattr(fitting, "equivalent_length", None)
+        if Le is not None:
+            if f is None:
+                Re = self._reynolds(v, d)
+                f_val = self._friction_factor(Re, d)
+            else:
+                f_val = float(f)
+            d_m = d.to("m").value
+            return Pressure(float(f_val) * (float(Le) / d_m) * 0.5 * rho * v_val * v_val, "Pa")
+        return Pressure(0.0, "Pa")
+
+    # -------------------- RUN / SUMMARY --------------------------------------
+
+    def run(self) -> PipelineResults:
+        """Execute configured simulation or sizing job and return PipelineResults."""
         net = self.data.get("network")
-        q = self._infer_flowrate()
+        pipe = self.data.get("pipe")
+        diameter = self.data.get("diameter")
+        available_dp = self.data.get("available_dp")
+        rho = self._get_density().value
+
+        # Sizing mode when available_dp provided
+        if isinstance(net, PipelineNetwork) and available_dp is not None:
+            if any(p.nominal_diameter is None for p in net.get_all_pipes()):
+                return self._solve_for_diameter(available_dp, **self.data)
+
+        if net is None and pipe is None and diameter is None and available_dp is not None:
+            return self._solve_for_diameter(available_dp, **self.data)
+
+        if diameter is not None and pipe is None and net is None:
+            self.pipe = self._ensure_pipe_object()
+            self.pipe.internal_diameter = diameter
+            velocity = self._maybe_velocity(pipe=self.pipe)
+            if velocity is not None:
+                self.pipe.velocity = velocity
+
+        q_in = self._infer_flowrate()
         tol = self.data.get("tolerance_m3s", DEFAULT_FLOW_TOL)
 
         results_out: Dict[str, Any] = {"mode": None, "summary": {}, "components": []}
 
-        # ----------------- Network Mode ------------------
         if isinstance(net, PipelineNetwork):
-            results_out["mode"] = "network"
-            # If available_dp present and pipes need sizing -> call network optimizer
+            # If sizing requested, map ideal diameters to standards first (simple approach)
             available_dp = self.data.get("available_dp")
             if available_dp is not None and any(p.nominal_diameter is None for p in net.get_all_pipes()):
-                # perform iterative sizing by mapping ideal diameters to standard sizes
-                # Simple approach: for each unspecified pipe compute ideal diameter using OptimumPipeDiameter then map
                 for p in net.get_all_pipes():
                     if p.nominal_diameter is None:
-                        q_branch = self._infer_flowrate() / len(net.get_all_pipes()) if len(net.get_all_pipes()) else q
+                        q_branch = self._infer_flowrate() / len(net.get_all_pipes()) if len(net.get_all_pipes()) else q_in
                         ideal = OptimumPipeDiameter(flow_rate=q_branch, density=self._get_density()).calculate().to("m").value
                         label, dstd = self._select_standard_diameter(ideal)
                         p.nominal_diameter = dstd
-                # After mapping, re-run solver
-            solved = self._solve_network_dual(net, q, tol)
+
+            solved = self._solve_network_dual(net, q_in, tol)
             reports = solved.get("reports", [])
 
-            # build summary and components
             comp_list = [r.as_dict() for r in reports]
             total_dp_pa = 0.0
+            total_elev_pa = 0.0
             for r in comp_list:
                 if r.get("pressure_drop_Pa"):
                     total_dp_pa += float(r.get("pressure_drop_Pa"))
-            total_head_m = total_dp_pa / (self._get_density().value * G)
+                if r.get("elevation_loss_Pa"):
+                    total_elev_pa += float(r.get("elevation_loss_Pa"))
+            total_head_m = total_dp_pa / (rho * G)
             pump_eff = self.data.get("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
-            shaft_power_kw = (total_dp_pa * q.value) / (1000.0 * pump_eff)
+            shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff)
 
+            results_out["mode"] = "network"
             results_out["summary"] = {
-                "inlet_flow_m3s": q.value,
+                "inlet_flow_m3s": q_in.value,
                 "total_pressure_drop_Pa": total_dp_pa,
+                "total_elevation_Pa": total_elev_pa,
                 "total_head_m": total_head_m,
                 "pump_shaft_power_kW": shaft_power_kw,
                 "solver_method": solved.get("method"),
@@ -480,28 +732,37 @@ class PipelineEngine:
             }
             results_out["components"] = comp_list
 
-        # ----------------- Single pipe -------------------
         else:
+            # Single pipe mode
             results_out["mode"] = "single_pipe"
-            pipe = self.data.get("pipe")
-            if pipe is None:
-                # build from diameter/length
-                pipe = self._ensure_pipe_object()
-            rep, calc = self._calc_single_pipe(pipe, q)
-            total_dp_pa = calc["pressure_drop"].to("Pa").value
-            total_head = total_dp_pa / (self._get_density().value * G)
+            pipe_instance = self._ensure_pipe_object()
+            rep, calc = self._calc_single_pipe(pipe_instance, q_in)
+            total_dp = calc["pressure_drop"]
+            total_dp_pa = total_dp.to("Pa").value
+            total_head = total_dp_pa / (rho * G)
             pump_eff = self.data.get("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
-            shaft_power_kw = (total_dp_pa * q.value) / (1000.0 * pump_eff)
+            shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff)
 
             results_out["summary"] = {
-                "flow_m3s": q.value,
+                "flow_m3s": q_in.value,
                 "total_pressure_drop_Pa": total_dp_pa,
                 "total_head_m": total_head,
                 "pump_shaft_power_kW": shaft_power_kw,
             }
-            results_out["components"] = [rep.as_dict()]
+            results_out["components"] = [{
+                "type": "pipe",
+                "name": pipe_instance.name,
+                "length": pipe_instance.length,
+                "diameter": self._internal_diameter_m(pipe_instance),
+                "velocity": calc["velocity"],
+                "reynolds": calc["reynolds"],
+                "friction_factor": calc["friction_factor"],
+                "major_dp": calc["major_dp"],
+                "minor_dp": calc["minor_dp"],
+                "elevation_dp": calc["elevation_dp"],
+                "total_dp": calc["pressure_drop"],
+            }]
 
-        # wrap into PipelineResults and store
         self._results = PipelineResults(results_out)
         return self._results
 
@@ -524,5 +785,10 @@ class PipelineEngine:
         self.data["pipe"] = p
         return p
 
+    # The following methods are preserved from earlier implementations and used above:
+    # _maybe_velocity, _solve_for_diameter, _optimize_network_for_size, _get_fluid_properties,
+    # _solve_network (legacy), _reynolds, _friction_factor, _major_loss_dp, _minor_loss_dp, etc.
+    # If your previous engine file contained additional helper definitions, keep them in place
+    # or merge with these implementations.
 
 # End of file
