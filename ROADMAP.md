@@ -5,7 +5,7 @@
 - **New version every 3 months** (Quarterly release)
 - Includes updates to:
   - **Pipeline Engine** (Pipeline hydraulics, multiphase, compressors, etc.)
-  - **htransfer** (Heat transfer)
+  - **Heat Transfer** (Heat transfer modeling and Equipment Design)
   - **Future modules** (mass transfer, equipment sizing, etc.)
 
 ---
