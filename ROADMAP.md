@@ -15,10 +15,10 @@
 | Version | Release Window | Key Deliverables |
 |----------|---------------|------------------|
 | **v0.3 – Foundation** | **Q4 2025 (Nov)** | Real-gas support, energy balance, steam & cryogenic support, pumps & compressors |
-| **v0.4 – Network Solver** | **Q1 2026 (Feb)** | Newton–Raphson solver for large networks, hybrid solver modes, basic htransfer module |
-| **v0.5 – Complex Fluids** | **Q2 2026 (May)** | Multiphase support, non-Newtonian models, flow regime detection, htransfer enhancements |
-| **v0.6 – Transients & Dynamics** | **Q3 2026 (Aug)** | Water hammer, pump/compressor dynamic models, transient htransfer cases |
-| **v1.0 – Stable Release** | **Q4 2026 (Nov)** | Full API, visualization, component libraries, GUI hooks, stable htransfer + unit operations |
+| **v0.4 – Network Solver** | **Q1 2026 (Feb)** | Newton–Raphson solver for large networks, hybrid solver modes, basic heat transfer module |
+| **v0.5 – Complex Fluids** | **Q2 2026 (May)** | Multiphase support, non-Newtonian models, flow regime detection, heat transfer enhancements |
+| **v0.6 – Transients & Dynamics** | **Q3 2026 (Aug)** | Water hammer, pump/compressor dynamic models, transient heat transfer cases |
+| **v1.0 – Stable Release** | **Q4 2026 (Nov)** | Full API, visualization, component libraries, GUI hooks, stable heat transfer + unit operations |
 
 ---
 
@@ -38,7 +38,7 @@
 |--------|-------|
 | **Month 1** | Network topology parser, incidence matrix builder |
 | **Month 2** | Newton–Raphson solver, hybrid solver logic |
-| **Month 3** | htransfer base module (shell-tube, plate exchangers), documentation, benchmarks |
+| **Month 3** | Heat transfer base module (shell-tube, plate exchangers), documentation, benchmarks |
 
 ---
 
