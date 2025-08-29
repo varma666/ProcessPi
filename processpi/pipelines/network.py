@@ -444,3 +444,21 @@ class PipelineNetwork:
     # ---------------- Python niceties ----------------------------------------
     def __repr__(self) -> str:
         return f"PipelineNetwork(name='{self.name}', type='{self.connection_type}', elements={len(self.elements)})"
+    # ---------------- Utility: Get all pipes in the network ----------------
+    def get_all_pipes(self) -> list[Pipe]:
+        """
+        Returns a flat list of all Pipe objects in this network, including nested subnetworks.
+
+        Returns:
+            list[Pipe]: List of Pipe objects found in the network.
+        """
+        pipes = []
+
+        for element in self.elements:
+            if isinstance(element, Pipe):
+                pipes.append(element)
+            elif isinstance(element, PipelineNetwork):
+                # Recursively get pipes from sub-networks
+                pipes.extend(element.get_all_pipes())
+
+        return pipes

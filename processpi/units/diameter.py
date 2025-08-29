@@ -4,10 +4,6 @@ class Diameter(Variable):
     """
     Represents a Diameter quantity.
     Default SI unit: meters (m).
-
-    Example:
-    d1 = Diameter(100, "mm")
-    d2 = Diameter(4, "in")
     """
 
     _conversion = {
@@ -36,6 +32,7 @@ class Diameter(Variable):
         if target_unit not in self._conversion:
             raise TypeError(f"{target_unit} is not a valid unit for Diameter")
         converted_value = self.value / self._conversion[target_unit]
+        # Return a NEW Diameter object with the converted value and unit
         return Diameter(round(converted_value, 6), target_unit)
 
     def __add__(self, other):
@@ -55,8 +52,12 @@ class Diameter(Variable):
         return hash((self.__class__.__name__, round(self.to_base(), 9)))
 
     def __repr__(self):
-        return f"{self.original_value} {self.original_unit}"
+        # A more detailed representation for debugging
+        return f"Diameter({self.original_value!r}, {self.original_unit!r})"
 
     def __str__(self):
-        # Ensure print() uses the same human-friendly format
-        return f"{round(self.original_value, 6)} {self.original_unit}"
+        # Human-friendly format for printing
+        # This will use the original_value and original_unit set by `to()`
+        return f"{self.original_value} {self.original_unit}"
+    
+

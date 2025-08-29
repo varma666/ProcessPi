@@ -25,6 +25,7 @@ class Pipe(PipelineBase):
         inlet_pressure: Optional[Pressure] = None,
         outlet_pressure: Optional[Pressure] = None,
         internal_diameter: Optional[Diameter] = None,
+        flow_rate: Optional[VolumetricFlowRate] = None,  # <-- NEW
         **kwargs: Any
     ):
         """
@@ -34,13 +35,15 @@ class Pipe(PipelineBase):
             name (str): Unique name of the pipe.
             nominal_diameter (Optional[Diameter]): Nominal pipe size. If `None`,
                 this pipe is a candidate for optimization.
-            schedule (str, optional): Pipe schedule. Defaults to "40".
+            schedule (str, optional): Pipe schedule. Defaults to "STD".
             material (str, optional): Pipe material. Defaults to "CS".
             length (Optional[Length], optional): Pipe length (default 1 meter).
             inlet_pressure (Optional[Pressure], optional): Inlet pressure.
             outlet_pressure (Optional[Pressure], optional): Outlet pressure.
             internal_diameter (Optional[Diameter], optional): Overrides the
                 calculated internal diameter if provided.
+            flow_rate (Optional[VolumetricFlowRate], optional): Initial flow rate
+                for solver. Defaults to 0.001 m³/s.
             **kwargs: Additional custom parameters to store in the base class.
         """
         super().__init__(name=name, **kwargs)
@@ -74,6 +77,11 @@ class Pipe(PipelineBase):
         # Nodes (set externally in network)
         self.start_node: Optional[Any] = None
         self.end_node: Optional[Any] = None
+
+        # -----------------------------
+        # NEW: flow_rate for solver initialization
+        # -----------------------------
+        self.flow_rate: VolumetricFlowRate = flow_rate or VolumetricFlowRate(0.001, "m3/s")
 
     # -------------------------------------------------------------------------
     # Derived calculations
@@ -121,6 +129,7 @@ class Pipe(PipelineBase):
             "cross_sectional_area": self.cross_sectional_area().to_dict()
             if self.cross_sectional_area()
             else None,
+            "flow_rate": self.flow_rate.to_dict() if self.flow_rate else None,  # <-- NEW
             "inlet_pressure": self.inlet_pressure.to_dict()
             if self.inlet_pressure
             else None,
@@ -140,7 +149,8 @@ class Pipe(PipelineBase):
         )
         return (
             f"Pipe(name='{self.name}', {dia_repr}, "
-            f"schedule='{self.schedule}', length={self.length})"
+            f"schedule='{self.schedule}', length={self.length}, "
+            f"flow_rate={self.flow_rate})"  # <-- UPDATED
         )
 
     # -------------------------------------------------------------------------

@@ -13,8 +13,38 @@ The following classes are exposed for direct use:
 
 from .water import Water
 from .base import Component
+from .aceticacid import AceticAcid
+from .ethanol import Ethanol
+from .methanol import Methanol
+from .acetone import Acetone
+from .acrylicacid import AcrylicAcid
+from .air import Air
+from .ammonia import Ammonia
+from .benzene import Benzene
+from .benzoicacid import BenzoicAcid
+from .bromine import Bromine
+from .butane import Butane
+from .carbondioxide import Carbondioxide
+from .carbonmonoxide import CarbonMonoxide
+from .carbontetrachloride import CarbonTetrachloride
+
+
 
 # Defines the public API for this module, making these classes directly
 # accessible when the package is imported.
 __all__ = ["Water",
-           "Component"]
+           "Component",
+           "AceticAcid",
+           "Ethanol",
+           "Methanol",
+           "Acetone",
+           "AcrylicAcid",
+           "Air",
+           "Ammonia",
+           "Benzene",
+           "BenzoicAcid",
+           "Bromine",
+           "Butane",
+           "Carbondioxide",
+           "CarbonMonoxide",
+           "CarbonTetrachloride"]

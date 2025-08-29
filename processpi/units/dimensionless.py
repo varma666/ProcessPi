@@ -44,3 +44,16 @@ class Dimensionless(Variable):
     def __str__(self):
         # Ensure print() uses the same human-friendly format
         return f"{round(self.original_value, 6)} (dimensionless)"
+    
+    def __format__(self, format_spec):
+        """
+        Formats the VolumetricFlowRate object based on the given format specifier.
+        """
+        # Get the value to be formatted.
+        value = self.value
+        
+        # Apply the format specifier to the numeric value.
+        formatted_value = format(value, format_spec)
+        
+        # Combine the formatted value and the unit.
+        return f"{formatted_value} (dimensionless)"

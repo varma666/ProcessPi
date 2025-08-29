@@ -77,6 +77,10 @@ from processpi.pipelines.fittings import Fitting
 from processpi.pipelines.equipment import Equipment
 from processpi.pipelines.network import PipelineNetwork
 from processpi.units import *
+from processpi.components import Water
+from processpi.components.carbonmonoxide import CarbonMonoxide
+from processpi.components.vapor import Vapor
+from processpi.components.organic_liquid import OrganicLiquid
 
 print("\n=== A) Quick single-pipe demos ===")
 
@@ -92,12 +96,14 @@ PipelineEngine().fit(
 ).run().summary()
 
 # --- A2) Pipe sizing with available ΔP ---
+fluid = Water()
 PipelineEngine().fit(
     flowrate=VolumetricFlowRate(75, "L/s"),
     length=Length(180, "m"),
     density=Density(998, "kg/m3"),
     viscosity=Viscosity(1.0, "cP"),
-    available_dp=Pressure(1.2, "bar")
+    available_dp=Pressure(1.2, "bar"),
+    fluid=fluid
 ).run().summary()
 
 print("\n=== B) Textbook-style problems ===")
@@ -107,6 +113,7 @@ m_dot = MassFlowRate(1000_000, "kg/day")
 mu_CO2 = Viscosity(0.016, "cP")
 rho_CO2 = Density(1.61, "kg/m3")
 placeholder_diameter = Diameter(2, "in")
+fluid = Water()
 
 co2_fittings = [
     Fitting(fitting_type="long_radius_90_deg", quantity=8, diameter=placeholder_diameter),
@@ -123,13 +130,16 @@ co2_size_results = PipelineEngine().fit(
     viscosity=mu_CO2,
     fittings=co2_fittings,
     material="CS",
+    fluid=fluid
 ).run()
 co2_size_results.summary()
 
 # --- B2) CO line sizing ---
 co_mdot = MassFlowRate(1500, "kg/h")
+fluid = Vapor()
 mu_CO = Viscosity(0.018, "cP")
 rho_CO = Density(1.06, "kg/m3")
+
 
 co_fittings = [
     Fitting(fitting_type="gate_valve", quantity=2, diameter=placeholder_diameter),
@@ -146,10 +156,12 @@ co_size_results = PipelineEngine().fit(
     viscosity=mu_CO,
     fittings=co_fittings,
     material="CS",
+    fluid = fluid
 ).run()
 co_size_results.summary()
 
 # --- B3) Water by gravity: CS vs Concrete ---
+fluid = Water()
 m_dot_water = MassFlowRate(100_000, "kg/h")
 rho_water40 = Density(993, "kg/m3")
 mu_water40 = Viscosity(0.67, "cP")
@@ -169,6 +181,7 @@ water_cs_results = PipelineEngine().fit(
     viscosity=mu_water40,
     fittings=[eq_len_fit],
     material="CS",
+    fluid = fluid
 ).run()
 water_cs_results.summary()
 
@@ -181,6 +194,7 @@ water_concrete_results = PipelineEngine().fit(
     viscosity=mu_water40,
     fittings=[eq_len_fit],
     material="Concrete",
+    fluid = fluid
 ).run()
 water_concrete_results.summary()
 
@@ -188,6 +202,7 @@ water_concrete_results.summary()
 m_dot_org = MassFlowRate(5000, "kg/h")
 rho_org = Density(930, "kg/m3")
 mu_org = Viscosity(0.91, "cP")
+fluid = OrganicLiquid()
 
 org_fittings = [
     Fitting(fitting_type="standard_elbow_90_deg", quantity=6, diameter=placeholder_diameter),
@@ -208,8 +223,99 @@ results_b4 = PipelineEngine().fit(
     equipment=[orifice_dp],
     available_dp=Pressure(600, "kPa"),
     material="CS",
+    fluid = fluid
 ).run()
 summary_b4 = results_b4.summary()
-residual_pa = Pressure(600, "kPa").to("Pa").value - summary_b4["total_pressure_drop"].to("Pa").value
+residual_pa = Pressure(600, "kPa").to("Pa").value - results_b4.total_pressure_drop
 
-print(f"Residual ΔP available for control valve: {Pressure(residual_pa, 'Pa').to('kPa')}")
+print(f"Residual ΔP available for control valve: {residual_pa}")
+
+
+
+
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.network import PipelineNetwork
+from processpi.units import *
+from processpi.components import Water
+
+# -----------------------------
+# Cooling Tower Network Parameters
+# -----------------------------
+fluid = Water(temperature=Temperature(30, "C"), pressure=Pressure(101325, "Pa"))
+
+flow_rate_per_condenser_m3h = VolumetricFlowRate(50, "m3/h")
+flow_rate_per_condenser_m3s = flow_rate_per_condenser_m3h.to("m3/s")
+#print(flow_rate_per_condenser_m3s)
+num_condensers = 8
+
+total_flow_rate_m3s = flow_rate_per_condenser_m3s.value * num_condensers
+#print(total_flow_rate_m3h)
+total_flow_rate_m3s = VolumetricFlowRate(total_flow_rate_m3s)
+branch_flow_m3s = flow_rate_per_condenser_m3s
+print(f"Total Flow Rate: {total_flow_rate_m3s}, Branch Flow Rate: {branch_flow_m3s}")
+
+# -----------------------------
+# Build main network
+# -----------------------------
+network = PipelineNetwork.series("Cooling Tower Header")
+network.add_node("Tower")
+network.add_node("Header_Distribution")
+
+# Main header pipe (auto-size)
+header_pipe = Pipe(
+    name="Main Header",
+    length=Length(100, "m"),
+    diameter=None,          # auto-size
+    flow_rate=total_flow_rate_m3s,
+    roughness=0.000045,
+    schedule="STD"
+)
+network.add_edge(header_pipe, "Tower", "Header_Distribution")
+
+# -----------------------------
+# Build parallel branches
+# -----------------------------
+parallel_branches = []
+
+for i in range(num_condensers):
+    branch_net = PipelineNetwork.series(f"Branch-{i+1}")
+    branch_net.add_node(f"Header_Distribution")
+    branch_net.add_node(f"Condenser-{i+1}")
+
+    branch_pipe = Pipe(
+        name=f"Branch Pipe {i+1}",
+        length=Length(30, "m"),
+        diameter=Diameter(2,"in"),       # auto-size
+        flow_rate=branch_flow_m3s,
+        roughness=0.000045,
+        schedule="STD"
+    )
+
+    # Set a non-zero initial flow to avoid Re=0 in solver
+    branch_pipe.flow_rate = branch_flow_m3s
+
+    branch_net.add_edge(branch_pipe, "Header_Distribution", f"Condenser-{i+1}")
+    parallel_branches.append(branch_net)
+
+# Combine parallel branches into one network
+parallel_network = PipelineNetwork.parallel("Branch Distribution", *parallel_branches)
+network.add_subnetwork(parallel_network)
+
+# Initialize engine
+engine = PipelineEngine()
+engine.fit(network=network, flow_rate=total_flow_rate_m3s, fluid=fluid)
+
+# Optional: ensure all pipes have initial flows
+for branch in engine._normalize_branches(network):
+    for pipe in branch:
+        if pipe.flow_rate is None:
+            pipe.flow_rate = VolumetricFlowRate(0.001, "m3/s")  # small non-zero guess
+
+# Run solver
+results = engine.run()
+
+# Print summaries
+print("\n--- Cooling Tower Network Results ---")
+results.summary()
+results.detailed_summary()

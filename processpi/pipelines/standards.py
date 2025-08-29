@@ -528,57 +528,43 @@ PUMP_COST_PER_POWER: Dict[str, float] = {
 # 🔹 Utility Functions
 # --------------------------
 def get_internal_diameter(
-    nominal_diameter: Diameter, schedule: str
+    nominal_diameter: Diameter, schedule: str = "STD"
 ) -> Optional[Diameter]:
     """Returns internal diameter for a given nominal diameter and schedule."""
     if nominal_diameter not in PIPE_SCHEDULES:
         return None
     return PIPE_SCHEDULES[nominal_diameter].get(schedule, (None, None, None))[2]
 
-
-def get_thickness(nominal_diameter: Diameter, schedule: str) -> Optional[Length]:
+def get_thickness(nominal_diameter: Diameter, schedule: str = "STD") -> Optional[Length]:
     """Returns wall thickness for a given nominal diameter and schedule."""
     if nominal_diameter not in PIPE_SCHEDULES:
         return None
     return PIPE_SCHEDULES[nominal_diameter].get(schedule, (None, None, None))[0]
 
-
 def get_roughness(material: str) -> Variable:
     """Returns roughness for given material. Defaults if not found."""
-    # This function is updated to return a Variable to match the Pipe class.
-    roughness_mm = ROUGHNESS.get(material, ROUGHNESS["Other"])
+    roughness_mm = ROUGHNESS.get(material.lower(), ROUGHNESS["Other"])
     return Variable(roughness_mm, "mm")
-
 
 def get_recommended_velocity(service: str) -> Optional[Union[float, Tuple[float, float]]]:
     """
     Returns recommended velocity (m/s) for a given chemical or general service.
-    
-    Args:
-        service (str): Chemical name or general category (lowercase, underscores for spaces)
-        
-    Returns:
-        float or tuple: Recommended velocity (m/s) as single value or range.
     """
     key = service.strip().lower().replace(" ", "_")
     return RECOMMENDED_VELOCITIES.get(key, None)
-
 
 def get_nearest_diameter(calculated_diameter: Diameter) -> Diameter:
     """
     Returns the nearest standard nominal diameter for a given calculated diameter.
     """
-    # Find the nearest standard diameter
     nearest = min(STANDARD_SIZES, key=lambda x: abs(x.value - calculated_diameter.value))
     return nearest
 
-
 def get_standard_pipe_data(
-    nominal_diameter: Diameter, schedule: str
+    nominal_diameter: Diameter, schedule: str = "STD"
 ) -> Dict[str, Union[Length, Diameter, None]]:
     """
     Returns a dictionary of standard pipe properties for a given nominal size and schedule.
-    This is useful for the optimization routine.
     """
     data = PIPE_SCHEDULES.get(nominal_diameter, {}).get(schedule, (None, None, None))
     return {
@@ -591,88 +577,56 @@ def get_standard_pipe_data(
 def get_k_factor(fitting_type: str) -> float:
     """
     Retrieve the standard K-factor (loss coefficient) for a given fitting type.
-
-    Args:
-        fitting_type (str): Name of the fitting, should match one of the keys in K_FACTORS.
-
-    Returns:
-        float: The K-factor for the fitting type, or 0.0 if not found.
     """
     return K_FACTORS.get(fitting_type.lower(), 0.0)
 
-# --------------------------
-# 🔹 Utility functions
-# --------------------------
-
-def list_available_pipe_diameters() -> list[Diameter]:
+def list_available_pipe_diameters() -> List[Diameter]:
     """
     Returns a list of all available standard nominal pipe diameters.
     """
     return STANDARD_SIZES
 
-
-def get_standard_pipe_data(nominal_d: Diameter, schedule: str = 'STD') -> dict:
-    """
-    Retrieves standard pipe data for a given nominal diameter and schedule.
-
-    Args:
-        nominal_d (Diameter): Nominal diameter of the pipe (e.g., Diameter(2, 'in'))
-        schedule (str): Pipe schedule (default is '40')
-
-    Returns:
-        dict: {
-            "wall_thickness": Length,
-            "outer_diameter": Diameter,
-            "internal_diameter": Diameter
-        }
-
-    Raises:
-        ValueError: If the nominal diameter or schedule is not found in the database.
-    """
-    # Look up the schedule data for this nominal diameter
-    schedule_data = PIPE_SCHEDULES.get(nominal_d)
-    if schedule_data is None:
-        raise ValueError(f"No data found for nominal diameter {nominal_d}")
-
-    # Look up the requested schedule
-    #print(schedule_data)
-    pipe_tuple = schedule_data.get(schedule)
-    if pipe_tuple is None:
-        raise ValueError(f"No data found for nominal diameter {nominal_d} with schedule {schedule}")
-
-    wall_thickness, outer_diameter, internal_diameter = pipe_tuple
-    return {
-        "wall_thickness": wall_thickness,
-        "outer_diameter": outer_diameter,
-        "internal_diameter": internal_diameter
-    }
-
-def get_standard_pipe_schedules() -> list[str]:
-    return ["STD", "5S", "10S", "S10", "S20", "S40", "S60", "XS", "80S", "S120", "S140", "S160", "XXS"]
-
-def get_next_standard_nominal(diameter_m: float, schedule: str = "STD"):
+def get_next_standard_nominal(diameter_m: float) -> Optional[Tuple[Diameter, dict]]:
     """
     Finds the next standard nominal size >= given diameter (inner diameter basis).
-    Returns (nominal_size_obj, data_dict) where:
-        nominal_size_obj = Diameter object for nominal size (e.g., Diameter(1.5, "in"))
-        data_dict = (wall_thickness, outer_diameter, inner_diameter)
+    If no larger diameter is found, returns the largest available.
     """
-    # Convert target to mm for comparison
     target_mm = diameter_m
-
-    candidates = []
+    last_candidate = None
     for nominal, schedules in PIPE_SCHEDULES.items():
-        if schedule in schedules:
-            _, _, id_mm = schedules[schedule]
-            candidates.append((nominal, id_mm.value, schedules[schedule]))
+        if "STD" in schedules:
+            _, _, id_mm = schedules["STD"]
+            last_candidate = (nominal, schedules["STD"])
+            if id_mm.value >= target_mm:
+                return nominal, schedules["STD"]
+    
+    # If no larger size was found, return the largest one
+    return last_candidate
 
-    # Sort by inner diameter
-    candidates.sort(key=lambda x: x[1])
+def get_previous_standard_nominal(nominal_diameter: Diameter) -> Optional[Diameter]:
+    """
+    Finds the previous standard nominal size in the sorted list.
+    """
+    try:
+        idx = STANDARD_SIZES.index(nominal_diameter)
+        if idx > 0:
+            return STANDARD_SIZES[idx - 1]
+    except ValueError:
+        pass
+    return None
 
-    # Pick first with ID >= target
-    for nominal, id_mm, sched_data in candidates:
-        if id_mm >= target_mm:
-            return nominal, sched_data
+def get_next_next_standard_nominal(nominal_diameter: Diameter) -> Optional[Diameter]:
+    """
+    Finds the next-next standard nominal size in the sorted list.
+    """
+    try:
+        idx = STANDARD_SIZES.index(nominal_diameter)
+        if idx < len(STANDARD_SIZES) - 1:
+            return STANDARD_SIZES[idx + 1]
+    except ValueError:
+        pass
+    return None
 
-    # If nothing is large enough, return the largest
-    return candidates[-1][0], candidates[-1][2]
+def get_standard_diameters_list() -> List[Diameter]:
+    """Returns a sorted list of standard nominal diameters."""
+    return sorted(list(PIPE_SCHEDULES.keys()), key=lambda d: d.value)
