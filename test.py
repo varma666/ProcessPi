@@ -3,26 +3,33 @@ from processpi.pipelines.pipes import Pipe
 from processpi.pipelines.fittings import Fitting
 from processpi.pipelines.equipment import Equipment
 from processpi.pipelines.network import PipelineNetwork
+from processpi.pipelines.nozzle import Nozzle
 from processpi.units import *
-from processpi.components.carbondioxide import Carbondioxide
-fluid = Carbondioxide() # Use default state (15C, 1 atm)
+from processpi.components.organic_liquid import OrganicLiquid
+placeholder_diameter = Diameter(10, "in")
+m_dot_org = MassFlowRate(5000, "kg/h")
+rho_org = Density(930, "kg/m3")
+mu_org = Viscosity(0.91, "cP")
+fluid = OrganicLiquid(density=rho_org, viscosity=mu_org)
 
-m_dot = MassFlowRate(1000_000, "kg/day")
-fluid.viscosity = Viscosity(0.016, "cP")
-fluid.density = Density(1.61, "kg/m3")
-
-co2_fittings = [
-    Fitting(fitting_type="long_radius_90_deg", quantity=8),
-    Fitting(fitting_type="swing_check_valve", quantity=1),
-    Fitting(fitting_type="entrance_sharp", quantity=1),
+org_fittings = [
+    Fitting(fitting_type="standard_elbow_90_deg", quantity=6, diameter=placeholder_diameter),
+    Fitting(fitting_type="standard_tee_through_flow", quantity=2, diameter=placeholder_diameter),
+    Fitting(fitting_type="gate_valve", quantity=4, diameter=placeholder_diameter),
+    Fitting(fitting_type="globe_valve", quantity=1, diameter=placeholder_diameter),
 ]
 
-print("\n--- B1) CO2 line sizing ---")
-co2_size_results = PipelineEngine().fit(
-    mass_flowrate=m_dot,
-    length=Length(800, "m"),
-    available_dp=Pressure(24, "kPa"),
-    fittings=co2_fittings,
-    fluid=fluid
+orifice_dp = Equipment(name="orifice meter", pressure_drop=Pressure(40, "kPa"))
+
+print("\n--- B4) Organic liquid sizing & residual ΔP ---")
+results_b4 = PipelineEngine().fit(
+    mass_flowrate=m_dot_org,
+    length=Length(50, "m"),
+    fluid=fluid,
+    fittings=org_fittings,
+    equipment=[orifice_dp],
+    #available_dp=Pressure(600, "kPa"),
+    material="CS",
 ).run()
-co2_size_results.summary()
+summary_b4 = results_b4.summary()
+

@@ -402,11 +402,11 @@ PIPE_SCHEDULES: Dict[Diameter, Dict[str, Tuple[Length, Diameter, Diameter]]] = {
 # 🔹 Recommended Fluid Velocities (m/s)
 # --------------------------
 RECOMMENDED_VELOCITIES = {
-    "organic_liquids": (1.0, 2.0),
-    "inorganic_liquids": (1.0, 2.5),
-    "oils": (0.5, 1.5),
-    "gases": (10.0, 20.0),
-    "vapours": (15.0, 30.0),
+    "organic_liquid": (1.8, 2.0),
+    "inorganic_liquid": (1.2, 1.8),
+    "oil": (1.8, 2.0),
+    "gas": (15.0, 30.0),
+    "vapour": (15.0, 30.0),
     "water": (1.0, 2.5),
     "acetic_acid": (1.0, 2.0),
     "acetone": (1.0, 2.0),

@@ -38,7 +38,7 @@ class Fitting(PipelineBase):
     def __init__(
         self,
         fitting_type: str,
-        diameter: Diameter,
+        diameter: Optional[Diameter] = None,
         quantity: int = 1,
     ):
         """

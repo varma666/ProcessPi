@@ -79,9 +79,12 @@ class PipelineResults:
         for idx, result in enumerate(self._all_simulation_results):
             summary_data = result.get("summary", {})
             residual_dp = result.get("residual_dp", 0)
+            diameter = self.pipe_diameter
 
             print(f"\n=== Pipeline Result {idx+1} ({result.get('network_name', 'N/A')}) ===")
             print(f"Mode: {result.get('mode', 'N/A').capitalize()}")
+            if diameter:
+                print(f"Calculated Pipe Diameter: {diameter}")
             print(f"Inlet Flow: {summary_data.get('inlet_flow', 0):.3f} m³/s")
             print(f"Outlet Flow: {summary_data.get('outlet_flow', 0):.3f} m³/s")
             print(f"Total Pressure Drop: {self._format_pressure(summary_data.get('total_pressure_drop'))}")
@@ -96,6 +99,7 @@ class PipelineResults:
             summaries.append({
                 "network_name": result.get("network_name"),
                 "simulation_mode": result.get("mode"),
+                "pipe_diameter": diameter,
                 "inlet_flow": summary_data.get("inlet_flow"),
                 "outlet_flow": summary_data.get("outlet_flow"),
                 "total_pressure_drop": summary_data.get("total_pressure_drop"),
@@ -150,3 +154,11 @@ class PipelineResults:
     # -------------------- Raw results --------------------
     def to_dict(self) -> Dict[str, Any]:
         return self.results
+    
+    @property
+    def pipe_diameter(self) -> Optional[Any]:
+        """Return the calculated optimum pipe diameter, if available."""
+        # Usually stored in results under 'diameter' or in first component
+        if self.components and "diameter" in self.components[0]:
+            return self.components[0]["diameter"]
+        return self.results.get("diameter", None)
