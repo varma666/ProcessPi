@@ -872,20 +872,25 @@ class PipelineEngine:
         _set_pipe_diameter_m(D_final)
     
         # Iteration parameters
-        max_iter = 40
+        max_iter = 10
         vel_rel_tol = 0.01   # 1% tolerance in velocity relative to bounds
         dp_rel_tol = 0.01    # 1% tolerance on ΔP (when available_dp provided)
     
         for it in range(1, max_iter + 1):
             calc = self._pipe_calculation(pipe, flow_rate)
+            #print(calc)
     
             # extract numeric velocity (m/s)
             v_obj = calc.get("velocity")
+            #print(v_obj)
             v_calc = float(v_obj.value) if hasattr(v_obj, "value") else float(v_obj)
+            #print(v_calc)
     
             # extract numeric pressure drop (Pa)
             dp_obj = calc.get("pressure_drop")
+            #print(dp_obj)
             total_dp_pa = dp_obj.to("Pa").value if hasattr(dp_obj, "to") else float(dp_obj)
+            #print(total_dp_pa)
     
             # Velocity-driven diameter factor:
             # D_new = D_old * sqrt(v_calc / v_target)
@@ -894,9 +899,14 @@ class PipelineEngine:
                 vel_factor = math.sqrt(max(v_calc / v_target, 1e-12))
             elif v_calc > v_max:
                 v_target = v_max
-                vel_factor = math.sqrt(max(v_calc / v_target, 1e-12))
+                vel_factor = math.sqrt(max(v_target / v_calc, 1e-12))
+                #print(vel_factor)
+            elif v_calc < v_max and v_calc > v_min:
+                v_target = v_calc
+                vel_factor = 0.0
             else:
                 v_target = v_calc
+                #print("Hello")
                 vel_factor = 1.0
     
             # ΔP-driven diameter factor:
@@ -912,7 +922,10 @@ class PipelineEngine:
                 dp_factor = 1.0
     
             # choose the stronger push (ensures we respect both constraints)
-            adjust_factor = max(vel_factor, dp_factor)
+            if dp_factor <= 1.000:
+                adjust_factor = 0.5 * (vel_factor+dp_factor)
+            else:
+                adjust_factor = max(vel_factor,dp_factor)
     
             # apply update
             D_new = D_final * adjust_factor
@@ -946,7 +959,7 @@ class PipelineEngine:
             dens_obj = rho_attr()
         else:
             dens_obj = rho_attr
-        rho_val = getattr(dens_obj, "value", float(dens_obj))
+        rho_val = getattr(dens_obj, "value", float(dens_obj.value))
     
         total_head_m = total_dp_pa / (rho_val * G) if rho_val else float("inf")
         shaft_power_kw = (total_dp_pa * flow_rate.value) / (1000.0 * pump_eff)

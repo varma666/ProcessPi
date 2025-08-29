@@ -649,3 +649,30 @@ def get_standard_pipe_data(nominal_d: Diameter, schedule: str = 'STD') -> dict:
 
 def get_standard_pipe_schedules() -> list[str]:
     return ["STD", "5S", "10S", "S10", "S20", "S40", "S60", "XS", "80S", "S120", "S140", "S160", "XXS"]
+
+def get_next_standard_nominal(diameter_m: float, schedule: str = "STD"):
+    """
+    Finds the next standard nominal size >= given diameter (inner diameter basis).
+    Returns (nominal_size_obj, data_dict) where:
+        nominal_size_obj = Diameter object for nominal size (e.g., Diameter(1.5, "in"))
+        data_dict = (wall_thickness, outer_diameter, inner_diameter)
+    """
+    # Convert target to mm for comparison
+    target_mm = diameter_m
+
+    candidates = []
+    for nominal, schedules in PIPE_SCHEDULES.items():
+        if schedule in schedules:
+            _, _, id_mm = schedules[schedule]
+            candidates.append((nominal, id_mm.value, schedules[schedule]))
+
+    # Sort by inner diameter
+    candidates.sort(key=lambda x: x[1])
+
+    # Pick first with ID >= target
+    for nominal, id_mm, sched_data in candidates:
+        if id_mm >= target_mm:
+            return nominal, sched_data
+
+    # If nothing is large enough, return the largest
+    return candidates[-1][0], candidates[-1][2]
