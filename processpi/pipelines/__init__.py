@@ -1,40 +1,38 @@
 """
-This module contains the core components for the fluid flow simulation engine.
-It includes classes for various pipeline elements such as pipes, pumps, and fittings,
-as well as the main engine for running simulations and analyzing results.
+Initializes the pipelines module dynamically.
+
+This module contains the core components for the fluid flow simulation engine,
+including classes for various pipeline elements such as pipes, pumps, vessels,
+and the main engine for running simulations and analyzing results.
+
+Example usage:
+
+    from processpi.pipelines import PipelineEngine, Pump, Pipe
 """
 
-from .engine import PipelineEngine
-from .equipment import Equipment
-from .fittings import Fitting
-from .network import PipelineNetwork
-from .pipelineresults import PipelineResults
-from .pipes import Pipe
-from .pumps import Pump
-from .vessel import Vessel
+import importlib
+import inspect
+from pathlib import Path
 
-__all__ = [
-    # Main simulation engine class
-    "PipelineEngine",
+# -----------------------
+# Initialize public API
+# -----------------------
+__all__ = []
 
-    # Base class for all pipeline equipment
-    "Equipment",
+pipelines_dir = Path(__file__).parent
 
-    # Represents pipeline fittings like elbows, tees, etc.
-    "Fitting",
+# Files to exclude from dynamic import
+exclude_files = ["__init__.py", "todo.md", "processpi_pipeline_engine_features.md"]
 
-    # Represents the entire network of interconnected pipes and equipment
-    "PipelineNetwork",
+for file in pipelines_dir.glob("*.py"):
+    if file.name in exclude_files:
+        continue
 
-    # Stores and manages the results of a simulation run
-    "PipelineResults",
+    module_name = file.stem
+    module = importlib.import_module(f".{module_name}", package=__name__)
 
-    # Represents a single pipe segment
-    "Pipe",
-
-    # Represents a pump in the network
-    "Pump",
-
-    # Represents a vessel or tank
-    "Vessel"
-]
+    # Iterate over all classes defined in the module
+    for name, obj in inspect.getmembers(module, inspect.isclass):
+        if obj.__module__ == module.__name__:
+            globals()[name] = obj
+            __all__.append(name)
