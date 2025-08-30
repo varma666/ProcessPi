@@ -1,86 +1,117 @@
-from processpi.pipelines.engine import PipelineEngine
-from processpi.pipelines.pipes import Pipe
-from processpi.pipelines.network import PipelineNetwork
-from processpi.units import *
-from processpi.components import Water
+"""
+Example usage of the ProcessPI `CalculationEngine`.
 
-# -----------------------------
-# Cooling Tower Network Parameters
-# -----------------------------
-fluid = Water(temperature=Temperature(30, "C"), pressure=Pressure(101325, "Pa"))
+Covers:
+1. Basic fluid velocity (US units)
+2. Basic fluid velocity (Metric units)
+3. Velocity and Reynolds number (US units)
+4. Velocity and Reynolds number (Metric units)
+5. Friction factor using Colebrook-White (US units)
+6. Darcy pressure drop (US units)
+7. Long pipeline pressure drop (Metric units)
+8. Pressure drop using Hazen-Williams (US units)
+"""
 
-flow_rate_per_condenser_m3h = VolumetricFlowRate(50, "m3/h")
-flow_rate_per_condenser_m3s = flow_rate_per_condenser_m3h.to("m3/s")
-#print(flow_rate_per_condenser_m3s)
-num_condensers = 8
+from processpi.calculations import CalculationEngine
+from processpi.units import VolumetricFlowRate, Diameter, Density, Viscosity, Length
 
-total_flow_rate_m3s = flow_rate_per_condenser_m3s.value * num_condensers
-#print(total_flow_rate_m3h)
-total_flow_rate_m3s = VolumetricFlowRate(total_flow_rate_m3s)
-branch_flow_m3s = flow_rate_per_condenser_m3s
+# Initialize the engine (used across all examples)
+engine = CalculationEngine()
 
+# ------------------------------------------------------------------------------
+# 1. Basic fluid velocity (US Units)
+# ------------------------------------------------------------------------------
+volumetric_flow_rate = VolumetricFlowRate(3000, 'gal/min')
+diameter = Diameter(15.5, 'in')
+velocity = engine.calculate("fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+print("\n--- Example 1: Fluid Velocity (US Units) ---")
+print(f"Velocity: {velocity.to('ft/s')}")
 
-# -----------------------------
-# Build main network
-# -----------------------------
-network = PipelineNetwork.series("Cooling Tower Header")
-network.add_node("Tower")
-network.add_node("Header_Distribution")
+# ------------------------------------------------------------------------------
+# 2. Basic fluid velocity (Metric Units)
+# ------------------------------------------------------------------------------
+volumetric_flow_rate = VolumetricFlowRate(75, 'L/s')
+diameter = Diameter(180, 'mm')
+velocity = engine.calculate("fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+print("\n--- Example 2: Fluid Velocity (Metric Units) ---")
+print(f"Velocity: {velocity}")
 
-# Main header pipe (auto-size)
-header_pipe = Pipe(
-    name="Main Header",
-    length=Length(100, "m"),
-    diameter=None,          # auto-size
-    flow_rate=total_flow_rate_m3s,
-    roughness=0.000045,
-    schedule="STD"
-)
-network.add_edge(header_pipe, "Tower", "Header_Distribution")
+# ------------------------------------------------------------------------------
+# 3. Velocity and Reynolds number (US Units)
+# ------------------------------------------------------------------------------
+volumetric_flow_rate = VolumetricFlowRate(6000, 'gal/min')
+diameter = Diameter(19.25, 'in')
+velocity = engine.calculate("fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+density = Density(998, 'kg/m3')
+viscosity = Viscosity(1.0, 'cSt')
+nre = engine.calculate("reynolds_number", density=density, velocity=velocity, diameter=diameter, viscosity=viscosity)
+print("\n--- Example 3: Velocity and Reynolds Number (US Units) ---")
+print(f"Velocity: {velocity.to('ft/s')}")
+print(f"Reynolds Number: {nre}")
 
-# -----------------------------
-# Build parallel branches
-# -----------------------------
-parallel_branches = []
+# ------------------------------------------------------------------------------
+# 4. Velocity and Reynolds number (Metric Units)
+# ------------------------------------------------------------------------------
+volumetric_flow_rate = VolumetricFlowRate(640, 'm3/h')
+diameter = Diameter(380, 'mm')
+velocity = engine.calculate("fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+density = Density(998, 'kg/m3')
+viscosity = Viscosity(1.0, 'cSt')
+nre = engine.calculate("reynolds_number", density=density, velocity=velocity, diameter=diameter, viscosity=viscosity)
+print("\n--- Example 4: Velocity and Reynolds Number (Metric Units) ---")
+print(f"Velocity: {velocity}")
+print(f"Reynolds Number: {nre}")
 
-for i in range(num_condensers):
-    branch_net = PipelineNetwork.series(f"Branch-{i+1}")
-    branch_net.add_node(f"Header_Distribution")
-    branch_net.add_node(f"Condenser-{i+1}")
+# ------------------------------------------------------------------------------
+# 5. Friction factor using Colebrook-White (US Units)
+# ------------------------------------------------------------------------------
+volumetric_flow_rate = VolumetricFlowRate(3000, "gal/min")
+diameter = Diameter(15.25, "in")
+roughness = Length(0.002, "in")
+density = Density(998, "kg/m3")
+viscosity = Viscosity(1.0, "cP")
+velocity = engine.calculate("fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+nre = engine.calculate("nre", density=density, velocity=velocity, diameter=diameter, viscosity=viscosity)
+friction_factor = engine.calculate("friction_factor_colebrookwhite", diameter=diameter, roughness=roughness, reynolds_number=nre)
+print("\n--- Example 5: Friction Factor (Colebrook-White, US Units) ---")
+print(f"Velocity: {velocity}")
+print(f"Reynolds Number: {nre}")
+print(f"Friction Factor: {friction_factor}")
 
-    branch_pipe = Pipe(
-        name=f"Branch Pipe {i+1}",
-        length=Length(30, "m"),
-        diameter=Diameter(2,"in"),       # auto-size
-        flow_rate=branch_flow_m3s,
-        roughness=0.000045,
-        schedule="STD"
-    )
+# ------------------------------------------------------------------------------
+# 6. Darcy pressure drop (US Units)
+# ------------------------------------------------------------------------------
+length = Length(1000, "ft")
+pressure_drop = engine.calculate("pressure_drop_darcy", friction_factor=friction_factor, length=length, diameter=diameter, density=density, velocity=velocity)
+print("\n--- Example 6: Darcy Pressure Drop (US Units) ---")
+print(f"Pressure Drop: {pressure_drop.to('psi')}")
 
-    # Set a non-zero initial flow to avoid Re=0 in solver
-    branch_pipe.flow_rate = branch_flow_m3s
+# ------------------------------------------------------------------------------
+# 7. Long pipeline pressure drop (Metric Units)
+# ------------------------------------------------------------------------------
+volumetric_flow_rate = VolumetricFlowRate(34000, "m3/h")
+diameter = Diameter(2, "m")
+roughness = Length(0.05, "mm")
+density = Density(998, "kg/m3")
+viscosity = Viscosity(1.0, "cP")
+velocity = engine.calculate("fluid_velocity", volumetric_flow_rate=volumetric_flow_rate, diameter=diameter)
+nre = engine.calculate("nre", density=density, velocity=velocity, diameter=diameter, viscosity=viscosity)
+friction_factor = engine.calculate("friction_factor_colebrookwhite", diameter=diameter, roughness=roughness, reynolds_number=nre)
+length = Length(5, "km")
+pressure_drop = engine.calculate("pressure_drop_darcy", friction_factor=friction_factor, length=length, diameter=diameter, density=density, velocity=velocity)
+print("\n--- Example 7: Long Pipeline Pressure Drop (Metric Units) ---")
+print(f"Velocity: {velocity}")
+print(f"Reynolds Number: {nre}")
+print(f"Friction Factor: {friction_factor}")
+print(f"Pressure Drop: {pressure_drop.to('kPa')}")
 
-    branch_net.add_edge(branch_pipe, "Header_Distribution", f"Condenser-{i+1}")
-    parallel_branches.append(branch_net)
-
-# Combine parallel branches into one network
-parallel_network = PipelineNetwork.parallel("Branch Distribution", *parallel_branches)
-network.add_subnetwork(parallel_network)
-
-# Initialize engine
-engine = PipelineEngine()
-engine.fit(network=network, flow_rate=total_flow_rate_m3s, fluid=fluid)
-
-# Optional: ensure all pipes have initial flows
-for branch in engine._normalize_branches(network):
-    for pipe in branch:
-        if pipe.flow_rate is None:
-            pipe.flow_rate = VolumetricFlowRate(0.001, "m3/s")  # small non-zero guess
-
-# Run solver
-results = engine.run()
-
-# Print summaries
-print("\n--- Cooling Tower Network Results ---")
-results.summary()
-results.detailed_summary()
+# ------------------------------------------------------------------------------
+# 8. Pressure drop using Hazen-Williams (US Units)
+# ------------------------------------------------------------------------------
+volumetric_flow_rate = VolumetricFlowRate(3000, "gal/min")
+diameter = Diameter(15.25, "in")
+density = Density(998, "kg/m3")
+length = Length(1000, "ft")
+pressure_drop = engine.calculate("pressure_drop_hazen_williams", length=length, flow_rate=volumetric_flow_rate, diameter=diameter, density=density, coefficient=120)
+print("\n--- Example 8: Pressure Drop (Hazen-Williams, US Units) ---")
+print(f"Pressure Drop: {pressure_drop.to('psi')}")

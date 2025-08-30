@@ -1021,3 +1021,275 @@ engine.fit(network=network, flow_rate=total_flow, fluid=fluid)
 results = engine.run()
 results.summary()
 
+
+# Flow chart examples
+from processpi.pipelines.network import PipelineNetwork
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.pumps import Pump
+from processpi.pipelines.vessel import Vessel
+from processpi.pipelines.equipment import Equipment
+from processpi.units import Pressure, Diameter
+
+# ---------------- Create main network ----------------
+net = PipelineNetwork("Chilled Water Loop")
+
+# ---------------- Nodes ----------------
+net.add_node("Tank")
+net.add_node("Pump_Inlet")
+net.add_node("Pump_Outlet")
+net.add_node("Main_Branch")
+net.add_node("AHU1_In")
+net.add_node("AHU1_Out")
+net.add_node("AHU2_In")
+net.add_node("AHU2_Out")
+net.add_node("Return_Tank")
+
+# ---------------- Components ----------------
+tank = Vessel("ChilledWaterTank")
+
+pump = Pump(
+    name="ChillerPump",
+    pump_type="Centrifugal",
+    inlet_pressure=Pressure(101325, "Pa"),
+    outlet_pressure=Pressure(250000, "Pa")
+)
+
+# Main pipe from pump to main branch
+main_pipe = Pipe("MainPipe", nominal_diameter=0.2, length=20)  # 20 m
+
+# AHU branch pipes
+ahu1_pipe = Pipe("AHU1Pipe", nominal_diameter=0.1, length=5)
+ahu2_pipe = Pipe("AHU2Pipe", nominal_diameter=0.1, length=7)
+
+# AHUs as Equipment (with pressure drop)
+ahu1 = Equipment("AHU1", pressure_drop=5000)
+ahu2 = Equipment("AHU2", pressure_drop=6000)
+
+# Return pipe to tank
+return_pipe = Pipe("ReturnPipe", nominal_diameter=0.2, length=15)
+
+# ---------------- Connect network in series ----------------
+net.add_edge(tank, "Tank", "Pump_Inlet")
+net.add_edge(pump, "Pump_Inlet", "Pump_Outlet")
+net.add_edge(main_pipe, "Pump_Outlet", "Main_Branch")
+
+# Parallel AHU branches from main branch
+net.add_edge(ahu1_pipe, "Main_Branch", "AHU1_In")
+net.add_edge(ahu1, "AHU1_In", "AHU1_Out")
+
+net.add_edge(ahu2_pipe, "Main_Branch", "AHU2_In")
+net.add_edge(ahu2, "AHU2_In", "AHU2_Out")
+
+# Merge branches back to return
+net.add_edge(return_pipe, "AHU1_Out", "Return_Tank")
+net.add_edge(return_pipe, "AHU2_Out", "Return_Tank")
+
+# Return to tank
+net.add_edge(return_pipe, "Return_Tank", "Tank")  # circular loop
+
+# ---------------- Visualize ----------------
+net.visualize_network(compact=True)
+
+-----------------------------------------------------------------
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.network import PipelineNetwork
+from processpi.pipelines.fittings import Fitting
+from processpi.pipelines.pumps import Pump
+from processpi.pipelines.vessel import Vessel
+from processpi.pipelines.equipment import Equipment
+from processpi.units import Diameter, Pressure
+
+# ---------------- Create Network ----------------
+net = PipelineNetwork("Chilled Water Loop")
+
+# ---------------- Nodes ----------------
+# Tank
+net.add_node("Tank", elevation=0)
+
+# Pump
+net.add_node("Pump_In", elevation=0)
+net.add_node("Pump_Out", elevation=1)
+
+# Main branch
+net.add_node("Main_In", elevation=1)
+net.add_node("Main_Out", elevation=1)
+
+# 5 sub-branches each with 5 AHUs (total 25 AHUs)
+for b in range(1, 6):
+    net.add_node(f"Branch_{b}_In", elevation=1)
+    net.add_node(f"Branch_{b}_Out", elevation=1)
+    for a in range(1, 6):
+        net.add_node(f"AHU_{b}_{a}_PipeOut", elevation=1)  # pipe output node
+        net.add_node(f"AHU_{b}_{a}_EqOut", elevation=1)    # equipment output node
+    # Return nodes
+    net.add_node(f"Return_{b}", elevation=0)
+
+# Return to Tank
+net.add_node("Return_Tank", elevation=0)
+
+# ---------------- Components ----------------
+pump = Pump(
+    name="Pump1",
+    pump_type="Centrifugal",
+    inlet_pressure=Pressure(101325, "Pa"),
+    outlet_pressure=Pressure(201325, "Pa")
+)
+
+main_pipe = Pipe("MainPipe", nominal_diameter=0.2, length=15)
+
+branch_pipes = [Pipe(f"BranchPipe_{b}", 0.15, 8) for b in range(1, 6)]
+ahu_pipes = [Pipe(f"AHUPipe_{b}_{a}", 0.1, 5) for b in range(1, 6) for a in range(1, 6)]
+return_pipes = [Pipe(f"ReturnPipe_{b}", 0.2, 10) for b in range(1, 6)]
+
+vessel = Vessel("ExpansionTank")
+chiller = Equipment("Chiller", pressure_drop=0.2)
+
+# ---------------- Build Network ----------------
+# Tank → Pump
+net.add_edge(Pipe("TankPipe", 0.2, 5), "Tank", "Pump_In")
+net.add_edge(pump, "Pump_In", "Pump_Out")
+
+# Pump → Main
+net.add_edge(main_pipe, "Pump_Out", "Main_In")
+net.add_edge(Pipe("MainPipe_Out", 0.2, 5), "Main_In", "Main_Out")
+
+# Main → Branches
+for b in range(1, 6):
+    net.add_edge(Pipe(f"MainToBranch_{b}", 0.15, 3), "Main_Out", f"Branch_{b}_In")
+
+# Branch → AHUs (series)
+for b in range(1, 6):
+    for a in range(1, 6):
+        # Determine input node
+        in_node = f"Branch_{b}_In" if a == 1 else f"AHU_{b}_{a-1}_EqOut"
+        pipe_out = f"AHU_{b}_{a}_PipeOut"
+        eq_out = f"AHU_{b}_{a}_EqOut"
+
+        # Pipe segment to AHU
+        net.add_edge(Pipe(f"AHUPipe_{b}_{a}", 0.1, 5), in_node, pipe_out)
+
+        # AHU equipment
+        net.add_edge(Equipment(f"AHU_{b}_{a}", pressure_drop=0.05), pipe_out, eq_out)
+
+# Branch → Return
+for b in range(1, 6):
+    last_ahu_out = f"AHU_{b}_5_EqOut"
+    net.add_edge(Pipe(f"BranchReturnPipe_{b}", 0.15, 5), last_ahu_out, f"Return_{b}")
+
+# Returns → Tank
+for b in range(1, 6):
+    net.add_edge(return_pipes[b-1], f"Return_{b}", "Return_Tank")
+
+# Optional expansion vessel and chiller
+net.add_edge(vessel, "Main_Out", "Return_Tank")
+net.add_edge(chiller, "Return_Tank", "Pump_In")
+
+# ---------------- Visualize ----------------
+net.visualize_network()
+
+----------------------------------------------------
+from processpi.pipelines.network import PipelineNetwork
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.equipment import Equipment
+from processpi.units import Pressure
+
+# ---------------- Create Network ----------------
+plant_net = PipelineNetwork("Small Plant Series Flow")
+
+# ---------------- Nodes ----------------
+plant_net.add_node("Feed_In", elevation=0)
+plant_net.add_node("Feed_Out", elevation=1)
+
+# Create 10 equipments in series
+for i in range(1, 11):
+    plant_net.add_node(f"EQ{i}_In", elevation=i)
+    plant_net.add_node(f"EQ{i}_Out", elevation=i)
+
+# Final outlet
+plant_net.add_node("Product_Out", elevation=11)
+
+# ---------------- Components ----------------
+# Feed pipe
+plant_net.add_edge(Pipe("FeedPipe", 0.2, 5), "Feed_In", "Feed_Out")
+
+# Series connection of equipments
+prev_node = "Feed_Out"
+for i in range(1, 11):
+    eq_name = f"EQ{i}"
+    in_node = f"{eq_name}_In"
+    out_node = f"{eq_name}_Out"
+
+    # Connect previous node to equipment inlet
+    plant_net.add_edge(Pipe(f"Pipe_to_{eq_name}", 0.1, 3), prev_node, in_node)
+
+    # Equipment itself
+    plant_net.add_edge(Equipment(eq_name, pressure_drop=0.05), in_node, out_node)
+
+    prev_node = out_node
+
+# Final product outlet
+plant_net.add_edge(Pipe("ProductPipe", 0.2, 4), prev_node, "Product_Out")
+
+# ---------------- Visualize ----------------
+plant_net.visualize_network()
+
+
+from processpi.pipelines.network import PipelineNetwork
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.equipment import Equipment
+
+# ---------------- Create Network ----------------
+plant_net = PipelineNetwork("Small Plant Series + Parallel Flow")
+
+# ---------------- Nodes ----------------
+plant_net.add_node("Feed_In", elevation=0)
+plant_net.add_node("Feed_Out", elevation=1)
+
+# Series equipments before branching
+for i in range(1, 6):
+    plant_net.add_node(f"EQ{i}_In", elevation=i)
+    plant_net.add_node(f"EQ{i}_Out", elevation=i)
+
+# Parallel branch equipments
+for b in range(1, 3):  # two parallel branches
+    for j in range(1, 4):  # three equipments per branch
+        plant_net.add_node(f"Branch{b}_EQ{j}_In", elevation=b*2 + j)
+        plant_net.add_node(f"Branch{b}_EQ{j}_Out", elevation=b*2 + j)
+
+# Merge node after parallel branches
+plant_net.add_node("Merge_Out", elevation=10)
+
+# Final product node
+plant_net.add_node("Product_Out", elevation=11)
+
+# ---------------- Components ----------------
+# Feed pipe
+plant_net.add_edge(Pipe("FeedPipe", 0.2, 5), "Feed_In", "Feed_Out")
+
+# Series equipments
+prev_node = "Feed_Out"
+for i in range(1, 6):
+    in_node = f"EQ{i}_In"
+    out_node = f"EQ{i}_Out"
+    plant_net.add_edge(Pipe(f"Pipe_to_EQ{i}", 0.1, 3), prev_node, in_node)
+    plant_net.add_edge(Equipment(f"EQ{i}", pressure_drop=0.05), in_node, out_node)
+    prev_node = out_node
+
+# Parallel branches from last series equipment
+for b in range(1, 3):
+    branch_prev = prev_node
+    for j in range(1, 4):
+        in_node = f"Branch{b}_EQ{j}_In"
+        out_node = f"Branch{b}_EQ{j}_Out"
+        plant_net.add_edge(Pipe(f"Pipe_B{b}_EQ{j}", 0.1, 2), branch_prev, in_node)
+        plant_net.add_edge(Equipment(f"Branch{b}_EQ{j}", pressure_drop=0.05), in_node, out_node)
+        branch_prev = out_node
+    # Connect branch end to merge
+    plant_net.add_edge(Pipe(f"Pipe_B{b}_Merge", 0.2, 3), branch_prev, "Merge_Out")
+
+# Final product
+plant_net.add_edge(Pipe("FinalPipe", 0.2, 4), "Merge_Out", "Product_Out")
+
+# ---------------- Visualize ----------------
+plant_net.visualize_network(width=1200, height=700)

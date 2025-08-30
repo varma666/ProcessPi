@@ -466,19 +466,17 @@ class PipelineNetwork:
 
         return pipes
 
-    def visualize_network(self, figsize=(24, 16), base_dx=2.0, autoscale=True):
+    def visualize_network(self, compact=False, width=1200, height=800):
         """
-        Fully recursive P&ID-style visualization with series/parallel blocks labeled.
-        Features:
-        - Handles nested subnetworks
-        - Series flows left→right, parallel stacked vertically
-        - Parallel merges and flow arrows
-        - Node elevations
-        - Color-coded components
-        - Automatic inlets/outlets
-        - Dynamic spacing and auto-scaled fonts/nodes
-        - Shaded boxes with subnetwork names and connection types
+        Interactive P&ID-style visualization using Plotly.
+        Supports series, parallel, and circular loops.
+        compact=True shortens node/edge labels for compact diagrams.
         """
+
+        import networkx as nx
+        import plotly.graph_objects as go
+
+        # ---------------- Prepare Graph ----------------
         G = nx.DiGraph()
         edge_colors = []
 
@@ -491,151 +489,133 @@ class PipelineNetwork:
             "merge": "gray"
         }
 
-        block_colors = {
-            "series": "#e0f7fa",
-            "parallel": "#fff3e0"
-        }
+        # Ensure all nodes are strings
+        for n in getattr(self, "nodes", []):
+            G.add_node(str(n))
 
-        block_labels = []  # Store subnetwork labels (x, y, width, height, text)
-
-        # ---------------- Recursive edge collection ----------------
+        # Add edges recursively
         def add_edges_recursive(elements):
             for elem in elements:
                 if isinstance(elem, Pipe):
-                    G.add_edge(elem.start_node.name, elem.end_node.name, label="Pipe")
+                    G.add_edge(str(elem.start_node.name), str(elem.end_node.name), label="P" if compact else "Pipe")
                     edge_colors.append(component_colors["Pipe"])
                 elif isinstance(elem, Pump):
-                    G.add_edge(elem.start_node.name, elem.end_node.name, label="Pump")
+                    G.add_edge(str(elem.start_node.name), str(elem.end_node.name), label="PU" if compact else "Pump")
                     edge_colors.append(component_colors["Pump"])
                 elif isinstance(elem, Fitting):
-                    G.add_edge(elem.node.name, elem.node.name, label=elem.fitting_type)
-                    edge_colors.append(component_colors["Fitting"])
+                    continue
                 elif isinstance(elem, (Vessel, Equipment)):
                     in_nodes = getattr(elem, "inlet_nodes", [])
                     out_nodes = getattr(elem, "outlet_nodes", [])
                     for in_node in in_nodes:
                         for out_node in out_nodes:
-                            G.add_edge(
-                                in_node.name,
-                                out_node.name,
-                                label=getattr(elem, "name", elem.__class__.__name__)
-                            )
+                            G.add_edge(str(in_node.name), str(out_node.name),
+                                    label="V" if compact else getattr(elem, "name", elem.__class__.__name__))
                             edge_colors.append(component_colors.get(elem.__class__.__name__, "gray"))
                 elif isinstance(elem, PipelineNetwork):
                     add_edges_recursive(elem.elements)
 
-        add_edges_recursive(self.elements)
+        add_edges_recursive(getattr(self, "elements", []))
 
-        # ---------------- Detect network inlets and outlets ----------------
+        # ---------------- Detect inlets ----------------
         all_nodes = set(G.nodes)
         all_targets = {target for _, target in G.edges}
         all_sources = {source for source, _ in G.edges}
-
         inlets = list(all_sources - all_targets)
-        outlets = list(all_targets - all_sources)
+        if not inlets:
+            inlets = list(G.nodes)
+        root_node = str(inlets[0])
 
-        # ---------------- Compute depth ----------------
-        def compute_depth(node, visited=None):
+        # ---------------- Recursive layout ----------------
+        pos = {}
+
+        def recursive_layout(node, x=0, y=0, dx=2.0, visited=None, depth=0):
             if visited is None:
                 visited = set()
+            node = str(node)
             if node in visited:
-                return 0
-            visited.add(node)
-            children = list(G.successors(node))
-            if not children:
-                return 1
-            return 1 + max(compute_depth(child, visited) for child in children)
-
-        network_depth = max((compute_depth(node) for node in inlets), default=1)
-        dx_scaled = base_dx * max(1.0, network_depth / 5.0)
-
-        # ---------------- Recursive layout with block tracking ----------------
-        block_rects = []
-        def recursive_layout(node, x=0, y=0, dx=dx_scaled, pos=None, visited=None, depth=0, parent_block=None, current_network=None):
-            if pos is None:
-                pos = {}
-            if visited is None:
-                visited = set()
-            if current_network is None:
-                current_network = self
-
-            if node in visited:
-                return pos
+                # Circular loop: offset slightly
+                y += 1.5
+                return
             pos[node] = (x, y)
             visited.add(node)
-
-            # Handle series/parallel subnetwork
             children = list(G.successors(node))
             n = len(children)
             if n == 0:
-                return pos
-
-            # Vertical spacing
+                return
             dy = max(1.5, n)
             dx_dynamic = dx * (1 + depth * 0.3)
-
-            # Track series/parallel blocks
             if n == 1:
-                pos = recursive_layout(children[0], x + dx_dynamic, y, dx, pos, visited, depth + 1, parent_block, current_network)
+                recursive_layout(children[0], x + dx_dynamic, y, dx, visited, depth + 1)
             else:
-                # Parallel branches split
+                # Parallel branches
                 start_y = y + dy * (n - 1) / 2
                 merge_y = y
                 merge_node = f"{node}_merge_{depth}"
-                G.add_node(merge_node, elevation=0)
+                G.add_node(merge_node)
                 for i, child in enumerate(children):
                     child_y = start_y - i * dy
-                    pos = recursive_layout(child, x + dx_dynamic, child_y, dx, pos, visited, depth + 1, parent_block, current_network)
-                    # Connect leaf nodes to merge
-                    branch_leaves = [n for n in G.successors(child) if G.out_degree(n) == 0]
-                    for leaf in branch_leaves:
-                        G.add_edge(leaf, merge_node, label="merge")
-                        edge_colors.append(component_colors["merge"])
+                    recursive_layout(child, x + dx_dynamic, child_y, dx, visited, depth + 1)
+                    # connect leaves to merge
+                    leaf_nodes = [n for n in G.successors(child) if G.out_degree(n) == 0]
+                    for leaf in leaf_nodes:
+                        if leaf not in pos:
+                            G.add_edge(str(leaf), merge_node, label="M" if compact else "merge")
+                            edge_colors.append(component_colors["merge"])
                 pos[merge_node] = (x + dx_dynamic + dx, merge_y)
-                # Save parallel block rectangle
-                min_y = min(pos[c][1] for c in children)
-                max_y = max(pos[c][1] for c in children)
-                block_rects.append((x, min_y - 0.5, dx_dynamic + dx, max_y - min_y + 1, "parallel"))
-                # Add label
-                block_labels.append((x + 0.1, min_y + (max_y - min_y)/2, current_network.name, current_network.connection_type))
 
-            return pos
+        recursive_layout(root_node)
 
-        root_node = inlets[0] if inlets else list(G.nodes)[0]
-        pos = recursive_layout(root_node)
+        # ---------------- Build Plotly Edges ----------------
+        edge_x, edge_y = [], []
+        edge_text = []
+        for edge in G.edges(data=True):
+            n0, n1 = str(edge[0]), str(edge[1])
+            if n0 in pos and n1 in pos:
+                x0, y0 = pos[n0]
+                x1, y1 = pos[n1]
+                edge_x += [x0, x1, None]
+                edge_y += [y0, y1, None]
+                edge_text.append(edge[2].get("label", ""))
 
-        # ---------------- Auto-scale ----------------
-        n_nodes = len(G.nodes)
-        node_size = 1200
-        font_size = 10
-        if autoscale:
-            scale_factor = max(0.3, min(1.0, 10.0 / (n_nodes ** 0.5)))
-            node_size *= scale_factor
-            font_size *= scale_factor
+        edge_trace = go.Scatter(
+            x=edge_x, y=edge_y,
+            line=dict(width=2, color='gray'),
+            hoverinfo='text',
+            mode='lines',
+            text=edge_text
+        )
+
+        # ---------------- Build Plotly Nodes ----------------
+        node_x, node_y, node_text = [], [], []
+        for n, (x, y) in pos.items():
+            node_x.append(x)
+            node_y.append(y)
+            node_text.append(str(n) if not compact else str(n)[:6])
+
+        node_trace = go.Scatter(
+            x=node_x, y=node_y,
+            mode='markers+text',
+            hoverinfo='text',
+            text=node_text,
+            textposition="top center",
+            marker=dict(
+                showscale=False,
+                color='lightblue',
+                size=20,
+                line=dict(width=2, color='black')
+            )
+        )
 
         # ---------------- Plot ----------------
-        plt.figure(figsize=figsize)
-
-        ax = plt.gca()
-        # Draw shaded blocks
-        for x0, y0, w, h, block_type in block_rects:
-            rect = Rectangle((x0 - 0.5, y0 - 0.5), w, h, facecolor=block_colors.get(block_type, "#f0f0f0"),
-                             edgecolor="black", alpha=0.2, zorder=0)
-            ax.add_patch(rect)
-
-        # Draw block labels (subnetwork name and connection type)
-        for lx, ly, name, ctype in block_labels:
-            ax.text(lx + 0.1, ly, f"{name}\n({ctype})", fontsize=font_size, fontweight="bold", va="center", ha="left", zorder=5)
-
-        nx.draw_networkx_nodes(G, pos, node_size=node_size, node_color="lightblue", zorder=2)
-        labels = {n: f"{n}\n({d.get('elevation', 0)} m)" for n, d in G.nodes(data=True)}
-        nx.draw_networkx_labels(G, pos, labels=labels, font_size=font_size, font_weight="bold", zorder=3)
-        nx.draw_networkx_edges(
-            G, pos, arrows=True, arrowsize=20 * (font_size / 10), arrowstyle='-|>',
-            edge_color=edge_colors, width=2, zorder=1
+        fig = go.Figure(data=[edge_trace, node_trace])
+        fig.update_layout(
+            showlegend=False,
+            width=width,
+            height=height,
+            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            hovermode='closest'
         )
-        edge_labels = nx.get_edge_attributes(G, 'label')
-        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=font_size * 0.9, zorder=3)
-        plt.title(f"P&ID-Style Pipeline Network: {self.name}", fontsize=font_size * 1.5)
-        plt.axis("off")
-        plt.show()
+        fig.show()
+

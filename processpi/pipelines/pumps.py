@@ -61,7 +61,7 @@ class Pump(PipelineBase):
         
         self.pump_type: str = pump_type
         self.flow_rate: Optional[VolumetricFlowRate] = flow_rate
-        self.density: Density = density or Density(1000, "kg/m³")
+        self.density: Density = density or Density(1000, "kg/m3")
         self.inlet_pressure: Optional[Pressure] = inlet_pressure
         self.outlet_pressure: Optional[Pressure] = outlet_pressure
 
@@ -69,7 +69,7 @@ class Pump(PipelineBase):
         if inlet_pressure and outlet_pressure:
             dp_pa = (outlet_pressure.to("Pa").value - inlet_pressure.to("Pa").value)
             # Head H = ΔP / (ρ * g)
-            calculated_head_m = dp_pa / (self.density.to("kg/m³").value * 9.81)
+            calculated_head_m = dp_pa / (self.density.to("kg/m3").value * 9.81)
             self.head: Length = Length(calculated_head_m, "m")
         else:
             self.head: Optional[Length] = head or Length(0.0, "m")
