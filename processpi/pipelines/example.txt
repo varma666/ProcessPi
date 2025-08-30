@@ -1,35 +1,72 @@
-"""# Example 1
+# Example 1
 from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.network import PipelineNetwork
 from processpi.units import *
 from processpi.components import Water
+
 fluid = Water()
 flow_rate = VolumetricFlowRate(3000, "gal/min")
 internal_diameter = Diameter(15.5, "in")
+
+# Create a simple network for a single pipe
+simple_pipe = Pipe(
+    name="Single Pipe",
+    length=Length(1, "m"),  # Length is needed, but value doesn't matter for velocity calculation
+    diameter=internal_diameter,
+    flow_rate=flow_rate,
+    roughness=0.000045, # Add a reasonable roughness
+    schedule="STD" # Add a schedule
+)
+simple_network = PipelineNetwork.series("Single Pipe Network")
+simple_network.add_node("Inlet")
+simple_network.add_node("Outlet")
+simple_network.add_edge(simple_pipe, "Inlet", "Outlet")
+
+
 model = PipelineEngine()
 model.fit(
+    network=simple_network, # Pass the network to fit
     fluid=fluid,
-    flow_rate=flow_rate,
-    internal_diameter=internal_diameter
+    flow_rate=flow_rate # Also need to pass the total flowrate to the network
 )
 result = model.run()
 #result.summary()
-print(result.velocity.to("ft/s")) """
-""" # Example 2
-from processpi.pipelines import PipelineEngine
+print(result.velocity.to("ft/s"))
+# Example 2
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe # Import Pipe
+from processpi.pipelines.network import PipelineNetwork # Import PipelineNetwork
 from processpi.components import Water
 from processpi.units import *
 fluid = Water()
 flow_rate = VolumetricFlowRate(75, 'L/s')
 internal_diameter = Diameter(180, 'mm')
+
+# Create a simple network for a single pipe
+simple_pipe = Pipe(
+    name="Single Pipe 2", # Give it a different name
+    length=Length(1, "m"),  # Length is needed, but value doesn't matter for velocity calculation
+    diameter=internal_diameter,
+    flow_rate=flow_rate,
+    roughness=0.000045, # Add a reasonable roughness
+    schedule="STD" # Add a schedule
+)
+simple_network = PipelineNetwork.series("Single Pipe Network 2") # Give it a different name
+simple_network.add_node("Inlet 2") # Give it a different name
+simple_network.add_node("Outlet 2") # Give it a different name
+simple_network.add_edge(simple_pipe, "Inlet 2", "Outlet 2") # Use the new node names
+
+
 model = PipelineEngine()
 model.fit(
+    network=simple_network, # Pass the network to fit
     fluid=fluid,
-    flow_rate=flow_rate,
-    internal_diameter=internal_diameter
+    flow_rate=flow_rate # Also need to pass the total flowrate to the network
 )
 result = model.run()
 #result.summary()
-print(result.velocity) """
+print(result.velocity)
 """ # Example 3
 from processpi.pipelines import PipelineEngine
 from processpi.components import Water
