@@ -1,4 +1,3 @@
-
 <p align="center">
   <img src="https://img.shields.io/badge/Process_PI-🧪-blue?style=for-the-badge&logo=python" alt="Process PI Logo" height="40"/>
 </p>
@@ -12,9 +11,9 @@
 <p align="center">
   <img src="https://img.shields.io/badge/🛠_Unit_Conversions-blue?style=for-the-badge" alt="Unit Conversions"/>
   <img src="https://img.shields.io/badge/💧_Components-blue?style=for-the-badge" alt="Components"/>
-  <img src="https://img.shields.io/badge/🏭_Pumps-Pipelines-blue?style=for-the-badge" alt="Pumps & Pipelines"/>
-  <img src="https://img.shields.io/badge/♨️_Heat_Exchangers-blue?style=for-the-badge" alt="Heat Exchangers"/>
-  <img src="https://img.shields.io/badge/⚗️_Chemical_Flasks-blue?style=for-the-badge" alt="Chemical Flasks"/>
+  <img src="https://img.shields.io/badge/🏭_Pipelines_&_Network_Engine-blue?style=for-the-badge" alt="Pipelines & Network Engine"/>
+  <img src="https://img.shields.io/badge/♨️_Heat_Transfer_(WIP)-blue?style=for-the-badge" alt="Heat Transfer"/>
+  <img src="https://img.shields.io/badge/⚗️_Reaction_&_Mass_Transfer_(WIP)-blue?style=for-the-badge" alt="Reaction & Mass Transfer"/>
 </p>
 
 <p align="center">
@@ -40,18 +39,23 @@
 
 ## 📖 Overview
 
-**Process PI** is a cross-platform **Python toolkit** for chemical engineering equipment design, simulations, and unit conversions.  
-It provides a **modular framework** for learning, experimenting, and simulating process systems.
+**Process PI** is a modular **Python toolkit** for chemical engineering that enables:
+
+- **Pipeline network simulations**
+- **Unit conversions across SI, CGS, and Imperial systems**
+- **Component-based property calculations**
+- And more, with advanced features under active development.
 
 ---
 
 ## 📑 Table of Contents
+
 - [Features](#-features)
 - [Installation](#-installation)
 - [Getting Started](#-getting-started)
   - [Unit Conversions](#1-unit-conversions)
   - [Components](#2-components)
-  - [Pipeline Network Analysis](#3-pipeline-network-analysis)
+  - [Pipeline Network Engine](#3-pipeline-network-engine)
 - [Roadmap](#-roadmap)
 - [License](#-license)
 
@@ -59,20 +63,32 @@ It provides a **modular framework** for learning, experimenting, and simulating 
 
 ## ⚡ Features
 
-- ⚙️ **Unit Conversion System** – Seamless conversion across SI, CGS, and Imperial units.  
-- 🧪 **Components Database (Work in Progress)** – Educational thermodynamic properties of 25+ components (Water, Ethanol, CO₂, etc.), expanding regularly.  
-- 🏭 **Equipment Design Modules (WIP)** – Pumps, pipelines, heat exchangers, reactors, and more.  
-- 🌐 **Pipeline Networks** – Analyze single pipes and complex networked systems, calculate flow, pressure drops, velocity, and Reynolds numbers.  
-- 📊 **Simulation Tools (Upcoming)** – Steady-state/dynamic process analysis, flow optimization, and energy management.
+- ⚙️ **Unit Conversion System** – Instant conversions between engineering unit systems.  
+- 🧪 **Components Library** – Access educational thermodynamic properties for 25+ fluids and growing.  
+- 🌐 **Pipeline Network Engine** – Build and simulate simple pipelines or complex interconnected networks, analyzing:
+  - Pressure drops
+  - Flow rates
+  - Reynolds number
+  - Pump requirements  
+- 🧮 **Calculation Modules (WIP)** – Heat transfer, mass transfer, and reaction engineering models in progress.  
+- 📊 **Simulation Tools (Planned)** – Transient dynamics, optimization, and interactive visualizations.  
 
 ---
 
 ## 📦 Installation
 
-Install via **PyPI**:
+Install from **PyPI**:
 
 ```bash
 pip install processpi
+```
+
+For development:
+
+```bash
+git clone https://github.com/varma666/ProcessPi.git
+cd ProcessPi
+pip install -e .
 ```
 
 ---
@@ -81,29 +97,23 @@ pip install processpi
 
 ### 1. Unit Conversions
 
-Easily convert between SI, CGS, and Imperial units.
-
 ```python
 from processpi.units import Length, Pressure, Temperature
 
-# Length
-l1 = Length(1.5, "m")
-print(l1.to("ft"))   # Output in feet
+# Length conversion
+length = Length(1.5, "m")
+print(length.to("ft"))  # Feet output
 
-# Pressure
+# Pressure conversion
 p = Pressure(2, "bar")
-print(p.to("Pa"))    # Output in Pascals
+print(p.to("psi"))      # PSI output
 
-# Temperature
+# Temperature conversion
 t = Temperature(100, "C")
-print(t.to("K"))     # Output in Kelvin
+print(t.to("K"))        # Kelvin output
 ```
 
----
-
 ### 2. Components
-
-Access educational thermodynamic properties of chemical components.
 
 ```python
 from processpi.components import Water, Ethanol
@@ -111,17 +121,15 @@ from processpi.components import Water, Ethanol
 water = Water()
 ethanol = Ethanol()
 
-print(f"Water density: {water.density()} kg/m³")
+print(f"Water density: {water.density()} kg/m3")
 print(f"Ethanol viscosity: {ethanol.viscosity()} Pa·s")
 ```
 
-⚠️ **Note**: Component data is provided for **educational and demonstration purposes**. The database is continuously expanding.
+⚠ **Note**: Component data is for educational/demo purposes only. Extended property support is in progress.
 
----
+### 3. Pipeline Network Engine
 
-### 3. Pipeline Network Analysis
-
-Perform hydraulic calculations for pipelines and network systems.
+Perform single-pipe or multi-pipe network simulations.
 
 ```python
 from processpi.pipelines.engine import PipelineEngine
@@ -129,37 +137,39 @@ from processpi.pipelines.pipes import Pipe
 from processpi.components import Water
 from processpi.units import VolumetricFlowRate, Diameter, Length
 
+# Define pipe and fluid
 pipe = Pipe(
     internal_diameter=Diameter(50, "mm"),
     length=Length(10, "m")
 )
+water = Water()
 
+# Set up engine
 engine = PipelineEngine()
 engine.fit(
-    flowrate=VolumetricFlowRate(0.001, "m^3/s"),
+    flowrate=VolumetricFlowRate(0.001, "m3/s"),
     pipe=pipe,
-    fluid=Water()
+    fluid=water
 )
 
+# Run calculations
 results = engine.run()
 engine.summary()
 ```
 
-#### Planned Enhancements
-
-- Support for branching and parallel pipeline networks  
-- Dynamic flow simulations and transient analysis  
-- Cost and energy optimization tools for network layouts  
+Planned upgrades:
+- Dynamic simulations  
+- Branching/parallel pipeline analysis  
+- Integrated cost and energy optimization  
 
 ---
 
 ## 🛣 Roadmap
 
-- Expand the Components Database to 50+ chemicals and fluids  
-- Add steady-state and dynamic simulation modules  
-- Implement energy optimization and cost analysis tools  
-- Build a GUI/web interface for interactive simulations  
-- Enable integration with real process data and sensor-driven workflows  
+- ✅ Pipeline Network Engine – Functional for single and multi-segment networks  
+- 🚧 Heat Transfer Modules – In progress for exchangers, conduction, and convection models  
+- 🚧 Mass Transfer & Reaction Modules – Basic structure in place, calculations coming soon  
+- 🔮 Advanced Features – Transient analysis, energy optimization, and GUI/web interfaces  
 
 ---
 
@@ -167,8 +177,4 @@ engine.summary()
 
 This project is licensed under the **MIT License** – see the LICENSE file for details.
 
----
-
-<p align="center">
-  <em>Process PI – Built with ❤️ for chemical engineers.</em>
-</p>
+<p align="center"> <em>ProcessPI – Built with ❤️ for chemical engineers.</em> </p>
