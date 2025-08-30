@@ -67,52 +67,82 @@ model.fit(
 result = model.run()
 #result.summary()
 print(result.velocity)
-""" # Example 3
-from processpi.pipelines import PipelineEngine
+# Example 3
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe # Import Pipe
+from processpi.pipelines.network import PipelineNetwork # Import PipelineNetwork
 from processpi.components import Water
 from processpi.units import *
+
 fluid = Water()
 flow_rate = VolumetricFlowRate(640, 'm3/h')
 internal_diameter = Diameter(380, 'mm')
-density = Density(1000, 'kg/m3')
-viscosity = Viscosity(1.0, 'cSt')
+
+# Create a simple network for a single pipe
+simple_pipe = Pipe(
+    name="Single Pipe 3",
+    length=Length(1, "m"),  # Length is needed, but value doesn't matter for velocity calculation
+    diameter=internal_diameter,
+    flow_rate=flow_rate,
+    roughness=0.000045, # Add a reasonable roughness
+    schedule="STD" # Add a schedule
+)
+simple_network = PipelineNetwork.series("Single Pipe Network 3")
+simple_network.add_node("Inlet 3")
+simple_network.add_node("Outlet 3")
+simple_network.add_edge(simple_pipe, "Inlet 3", "Outlet 3")
+
 model = PipelineEngine()
 model.fit(
+    network=simple_network, # Pass the network to fit
     fluid=fluid,
-    flow_rate=flow_rate,
-    internal_diameter=internal_diameter,
-    density=density,
-    viscosity=viscosity
+    flow_rate=flow_rate # Also need to pass the total flowrate to the network
 )
 result = model.run()
-print(result.velocity.to("m/s"), result.reynolds) """
-""" # Example 4
-from processpi.pipelines import PipelineEngine
+print(result.velocity.to("m/s"), result.reynolds)
+# Example 4
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.network import PipelineNetwork
 from processpi.components import Water
 from processpi.units import *
+
 fluid = Water()
 flow_rate = VolumetricFlowRate(6000, 'gal/min')
 internal_diameter = Diameter(19.25, 'in')
-density = Density(1000, 'kg/m3')
-viscosity = Viscosity(1.0, 'cSt')
+# Density and viscosity are properties of the fluid and not needed in fit() directly when passing a fluid object
+# density = Density(1000, 'kg/m3')
+# viscosity = Viscosity(1.0, 'cSt')
+
+# Create a simple network for a single pipe
+simple_pipe = Pipe(
+    name="Single Pipe 4",
+    length=Length(1, "m"),  # Length is needed, but value doesn't matter for velocity calculation
+    diameter=internal_diameter,
+    flow_rate=flow_rate,
+    roughness=0.000045, # Add a reasonable roughness
+    schedule="STD" # Add a schedule
+)
+simple_network = PipelineNetwork.series("Single Pipe Network 4")
+simple_network.add_node("Inlet 4")
+simple_network.add_node("Outlet 4")
+simple_network.add_edge(simple_pipe, "Inlet 4", "Outlet 4")
+
 model = PipelineEngine()
 model.fit(
+    network=simple_network, # Pass the network to fit
     fluid=fluid,
-    flow_rate=flow_rate,
-    internal_diameter=internal_diameter,
-    density=density,
-    viscosity=viscosity
+    flow_rate=flow_rate # Also need to pass the total flowrate to the network
 )
 result = model.run()
 print(result.velocity.to("ft/s"), result.reynolds)
-
-print(vel) """
-
 # B2_co_sizing.py
 
 from processpi.pipelines.engine import PipelineEngine
 from processpi.units import *
-from processpi.pipelines.pipes import Fitting
+from processpi.pipelines import Fitting # Placeholder import - verify correct location
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.network import PipelineNetwork
 from processpi.components import Vapor
 
 print("\n=== B2) CO Line Sizing ===")
@@ -120,47 +150,98 @@ print("\n=== B2) CO Line Sizing ===")
 co_mdot = MassFlowRate(1500, "kg/h")
 mu_CO = Viscosity(0.018, "cP")
 rho_CO = Density(1.06, "kg/m3")
-placeholder_diameter = Diameter(2, "in")
-fluid = Vapor()
+placeholder_diameter = Diameter(2, "in") # This diameter will likely be auto-sized or iterated on
+fluid = Vapor(density=rho_CO, viscosity=mu_CO) # Initialize Vapor with properties
 
+# Define available pressure drop (assuming this is an input for sizing)
+available_dp = Pressure(10000, "Pa") # Placeholder value - replace with actual available pressure drop
+
+# Create the pipe (length is needed for pressure drop calculation)
+co_pipe = Pipe(
+    name="CO Pipe",
+    length=Length(50, "m"), # Placeholder length - replace with actual pipe length
+    diameter=placeholder_diameter, # Initial guess or placeholder
+    roughness=0.000045,
+    schedule="STD"
+)
+
+# Create fittings with the placeholder diameter
 co_fittings = [
     Fitting(fitting_type="gate_valve", quantity=2, diameter=placeholder_diameter),
     Fitting(fitting_type="standard_elbow_45_deg", quantity=3, diameter=placeholder_diameter),
     Fitting(fitting_type="standard_elbow_90_deg", quantity=6, diameter=placeholder_diameter),
 ]
 
-co_size_results = PipelineEngine().fit(
-    mass_flowrate=co_mdot,
-    length=Length(4, "km"),
-    available_dp=Pressure(50, "kPa"),
-    density=rho_CO,
-    viscosity=mu_CO,
-    fittings=co_fittings,
-    material="CS",
-    fluid=fluid
-).run()
+# Create a network and add the pipe and fittings
+co_network = PipelineNetwork.series("CO Line")
+co_network.add_node("Inlet")
+co_network.add_node("Outlet")
+co_network.add_edge(co_pipe, "Inlet", "Outlet")
 
+co_pipe.fittings = co_fittings 
+
+
+model = PipelineEngine()
+model.fit(
+    network=co_network, # Pass the network to fit
+    fluid=fluid,
+    flow_rate=co_mdot, # Pass the mass flow rate
+    available_dp=available_dp # If sizing by available DP, this might be passed here or in run()
+)
+
+# To perform sizing based on available_dp, the run method or a specific sizing method
+# might take available_dp as an argument, or it might be set in the network or fluid.
+# Assuming run() can take available_dp for sizing:
+co_size_results = model.run()
+
+
+print("\n--- CO Line Sizing Results ---")
 co_size_results.summary()
-
 # A1_velocity_pressure_drop.py
 
 from processpi.pipelines.engine import PipelineEngine
 from processpi.units import *
-from processpi.pipelines.pipes import Fitting
+from processpi.pipelines import Fitting
+from processpi.pipelines.pipes import Pipe # Import Pipe
+from processpi.pipelines.network import PipelineNetwork # Import PipelineNetwork
 from processpi.components import Water
 
 print("\n=== A1) Velocity and Pressure Drop Calculation ===")
 
 pipe_diameter = Diameter(15.5, "in")
+flow_rate = VolumetricFlowRate(3000, "gal/min")
+fluid = Water(density=Density(998, "kg/m3"), viscosity=Viscosity(1.0, "cP")) # Initialize fluid with properties
 
-PipelineEngine().fit(
-    flowrate=VolumetricFlowRate(3000, "gal/min"),
-    diameter=pipe_diameter,
+# Create the pipe
+single_pipe = Pipe(
+    name="Single Pipe A1",
     length=Length(1000, "ft"),
-    density=Density(998, "kg/m3"),
-    viscosity=Viscosity(1.0, "cP"),
-    fittings=[Fitting(fitting_type="long_radius_90_deg", quantity=6, diameter=pipe_diameter)]
-).run().summary()
+    diameter=pipe_diameter,
+    flow_rate=flow_rate,
+    roughness=0.000045, # Assuming a reasonable roughness
+    schedule="STD" # Assuming a standard schedule
+)
+
+# Create fittings and associate them with the pipe (assuming this is how processpi handles it)
+pipe_fittings = [Fitting(fitting_type="long_radius_90_deg", quantity=6, diameter=pipe_diameter)]
+single_pipe.fittings = pipe_fittings # Assuming Pipe object can hold a list of fittings
+
+# Create a network and add the pipe
+pipe_network = PipelineNetwork.series("Single Pipe Network A1")
+pipe_network.add_node("Inlet")
+pipe_network.add_node("Outlet")
+pipe_network.add_edge(single_pipe, "Inlet", "Outlet")
+
+
+model = PipelineEngine()
+model.fit(
+    network=pipe_network, # Pass the network to fit
+    fluid=fluid, # Pass the fluid
+    flow_rate=flow_rate # Pass the total flow rate
+)
+
+result = model.run()
+result.summary()
 
 # A2_pipe_sizing_dp.py
 
@@ -219,7 +300,9 @@ co2_size_results.summary()
 
 from processpi.pipelines.engine import PipelineEngine
 from processpi.units import *
-from processpi.pipelines.pipes import Fitting
+from processpi.pipelines import Fitting
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.network import PipelineNetwork
 from processpi.components import Water
 
 print("\n=== B3) Water by Gravity: CS vs Concrete ===")
@@ -230,42 +313,79 @@ rho_water40 = Density(993, "kg/m3")
 mu_water40 = Viscosity(0.67, "cP")
 dp_available_water = Pressure(rho_water40.to("kg/m3").value * 9.81 * 6.0, "Pa")
 
-placeholder_diameter_b3 = Diameter(10, "in")
-eq_len_fit = Fitting(fitting_type="long_radius_90_deg", quantity=12, diameter=placeholder_diameter_b3)
+placeholder_diameter_b3 = Diameter(10, "in") # Initial guess or placeholder for sizing
+
+# Create the pipe
+water_pipe_cs = Pipe(
+    name="Water Pipe CS",
+    length=Length(3000, "m"), # Placeholder length
+    diameter=placeholder_diameter_b3,
+    roughness=0.000045, # Carbon Steel roughness
+    schedule="STD"
+)
+
+water_pipe_concrete = Pipe(
+    name="Water Pipe Concrete",
+    length=Length(3000, "m"), # Placeholder length
+    diameter=placeholder_diameter_b3,
+    roughness=0.000045, # Need to adjust roughness for Concrete based on documentation if different
+    schedule="STD"
+)
+
+
+# Create fittings and associate them with the pipes (assuming Pipe object can hold fittings)
+eq_len_fit_cs = Fitting(fitting_type="long_radius_90_deg", quantity=12, diameter=placeholder_diameter_b3)
+water_pipe_cs.fittings = [eq_len_fit_cs]
+
+eq_len_fit_concrete = Fitting(fitting_type="long_radius_90_deg", quantity=12, diameter=placeholder_diameter_b3)
+water_pipe_concrete.fittings = [eq_len_fit_concrete]
+
+
+# Create networks for each material
+cs_network = PipelineNetwork.series("Carbon Steel Line")
+cs_network.add_node("Inlet_CS")
+cs_network.add_node("Outlet_CS")
+cs_network.add_edge(water_pipe_cs, "Inlet_CS", "Outlet_CS")
+
+concrete_network = PipelineNetwork.series("Concrete Line")
+concrete_network.add_node("Inlet_Concrete")
+concrete_network.add_node("Outlet_Concrete")
+concrete_network.add_edge(water_pipe_concrete, "Inlet_Concrete", "Outlet_Concrete")
+
 
 # Carbon Steel
 print("\n[Carbon Steel]")
-water_cs_results = PipelineEngine().fit(
-    mass_flowrate=m_dot_water,
-    length=Length(3000, "m"),
-    available_dp=dp_available_water,
-    density=rho_water40,
-    viscosity=mu_water40,
-    fittings=[eq_len_fit],
-    material="CS",
-    fluid=fluid
-).run()
+# Assuming fit takes network, fluid, flow rate, and run might take available_dp for sizing
+model_cs = PipelineEngine()
+model_cs.fit(
+    network=cs_network,
+    fluid=fluid,
+    flow_rate=m_dot_water,
+    available_dp=dp_available_water# Passing mass flow rate
+)
+water_cs_results = model_cs.run() # Attempting to pass available_dp to run
 water_cs_results.summary()
 
 # Concrete
 print("\n[Concrete]")
-water_concrete_results = PipelineEngine().fit(
-    mass_flowrate=m_dot_water,
-    length=Length(3000, "m"),
-    available_dp=dp_available_water,
-    density=rho_water40,
-    viscosity=mu_water40,
-    fittings=[eq_len_fit],
-    material="Concrete",
-    fluid=fluid
-).run()
+# Assuming fit takes network, fluid, flow rate, and run might take available_dp for sizing
+model_concrete = PipelineEngine()
+model_concrete.fit(
+    network=concrete_network,
+    fluid=fluid,
+    flow_rate=m_dot_water,
+    available_dp=dp_available_water# Passing mass flow rate
+)
+water_concrete_results = model_concrete.run() # Attempting to pass available_dp to run
 water_concrete_results.summary()
 
 # B4_organic_liquid.py
 
 from processpi.pipelines.engine import PipelineEngine
 from processpi.units import *
-from processpi.pipelines.pipes import Fitting, Equipment
+from processpi.pipelines import Fitting, Equipment
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.network import PipelineNetwork # Import PipelineNetwork
 from processpi.components import OrganicLiquid
 
 print("\n=== B4) Organic Liquid Sizing & Residual ΔP ===")
@@ -273,9 +393,20 @@ print("\n=== B4) Organic Liquid Sizing & Residual ΔP ===")
 m_dot_org = MassFlowRate(5000, "kg/h")
 rho_org = Density(930, "kg/m3")
 mu_org = Viscosity(0.91, "cP")
-placeholder_diameter = Diameter(2, "in")
-fluid = OrganicLiquid()
+placeholder_diameter = Diameter(2, "in") # This diameter will likely be auto-sized or iterated on
+fluid = OrganicLiquid(density=rho_org, viscosity=mu_org) # Initialize OrganicLiquid with properties
 
+
+# Create the pipe (length is needed for pressure drop calculation)
+org_pipe = Pipe(
+    name="Organic Liquid Pipe",
+    length=Length(50, "m"), # Placeholder length - replace with actual pipe length
+    diameter=placeholder_diameter, # Initial guess or placeholder
+    roughness=0.000045,
+    schedule="STD"
+)
+
+# Create fittings with the placeholder diameter
 org_fittings = [
     Fitting(fitting_type="standard_elbow_90_deg", quantity=6, diameter=placeholder_diameter),
     Fitting(fitting_type="standard_tee_through_flow", quantity=2, diameter=placeholder_diameter),
@@ -283,24 +414,43 @@ org_fittings = [
     Fitting(fitting_type="globe_valve", quantity=1, diameter=placeholder_diameter),
 ]
 
+# Create equipment
 orifice_dp = Equipment(name="orifice meter", pressure_drop=Pressure(40, "kPa"))
 
-results_b4 = PipelineEngine().fit(
-    mass_flowrate=m_dot_org,
-    length=Length(50, "m"),
-    density=rho_org,
-    viscosity=mu_org,
-    fittings=org_fittings,
-    equipment=[orifice_dp],
-    available_dp=Pressure(600, "kPa"),
-    material="CS",
-    fluid=fluid
-).run()
+# Create a network and add the pipe, fittings, and equipment
+org_network = PipelineNetwork.series("Organic Liquid Line")
+org_network.add_node("Inlet")
+org_network.add_node("Outlet")
+org_network.add_edge(org_pipe, "Inlet", "Outlet")
+
+# Add fittings and equipment to the pipe or network (assuming Pipe or Network can hold them)
+# A common pattern is adding them as components on the edge or nodes.
+# Assuming Pipe object can hold a list of fittings and equipment:
+org_pipe.fittings = org_fittings
+org_pipe.equipment = [orifice_dp] # Assuming Pipe object can hold equipment
+
+# Define available pressure drop (assuming this is an input for sizing)
+available_dp = Pressure(600, "kPa") # Placeholder value - replace with actual available pressure drop
+
+
+model = PipelineEngine()
+# Assuming fit takes network, fluid, flow rate, and run might take available_dp for sizing
+model.fit(
+    network=org_network, # Pass the network to fit
+    fluid=fluid,
+    flow_rate=m_dot_org,
+    available_dp=available_dp# Pass the mass flow rate
+)
+
+# To perform sizing based on available_dp, the run method or a specific sizing method
+# might take available_dp as an argument, or it might be set in the network or fluid.
+# Assuming run() can take available_dp for sizing:
+results_b4 = model.run()
+
 
 results_b4.summary()
 residual_pa = Pressure(600, "kPa").to("Pa").value - results_b4.total_pressure_drop
 print(f"Residual ΔP available for control valve: {residual_pa} Pa")
-
 
 
 
