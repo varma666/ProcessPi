@@ -1,26 +1,27 @@
-name: Publish Python Package
+name: Publish Python 🐍 package
 
 on:
   push:
     tags:
-      - 'v*.*.*'   # triggers when you create a version tag like v0.1.2
-
-permissions:
-  id-token: write   # required for Trusted Publishing
-  contents: read
+      - 'v*'  # Trigger on version tags like v0.1.0
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write   # Required for OIDC
+      contents: read
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install build tools
+      - name: Upgrade pip and install build tools
         run: |
           python -m pip install --upgrade pip
           pip install build
@@ -28,22 +29,14 @@ jobs:
       - name: Build package
         run: python -m build
 
-      - name: Verify TestPyPI install
-        run: |
-          python -m pip install --upgrade pip
-          pip install --index-url https://test.pypi.org/simple/ processpi --extra-index-url https://pypi.org/simple
-          python -c "import processpi; print('✅ Version:', processpi.__version__)"
-
-      - name: Publish to TestPyPI
+      # ✅ Publish to TestPyPI
+      - name: Publish to TestPyPI via Trusted Publisher
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
 
-      - name: Verify PyPI install
-        run: |
-          python -m pip install --upgrade pip
-          pip install processpi --extra-index-url https://pypi.org/simple
-          python -c "import processpi; print('✅ Version:', processpi.__version__)"
-
-      - name: Publish to PyPI
+      # ✅ Publish to PyPI
+      - name: Publish to PyPI via Trusted Publisher
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          environment: pypi
