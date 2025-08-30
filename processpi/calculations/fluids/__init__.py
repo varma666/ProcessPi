@@ -1,37 +1,46 @@
-"""Initializes the Process PI calculation engine module.
+"""
+Initializes the Process PI calculation engine module for fluid mechanics.
 
-This module provides a collection of classes for performing calculations related to fluid mechanics and process engineering. The included classes handle key engineering tasks such as calculating pressure drop, pump power, fluid velocity, and determining flow characteristics.
+This module dynamically discovers and imports all calculation classes 
+from Python files in this folder, so you don’t need to manually update 
+this __init__.py whenever a new calculation is added.
 
-**Classes:**
-    * `PressureDropDarcy`: Calculates the pressure drop in a pipe using the Darcy-Weisbach equation.
-    * `PressureDropFanning`: Calculates the pressure drop using the Fanning friction factor.
-    * `PumpPower`: Determines the required pump power for a fluid system.
-    * `ReynoldsNumber`: Computes the Reynolds number to characterize the fluid flow regime.
-    * `OptimumPipeDiameter`: Calculates the most efficient pipe diameter for a given flow.
-    * `FluidVelocity`: Determines the velocity of the fluid within a pipe.
-    * `ColebrookWhite`: Calculates the friction factor using the Colebrook-White equation for turbulent flow.
-    * `TypeOfFlow`: Classifies the fluid flow as laminar or turbulent based on the Reynolds number.
+Available calculations include:
+    * PressureDropDarcy
+    * PressureDropFanning
+    * PumpPower
+    * ReynoldsNumber
+    * OptimumPipeDiameter
+    * FluidVelocity
+    * ColebrookWhite
+    * PressureDropHazenWilliams
+    * TypeOfFlow
 """
 
-# Import public classes from sub-modules to make them directly available under the package namespace.
-from .pressure_drop_darcy import PressureDropDarcy
-from .pressure_drop_fanning import PressureDropFanning
-from .pump_power import PumpPower
-from .reynolds_number import ReynoldsNumber
-from .optimium_pipe_dia import OptimumPipeDiameter
-from .velocity import FluidVelocity
-from .friction_factor_colebrookwhite import ColebrookWhite
-from .pressure_drop_hazen_williams import PressureDropHazenWilliams
-from .flow_type import TypeOfFlow
+import importlib
+import pkgutil
+import inspect
+from pathlib import Path
 
-# Define the public API of the module. This list specifies which objects are accessible
-# when a user imports the package using `from process_pi_engine import *`.
-__all__ = ["PressureDropDarcy",
-           "PressureDropFanning", 
-           "PumpPower", 
-           "ReynoldsNumber", 
-           "OptimumPipeDiameter", 
-           "FluidVelocity", 
-           "ColebrookWhite", 
-           "PressureDropHazenWilliams", 
-           "TypeOfFlow"]
+# Module path and package name
+_package_name = __name__
+_package_path = Path(__file__).parent
+
+# Public API list for __all__
+__all__ = []
+
+# Dynamically discover and import all modules in this package
+for module_info in pkgutil.iter_modules([str(_package_path)]):
+    module_name = module_info.name
+    # Skip private or cache files
+    if module_name.startswith("_"):
+        continue
+
+    module = importlib.import_module(f"{_package_name}.{module_name}")
+
+    # Find all classes in the module and expose them
+    for name, obj in inspect.getmembers(module, inspect.isclass):
+        # Only include classes defined in this module (not imported ones)
+        if obj.__module__ == module.__name__:
+            globals()[name] = obj
+            __all__.append(name)
