@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "processpi"
-version = "0.1.1"
+version = "0.1.2"
 description = "Python toolkit for chemical engineering simulations, equipment design, and unit conversions"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -24,3 +24,4 @@ urls = {
     "Bug Tracker" = "https://github.com/varma666/ProcessPi/issues",
     "Source Code" = "https://github.com/varma666/ProcessPi"
 }
+
