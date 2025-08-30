@@ -32,6 +32,12 @@ jobs:
           pip install .[dev]
           python -c "import processpi; print('✅ Local import successful!')"
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
   publish-testpypi:
     name: Publish to TestPyPI
     needs: build
@@ -39,8 +45,11 @@ jobs:
     permissions:
       id-token: write  # Required for trusted publishing
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
 
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -57,8 +66,11 @@ jobs:
     permissions:
       id-token: write  # Required for trusted publishing
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
