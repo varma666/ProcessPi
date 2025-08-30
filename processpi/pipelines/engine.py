@@ -14,7 +14,7 @@ from .nozzle import Nozzle
 from ..components import Component
 from .standards import (
     get_k_factor, get_roughness, list_available_pipe_diameters, get_standard_pipe_data,
-    get_recommended_velocity, get_next_standard_nominal,  get_next_next_standard_nominal, get_previous_standard_nominal
+    get_recommended_velocity, get_next_standard_nominal, get_next_next_standard_nominal, get_previous_standard_nominal
 )
 from .pipes import Pipe
 from .fittings import Fitting
@@ -28,17 +28,30 @@ from processpi.pipelines import network
 
 
 # ------------------------------- Constants ---------------------------------
-G = 9.80665  # m/s^2
+G = 9.80665  # m/s^2, Standard gravity
 DEFAULT_PUMP_EFFICIENCY = 0.70
-DEFAULT_FLOW_TOL = 1e-6  # m3/s absolute flow tolerance for solvers
-MAX_HC_ITER = 200
-MAX_MATRIX_ITER = 100
+DEFAULT_FLOW_TOL = 1e-6  # m3/s, Absolute flow tolerance for solvers
+MAX_HC_ITER = 200  # Max iterations for Hardy-Cross solver
+MAX_MATRIX_ITER = 100 # Max iterations for matrix solver
 
 # ------------------------------- Helpers -----------------------------------
 
 
 def _to_m3s(maybe_flow: Any) -> VolumetricFlowRate:
-    """Normalize flow to VolumetricFlowRate (m^3/s). Accepts MassFlowRate as well."""
+    """
+    Normalize flow to VolumetricFlowRate (m^3/s).
+
+    Args:
+        maybe_flow (Any): The flow rate, which can be a VolumetricFlowRate object,
+                          a MassFlowRate object, or a number.
+
+    Returns:
+        VolumetricFlowRate: The flow rate in m^3/s.
+
+    Raises:
+        ValueError: If flow is None.
+        TypeError: If a MassFlowRate object is provided without density context.
+    """
     if maybe_flow is None:
         raise ValueError("Flow cannot be None")
     if isinstance(maybe_flow, VolumetricFlowRate):
@@ -50,6 +63,19 @@ def _to_m3s(maybe_flow: Any) -> VolumetricFlowRate:
 
 
 def _ensure_diameter_obj(d: Any, assume_mm: bool = True) -> Diameter:
+    """
+    Ensures the input is a Diameter object.
+
+    If the input `d` is not a Diameter object, it attempts to convert it to one.
+    The `assume_mm` flag determines if a raw number is treated as millimeters.
+
+    Args:
+        d (Any): The diameter value or object.
+        assume_mm (bool): If True, a numeric input is assumed to be in millimeters.
+
+    Returns:
+        Diameter: The validated or converted Diameter object.
+    """
     if isinstance(d, Diameter):
         return d
     val = float(d)
@@ -59,6 +85,9 @@ def _ensure_diameter_obj(d: Any, assume_mm: bool = True) -> Diameter:
 
 @dataclass
 class ElementReport:
+    """
+    A data class to store the results of a single pipeline element calculation.
+    """
     name: str
     type: str
     diameter_m: Optional[float] = None
@@ -72,6 +101,7 @@ class ElementReport:
     warnings: List[str] = field(default_factory=list)
 
     def as_dict(self) -> Dict[str, Any]:
+        """Convert the dataclass to a dictionary."""
         return {
             "name": self.name,
             "type": self.type,
@@ -89,14 +119,30 @@ class ElementReport:
 
 # ----------------------------- Pipeline Engine -----------------------------
 class PipelineEngine:
-    """Pipeline simulation and sizing engine.
+    """
+    Pipeline simulation and sizing engine.
 
-    Usage: create engine, call .fit(...) with inputs (fluid, network or pipe, flowrate or mass_flowrate, etc.), then call .run().
+    This class provides a comprehensive set of tools for modeling fluid flow
+    in pipelines. It can handle single pipes, series networks, and parallel
+    networks, calculating pressure drop, velocity, Reynolds number, and other
+    key fluid properties.
 
-    The object stores the last results in self._results (PipelineResults).
+    Usage:
+        1. Instantiate the engine: `engine = PipelineEngine()`
+        2. Configure inputs with `.fit()`: `engine.fit(fluid=water, flowrate=1.0)`
+        3. Run the simulation: `results = engine.run()`
+        4. Access results: `results.summary()`
+
+    The object stores the last results in `self._results` (PipelineResults).
     """
 
     def __init__(self, **kwargs: Any) -> None:
+        """
+        Initializes the PipelineEngine.
+
+        Args:
+            **kwargs: Initial configuration parameters passed to `fit()`.
+        """
         self.data: Dict[str, Any] = {}
         self._results: Optional[PipelineResults] = None
         if kwargs:
@@ -104,12 +150,23 @@ class PipelineEngine:
 
     # ---------------------- Configuration / Fit ----------------------------
     def fit(self, **kwargs: Any) -> "PipelineEngine":
-        """Configure engine inputs. Converts and normalizes keys/aliases."""
+        """
+        Configures engine inputs. Converts and normalizes keys/aliases.
+
+        Args:
+            **kwargs: A dictionary of input parameters.
+
+        Returns:
+            PipelineEngine: The configured engine instance.
+
+        Raises:
+            TypeError: If the `network` provided is not a PipelineNetwork instance.
+        """
         self.data = dict(kwargs)
 
-        # Aliases
+        # Map aliases to canonical keys
         alias_map = {
-            "flowrate": ["flow_rate", "q", "Q","flowrate"],
+            "flowrate": ["flow_rate", "q", "Q", "flowrate"],
             "mass_flowrate": ["mass_flow", "m_dot", "mdot"],
             "velocity": ["v"],
             "diameter": ["dia", "D", "nominal_diameter", "internal_diameter"],
@@ -124,13 +181,13 @@ class PipelineEngine:
                         self.data[canon] = self.data[a]
                         break
 
-        # Defaults
+        # Set default values for common parameters
         self.data.setdefault("assume_mm_for_numbers", True)
         self.data.setdefault("flow_split", {})
         self.data.setdefault("tolerance_m3s", DEFAULT_FLOW_TOL)
         self.data.setdefault("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
         self.data.setdefault("method", "darcy_weisbach")
-        self.data.setdefault("hw_coefficient", 130.0)
+        self.data.setdefault("hw_coefficient", 130.0)  # Hazen-Williams roughness coefficient
         self.data.setdefault("solver", "auto")
 
         # Validate network type
@@ -138,19 +195,27 @@ class PipelineEngine:
         if net is not None and not isinstance(net, PipelineNetwork):
             raise TypeError("`network` must be a PipelineNetwork instance.")
 
-        # Explicitly bind normalized attributes for internal use
+        # Bind normalized attributes for internal use
         self.flowrate = self.data.get("flowrate")
         self.diameter = self.data.get("diameter")
         self.velocity = self.data.get("velocity")
-        #self.internal_diameter = self.data.get("internal_diameter")
         self.mass_flowrate = self.data.get("mass_flowrate")
-        # print(self)
+        # print(self) # For debugging purposes
 
         return self
 
 
     # ---------------------- Fluid properties --------------------------------
     def _get_density(self) -> Density:
+        """
+        Retrieves the fluid's density.
+
+        Returns:
+            Density: The fluid density object.
+
+        Raises:
+            ValueError: If density is not provided or cannot be inferred from the fluid component.
+        """
         if "density" in self.data and self.data["density"] is not None:
             return self.data["density"]
         fluid = self.data.get("fluid")
@@ -159,6 +224,15 @@ class PipelineEngine:
         raise ValueError("Provide 'density' or a 'fluid' Component with density().")
 
     def _get_viscosity(self) -> Viscosity:
+        """
+        Retrieves the fluid's dynamic viscosity.
+
+        Returns:
+            Viscosity: The fluid viscosity object.
+
+        Raises:
+            ValueError: If viscosity is not provided or cannot be inferred from the fluid component.
+        """
         if "viscosity" in self.data and self.data["viscosity"] is not None:
             return self.data["viscosity"]
         fluid = self.data.get("fluid")
@@ -168,9 +242,21 @@ class PipelineEngine:
 
     # ---------------------- Flow inference ----------------------------------
     def _infer_flowrate(self) -> VolumetricFlowRate:
+        """
+        Infers the volumetric flow rate from available data.
+
+        It checks for `flowrate`, then `mass_flowrate`, and finally `velocity`
+        and `diameter` to calculate the flow rate.
+
+        Returns:
+            VolumetricFlowRate: The calculated volumetric flow rate.
+
+        Raises:
+            ValueError: If flow rate cannot be inferred from the provided data.
+        """
         if "flowrate" in self.data and self.data["flowrate"] is not None:
             return self.data["flowrate"]
-        # mass flow -> volumetric
+        # Convert mass flow to volumetric flow
         if "mass_flowrate" in self.data and self.data["mass_flowrate"] is not None:
             rho = self._get_density()
             m = self.data["mass_flowrate"]
@@ -179,7 +265,7 @@ class PipelineEngine:
             q = VolumetricFlowRate(q_val, "m3/s")
             self.data["flowrate"] = q
             return q
-        # velocity & diameter
+        # Calculate flow from velocity and diameter
         v = self.data.get("velocity")
         d = self.data.get("diameter")
         if v is not None and d is not None:
@@ -193,8 +279,19 @@ class PipelineEngine:
     
     def _maybe_velocity(self, pipe):
         """
-        Ensures velocity is available. If not explicitly provided, 
-        calculates velocity using volumetric flow rate and pipe diameter.
+        Ensures velocity is available.
+
+        If not explicitly provided, it calculates velocity using volumetric flow
+        rate and pipe diameter.
+
+        Args:
+            pipe (Pipe): The pipe object to check for velocity.
+
+        Returns:
+            Velocity: The velocity object.
+
+        Raises:
+            ValueError: If velocity cannot be calculated.
         """
         if hasattr(pipe, "velocity") and pipe.velocity is not None:
             return pipe.velocity
@@ -210,7 +307,21 @@ class PipelineEngine:
 
     # ---------------------- Diameter resolution -----------------------------
     def _resolve_internal_diameter(self, pipe: Optional[Pipe] = None) -> Diameter:
-        # Priority: pipe.internal_diameter -> pipe.nominal_diameter -> engine diameter -> compute optimum
+        """
+        Resolves the internal diameter for a given pipe or the simulation.
+
+        Priority order:
+        1. `pipe.internal_diameter`
+        2. `pipe.nominal_diameter`
+        3. `engine.diameter` from `self.data`
+        4. Calculates the optimum diameter as a fallback.
+
+        Args:
+            pipe (Optional[Pipe]): The pipe object for which to resolve the diameter.
+
+        Returns:
+            Diameter: The resolved internal diameter.
+        """
         if pipe is not None:
             if getattr(pipe, "internal_diameter", None) is not None:
                 d = pipe.internal_diameter
@@ -220,29 +331,46 @@ class PipelineEngine:
                 return d if isinstance(d, Diameter) else Diameter(float(d), "m")
         d = self.data.get("diameter")
         if d is not None:
-            print(d)
+            # print(d) # For debugging
             return d if isinstance(d, Diameter) else _ensure_diameter_obj(d, self.data.get("assume_mm_for_numbers", True))
-        # fallback compute optimum for single pipe
+        # fallback to compute optimum for a single pipe
         q = self._infer_flowrate()
         calc = OptimumPipeDiameter(flow_rate=q, density=self._get_density())
         return calc.calculate()
 
     # ---------------------- Primitive calculators ---------------------------
     def _velocity(self, q: VolumetricFlowRate, d: Diameter) -> Velocity:
+        """
+        Calculates the fluid velocity given flow rate and diameter.
+        """
         return FluidVelocity(volumetric_flow_rate=q, diameter=d).calculate()
 
     def _reynolds(self, v: Velocity, d: Diameter) -> float:
+        """
+        Calculates the Reynolds number.
+        """
         return ReynoldsNumber(density=self._get_density(), velocity=v, diameter=d, viscosity=self._get_viscosity()).calculate()
 
     def _friction_factor(self, Re: float, d: Diameter, material: Optional[str] = None) -> float:
+        """
+        Calculates the friction factor using the Colebrook-White equation.
+        """
         eps = get_roughness(material) if material else 0.0
-        #print(Re)
+        # print(Re) # For debugging
         return ColebrookWhite(reynolds_number=Re, roughness=eps, diameter=d).calculate()
 
     def _major_dp_pa(self, f: float, L: Length, d: Diameter, v: Velocity) -> Pressure:
+        """
+        Calculates the major pressure drop (friction loss) using the Darcy-Weisbach equation.
+        """
         return PressureDropDarcy(friction_factor=f, length=L, diameter=d, density=self._get_density(), velocity=v).calculate()
 
     def _minor_dp_pa(self, fitting: Fitting, v: Velocity, f: Optional[float], d: Diameter) -> Pressure:
+        """
+        Calculates the minor pressure drop (fitting loss).
+
+        It prioritizes the K-factor method and falls back to the equivalent length method.
+        """
         # try K factor first
         rho = self._get_density().value
         v_val = v.value if hasattr(v, "value") else float(v)
@@ -253,7 +381,7 @@ class PipelineEngine:
         Le = getattr(fitting, "Le", None) or getattr(fitting, "equivalent_length", None)
         if Le is not None:
             if f is None:
-                # recompute friction
+                # recompute friction factor if not provided
                 Re = self._reynolds(v, d)
                 f_val = self._friction_factor(Re, d)
             else:
@@ -264,7 +392,14 @@ class PipelineEngine:
     # ---------------------- Pipe calculation (major+minor+elevation) ---------
     def _pipe_calculation(self, pipe: Pipe, flow_rate: Optional[VolumetricFlowRate]) -> Dict[str, Any]:
         """
-        Calculate velocity, Reynolds number, friction factor, and pressure drops.
+        Calculates velocity, Reynolds number, friction factor, and pressure drops for a single pipe.
+
+        Args:
+            pipe (Pipe): The pipe object to analyze.
+            flow_rate (Optional[VolumetricFlowRate]): The flow rate for this pipe. If None, it is inferred.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing all calculated properties for the pipe.
         """
 
         # ---------------------------
@@ -356,14 +491,17 @@ class PipelineEngine:
     def _compute_series(self, series: Any, flow_rate: Optional[VolumetricFlowRate] = None) -> Tuple[Pressure, List[Dict[str, Any]], Dict[str, Any]]:
         """
         Compute pressure drop for a series of pipes.
-        Accepts:
-        - A single Pipe
-        - A list of Pipes (treated as series)
-        - A list of branches (each branch is a list of Pipes)
+
+        Args:
+            series (Any): A single Pipe, a list of Pipes (treated as series),
+                          or a list of branches (each branch is a list of Pipes).
+            flow_rate (Optional[VolumetricFlowRate]): The flow rate for the series.
+
         Returns:
-        - total pressure drop
-        - list of element reports
-        - series summary
+            Tuple[Pressure, List[Dict[str, Any]], Dict[str, Any]]:
+                - total pressure drop
+                - list of element reports
+                - series summary dictionary
         """
 
         # ---------------------------
@@ -420,15 +558,18 @@ class PipelineEngine:
                         ) -> Tuple[Pressure, List[Dict[str, Any]], Dict[str, Any]]:
         """
         Compute pressure drop for a network.
-        Accepts:
-        - Single Pipe
-        - List of Pipes (series branch)
-        - List of branches (each branch is list of Pipes)
-        - PipelineNetwork object (collection of branches)
+
+        Args:
+            network (Any): Single Pipe, list of Pipes (series branch), list of
+                           branches (each branch is list of Pipes), or a
+                           PipelineNetwork object.
+            flow_rate (Optional[VolumetricFlowRate]): The flow rate for the network.
+
         Returns:
-        - total network pressure drop
-        - element reports
-        - network summary
+            Tuple[Pressure, List[Dict[str, Any]], Dict[str, Any]]:
+                - total network pressure drop
+                - element reports
+                - network summary
         """
 
         # ---------------------------
@@ -499,14 +640,14 @@ class PipelineEngine:
         Resolves flow in parallel branches using iterative ΔP balancing.
         
         Args:
-            net: The parallel network object
-            q_total: Total volumetric flow rate (m3/s)
-            branches: List of branch networks
-            tol: Convergence tolerance on ΔP equality
-            max_iter: Maximum iterations
+            net (PipelineNetwork): The parallel network object.
+            q_total (VolumetricFlowRate): Total volumetric flow rate (m3/s).
+            branches (list): List of branch networks.
+            tol (float): Convergence tolerance on ΔP equality.
+            max_iter (int): Maximum iterations.
         
         Returns:
-            List of flows (m3/s) for each branch
+            List[float]: A list of flow rates (m3/s) for each branch.
         """
         n = len(branches)
         # --- Initial guess: equal split ---
@@ -550,16 +691,21 @@ class PipelineEngine:
 
 
 
-
     # ---------------------- Network Solvers ---------------------------------
     def _hardy_cross(self, network: PipelineNetwork, q_total: VolumetricFlowRate, tol: float) -> Tuple[bool, float, List[ElementReport]]:
-        """Hardy-Cross iterative solver for a parallel/looped network.
+        """
+        Hardy-Cross iterative solver for a parallel/looped network.
 
-        Strategy:
-        - For a top-level parallel group, assign initial equal flows.
-        - Iterate: compute heads for each branch (using _compute_network), approximate derivative dH/dQ,
-          compute ΔQ correction and apply.
-        - Collect element reports and return residual.
+        Args:
+            network (PipelineNetwork): The network object to solve.
+            q_total (VolumetricFlowRate): The total flow rate entering the network.
+            tol (float): The convergence tolerance.
+
+        Returns:
+            Tuple[bool, float, List[ElementReport]]:
+                - bool: True if the solver converged.
+                - float: The final maximum residual.
+                - List[ElementReport]: A list of element reports with calculated properties.
         """
         # Get parallel branches for this network block
         branches = network.get_parallel_branches() if hasattr(network, "get_parallel_branches") else getattr(network, "elements", [])
@@ -581,7 +727,7 @@ class PipelineEngine:
                 dp_branch, el_reports, _ = self._compute_network(branch, q_b)
                 # convert to head (m)
                 H = dp_branch.to("Pa").value / (self._get_density().value * G)
-                # derivative estimate dH/dQ ≈ n * H / Q  (heuristic better than 2*H/Q in mixed networks)
+                # derivative estimate dH/dQ ≈ n * H / Q (heuristic better than 2*H/Q in mixed networks)
                 if abs(q_b.value) < 1e-12:
                     dHdQ = 1e12
                 else:
@@ -613,11 +759,17 @@ class PipelineEngine:
                   ) -> Tuple[bool, List[VolumetricFlowRate], List[Dict[str, Any]]]:
         """
         Solve the network using an iterative approach.
-        Accepts normalized input: Pipe, list of Pipes, list of branches, PipelineNetwork.
+
+        Args:
+            network (Any): The network to solve.
+            q_total (VolumetricFlowRate): Total volumetric flow rate.
+            tol (float): Convergence tolerance.
+
         Returns:
-        - matrix_ok: bool indicating convergence
-        - matrix_res: list of branch flow rates
-        - matrix_reports: detailed element reports
+            Tuple[bool, List[VolumetricFlowRate], List[Dict[str, Any]]]:
+                - matrix_ok: bool indicating convergence
+                - matrix_res: list of branch flow rates
+                - matrix_reports: detailed element reports
         """
 
         # Normalize network using _compute_network
@@ -632,7 +784,7 @@ class PipelineEngine:
 
         while iteration < max_iter:
             iteration += 1
-            dp_prev = [self._compute_network(branch, q)[0].value for branch, q in zip(self._normalize_branches(network), branch_flows)]
+            # dp_prev = [self._compute_network(branch, q)[0].value for branch, q in zip(self._normalize_branches(network), branch_flows)]
 
             # Recompute pressure drops for each branch with current flows
             dp_new = []
@@ -664,10 +816,19 @@ class PipelineEngine:
     ) -> Tuple[Dict[str, Any], Any]:
         """
         Top-level solver for networks with multiple branches.
-        Returns a dict containing:
-            - success: bool
-            - branch_flows: list of flow rates
-            - reports: list of element reports
+
+        This method normalizes the network structure and iteratively balances
+        pressure drops across parallel branches.
+
+        Args:
+            network (Any): The network to solve.
+            q_total (VolumetricFlowRate): The total volumetric flow rate.
+            tol (float): The convergence tolerance.
+
+        Returns:
+            Tuple[Dict[str, Any], Any]:
+                - A dictionary containing the solve status, branch flows, reports, and iteration count.
+                - The second element is always None.
         """
         # Normalize branches
         branches = self._normalize_branches(network)
@@ -713,8 +874,14 @@ class PipelineEngine:
 
     def _normalize_branches(self, network) -> list[list[Pipe]]:
         """
-        Convert any PipelineNetwork or list of branches into a flat list of
+        Converts any PipelineNetwork or list of branches into a flat list of
         branches, where each branch is a list of Pipe objects.
+
+        Args:
+            network (Any): The network or list of pipes to normalize.
+
+        Returns:
+            list[list[Pipe]]: A flattened list of branches.
         """
         if isinstance(network, Pipe):
             return [[network]]
@@ -755,12 +922,16 @@ class PipelineEngine:
 
 
     # ---------------------- Diameter selection -------------------------------
-    # ---------------------- Diameter selection -------------------------------
     def _select_standard_diameter(self, ideal_d_m: float) -> Tuple[str, float]:
         """
-        Map a continuous ideal diameter (m) to nearest standard nominal.
+        Maps a continuous ideal diameter (m) to nearest standard nominal.
         Picks the smallest standard size that yields diameter >= ideal.
-        Returns a tuple: (label, value_in_m)
+        
+        Args:
+            ideal_d_m (float): The ideal diameter in meters.
+
+        Returns:
+            Tuple[str, float]: A tuple of the label and the value in meters.
         """
         standard_list = list_available_pipe_diameters()
         if not standard_list:
@@ -774,6 +945,9 @@ class PipelineEngine:
 
     # ---------------------- Utility helpers ---------------------------------
     def _as_pressure(self, maybe_pressure: Any, default_unit: str = "Pa") -> Optional[Pressure]:
+        """
+        Converts input to a Pressure object.
+        """
         if maybe_pressure is None:
             return None
         if isinstance(maybe_pressure, Pressure):
@@ -781,7 +955,10 @@ class PipelineEngine:
         return Pressure(float(maybe_pressure), default_unit)
 
     def _pump_gain_pa(self, pump: Any) -> Pressure:
-        """Convert pump object head/pressure to Pa. Accepts `head` (m) or inlet/outlet pressures."""
+        """
+        Converts pump object head/pressure to Pa.
+        Accepts `head` (m) or inlet/outlet pressures.
+        """
         rho = getattr(pump, "density", None) or self._get_density().value
         pin = getattr(pump, "inlet_pressure", None)
         pout = getattr(pump, "outlet_pressure", None)
@@ -793,12 +970,16 @@ class PipelineEngine:
         return Pressure(0.0, "Pa")
 
     def _equipment_dp_pa(self, eq: Any) -> Pressure:
-        """Converts Equipment pressure_drop (assumed bar) to Pa if needed."""
+        """
+        Converts Equipment pressure_drop (assumed bar) to Pa if needed.
+        """
         dp = getattr(eq, "pressure_drop", 0.0) or 0.0
         return Pressure(float(dp), "bar").to("Pa") if not isinstance(dp, Pressure) else dp
 
     def _fitting_dp_pa(self, fitting: Fitting, v: Velocity, f: Optional[float], d: Diameter) -> Pressure:
-        """Compute fitting pressure drop using K or Le approaches."""
+        """
+        Compute fitting pressure drop using K or Le approaches.
+        """
         rho = self._get_density().value
         v_val = v.value if hasattr(v, "value") else float(v)
         K = getattr(fitting, "K", None) or getattr(fitting, "K_factor", None) or getattr(fitting, "total_K", None)
@@ -822,10 +1003,20 @@ class PipelineEngine:
 
     def run(self, tol: float = 1e-5) -> "PipelineResults":
         """
-        Run the pipeline/network solver and return a PipelineResults object.
+        Runs the pipeline/network solver and returns a PipelineResults object.
 
         Handles single pipes, series networks, and parallel subnetworks.
         Reports are flattened so all components (pipes, fittings, etc.) are included.
+
+        Args:
+            tol (float): The convergence tolerance for the solver.
+
+        Returns:
+            PipelineResults: An object containing the simulation results.
+
+        Raises:
+            ValueError: If the engine is not fitted with network, flow, or fluid data.
+            TypeError: If the network type is unsupported.
         """
         net = self.data.get("network", None)
         q_in = self.data.get("flow_rate", None)
@@ -921,6 +1112,9 @@ class PipelineEngine:
 
 
     def summary(self) -> Optional[PipelineResults]:
+        """
+        Returns the summary of the last run.
+        """
         if not self._results:
             print("No results available for summary.")
             return None
@@ -928,7 +1122,9 @@ class PipelineEngine:
 
     # ---------------------- Backwards compatibility / helpers ---------------
     def _ensure_pipe_object(self) -> Pipe:
-        """Constructs a Pipe object from engine data if not provided."""
+        """
+        Constructs a Pipe object from engine data if not provided.
+        """
         if isinstance(self.data.get("pipe"), Pipe):
             return self.data["pipe"]
         d = self.data.get("diameter")
@@ -949,7 +1145,7 @@ class PipelineEngine:
     def _internal_diameter_m(self, element: Any = None) -> Diameter:
         """
         Returns the nominal internal diameter as a Diameter object in meters.
-        Handles Pipe, Fitting (via parent pipe), and falls back to default.
+        Handles Pipe, Fitting (via parent pipe), and falls back to a default value.
         """
         if element is None:
             # fallback: default diameter
@@ -976,7 +1172,15 @@ class PipelineEngine:
     
     
     def _resolve_internal_diameter(self, pipe: Pipe) -> Diameter:
-        """Return internal diameter as a Diameter object, safely."""
+        """
+        Return internal diameter as a Diameter object, safely.
+
+        Args:
+            pipe (Pipe): The pipe object to get the diameter from.
+
+        Returns:
+            Diameter: The resolved diameter object.
+        """
         if getattr(pipe, "internal_diameter", None):
             return pipe.internal_diameter
         if getattr(pipe, "nominal_diameter", None):
@@ -994,9 +1198,19 @@ class PipelineEngine:
 
     def _select_standard_diameter(self, ideal_d_m: float) -> Tuple[str, Diameter]:
         """
-        Map a continuous ideal diameter (m) to the nearest standard nominal pipe size.
+        Maps a continuous ideal diameter (m) to the nearest standard nominal pipe size.
+
         Always returns (label, Diameter), never a raw float.
         Picks the smallest standard size that is >= ideal_d_m.
+
+        Args:
+            ideal_d_m (float): The ideal diameter in meters.
+
+        Returns:
+            Tuple[str, Diameter]: The label and the Diameter object.
+
+        Raises:
+            ValueError: If no standard pipe diameters are available.
         """
         candidates: List[Tuple[str, Diameter]] = []
 
@@ -1023,6 +1237,18 @@ class PipelineEngine:
         raise ValueError("No standard pipe diameters available in catalog")
     
     def _solve_for_diameter(self, **kwargs):
+        """
+        Sizing a single pipeline to meet either a target velocity or an available pressure drop.
+        The function iteratively tests three standard pipe sizes around an initial guess
+        based on recommended velocities to find the best fit.
+
+        Args:
+            **kwargs: Configuration parameters, including 'fluid', 'flow_rate',
+                      and 'available_dp' (optional).
+
+        Returns:
+            PipelineResults: An object containing the sizing results.
+        """
         import math
 
         # Helper to safely set diameter on a pipe object
@@ -1080,7 +1306,7 @@ class PipelineEngine:
         if not diameters_to_test:
             raise RuntimeError("Could not find any suitable standard diameter to test.")
 
-        print(f"Testing diameters: {[d.to('in') for d in diameters_to_test]}")
+        # print(f"Testing diameters: {[d.to('in') for d in diameters_to_test]}") # For debugging
 
         # ---------------------------
         # Run calculations for each diameter
@@ -1169,8 +1395,15 @@ class PipelineEngine:
     
     def _solve_for_diameter_network(self, network, **kwargs):
         """
-        Iteratively size each pipe in a network based on flow, ΔP, and recommended velocities.
+        Iteratively sizes each pipe in a network based on flow, ΔP, and recommended velocities.
         Each pipe is sized sequentially; fittings and equipment are included in calculations.
+
+        Args:
+            network (PipelineNetwork): The network to size.
+            **kwargs: Configuration parameters.
+
+        Returns:
+            PipelineResults: The simulation results.
         """
 
         import math
@@ -1187,7 +1420,7 @@ class PipelineEngine:
             "water": (1.0, 2.5),
             # Add more fluids as needed
         }
-        fluid_type = getattr(fluid, "name", "").strip().lower()
+        fluid_type = getattr(fluid, "name", "").strip().lower().replace(" ", "_")
         v_min, v_max = RECOMMENDED_VELOCITIES.get(fluid_type, (0.5, 100.0))
         pump_eff = kwargs.get("pump_efficiency", self.data.get("pump_efficiency", 0.75))
 
@@ -1265,6 +1498,3 @@ class PipelineEngine:
             })
 
         return PipelineResults({"all_simulation_results": all_results})
-
-
-
