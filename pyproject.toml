@@ -19,9 +19,9 @@ dependencies = [
     "CoolProp>=6.5.0",
     "tqdm>=4.65.0"
 ]
-urls = { 
-    "Homepage" = "https://github.com/varma666/ProcessPi",
-    "Bug Tracker" = "https://github.com/varma666/ProcessPi/issues",
-    "Source Code" = "https://github.com/varma666/ProcessPi"
-}
+[project.urls]
+Homepage = "https://github.com/varma666/ProcessPi"
+Bug Tracker = "https://github.com/varma666/ProcessPi/issues"
+Source Code = "https://github.com/varma666/ProcessPi"
+
 
