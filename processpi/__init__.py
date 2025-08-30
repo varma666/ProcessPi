@@ -1,49 +1,80 @@
-# processpi/__init__.py
 """
-ProcessPI - Python toolkit for chemical engineering simulations, equipment design, and unit conversions
+ProcessPI: Chemical & Process Engineering Tools
+==============================================
+
+ProcessPI is a Python library for process engineers to perform calculations,
+simulate fluid systems, and design equipment.
+
+Features:
+---------
+- Fluid mechanics and hydraulic calculations
+- Pipeline network simulation and visualization
+- Chemical and physical properties management
+- Unit handling and conversions
 """
 
-from importlib.metadata import version, PackageNotFoundError
-import time
+import os
 import sys
+import time
+import importlib
+import pkgutil
+from pathlib import Path
 
-# -----------------------
-# Version handling
-# -----------------------
+# -------------------------------------------------------------------
+# Dynamic Version Handling
+# -------------------------------------------------------------------
 try:
+    from importlib.metadata import version, PackageNotFoundError
     __version__ = version("processpi")
 except PackageNotFoundError:
-    __version__ = "0.1.2"  # fallback for local/dev installs
+    __version__ = "0.1.0"  # fallback version for dev environments
 
-# -----------------------
-# Core submodules import
-# -----------------------
-from .pipelines.engine import PipelineEngine
-from .pipelines.pipelineresults import PipelineResults
-from .pipelines.nozzle import Nozzle
-from .components import Component
+__all__ = []
 
-__all__ = [
-    "PipelineEngine",
-    "PipelineResults",
-    "Nozzle",
-    "Component",
-]
+# -------------------------------------------------------------------
+# Sleek Loading Animation
+# -------------------------------------------------------------------
+def _loading_animation(text="Initializing ProcessPI"):
+    frames = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]
+    for i in range(20):
+        sys.stdout.write(f"\r{text} {frames[i % len(frames)]}")
+        sys.stdout.flush()
+        time.sleep(0.05)
+    sys.stdout.write("\r✅ ProcessPI Ready!             \n")
 
-# -----------------------
-# Loading animation on import
-# -----------------------
-def _show_loading_animation():
-    """Display a small loading/progress animation in terminal or Colab."""
-    if sys.stdout.isatty():  # only display in terminal
-        print(f"⚡ Loading ProcessPI v{__version__} ...")
-        from tqdm import tqdm
-        for _ in tqdm(range(50), desc="Initializing", ncols=70, ascii=True):
-            time.sleep(0.02)  # small delay for smooth effect
-        print(f"✅ ProcessPI v{__version__} ready!\n")
-    else:
-        # minimal message in non-terminal environments (like Colab notebooks)
-        print(f"⚡ ProcessPI v{__version__} loaded successfully!")
+# Only show animation in interactive sessions (terminal/Colab)
+if sys.stdout.isatty() or "COLAB_GPU" in os.environ:
+    _loading_animation()
 
-# Call the loading animation automatically on import
-_show_loading_animation()
+# -------------------------------------------------------------------
+# Import Core Submodules
+# -------------------------------------------------------------------
+from . import calculations, pipelines, units, components
+
+__all__.extend(["calculations", "pipelines", "units", "components"])
+
+# -------------------------------------------------------------------
+# Dynamic Discovery & Import of Component Classes
+# -------------------------------------------------------------------
+_components_dir = Path(__file__).parent / "components"
+
+for _, module_name, is_pkg in pkgutil.iter_modules([str(_components_dir)]):
+    if not is_pkg:  # Import each component module dynamically
+        module = importlib.import_module(f"{__name__}.components.{module_name}")
+        globals()[module_name] = module
+        __all__.append(module_name)
+
+# Automatically collect all classes from components
+for mod in list(__all__):
+    module_obj = globals().get(mod)
+    if module_obj and hasattr(module_obj, "__dict__"):
+        for name, obj in module_obj.__dict__.items():
+            if isinstance(obj, type):  # only classes
+                globals()[name] = obj
+                __all__.append(name)
+
+# -------------------------------------------------------------------
+# Friendly Banner for Interactive Users
+# -------------------------------------------------------------------
+if sys.stdout.isatty() or "COLAB_GPU" in os.environ:
+    print(f"📦 ProcessPI v{__version__} | Chemical & Process Engineering Tools Loaded!\n")
