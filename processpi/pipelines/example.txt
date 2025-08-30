@@ -71,32 +71,70 @@ print(result.velocity.to("ft/s"), result.reynolds)
 
 print(vel) """
 
+# B2_co_sizing.py
+
 from processpi.pipelines.engine import PipelineEngine
-from processpi.pipelines.pipes import Pipe
-from processpi.pipelines.fittings import Fitting
-from processpi.pipelines.equipment import Equipment
-from processpi.pipelines.network import PipelineNetwork
 from processpi.units import *
+from processpi.pipelines.pipes import Fitting
+from processpi.components import Vapor
+
+print("\n=== B2) CO Line Sizing ===")
+
+co_mdot = MassFlowRate(1500, "kg/h")
+mu_CO = Viscosity(0.018, "cP")
+rho_CO = Density(1.06, "kg/m3")
+placeholder_diameter = Diameter(2, "in")
+fluid = Vapor()
+
+co_fittings = [
+    Fitting(fitting_type="gate_valve", quantity=2, diameter=placeholder_diameter),
+    Fitting(fitting_type="standard_elbow_45_deg", quantity=3, diameter=placeholder_diameter),
+    Fitting(fitting_type="standard_elbow_90_deg", quantity=6, diameter=placeholder_diameter),
+]
+
+co_size_results = PipelineEngine().fit(
+    mass_flowrate=co_mdot,
+    length=Length(4, "km"),
+    available_dp=Pressure(50, "kPa"),
+    density=rho_CO,
+    viscosity=mu_CO,
+    fittings=co_fittings,
+    material="CS",
+    fluid=fluid
+).run()
+
+co_size_results.summary()
+
+# A1_velocity_pressure_drop.py
+
+from processpi.pipelines.engine import PipelineEngine
+from processpi.units import *
+from processpi.pipelines.pipes import Fitting
 from processpi.components import Water
-from processpi.components.carbonmonoxide import CarbonMonoxide
-from processpi.components.vapor import Vapor
-from processpi.components.organic_liquid import OrganicLiquid
 
-print("\n=== A) Quick single-pipe demos ===")
+print("\n=== A1) Velocity and Pressure Drop Calculation ===")
 
-# --- A1) Velocity and pressure drop calculation ---
-pipe_diameter_a1 = Diameter(15.5, "in")
+pipe_diameter = Diameter(15.5, "in")
+
 PipelineEngine().fit(
     flowrate=VolumetricFlowRate(3000, "gal/min"),
-    diameter=pipe_diameter_a1,
+    diameter=pipe_diameter,
     length=Length(1000, "ft"),
     density=Density(998, "kg/m3"),
     viscosity=Viscosity(1.0, "cP"),
-    fittings=[Fitting(fitting_type="long_radius_90_deg", quantity=6, diameter=pipe_diameter_a1)]
+    fittings=[Fitting(fitting_type="long_radius_90_deg", quantity=6, diameter=pipe_diameter)]
 ).run().summary()
 
-# --- A2) Pipe sizing with available ΔP ---
+# A2_pipe_sizing_dp.py
+
+from processpi.pipelines.engine import PipelineEngine
+from processpi.units import *
+from processpi.components import Water
+
+print("\n=== A2) Pipe Sizing with Available ΔP ===")
+
 fluid = Water()
+
 PipelineEngine().fit(
     flowrate=VolumetricFlowRate(75, "L/s"),
     length=Length(180, "m"),
@@ -106,10 +144,16 @@ PipelineEngine().fit(
     fluid=fluid
 ).run().summary()
 
-print("\n=== B) Textbook-style problems ===")
+# B1_co2_sizing.py
 
-# --- B1) CO2 line sizing ---
-m_dot = MassFlowRate(1000_000, "kg/day")
+from processpi.pipelines.engine import PipelineEngine
+from processpi.units import *
+from processpi.pipelines.pipes import Fitting
+from processpi.components import Water
+
+print("\n=== B1) CO2 Line Sizing ===")
+
+m_dot = MassFlowRate(1_000_000, "kg/day")
 mu_CO2 = Viscosity(0.016, "cP")
 rho_CO2 = Density(1.61, "kg/m3")
 placeholder_diameter = Diameter(2, "in")
@@ -121,7 +165,6 @@ co2_fittings = [
     Fitting(fitting_type="entrance_sharp", quantity=1, diameter=placeholder_diameter),
 ]
 
-print("\n--- B1) CO2 line sizing ---")
 co2_size_results = PipelineEngine().fit(
     mass_flowrate=m_dot,
     length=Length(800, "m"),
@@ -132,35 +175,18 @@ co2_size_results = PipelineEngine().fit(
     material="CS",
     fluid=fluid
 ).run()
+
 co2_size_results.summary()
 
-# --- B2) CO line sizing ---
-co_mdot = MassFlowRate(1500, "kg/h")
-fluid = Vapor()
-mu_CO = Viscosity(0.018, "cP")
-rho_CO = Density(1.06, "kg/m3")
+# B3_water_gravity.py
 
+from processpi.pipelines.engine import PipelineEngine
+from processpi.units import *
+from processpi.pipelines.pipes import Fitting
+from processpi.components import Water
 
-co_fittings = [
-    Fitting(fitting_type="gate_valve", quantity=2, diameter=placeholder_diameter),
-    Fitting(fitting_type="standard_elbow_45_deg", quantity=3, diameter=placeholder_diameter),
-    Fitting(fitting_type="standard_elbow_90_deg", quantity=6, diameter=placeholder_diameter),
-]
+print("\n=== B3) Water by Gravity: CS vs Concrete ===")
 
-print("\n--- B2) CO line sizing ---")
-co_size_results = PipelineEngine().fit(
-    mass_flowrate=co_mdot,
-    length=Length(4, "km"),
-    available_dp=Pressure(50, "kPa"),
-    density=rho_CO,
-    viscosity=mu_CO,
-    fittings=co_fittings,
-    material="CS",
-    fluid = fluid
-).run()
-co_size_results.summary()
-
-# --- B3) Water by gravity: CS vs Concrete ---
 fluid = Water()
 m_dot_water = MassFlowRate(100_000, "kg/h")
 rho_water40 = Density(993, "kg/m3")
@@ -170,8 +196,7 @@ dp_available_water = Pressure(rho_water40.to("kg/m3").value * 9.81 * 6.0, "Pa")
 placeholder_diameter_b3 = Diameter(10, "in")
 eq_len_fit = Fitting(fitting_type="long_radius_90_deg", quantity=12, diameter=placeholder_diameter_b3)
 
-print("\n--- B3) Water by gravity: size comparison ---")
-print("Assumption: Available head for friction = 6 m (8 m static diff − 2 m submergence).")
+# Carbon Steel
 print("\n[Carbon Steel]")
 water_cs_results = PipelineEngine().fit(
     mass_flowrate=m_dot_water,
@@ -181,10 +206,11 @@ water_cs_results = PipelineEngine().fit(
     viscosity=mu_water40,
     fittings=[eq_len_fit],
     material="CS",
-    fluid = fluid
+    fluid=fluid
 ).run()
 water_cs_results.summary()
 
+# Concrete
 print("\n[Concrete]")
 water_concrete_results = PipelineEngine().fit(
     mass_flowrate=m_dot_water,
@@ -194,14 +220,23 @@ water_concrete_results = PipelineEngine().fit(
     viscosity=mu_water40,
     fittings=[eq_len_fit],
     material="Concrete",
-    fluid = fluid
+    fluid=fluid
 ).run()
 water_concrete_results.summary()
 
-# --- B4) Organic liquid: uniform pipe size + residual ΔP ---
+# B4_organic_liquid.py
+
+from processpi.pipelines.engine import PipelineEngine
+from processpi.units import *
+from processpi.pipelines.pipes import Fitting, Equipment
+from processpi.components import OrganicLiquid
+
+print("\n=== B4) Organic Liquid Sizing & Residual ΔP ===")
+
 m_dot_org = MassFlowRate(5000, "kg/h")
 rho_org = Density(930, "kg/m3")
 mu_org = Viscosity(0.91, "cP")
+placeholder_diameter = Diameter(2, "in")
 fluid = OrganicLiquid()
 
 org_fittings = [
@@ -213,7 +248,6 @@ org_fittings = [
 
 orifice_dp = Equipment(name="orifice meter", pressure_drop=Pressure(40, "kPa"))
 
-print("\n--- B4) Organic liquid sizing & residual ΔP ---")
 results_b4 = PipelineEngine().fit(
     mass_flowrate=m_dot_org,
     length=Length(50, "m"),
@@ -223,12 +257,15 @@ results_b4 = PipelineEngine().fit(
     equipment=[orifice_dp],
     available_dp=Pressure(600, "kPa"),
     material="CS",
-    fluid = fluid
+    fluid=fluid
 ).run()
-summary_b4 = results_b4.summary()
-residual_pa = Pressure(600, "kPa").to("Pa").value - results_b4.total_pressure_drop
 
-print(f"Residual ΔP available for control valve: {residual_pa}")
+results_b4.summary()
+residual_pa = Pressure(600, "kPa").to("Pa").value - results_b4.total_pressure_drop
+print(f"Residual ΔP available for control valve: {residual_pa} Pa")
+
+
+
 
 
 
@@ -319,3 +356,481 @@ results = engine.run()
 print("\n--- Cooling Tower Network Results ---")
 results.summary()
 results.detailed_summary()
+
+
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.network import PipelineNetwork
+from processpi.units import *
+from processpi.components import Water
+
+# -----------------------------
+# Define fluid (chilled water)
+# -----------------------------
+chilled_water = Water(temperature=Temperature(7, "C"), pressure=Pressure(101325, "Pa"))
+
+# -----------------------------
+# Define AHU flow rates (m3/s)
+# Example: each AHU has different required flow
+# -----------------------------
+ahu_flows = {
+    "AHU1": 0.005, "AHU2": 0.004, "AHU3": 0.006,
+    "AHU4": 0.0055, "AHU5": 0.0045, "AHU6": 0.005,
+    "AHU7": 0.006, "AHU8": 0.004, "AHU9": 0.005
+}
+
+# -----------------------------
+# Calculate total main header flow
+# -----------------------------
+total_flow_m3s = sum(ahu_flows.values())
+total_flow = VolumetricFlowRate(total_flow_m3s)
+
+# -----------------------------
+# Build main network
+# -----------------------------
+network = PipelineNetwork.series("CHW Supply Header")
+network.add_node("Pump")
+network.add_node("Bend1")
+network.add_node("Vertical180")
+network.add_node("Bend2")
+network.add_node("Vertical150")
+network.add_node("Split1")
+network.add_node("Split2")
+
+# Main header pipes
+pipe_main_h = Pipe("Main Horizontal", Length(3, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+pipe_vertical_180 = Pipe("Vertical 180m", Length(180, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+pipe_vertical_150 = Pipe("Vertical 150m", Length(150, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+
+network.add_edge(pipe_main_h, "Pump", "Bend1")
+network.add_edge(pipe_vertical_180, "Bend1", "Vertical180")
+network.add_edge(pipe_vertical_150, "Vertical180", "Vertical150")
+
+# -----------------------------
+# First-level splits (2 branches)
+# -----------------------------
+first_level_branches = []
+first_branch_nodes = ["Split1", "Split2"]
+
+for i, split_node in enumerate(first_branch_nodes):
+    branch_net = PipelineNetwork.series(f"Branch-{i+1}")
+    branch_net.add_node(split_node)
+    
+    # Horizontal 20 m before sub-branches
+    horiz_pipe = Pipe(f"Branch-{i+1} Horizontal 20m", Length(20, "m"), diameter=None, flow_rate=None, roughness=0.000045)
+    branch_net.add_edge(horiz_pipe, split_node, f"SubBranch{i+1}_Split")
+
+    # Create 3 sub-branches for each first-level branch
+    sub_branches = []
+    for j in range(3):
+        sub_branch_net = PipelineNetwork.series(f"Branch-{i+1}-Sub-{j+1}")
+        sub_branch_net.add_node(f"SubBranch{i+1}_Split")
+        
+        # Each sub-branch connects 3 AHUs
+        sub_total_flow = sum([ahu_flows[f"AHU{k+1 + i*3 + j*3}"] for k in range(3)])  # 3 AHUs per sub-branch
+        sub_total_vol = VolumetricFlowRate(sub_total_flow)
+        
+        # Connect AHUs
+        for k in range(3):
+            ahu_name = f"AHU{i*3*3 + j*3 + k+1}"
+            ahu_flow = VolumetricFlowRate(ahu_flows[ahu_name])
+            
+            ahu_net = PipelineNetwork.series(ahu_name)
+            ahu_net.add_node(f"SubBranch{i+1}_Split")
+            ahu_net.add_node(f"{ahu_name}_Inlet")
+            
+            inlet_pipe = Pipe(f"{ahu_name} Inlet", Length(1, "m"), diameter=None, flow_rate=ahu_flow, roughness=0.000045)
+            outlet_pipe = Pipe(f"{ahu_name} Outlet", Length(1, "m"), diameter=None, flow_rate=ahu_flow, roughness=0.000045)
+            
+            ahu_net.add_edge(inlet_pipe, f"SubBranch{i+1}_Split", f"{ahu_name}_Inlet")
+            ahu_net.add_edge(outlet_pipe, f"{ahu_name}_Inlet", f"{ahu_name}_Outlet")
+            
+            sub_branch_net.add_subnetwork(ahu_net)
+        
+        sub_branches.append(sub_branch_net)
+    
+    # Combine 3 sub-branches in parallel
+    parallel_sub_branches = PipelineNetwork.parallel(f"Branch-{i+1} SubBranches", *sub_branches)
+    branch_net.add_subnetwork(parallel_sub_branches)
+    
+    first_level_branches.append(branch_net)
+
+# Combine first-level branches in parallel
+parallel_first_level = PipelineNetwork.parallel("First-Level Branches", *first_level_branches)
+network.add_subnetwork(parallel_first_level)
+
+# -----------------------------
+# Return loop (reverse connection)
+# -----------------------------
+# For simplicity, we assume return pipes follow same path in reverse
+return_pipe_vertical_150 = Pipe("Return Vertical 150m", Length(150, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+return_pipe_vertical_180 = Pipe("Return Vertical 180m", Length(180, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+return_pipe_horizontal = Pipe("Return Horizontal", Length(3, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+
+network.add_edge(return_pipe_vertical_150, "Return_Split", "Vertical150")
+network.add_edge(return_pipe_vertical_180, "Vertical150", "Vertical180")
+network.add_edge(return_pipe_horizontal, "Vertical180", "Tank")  # Tank at pump location
+
+network.add_node("Tank")
+
+# -----------------------------
+# Initialize engine and run
+# -----------------------------
+engine = PipelineEngine()
+engine.fit(network=network, flow_rate=total_flow, fluid=chilled_water)
+
+# Optional: set small initial flows for solver stability
+for branch in engine._normalize_branches(network):
+    for pipe in branch:
+        if pipe.flow_rate is None:
+            pipe.flow_rate = VolumetricFlowRate(0.001, "m3/s")
+
+# Run solver
+results = engine.run()
+
+# Print summaries
+print("\n--- AHU Chilled Water Network Results ---")
+results.summary()
+results.detailed_summary()
+
+
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.network import PipelineNetwork
+from processpi.units import *
+from processpi.components import Water
+
+# -----------------------------
+# Fluid
+# -----------------------------
+chilled_water = Water(temperature=Temperature(6, "C"), pressure=Pressure(101325, "Pa"))
+
+# -----------------------------
+# AHU flow rates per floor (3 floors, 4 AHUs each)
+# -----------------------------
+ahu_flows = {
+    "F1_AHU1": 0.004, "F1_AHU2": 0.0035, "F1_AHU3": 0.0045, "F1_AHU4": 0.0038,
+    "F2_AHU1": 0.0042, "F2_AHU2": 0.0039, "F2_AHU3": 0.0046, "F2_AHU4": 0.004,
+    "F3_AHU1": 0.0045, "F3_AHU2": 0.004, "F3_AHU3": 0.0048, "F3_AHU4": 0.0042
+}
+
+total_flow = VolumetricFlowRate(sum(ahu_flows.values()))
+
+# -----------------------------
+# Main header (vertical riser)
+# -----------------------------
+network = PipelineNetwork.series("Vertical Riser")
+network.add_node("Pump")
+network.add_node("Split Floors")
+
+main_riser = Pipe("Main Vertical Riser", Length(50, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+network.add_edge(main_riser, "Pump", "Split Floors")
+
+# -----------------------------
+# Parallel floor branches
+# -----------------------------
+floor_branches = []
+for floor in range(1, 4):
+    floor_branch = PipelineNetwork.series(f"Floor-{floor} Branch")
+    floor_branch.add_node("Split Floors")
+    
+    # Horizontal pipe for floor
+    horiz_pipe = Pipe(f"Floor-{floor} Horizontal", Length(30, "m"), diameter=None, flow_rate=None, roughness=0.000045)
+    floor_branch.add_edge(horiz_pipe, "Split Floors", f"Floor{floor}_Split")
+    
+    # AHU sub-branches for each floor
+    ahu_branches = []
+    for ahu_num in range(1, 5):
+        ahu_name = f"F{floor}_AHU{ahu_num}"
+        ahu_flow = VolumetricFlowRate(ahu_flows[ahu_name])
+        
+        ahu_net = PipelineNetwork.series(ahu_name)
+        ahu_net.add_node(f"Floor{floor}_Split")
+        ahu_net.add_node(f"{ahu_name}_Inlet")
+        
+        inlet_pipe = Pipe(f"{ahu_name} Inlet", Length(1, "m"), diameter=None, flow_rate=ahu_flow, roughness=0.000045)
+        outlet_pipe = Pipe(f"{ahu_name} Outlet", Length(1, "m"), diameter=None, flow_rate=ahu_flow, roughness=0.000045)
+        
+        ahu_net.add_edge(inlet_pipe, f"Floor{floor}_Split", f"{ahu_name}_Inlet")
+        ahu_net.add_edge(outlet_pipe, f"{ahu_name}_Inlet", f"{ahu_name}_Outlet")
+        
+        ahu_branches.append(ahu_net)
+    
+    floor_parallel = PipelineNetwork.parallel(f"Floor-{floor} AHUs", *ahu_branches)
+    floor_branch.add_subnetwork(floor_parallel)
+    floor_branches.append(floor_branch)
+
+# Combine all floors
+network_parallel_floors = PipelineNetwork.parallel("All Floors", *floor_branches)
+network.add_subnetwork(network_parallel_floors)
+
+# -----------------------------
+# Return loop to tank
+# -----------------------------
+return_riser = Pipe("Return Vertical Riser", Length(50, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+network.add_edge(return_riser, "All Floors", "Tank")
+network.add_node("Tank")
+
+# -----------------------------
+# Run engine
+# -----------------------------
+engine = PipelineEngine()
+engine.fit(network=network, flow_rate=total_flow, fluid=chilled_water)
+results = engine.run()
+
+results.summary()
+results.detailed_summary()
+
+
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.network import PipelineNetwork
+from processpi.units import *
+from processpi.components import Water
+
+# -----------------------------
+# Fluid definition
+# -----------------------------
+cooling_water = Water(temperature=Temperature(25, "C"), pressure=Pressure(101325, "Pa"))
+
+# -----------------------------
+# Flow requirements for 4 heat exchangers
+# -----------------------------
+hx_flows = {
+    "HX1": 0.01, "HX2": 0.008, "HX3": 0.012, "HX4": 0.009
+}
+
+total_flow = VolumetricFlowRate(sum(hx_flows.values()))
+
+# -----------------------------
+# Main supply header
+# -----------------------------
+network = PipelineNetwork.series("Cooling Supply Header")
+network.add_node("Pump1")
+network.add_node("Pump2")
+network.add_node("Header Junction")
+
+pipe_pump1 = Pipe("Pump1 Outlet", Length(5, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+pipe_pump2 = Pipe("Pump2 Outlet", Length(5, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+pipe_header = Pipe("Main Header", Length(100, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+
+network.add_edge(pipe_pump1, "Pump1", "Header Junction")
+network.add_edge(pipe_pump2, "Pump2", "Header Junction")
+network.add_edge(pipe_header, "Header Junction", "Split Branches")
+
+# -----------------------------
+# Parallel heat exchanger branches
+# -----------------------------
+hx_branches = []
+for i, hx_name in enumerate(hx_flows.keys()):
+    branch = PipelineNetwork.series(f"{hx_name} Branch")
+    branch.add_node("Split Branches")
+    branch.add_node(f"{hx_name}_Inlet")
+    
+    hx_flow = VolumetricFlowRate(hx_flows[hx_name])
+    inlet_pipe = Pipe(f"{hx_name} Inlet Pipe", Length(10, "m"), diameter=None, flow_rate=hx_flow, roughness=0.000045)
+    outlet_pipe = Pipe(f"{hx_name} Outlet Pipe", Length(10, "m"), diameter=None, flow_rate=hx_flow, roughness=0.000045)
+    
+    branch.add_edge(inlet_pipe, "Split Branches", f"{hx_name}_Inlet")
+    branch.add_edge(outlet_pipe, f"{hx_name}_Inlet", f"{hx_name}_Outlet")
+    
+    hx_branches.append(branch)
+
+parallel_hx = PipelineNetwork.parallel("HX Parallel Branches", *hx_branches)
+network.add_subnetwork(parallel_hx)
+
+# -----------------------------
+# Return loop to tank
+# -----------------------------
+return_pipe = Pipe("Return Header", Length(120, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+network.add_edge(return_pipe, "HX Parallel Branches", "Tank")
+network.add_node("Tank")
+
+# -----------------------------
+# Run engine
+# -----------------------------
+engine = PipelineEngine()
+engine.fit(network=network, flow_rate=total_flow, fluid=cooling_water)
+results = engine.run()
+
+results.summary()
+results.detailed_summary()
+
+# moderate_complex_1.py
+
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe, Fitting
+from processpi.pipelines.network import PipelineNetwork
+from processpi.units import *
+from processpi.components import Water
+
+print("\n=== Moderate Complex Network 1: Parallel CHW Loops ===")
+
+fluid = Water(temperature=Temperature(6, "C"), pressure=Pressure(101325, "Pa"))
+
+# Flow for each AHU in m3/s
+ahu_flows = {
+    "Loop1_AHU1": 0.004, "Loop1_AHU2": 0.0035,
+    "Loop2_AHU1": 0.0042, "Loop2_AHU2": 0.004,
+    "Loop3_AHU1": 0.0038, "Loop3_AHU2": 0.0035
+}
+
+total_flow = VolumetricFlowRate(sum(ahu_flows.values()))
+
+# Main header
+network = PipelineNetwork.series("Main CHW Header")
+network.add_node("Pump")
+network.add_node("Header Split")
+main_pipe = Pipe("Pump to Split", Length(20, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+network.add_edge(main_pipe, "Pump", "Header Split")
+
+# Parallel branches for loops
+loop_branches = []
+for i in range(1, 4):
+    branch = PipelineNetwork.series(f"Loop{i} Branch")
+    branch.add_node("Header Split")
+    horiz_pipe = Pipe(f"Loop{i} Horizontal", Length(15, "m"), diameter=None, flow_rate=None, roughness=0.000045)
+    branch.add_edge(horiz_pipe, "Header Split", f"Loop{i}_Split")
+    
+    # AHUs in each loop
+    ahu1_name = f"Loop{i}_AHU1"
+    ahu2_name = f"Loop{i}_AHU2"
+    ahu1_flow = VolumetricFlowRate(ahu_flows[ahu1_name])
+    ahu2_flow = VolumetricFlowRate(ahu_flows[ahu2_name])
+    
+    ahu1_pipe = Pipe(f"{ahu1_name} Pipe", Length(10, "m"), diameter=None, flow_rate=ahu1_flow, roughness=0.000045)
+    ahu2_pipe = Pipe(f"{ahu2_name} Pipe", Length(10, "m"), diameter=None, flow_rate=ahu2_flow, roughness=0.000045)
+    
+    branch.add_edge(ahu1_pipe, f"Loop{i}_Split", f"{ahu1_name}_Outlet")
+    branch.add_edge(ahu2_pipe, f"{ahu1_name}_Outlet", f"{ahu2_name}_Outlet")
+    
+    loop_branches.append(branch)
+
+parallel_loops = PipelineNetwork.parallel("All Loops", *loop_branches)
+network.add_subnetwork(parallel_loops)
+
+# Return header
+network.add_node("Tank")
+return_pipe = Pipe("Return Header", Length(25, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+network.add_edge(return_pipe, "All Loops", "Tank")
+
+# Run engine
+engine = PipelineEngine()
+engine.fit(network=network, flow_rate=total_flow, fluid=fluid)
+results = engine.run()
+results.summary()
+
+
+# moderate_complex_2.py
+
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe, Fitting
+from processpi.pipelines.network import PipelineNetwork
+from processpi.units import *
+from processpi.components import Water
+
+print("\n=== Moderate Complex Network 2: 2 Floors, Parallel AHUs ===")
+
+fluid = Water(temperature=Temperature(7, "C"), pressure=Pressure(101325, "Pa"))
+
+ahu_flows = {
+    "F1_AHU1": 0.004, "F1_AHU2": 0.0038,
+    "F2_AHU1": 0.0042, "F2_AHU2": 0.004
+}
+total_flow = VolumetricFlowRate(sum(ahu_flows.values()))
+
+network = PipelineNetwork.series("Building CHW Riser")
+network.add_node("Pump")
+network.add_node("Floor Split")
+
+riser_pipe = Pipe("Vertical Riser", Length(20, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+network.add_edge(riser_pipe, "Pump", "Floor Split")
+
+floor_branches = []
+for floor in range(1, 3):
+    branch = PipelineNetwork.series(f"Floor{floor} Branch")
+    branch.add_node("Floor Split")
+    horiz_pipe = Pipe(f"Floor{floor} Horizontal", Length(15, "m"), diameter=None, flow_rate=None, roughness=0.000045)
+    branch.add_edge(horiz_pipe, "Floor Split", f"Floor{floor}_Split")
+    
+    # AHUs
+    for ahu_num in range(1, 3):
+        ahu_name = f"F{floor}_AHU{ahu_num}"
+        ahu_flow = VolumetricFlowRate(ahu_flows[ahu_name])
+        ahu_pipe = Pipe(f"{ahu_name} Pipe", Length(10, "m"), diameter=None, flow_rate=ahu_flow, roughness=0.000045)
+        branch.add_edge(ahu_pipe, f"Floor{floor}_Split", f"{ahu_name}_Outlet")
+    
+    floor_branches.append(branch)
+
+parallel_floors = PipelineNetwork.parallel("Floor AHUs", *floor_branches)
+network.add_subnetwork(parallel_floors)
+
+network.add_node("Tank")
+return_pipe = Pipe("Return Header", Length(20, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+network.add_edge(return_pipe, "Floor AHUs", "Tank")
+
+engine = PipelineEngine()
+engine.fit(network=network, flow_rate=total_flow, fluid=fluid)
+results = engine.run()
+results.summary()
+
+
+# moderate_complex_3.py
+
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe, Fitting
+from processpi.pipelines.network import PipelineNetwork
+from processpi.units import *
+from processpi.components import Water
+
+print("\n=== Moderate Complex Network 3: Two Pumps → Parallel Loops ===")
+
+fluid = Water(temperature=Temperature(6, "C"), pressure=Pressure(101325, "Pa"))
+
+ahu_flows = {
+    "Loop1_AHU1":0.004,"Loop1_AHU2":0.0038,"Loop1_AHU3":0.0042,
+    "Loop2_AHU1":0.004,"Loop2_AHU2":0.0039,"Loop2_AHU3":0.0041
+}
+total_flow = VolumetricFlowRate(sum(ahu_flows.values()))
+
+network = PipelineNetwork.series("Two Pump Header")
+network.add_node("Pump1")
+network.add_node("Pump2")
+network.add_node("Header Split")
+
+pipe1 = Pipe("Pump1 Outlet", Length(5, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+pipe2 = Pipe("Pump2 Outlet", Length(5, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+header_pipe = Pipe("Main Header", Length(20, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+
+network.add_edge(pipe1, "Pump1", "Header Split")
+network.add_edge(pipe2, "Pump2", "Header Split")
+network.add_edge(header_pipe, "Header Split", "Loop Split")
+
+# Loops
+loops = []
+for loop in range(1,3):
+    branch = PipelineNetwork.series(f"Loop{loop} Branch")
+    branch.add_node("Loop Split")
+    horiz_pipe = Pipe(f"Loop{loop} Horizontal", Length(15, "m"), diameter=None, flow_rate=None, roughness=0.000045)
+    branch.add_edge(horiz_pipe, "Loop Split", f"Loop{loop}_Split")
+    
+    for ahu_num in range(1,4):
+        ahu_name = f"Loop{loop}_AHU{ahu_num}"
+        ahu_flow = VolumetricFlowRate(ahu_flows[ahu_name])
+        ahu_pipe = Pipe(f"{ahu_name} Pipe", Length(10, "m"), diameter=None, flow_rate=ahu_flow, roughness=0.000045)
+        branch.add_edge(ahu_pipe, f"Loop{loop}_Split", f"{ahu_name}_Outlet")
+    
+    loops.append(branch)
+
+parallel_loops = PipelineNetwork.parallel("All Loops", *loops)
+network.add_subnetwork(parallel_loops)
+
+network.add_node("Tank")
+return_pipe = Pipe("Return Header", Length(25, "m"), diameter=None, flow_rate=total_flow, roughness=0.000045)
+network.add_edge(return_pipe, "All Loops", "Tank")
+
+engine = PipelineEngine()
+engine.fit(network=network, flow_rate=total_flow, fluid=fluid)
+results = engine.run()
+results.summary()
+
