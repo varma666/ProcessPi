@@ -1,43 +1,44 @@
-from .length import Length
-from .velocity import Velocity
-from .density import Density
-from .viscosity import Viscosity
-from .temperature import Temperature
-from .dimensionless import Dimensionless
-from .volumetric_flowrate import VolumetricFlowRate
-from .mass_flowrate import MassFlowRate
-from .diameter import Diameter
-from .pressure import Pressure
-from .volume import Volume
-from .area import Area  
-from .mass import Mass
-from .specific_heat import SpecificHeat
-from .thermal_conductivity import ThermalConductivity
-from .heat_transfer_coefficient import HeatTransferCoefficient
-from .thermal_resistance import ThermalResistance
-from .heat_flux import HeatFlux
-from .heat_of_vaporization import HeatOfVaporization
-from .power import Power
-from .base import Variable  
-__all__ = ["Length", 
-           "Velocity", 
-           "Density", 
-           "Viscosity", 
-           "Temperature", 
-           "VolumetricFlowRate", 
-           "MassFlowRate", 
-           "Diameter", 
-           "Pressure", 
-           "Volume", 
-           "Area", 
-           "Mass", 
-           "SpecificHeat", 
-           "ThermalConductivity", 
-           "HeatTransferCoefficient", 
-           "ThermalResistance", 
-           "HeatFlux", 
-           "HeatOfVaporization",
-           "Dimensionless",
-           "Power",
-           "Variable"
-]
+"""
+Initializes the units module dynamically.
+
+This module automatically discovers all variable classes within the folder
+and exposes them for direct import. The base class `Variable` is always
+included.
+
+Example usage:
+
+    from processpi.units import Length, Temperature, Pressure
+"""
+
+import importlib
+import inspect
+from pathlib import Path
+
+# -----------------------
+# Import the base Variable class
+# -----------------------
+from .base import Variable
+
+# Initialize __all__ with the base class
+__all__ = ["Variable"]
+
+# -----------------------
+# Dynamically discover and import variable classes
+# -----------------------
+units_dir = Path(__file__).parent
+
+# List of files to exclude from dynamic import
+exclude_files = ["__init__.py", "base.py", "example.txt", "strings.py"]
+
+for file in units_dir.glob("*.py"):
+    if file.name in exclude_files:
+        continue
+
+    module_name = file.stem
+    module = importlib.import_module(f".{module_name}", package=__name__)
+
+    # Iterate over all classes defined in this module
+    for name, obj in inspect.getmembers(module, inspect.isclass):
+        if obj.__module__ == module.__name__:
+            globals()[name] = obj
+            __all__.append(name)
