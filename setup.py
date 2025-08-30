@@ -1,4 +1,4 @@
-__version__ = "0.1.2.7"
+__version__ = "0.1.2.8"
 
 from setuptools import setup, find_packages
 from pathlib import Path
