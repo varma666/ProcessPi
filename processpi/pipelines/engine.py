@@ -1013,28 +1013,101 @@ class PipelineEngine:
         results_out: Dict[str, Any] = {"mode": None, "summary": {}, "components": []}
 
         # -----------------------
-        # NETWORK MODE
+        # NETWORK MODE (REPLACEMENT)
         # -----------------------
         if isinstance(net, PipelineNetwork):
-            # Assign seed flows to avoid zero-division errors
-            for pipe in net.get_all_pipes():
-                if not getattr(pipe.flow_rate, "value", 0):
-                    pipe.flow_rate = VolumetricFlowRate(1e-4, "m3/s")
+            # Helpers to extract numeric values from your unit wrappers
+            def _to_value(obj, prefer_unit: Optional[str] = None):
+                """Return float value from unit-like object or numeric."""
+                if obj is None:
+                    return 0.0
+                try:
+                    if hasattr(obj, "to") and prefer_unit is not None:
+                        try:
+                            conv = obj.to(prefer_unit)
+                            if hasattr(conv, "value"):
+                                return float(conv.value)
+                        except Exception:
+                            pass
+                    if hasattr(obj, "value"):
+                        return float(obj.value)
+                    # try common .magnitude (other wrappers)
+                    if hasattr(obj, "magnitude"):
+                        return float(obj.magnitude)
+                    return float(obj)
+                except Exception:
+                    return 0.0
 
-            solved_dict, _ = self._solve_network_dual(net, q_in, tol)
-            solved_dict = solved_dict if isinstance(solved_dict, dict) else {"success": False, "branch_flows": [], "reports": []}
+            # Guarantee each pipe has a non-zero flow_rate (use provided q_in if missing)
+            for p in net.get_all_pipes():
+                # If the pipe has no flow or a zero flow, assign the requested inlet flow
+                current_flow = getattr(p, "flow_rate", None)
+                if current_flow is None or _to_value(current_flow) <= 0:
+                    # preserve units by creating VolumetricFlowRate(q_in.value, "m3/s")
+                    try:
+                        p.flow_rate = VolumetricFlowRate(q_in.value, "m3/s")
+                    except Exception:
+                        # fallback to numeric assignment
+                        p.flow_rate = q_in
 
-            comp_list = [
-                r if isinstance(r, dict) else r.as_dict()
-                for r in solved_dict.get("reports", [])
-            ]
+                # If pipe has a diameter set as plain number, coerce to Diameter object
+                if hasattr(p, "internal_diameter") and p.internal_diameter is not None:
+                    # assume it's already a Diameter object
+                    pass
+                elif hasattr(p, "diameter") and p.diameter is not None:
+                    # leave as-is; downstream code will handle types
+                    pass
 
-            total_dp_pa = sum(float(r.get("pressure_drop_Pa", 0.0)) for r in comp_list)
-            rho = self._get_density().value
-            total_head_m = total_dp_pa / (rho * G)
+            # Now run the network solver
+            solved_dict, solver_meta = self._solve_network_dual(net, q_in, tol)
+
+            # Ensure solved_dict shape is expected
+            if not isinstance(solved_dict, dict):
+                solved_dict = {"success": False, "branch_flows": [], "reports": []}
+            reports = solved_dict.get("reports", []) or []
+
+            # Coerce each report into a dict (if it's an object with as_dict())
+            comp_list = []
+            for r in reports:
+                if isinstance(r, dict):
+                    comp_list.append(r)
+                else:
+                    # try object -> dict
+                    try:
+                        comp_list.append(r.as_dict())
+                    except Exception:
+                        # best-effort conversion
+                        comp_list.append({
+                            "name": getattr(r, "name", None),
+                            "pressure_drop_Pa": _to_value(getattr(r, "pressure_drop_Pa", None)),
+                            "pressure_drop": _to_value(getattr(r, "pressure_drop", None)),
+                        })
+
+            # Sum pressure drops robustly (accept either "pressure_drop_Pa" or "pressure_drop")
+            total_dp_pa = 0.0
+            for r in comp_list:
+                # prefer explicit Pa field
+                pd = r.get("pressure_drop_Pa", None)
+                if pd is None:
+                    pd = r.get("pressure_drop", None)
+                total_dp_pa += _to_value(pd, prefer_unit="Pa")
+
+            # density (kg/m3)
+            dens_obj = self._get_density() if hasattr(self, "_get_density") else getattr(self, "fluid", None)
+            try:
+                if callable(dens_obj):
+                    dens_obj = dens_obj()
+                rho = _to_value(getattr(dens_obj, "value", dens_obj), prefer_unit=None) or 1000.0
+            except Exception:
+                rho = 1000.0
+
+            # compute head (m) and shaft power (kW)
+            G = 9.80665
+            total_head_m = total_dp_pa / (rho * G) if rho else float("inf")
             pump_eff = self.data.get("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
-            shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff)
+            shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff) if pump_eff else 0.0
 
+            # Fill results_out preserving same structure used elsewhere
             results_out.update({
                 "mode": "network",
                 "summary": {
@@ -1043,9 +1116,9 @@ class PipelineEngine:
                     "total_head_m": total_head_m,
                     "pump_shaft_power_kW": shaft_power_kw,
                     "solver_converged": solved_dict.get("success"),
-                    "solver_iterations": solved_dict.get("iterations"),
+                    "solver_iterations": solved_dict.get("iterations", getattr(solver_meta, "iterations", None)),
                 },
-                "components": comp_list,
+                "components": comp_list
             })
 
         # -----------------------

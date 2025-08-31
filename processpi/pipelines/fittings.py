@@ -48,7 +48,7 @@ class Fitting:
         If K depends on diameter and diameter is missing, raises a ValueError.
         """
         try:
-            return get_k_factor(self.fitting_type, self.diameter)
+            return get_k_factor(self.fitting_type)
         except ValueError as e:
             if "requires diameter" in str(e).lower():
                 raise ValueError(

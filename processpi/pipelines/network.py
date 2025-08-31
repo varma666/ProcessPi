@@ -333,7 +333,7 @@ class PipelineNetwork:
             if isinstance(elem, Fitting):
                 if not isinstance(getattr(elem, "diameter", None), Diameter):
                     errors.append(f"Fitting '{elem.fitting_type}' requires 'diameter' to be a `Diameter` object.")
-                if elem.total_K() is None and elem.equivalent_length() is None:
+                if elem.k_factor() is None and elem.equivalent_length() is None:
                     errors.append(f"Fitting '{elem.fitting_type}' has no 'K' or 'L/D' data in standards.")
             
             if isinstance(elem, Pump):
