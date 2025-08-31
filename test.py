@@ -2,42 +2,29 @@ from processpi.units import *
 from processpi.components import *
 from processpi.pipelines.engine import PipelineEngine
 from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.pumps import Pump
 from processpi.pipelines.fittings import Fitting
 from processpi.pipelines.network import PipelineNetwork
 
-fluid = CarbonMonoxide(temperature=Temperature(50, "C"))
+fluid = OrganicLiquid(density=Density(930, "kg/m3"),viscosity=Viscosity(0.91, "cP"))
 
-mass_flow = MassFlowRate(1500, "kg/h")
-pipe = Pipe(
-    name="main_line",
-    length=Length(4000, "m")
-)
+print(fluid.density(),fluid.viscosity(),fluid.specific_heat(),fluid.thermal_conductivity())
+mass_flow = MassFlowRate(5000, "kg/h")
+pipe = Pipe(name="Main Organic Liquid Pipe", length=Length(50, "m"))
+elbow = Fitting(fitting_type="standard_elbow_90_deg", quantity=6)
+tees = Fitting(fitting_type="standard_tee", quantity=2)
+gate_valves = Fitting(fitting_type="gate_valve", quantity=2)
+globe_valves = Fitting(fitting_type="globe_valve", quantity=2)
+orifice = Fitting(fitting_type="orifice", quantity=1)
 
-# Add fittings
-gate_valves = [Fitting("gate_valve") for _ in range(2)]
-elbows_45 = [Fitting("elbow_45") for _ in range(3)]
-elbows_90 = [Fitting("elbow_90") for _ in range(6)]
-
-net = PipelineNetwork.series("CO_line", pipe, *gate_valves, *elbows_45, *elbows_90)
-
-# ----------------------
-# Engine setup
-# ----------------------
-engine = PipelineEngine(
-    network=net,
+model = PipelineEngine()
+model.fit(
     fluid=fluid,
-    mass_flow=MassFlowRate(1500, "kg/h"),  # mass flow input
-    inlet_pressure=Pressure(50, "kPa"),  # gauge pressure at inlet
-    outlet_pressure=Pressure(0, "kPa"),  # atmospheric
-    available_dp=Pressure(50, "kPa"),    # available pressure drop for sizing
+    mass_flow=mass_flow,
+    pipe=pipe,
+    fittings=[elbow, tees, gate_valves, globe_valves, orifice],
+    
 )
 
-# ----------------------
-# Run calculation
-# ----------------------
-result = engine.run()
-
-# ----------------------
-# Show results
-# ----------------------
-result.summary()
+model.run()
+model.summary()
