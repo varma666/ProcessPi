@@ -630,3 +630,16 @@ def get_next_next_standard_nominal(nominal_diameter: Diameter) -> Optional[Diame
 def get_standard_diameters_list() -> List[Diameter]:
     """Returns a sorted list of standard nominal diameters."""
     return sorted(list(PIPE_SCHEDULES.keys()), key=lambda d: d.value)
+
+
+def get_equivalent_length(fitting_type: str) -> Optional[float]:
+    """
+    Return the equivalent length multiplier (Le/D) for a fitting type.
+    """
+    return EQUIVALENT_LENGTHS.get(fitting_type.lower())
+
+def get_k_factor(fitting_type: str) -> Optional[float]:
+    """
+    Return the K-factor (resistance coefficient) for a fitting type.
+    """
+    return K_FACTORS.get(fitting_type.lower())

@@ -1001,112 +1001,114 @@ class PipelineEngine:
 
     # -------------------- RUN / SUMMARY --------------------------------------
 
-    def run(self, tol: float = 1e-5) -> "PipelineResults":
-        """
-        Runs the pipeline/network solver and returns a PipelineResults object.
+    def run(self) -> PipelineResults:
+        """Execute pipeline simulation and return PipelineResults."""
+        net = self.data.get("network")
+        q_in = self._infer_flowrate()
+        tol = self.data.get("tolerance_m3s", DEFAULT_FLOW_TOL)
+        diameter = self.data.get("diameter")
+        available_dp = self.data.get("available_dp")
+        fluid = self.data.get("fluid")
 
-        Handles single pipes, series networks, and parallel subnetworks.
-        Reports are flattened so all components (pipes, fittings, etc.) are included.
+        results_out: Dict[str, Any] = {"mode": None, "summary": {}, "components": []}
 
-        Args:
-            tol (float): The convergence tolerance for the solver.
+        # -----------------------
+        # NETWORK MODE
+        # -----------------------
+        if isinstance(net, PipelineNetwork):
+            # Assign seed flows to avoid zero-division errors
+            for pipe in net.get_all_pipes():
+                if not getattr(pipe.flow_rate, "value", 0):
+                    pipe.flow_rate = VolumetricFlowRate(1e-4, "m3/s")
 
-        Returns:
-            PipelineResults: An object containing the simulation results.
+            solved_dict, _ = self._solve_network_dual(net, q_in, tol)
+            solved_dict = solved_dict if isinstance(solved_dict, dict) else {"success": False, "branch_flows": [], "reports": []}
 
-        Raises:
-            ValueError: If the engine is not fitted with network, flow, or fluid data.
-            TypeError: If the network type is unsupported.
-        """
-        net = self.data.get("network", None)
-        q_in = self.data.get("flow_rate", None)
-        fluid = self.data.get("fluid", None)
+            comp_list = [
+                r if isinstance(r, dict) else r.as_dict()
+                for r in solved_dict.get("reports", [])
+            ]
 
-        if net is None or q_in is None or fluid is None:
-            raise ValueError("Engine is not fitted. Please call fit() first.")
-
-        results_out: Dict[str, Any] = {}
-
-        # -----------------------------
-        # Helper to recursively solve pipes and networks
-        # -----------------------------
-        def _solve_and_collect(node_or_net, flow_rate) -> list[dict]:
-            reports = []
-
-            if isinstance(node_or_net, Pipe):
-                # Solve single pipe
-                pipe_res = self._pipe_calculation(node_or_net, flow_rate)
-                # Convert to dict for flattened reporting
-                reports.append(pipe_res.as_dict() if hasattr(pipe_res, "as_dict") else pipe_res)
-
-            elif isinstance(node_or_net, PipelineNetwork):
-                # Ensure non-zero initial flows
-                for p in node_or_net.get_all_pipes():
-                    if p.flow_rate is None or getattr(p.flow_rate, "value", 0) <= 0:
-                        p.flow_rate = VolumetricFlowRate(1e-4, "m3/s")
-
-                # Solve network
-                solved_dict, branch_flows = self._solve_network_dual(node_or_net, flow_rate, tol)
-
-                # Solve all pipes recursively (main + subnetworks)
-                for sub in getattr(node_or_net, "subnetworks", []):
-                    reports.extend(_solve_and_collect(sub, flow_rate))
-                for p in node_or_net.get_all_pipes():
-                    pipe_res = self._pipe_calculation(p, p.flow_rate)
-                    reports.append(pipe_res.as_dict() if hasattr(pipe_res, "as_dict") else pipe_res)
-            else:
-                raise TypeError(f"Unsupported network type: {type(node_or_net)}")
-
-            return reports
-
-        # -----------------------------
-        # Single pipe
-        # -----------------------------
-        if isinstance(net, Pipe):
-            comp_list = _solve_and_collect(net, q_in)
-
-            total_dp_pa = float(comp_list[0].get("pressure_drop_Pa", 0.0))
-            rho_val = fluid.density.value
-            total_head_m = total_dp_pa / (rho_val * G)
-            pump_eff = self.data.get("pump_efficiency", 0.7)
-            shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff)
-
-            results_out["mode"] = "single"
-            results_out["summary"] = {
-                "inlet_flow_m3s": q_in.value,
-                "total_pressure_drop_Pa": total_dp_pa,
-                "total_head_m": total_head_m,
-                "pump_shaft_power_kW": shaft_power_kw,
-            }
-            results_out["components"] = comp_list
-
-        # -----------------------------
-        # Network (series or parallel)
-        # -----------------------------
-        elif isinstance(net, PipelineNetwork):
-            comp_list = _solve_and_collect(net, q_in)
-
-            # Compute total pressure drop, head, and pump power
             total_dp_pa = sum(float(r.get("pressure_drop_Pa", 0.0)) for r in comp_list)
-            rho_val = fluid.density().value
-            total_head_m = total_dp_pa / (rho_val * G)
-            pump_eff = self.data.get("pump_efficiency", 0.7)
+            rho = self._get_density().value
+            total_head_m = total_dp_pa / (rho * G)
+            pump_eff = self.data.get("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
             shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff)
 
-            results_out["mode"] = "network"
-            results_out["summary"] = {
-                "inlet_flow_m3s": q_in.value,
-                "total_pressure_drop_Pa": total_dp_pa,
-                "total_head_m": total_head_m,
-                "pump_shaft_power_kW": shaft_power_kw,
-                # optional: solver info if _solve_network_dual returns it
-            }
-            results_out["components"] = comp_list
+            results_out.update({
+                "mode": "network",
+                "summary": {
+                    "inlet_flow_m3s": q_in.value,
+                    "total_pressure_drop_Pa": total_dp_pa,
+                    "total_head_m": total_head_m,
+                    "pump_shaft_power_kW": shaft_power_kw,
+                    "solver_converged": solved_dict.get("success"),
+                    "solver_iterations": solved_dict.get("iterations"),
+                },
+                "components": comp_list,
+            })
 
+        # -----------------------
+        # SINGLE PIPE MODE
+        # -----------------------
         else:
-            raise TypeError(f"Unsupported network type: {type(net)}")
+            pipe_instance = self._ensure_pipe_object()
 
-        return PipelineResults(results_out)
+            if diameter is None:
+                # CASE 2: Solve for optimum diameter
+                self.data.update({
+                    "pipe": pipe_instance,
+                    "fluid": fluid,
+                    "available_dp": available_dp,
+                })
+                pr = self._solve_for_diameter(**self.data)
+                self._results = pr
+                return pr
+
+            # CASE 1: Diameter provided → calculate pressure drop and velocity
+            pipe_instance.internal_diameter = _ensure_diameter_obj(diameter)
+            calc = self._pipe_calculation(pipe_instance, q_in)
+
+            D_final = self._resolve_internal_diameter(pipe_instance)
+            total_dp_pa = float(getattr(calc["pressure_drop"], "value", calc["pressure_drop"]))
+            rho_val = float(getattr(getattr(fluid, "density", 1000.0), "value", getattr(fluid, "density", 1000.0)))
+            total_head_m = total_dp_pa / (rho_val * G) if rho_val else float("inf")
+            pump_eff = self.data.get("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
+            shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff)
+            velocity_val = float(getattr(calc.get("velocity"), "value", calc.get("velocity")))
+
+            # Unified, consistent results structure
+            results_out.update({
+                "mode": "single_pipe",
+                "summary": {
+                    "flow_m3s": q_in.value,
+                    "total_pressure_drop_Pa": total_dp_pa,
+                    "total_head_m": total_head_m,
+                    "pump_shaft_power_kW": shaft_power_kw,
+                    "velocity": velocity_val,
+                    "reynolds": calc.get("reynolds"),
+                    "friction_factor": calc.get("friction_factor"),
+                    "calculated_diameter_m": D_final.value,
+                },
+                "components": [{
+                    "type": "pipe",
+                    "name": pipe_instance.name,
+                    "length": pipe_instance.length,
+                    "diameter": D_final,
+                    "velocity": velocity_val,
+                    "reynolds": calc.get("reynolds"),
+                    "friction_factor": calc.get("friction_factor"),
+                    "major_dp": calc.get("major_dp"),
+                    "minor_dp": calc.get("minor_dp"),
+                    "elevation_dp": calc.get("elevation_dp"),
+                    "total_dp": calc.get("pressure_drop"),
+                }],
+            })
+
+        # Store consistent PipelineResults for both modes
+        self._results = PipelineResults(results_out)
+        return self._results
+
 
 
 
@@ -1242,14 +1244,68 @@ class PipelineEngine:
         The function iteratively tests three standard pipe sizes around an initial guess
         based on recommended velocities to find the best fit.
 
-        Args:
-            **kwargs: Configuration parameters, including 'fluid', 'flow_rate',
-                      and 'available_dp' (optional).
+        Behaviour changes:
+        - If available_dp given: choose smallest standard diameter whose ΔP <= available_dp.
+            If none satisfy, choose the diameter with ΔP closest to available_dp (min abs diff).
+        - If available_dp not given: show results for three nearby standard sizes (existing behavior).
 
         Returns:
-            PipelineResults: An object containing the sizing results.
+            PipelineResults
         """
         import math
+        from ..pipelines.standards import get_recommended_velocity, list_available_pipe_diameters
+
+        # helpers for units/values
+        def _to_value(obj, attr="value"):
+            """Return numeric value for your unit wrappers (Pressure, Variable, Diameter, etc.)."""
+            if obj is None:
+                return None
+            # Pressure-like objects may have `.to(unit)` method
+            try:
+                # Most of your unit objects support .to('Pa') or .to('m') and then .value
+                if hasattr(obj, "to"):
+                    # special-case: someone might pass a string like "kPa" as unit - ignore
+                    # attempt converting to SI-like unit where appropriate (pressure -> Pa, length -> m, flow -> m3/s)
+                    # We'll let caller decide which conversion; here just return generic `.to('Pa')` when possible for pressure-like
+                    # We'll try common conversions in try/except
+                    for unit in ("Pa", "m", "m^3/s", "m3/s", "in"):
+                        try:
+                            converted = obj.to(unit)
+                            if hasattr(converted, "value"):
+                                return float(converted.value)
+                        except Exception:
+                            continue
+                # fallback to `.value` attribute
+                if hasattr(obj, "value"):
+                    return float(obj.value)
+            except Exception:
+                pass
+
+            # numeric fallback
+            try:
+                return float(obj)
+            except Exception:
+                return None
+
+        def _pressure_to_Pa(p):
+            """Accept Pressure, Variable, numeric and return Pa float."""
+            if p is None:
+                return None
+            # if it's a Pressure-like object with .to
+            try:
+                if hasattr(p, "to"):
+                    try:
+                        return float(p.to("Pa").value)
+                    except Exception:
+                        pass
+                if hasattr(p, "value"):
+                    return float(p.value)
+            except Exception:
+                pass
+            try:
+                return float(p)
+            except Exception:
+                return None
 
         # Helper to safely set diameter on a pipe object
         def _set_pipe_diameter_m(pipe_obj, D_m: float):
@@ -1288,15 +1344,38 @@ class PipelineEngine:
 
         # Initial diameter guess based on average recommended velocity
         v_start = 0.5 * (v_min + v_max)
-        D_initial = math.sqrt(4.0 * flow_rate.value / (math.pi * v_start))
+        # flow_rate expected to be a VolumetricFlowRate unit with .value in m3/s
+        try:
+            q_val = float(flow_rate.value)
+        except Exception:
+            q_val = float(flow_rate)
 
-        # Standard diameters
+        D_initial = math.sqrt(max(1e-20, 4.0 * q_val / (math.pi * v_start)))
+
+        # Standard diameters (list of Diameter objects)
         all_standard_diameters = list_available_pipe_diameters()
-        selected_diameter_obj = next((d for d in all_standard_diameters if d.value >= D_initial), None)
-        selected_index = all_standard_diameters.index(selected_diameter_obj) if selected_diameter_obj else len(all_standard_diameters) - 1
+        # find first standard diameter >= initial guess (by meters)
+        selected_diameter_obj = None
+        for d in all_standard_diameters:
+            try:
+                d_m = _to_value(d)  # returns meters if Diameter.to('m') available
+                if d_m is None:
+                    # fallback: try d.value
+                    if hasattr(d, "value"):
+                        d_m = float(d.value)
+                if d_m is not None and d_m >= D_initial:
+                    selected_diameter_obj = d
+                    break
+            except Exception:
+                continue
 
         if selected_diameter_obj is None and all_standard_diameters:
             selected_diameter_obj = all_standard_diameters[-1]
+
+        try:
+            selected_index = all_standard_diameters.index(selected_diameter_obj)
+        except Exception:
+            selected_index = 0
 
         D_std_next = selected_diameter_obj
         D_std_before = all_standard_diameters[selected_index - 1] if selected_index > 0 else None
@@ -1306,89 +1385,147 @@ class PipelineEngine:
         if not diameters_to_test:
             raise RuntimeError("Could not find any suitable standard diameter to test.")
 
-        # print(f"Testing diameters: {[d.to('in') for d in diameters_to_test]}") # For debugging
-
         # ---------------------------
         # Run calculations for each diameter
         # ---------------------------
         results_list = []
         for D_test in diameters_to_test:
-            _set_pipe_diameter_m(pipe, D_test.value)
+            D_m = _to_value(D_test)  # hopefully meters
+            if D_m is None:
+                # try Diameter.value (some wrappers store size in .value)
+                if hasattr(D_test, "value"):
+                    D_m = float(D_test.value)
+                else:
+                    raise RuntimeError("Unable to read numeric diameter from standard diameter object.")
+            _set_pipe_diameter_m(pipe, D_m)
             calc = self._pipe_calculation(pipe, flow_rate)
-            results_list.append({"diameter": D_test, "calc": calc})
+            # normalize the calc pressure_drop to Pa and velocity to m/s for comparison
+            pd_pa = _pressure_to_Pa(getattr(calc.get("pressure_drop"), "value", calc.get("pressure_drop")))
+            if pd_pa is None:
+                # try again if pressure_drop stored as Variable with .value
+                pd_pa = _to_value(calc.get("pressure_drop"))
+            vel_val = _to_value(getattr(calc, "get", lambda x, default=None: default)("velocity") or calc.get("velocity"))
+            # ensure numeric valid
+            vel_val = float(vel_val) if vel_val is not None else None
+            results_list.append({
+                "diameter": D_test,
+                "diameter_m": D_m,
+                "calc": calc,
+                "pressure_drop_Pa": pd_pa,
+                "velocity_m_s": vel_val,
+            })
 
         # ---------------------------
-        # Select result
+        # Selection logic
         # ---------------------------
-        if available_dp:
-            # Pick diameter with lowest pressure drop
-            best_result = min(
-                results_list,
-                key=lambda r: getattr(r["calc"]["pressure_drop"], "value", r["calc"]["pressure_drop"])
-            )
+        available_dp_pa = _pressure_to_Pa(available_dp) if available_dp is not None else None
+
+        if available_dp_pa is not None:
+            # Find candidates where ΔP <= available_dp
+            feasible = [r for r in results_list if r["pressure_drop_Pa"] is not None and r["pressure_drop_Pa"] <= available_dp_pa]
+            if feasible:
+                # choose the smallest diameter among feasible (economical)
+                best_result = min(feasible, key=lambda r: r["diameter_m"])
+            else:
+                # No feasible diameters — pick the one whose ΔP is closest to available_dp (min abs diff)
+                # (prefer larger diameter when tie)
+                def diff(r): 
+                    if r["pressure_drop_Pa"] is None:
+                        return float("inf")
+                    return abs(r["pressure_drop_Pa"] - available_dp_pa)
+                best_result = min(results_list, key=lambda r: (diff(r), -r["diameter_m"]))
             final_calc = best_result["calc"]
             D_final = best_result["diameter"]
+            final_pd = best_result["pressure_drop_Pa"]
             print(f"✅ Found optimal diameter for available pressure drop.")
             print(f"   Selected Diameter: {D_final.to('in')} ({D_final.value:.3f} m)")
-            print(f"   Calculated Pressure Drop: {getattr(final_calc['pressure_drop'], 'value', final_calc['pressure_drop']):.2f} Pa")
+            if final_pd is not None:
+                print(f"   Calculated Pressure Drop: {final_pd:.2f} Pa (allowed: {available_dp_pa:.2f} Pa)")
+            else:
+                print("   Calculated Pressure Drop: N/A")
         else:
+            # Legacy behavior: display the three tested diameters
             print("🔍 No available pressure drop given. Displaying results for three standard diameters:")
             for result in results_list:
                 D_final = result["diameter"]
                 final_calc = result["calc"]
-                v_val = getattr(final_calc.get("velocity"), "value", final_calc.get("velocity"))
-                print(f"\n--- Results for Diameter: {D_final.to('in')} ({D_final.value:.3f} m) ---")
-                print(f"Velocity: {v_val:.2f} m/s")
+                v_val = result["velocity_m_s"]
+                pd_val = result["pressure_drop_Pa"]
+                print(f"\n--- Results for Diameter: {D_final.to('in')} ({result['diameter_m']:.3f} m) ---")
+                print(f"Velocity: {v_val:.2f} m/s" if v_val is not None else "Velocity: N/A")
                 print(f"Reynolds: {final_calc.get('reynolds'):.2f}")
-                print(f"Total Pressure Drop: {getattr(final_calc.get('pressure_drop'), 'value', final_calc.get('pressure_drop')):.2f} Pa")
-            final_calc = results_list[len(results_list) // 2]["calc"]
-            D_final = results_list[len(results_list) // 2]["diameter"]
+                print(f"Total Pressure Drop: {pd_val:.2f} Pa" if pd_val is not None else "Total Pressure Drop: N/A")
+            # pick middle as before
+            idx_mid = len(results_list) // 2
+            final_calc = results_list[idx_mid]["calc"]
+            D_final = results_list[idx_mid]["diameter"]
 
-        # ---------------------------
+         # ---------------------------
         # Compute head and power
         # ---------------------------
-        total_dp_pa = getattr(final_calc["pressure_drop"], "value", final_calc["pressure_drop"])
+        total_dp_pa = (
+            _pressure_to_Pa(getattr(final_calc["pressure_drop"], "value", final_calc["pressure_drop"]))
+            or _to_value(final_calc.get("pressure_drop"))
+            or 0.0
+        )
+
         dens_obj = getattr(fluid, "density", 1000.0)
         if callable(dens_obj):
             dens_obj = dens_obj()
-        rho_val = getattr(dens_obj, "value", dens_obj)
+        rho_val = float(getattr(dens_obj, "value", dens_obj) or 1000.0)
 
         total_head_m = total_dp_pa / (rho_val * G) if rho_val else float("inf")
-        shaft_power_kw = (total_dp_pa * flow_rate.value) / (1000.0 * pump_eff)
-        v_final = float(getattr(final_calc.get("velocity"), "value", final_calc.get("velocity")))
+        shaft_power_kw = (total_dp_pa * q_val) / (1000.0 * pump_eff)
+
+        v_final = final_calc.get("velocity").value or 0.0
+        if "best_result" in locals() and best_result.get("velocity_m_s") is not None:
+            v_final = float(best_result["velocity_m_s"])
+            #print(v_final)
 
         if not (v_min <= v_final <= v_max):
-            print(f"⚠️ Warning: Final velocity {v_final:.2f} m/s outside recommended range ({v_min:.2f}-{v_max:.2f} m/s) for {getattr(fluid, 'name', 'fluid')}.")
+            print(
+                f"⚠️ Warning: Final velocity {v_final:.2f} m/s outside recommended "
+                f"range ({v_min:.2f}-{v_max:.2f} m/s) for {getattr(fluid, 'name', 'fluid')}."
+            )
 
+        # ---------------------------
+        # Store the final selected diameter for consistency
+        # ---------------------------
+        self.selected_diameter = D_final  # ensure engine holds the chosen diameter
+
+        # Prepare results with consistent diameter reference
         results_out = {
             "network_name": pipe.name,
             "mode": "single_pipe",
             "summary": {
-                "flow_m3s": flow_rate.value,
+                "flow_m3s": q_val,
                 "total_pressure_drop_Pa": total_dp_pa,
                 "total_head_m": total_head_m,
                 "pump_shaft_power_kW": shaft_power_kw,
                 "velocity": v_final,
                 "reynolds": final_calc.get("reynolds"),
                 "friction_factor": final_calc.get("friction_factor"),
-                "calculated_diameter_m": D_final.value,
+                "calculated_diameter_m": D_final.to("m").value,
             },
-            "components": [{
-                "type": "pipe",
-                "name": pipe.name,
-                "length": pipe.length,
-                "diameter": getattr(pipe, "internal_diameter", getattr(pipe, "diameter", None)),
-                "velocity": v_final,
-                "reynolds": final_calc.get("reynolds"),
-                "friction_factor": final_calc.get("friction_factor"),
-                "major_dp": final_calc.get("major_dp"),
-                "minor_dp": final_calc.get("minor_dp"),
-                "elevation_dp": final_calc.get("elevation_dp"),
-                "total_dp": final_calc.get("pressure_drop"),
-            }],
+            "components": [
+                {
+                    "type": "pipe",
+                    "name": pipe.name,
+                    "length": pipe.length,
+                    "diameter": D_final,
+                    "velocity": v_final,
+                    "reynolds": final_calc.get("reynolds"),
+                    "friction_factor": final_calc.get("friction_factor"),
+                    "major_dp": final_calc.get("major_dp"),
+                    "minor_dp": final_calc.get("minor_dp"),
+                    "elevation_dp": final_calc.get("elevation_dp"),
+                    "pressure_drop": final_calc.get("pressure_drop"),
+                }
+            ],
         }
 
         return PipelineResults(results_out)
+
 
 
 

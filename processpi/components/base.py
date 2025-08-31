@@ -4,11 +4,11 @@ from processpi.units import (
     Temperature, Pressure, Density, SpecificHeat, Viscosity,
     ThermalConductivity, HeatOfVaporization
 )
+from processpi.constants import R_UNIVERSAL  # J/kmol-K
 
 class PropertyMethod:
     """
     Descriptor that allows both property-style and method-style access.
-
     Example:
         @PropertyMethod
         def density(self):
@@ -22,32 +22,15 @@ class PropertyMethod:
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        # Wrapper for dual behavior
         def wrapper(*args, **kwargs):
             return self.func(instance, *args, **kwargs)
-        # Allow direct attribute-style usage
         wrapper.value = self.func(instance)
         return wrapper
 
 
 class Component(ABC):
     """
-    Abstract base class for a chemical component.
-
-    Provides a common interface and default DIPPR-style
-    correlations for:
-      - Density
-      - Specific Heat
-      - Viscosity
-      - Thermal Conductivity
-      - Vapor Pressure
-      - Enthalpy of Vaporization
-
-    Subclasses must define:
-      - name
-      - formula
-      - molecular_weight
-      - correlation constants for each property
+    Abstract base class for a chemical component with DIPPR-style property methods.
     """
 
     def __init__(
@@ -61,23 +44,9 @@ class Component(ABC):
         vapor_pressure: Pressure = None,
         enthalpy: HeatOfVaporization = None,
     ):
-        """
-        Initialize the component.
-
-        Args:
-            temperature (Temperature): Operating temperature (default 35°C).
-            pressure (Pressure): Operating pressure (default 101,325 Pa).
-            density (Density): Optional override for density.
-            specific_heat (SpecificHeat): Optional override for Cp.
-            viscosity (Viscosity): Optional override for viscosity.
-            thermal_conductivity (ThermalConductivity): Optional override for k.
-            vapor_pressure (Pressure): Optional override for vapor pressure.
-            enthalpy (HeatOfVaporization): Optional override for latent heat.
-        """
         self.temperature = temperature or Temperature(35, "C")
         self.pressure = pressure or Pressure(101325, "Pa")
 
-        # Optional overrides
         self._density = density
         self._specific_heat = specific_heat
         self._viscosity = viscosity
@@ -86,25 +55,33 @@ class Component(ABC):
         self._enthalpy = enthalpy
 
     # ----------------------------------------------------------------------
-    # Abstract properties
+    # Abstract Properties
     # ----------------------------------------------------------------------
     @property
     @abstractmethod
-    def name(self):
-        """Component name (e.g., 'Acetone')."""
-        pass
+    def name(self): pass
 
     @property
     @abstractmethod
-    def formula(self):
-        """Chemical formula (e.g., 'C3H6O')."""
-        pass
+    def formula(self): pass
 
     @property
     @abstractmethod
-    def molecular_weight(self):
-        """Molecular weight in g/mol."""
+    def molecular_weight(self):  # in g/mol
         pass
+
+    # ----------------------------------------------------------------------
+    # Phase Detection
+    # ----------------------------------------------------------------------
+    @PropertyMethod
+    def phase(self) -> str:
+        """
+        Detects phase based on system pressure and vapor pressure.
+        Returns: "gas" or "liquid"
+        """
+        P = self.pressure.to("Pa").value
+        Pvap = self.vapor_pressure().to("Pa").value
+        return "gas" if P < Pvap else "liquid"
 
     # ----------------------------------------------------------------------
     # Density
@@ -112,14 +89,27 @@ class Component(ABC):
     @PropertyMethod
     def density(self) -> Density:
         """
-        Density (kg/m³).
-        Uses DIPPR correlation unless overridden.
+        Returns density (kg/m³):
+        - Gas: Ideal Gas Law (PV = nRT)
+        - Liquid: DIPPR correlation
         """
         if self._density is not None:
             return self._density
-        T = self.temperature.value
+
+        T = self.temperature.to("K").value
+        P = self.pressure.to("Pa").value
+        phase = self.phase.value
+
+        MW_kg_per_mol = self.molecular_weight / 1000  # g/mol → kg/mol
+
+        if phase == "gas":
+            rho = (P * MW_kg_per_mol) / (R_UNIVERSAL * T)
+            return Density(rho, "kg/m3")
+
+        # Liquid DIPPR correlation
         a, b, Tc, n = self._density_constants
-        rho = a / (b ** (1 + (1 - (T / Tc)) ** n))
+        T_celsius = self.temperature.to("C").value
+        rho = a / (b ** (1 + (1 - (T_celsius / Tc)) ** n))
         rho *= self.molecular_weight
         return Density(rho, "kg/m3")
 
@@ -128,10 +118,6 @@ class Component(ABC):
     # ----------------------------------------------------------------------
     @PropertyMethod
     def specific_heat(self) -> SpecificHeat:
-        """
-        Specific heat (J/kg·K).
-        Polynomial correlation: Cp = A + B·T + C·T² + D·T³ + E·T⁴.
-        """
         if self._specific_heat is not None:
             return self._specific_heat
         T = self.temperature.value
@@ -145,17 +131,30 @@ class Component(ABC):
     @PropertyMethod
     def viscosity(self) -> Viscosity:
         """
-        Dynamic viscosity (Pa·s).
-        Exponential DIPPR correlation.
+        Returns viscosity (Pa·s):
+        - Liquid: DIPPR correlation
+        - Gas: Sutherland approximation
         """
         if self._viscosity is not None:
             return self._viscosity
-        T = self.temperature.value
-        po = (self._viscosity_constants[0] +
-              (self._viscosity_constants[1] / T) +
-              (self._viscosity_constants[2] * log(T)) +
-              (self._viscosity_constants[3] * (T ** self._viscosity_constants[4])))
-        mu = exp(po)
+
+        phase = self.phase.value
+        T = self.temperature.to("K").value
+
+        if phase == "liquid":
+            po = (self._viscosity_constants[0] +
+                  (self._viscosity_constants[1] / self.temperature.value) +
+                  (self._viscosity_constants[2] * log(self.temperature.value)) +
+                  (self._viscosity_constants[3] *
+                   (self.temperature.value ** self._viscosity_constants[4])))
+            mu = exp(po)
+            return Viscosity(mu, "Pa·s")
+
+        # --- Gas phase: Sutherland's law ---
+        mu0 = getattr(self, "_gas_viscosity_ref", 1.8e-5)  # air baseline (Pa·s)
+        T0 = getattr(self, "_gas_viscosity_Tref", 300.0)   # reference K
+        C = getattr(self, "_sutherland_constant", 120.0)   # Sutherland constant
+        mu = mu0 * ((T0 + C) / (T + C)) * ((T / T0) ** 1.5)
         return Viscosity(mu, "Pa·s")
 
     # ----------------------------------------------------------------------
@@ -163,10 +162,6 @@ class Component(ABC):
     # ----------------------------------------------------------------------
     @PropertyMethod
     def thermal_conductivity(self) -> ThermalConductivity:
-        """
-        Thermal conductivity (W/m·K).
-        Polynomial correlation: k = A + B·T + C·T² + D·T³ + E·T⁴.
-        """
         if self._thermal_conductivity is not None:
             return self._thermal_conductivity
         T = self.temperature.value
@@ -178,10 +173,6 @@ class Component(ABC):
     # ----------------------------------------------------------------------
     @PropertyMethod
     def vapor_pressure(self) -> Pressure:
-        """
-        Vapor pressure (Pa).
-        Exponential DIPPR correlation.
-        """
         if self._vapor_pressure is not None:
             return self._vapor_pressure
         T = self.temperature.value
@@ -197,10 +188,6 @@ class Component(ABC):
     # ----------------------------------------------------------------------
     @PropertyMethod
     def enthalpy(self) -> HeatOfVaporization:
-        """
-        Enthalpy of vaporization (J/kg).
-        Based on reduced temperature (Tr = T/Tc).
-        """
         if self._enthalpy is not None:
             return self._enthalpy
         T = self.temperature.value

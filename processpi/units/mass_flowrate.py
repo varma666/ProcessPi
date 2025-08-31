@@ -19,7 +19,8 @@ class MassFlowRate(Variable):
         "lb/s": 0.453592,
         "lb/min": 0.453592 / 60,
         "lb/h": 0.453592 / 3600,
-        "kg/day": 1 / 86400
+        "kg/day": 1 / 86400,
+        "t/day": 0.0115740741
     }
 
     def __init__(self, value, units="kg/s"):
