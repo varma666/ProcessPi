@@ -1,38 +1,42 @@
 """
-Initializes the pipelines module dynamically.
+ProcessPI Pipelines Module
+==========================
 
-This module contains the core components for the fluid flow simulation engine,
-including classes for various pipeline elements such as pipes, pumps, vessels,
-and the main engine for running simulations and analyzing results.
+Provides core components for the fluid flow simulation engine, including:
+- Pipeline elements: Pipe, Pump, Vessel, Junction
+- Main engine: PipelineEngine for simulations and analysis
 
-Example usage:
-
-    from processpi.pipelines import PipelineEngine, Pump, Pipe
+Example:
+    from processpi.pipelines import PipelineEngine, Pipe, Pump
 """
 
 import importlib
 import inspect
 from pathlib import Path
 
-# -----------------------
-# Initialize public API
-# -----------------------
+# -------------------------------------------------------------------
+# Public API initialization
+# -------------------------------------------------------------------
 __all__ = []
 
-pipelines_dir = Path(__file__).parent
+# Directory of this package
+_pipelines_dir = Path(__file__).parent
 
-# Files to exclude from dynamic import
-exclude_files = ["__init__.py", "todo.md", "processpi_pipeline_engine_features.md"]
+# Files to skip for dynamic imports
+_excluded = {"__init__.py", "todo.md", "processpi_pipeline_engine_features.md"}
 
-for file in pipelines_dir.glob("*.py"):
-    if file.name in exclude_files:
+# -------------------------------------------------------------------
+# Dynamic discovery of pipeline components
+# -------------------------------------------------------------------
+for file in _pipelines_dir.glob("*.py"):
+    if file.name in _excluded:
         continue
 
     module_name = file.stem
     module = importlib.import_module(f".{module_name}", package=__name__)
 
-    # Iterate over all classes defined in the module
-    for name, obj in inspect.getmembers(module, inspect.isclass):
-        if obj.__module__ == module.__name__:
-            globals()[name] = obj
-            __all__.append(name)
+    # Promote all top-level classes in the module
+    for cls_name, cls_obj in inspect.getmembers(module, inspect.isclass):
+        if cls_obj.__module__ == module.__name__:
+            globals()[cls_name] = cls_obj
+            __all__.append(cls_name)
