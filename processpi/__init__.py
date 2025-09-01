@@ -2,79 +2,53 @@
 ProcessPI: Chemical & Process Engineering Tools
 ==============================================
 
-ProcessPI is a Python library for process engineers to perform calculations,
-simulate fluid systems, and design equipment.
-
-Features:
----------
-- Fluid mechanics and hydraulic calculations
-- Pipeline network simulation and visualization
-- Chemical and physical properties management
-- Unit handling and conversions
+A Python library for process engineers to:
+- Perform fluid mechanics and hydraulic calculations
+- Simulate and visualize pipeline networks
+- Manage chemical and physical properties
+- Handle engineering units and conversions
 """
 
-import os
 import sys
+import os
 import time
-import importlib
-import pkgutil
-from pathlib import Path
+from importlib.metadata import version, PackageNotFoundError
 
 # -------------------------------------------------------------------
-# Dynamic Version Handling
+# Version Handling
 # -------------------------------------------------------------------
 try:
-    from importlib.metadata import version, PackageNotFoundError
     __version__ = version("processpi")
 except PackageNotFoundError:
-    __version__ = "0.1.0"  # fallback version for dev environments
-
-__all__ = []
+    __version__ = "0.1.0"
 
 # -------------------------------------------------------------------
-# Sleek Loading Animation
+# Submodules (explicit imports for static analyzers)
 # -------------------------------------------------------------------
-def _loading_animation(text="Initializing ProcessPI"):
-    frames = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]
+from . import calculations
+from . import pipelines
+from . import units
+from . import components
+
+__all__ = ["calculations", "pipelines", "units", "components"]
+
+# -------------------------------------------------------------------
+# Loading animation (only for interactive sessions)
+# -------------------------------------------------------------------
+def _show_loading(text="Initializing ProcessPI"):
+    if not (sys.stdout.isatty() or "COLAB_GPU" in os.environ):
+        return
+    frames = "⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏"
     for i in range(20):
         sys.stdout.write(f"\r{text} {frames[i % len(frames)]}")
         sys.stdout.flush()
         time.sleep(0.05)
-    sys.stdout.write("\r✅ ProcessPI Ready!             \n")
+    sys.stdout.write("\r✅ ProcessPI Ready!\n")
 
-# Only show animation in interactive sessions (terminal/Colab)
-if sys.stdout.isatty() or "COLAB_GPU" in os.environ:
-    _loading_animation()
+_show_loading()
 
 # -------------------------------------------------------------------
-# Import Core Submodules
-# -------------------------------------------------------------------
-from . import calculations, pipelines, units, components
-
-__all__.extend(["calculations", "pipelines", "units", "components"])
-
-# -------------------------------------------------------------------
-# Dynamic Discovery & Import of Component Classes
-# -------------------------------------------------------------------
-_components_dir = Path(__file__).parent / "components"
-
-for _, module_name, is_pkg in pkgutil.iter_modules([str(_components_dir)]):
-    if not is_pkg:  # Import each component module dynamically
-        module = importlib.import_module(f"{__name__}.components.{module_name}")
-        globals()[module_name] = module
-        __all__.append(module_name)
-
-# Automatically collect all classes from components
-for mod in list(__all__):
-    module_obj = globals().get(mod)
-    if module_obj and hasattr(module_obj, "__dict__"):
-        for name, obj in module_obj.__dict__.items():
-            if isinstance(obj, type):  # only classes
-                globals()[name] = obj
-                __all__.append(name)
-
-# -------------------------------------------------------------------
-# Friendly Banner for Interactive Users
+# Friendly banner for interactive use
 # -------------------------------------------------------------------
 if sys.stdout.isatty() or "COLAB_GPU" in os.environ:
     print(f"📦 ProcessPI v{__version__} | Chemical & Process Engineering Tools Loaded!\n")
