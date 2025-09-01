@@ -1,65 +1,55 @@
 """
-Initializes the main calculations module of ProcessPI.
+ProcessPI Calculations Module
+=============================
 
-This module dynamically discovers and loads all calculation submodules and
-makes their classes accessible under the processpi.calculations namespace.
+This module provides core calculation classes and dynamically
+loads all available calculation submodules under `processpi.calculations`.
 
-Example usage:
-
+Example:
     import processpi.calculations as calc
+
     engine = calc.CalculationEngine()
-    water_calc = calc.fluids.PressureDropDarcy(...)
+    water_dp = calc.fluids.PressureDropDarcy(...)
 """
 
-import importlib
-import pkgutil
-import inspect
-from pathlib import Path
 import sys
 import time
+import importlib
+import pkgutil
+from pathlib import Path
 
-# ------------------------
-# Loading animation
-# ------------------------
-def _show_loading_animation():
-    frames = ["⠁","⠂","⠄","⠂"]
-    sys.stdout.write(f"⏳ Loading ProcessPI Calculations... ")
+# -------------------------------------------------------------------
+# Optional: Loading Animation
+# -------------------------------------------------------------------
+def _show_loading():
+    if not sys.stdout.isatty():
+        return
+    frames = "⠁⠂⠄⠂"
+    sys.stdout.write("⏳ Loading ProcessPI Calculations... ")
     sys.stdout.flush()
     for frame in frames * 2:
         sys.stdout.write(f"\r⏳ Loading ProcessPI Calculations... {frame}")
         sys.stdout.flush()
         time.sleep(0.1)
     sys.stdout.write("\r✅ Calculations module ready!          \n")
-    sys.stdout.flush()
 
-_show_loading_animation()
+_show_loading()
 
-# ------------------------
-# Import core classes if any
-# ------------------------
-from .engine import CalculationEngine  # optional; adjust as needed
+# -------------------------------------------------------------------
+# Core classes (explicit for static analyzers)
+# -------------------------------------------------------------------
+from .engine import CalculationEngine
 from .base import CalculationBase
 
 __all__ = ["CalculationEngine", "CalculationBase"]
 
-# ------------------------
-# Dynamically import submodules (e.g., fluids, heat_transfer, etc.)
-# ------------------------
-package_dir = Path(__file__).parent
-package_name = __name__
-
-for finder, name, ispkg in pkgutil.iter_modules([str(package_dir)]):
-    # skip private or undesired modules if any
-    if name.startswith("_"):
+# -------------------------------------------------------------------
+# Dynamically import submodules, no class injection
+# -------------------------------------------------------------------
+_package_dir = Path(__file__).parent
+for _, name, is_pkg in pkgutil.iter_modules([str(_package_dir)]):
+    if name.startswith("_") or name in ["engine", "base"]:
         continue
-
-    full_mod = f"{package_name}.{name}"
-    module = importlib.import_module(full_mod)
+    module = importlib.import_module(f"{__name__}.{name}")
     globals()[name] = module
     __all__.append(name)
-
-    # Optionally, auto-import module-level classes
-    for cls_name, cls_obj in inspect.getmembers(module, inspect.isclass):
-        if cls_obj.__module__ == module.__name__:
-            globals()[cls_name] = cls_obj
-            __all__.append(cls_name)
