@@ -1,45 +1,40 @@
 """
-Initializes the components module dynamically.
+ProcessPI Components Module
+===========================
 
-This module automatically discovers all component classes within the folder
-and exposes them for direct import. The base class `Component` is always
-included.
+Automatically discovers all chemical component classes in this package
+and exposes them for direct import.
 
-Example usage:
-
+Example:
     from processpi.components import Water, Ethanol, Acetone
 """
 
-import os
 import importlib
 import inspect
 from pathlib import Path
 
-# -----------------------
-# Import the base Component class
-# -----------------------
+# -------------------------------------------------------------------
+# Base class import
+# -------------------------------------------------------------------
 from .base import Component
 
-# Initialize __all__ with the base class
 __all__ = ["Component"]
 
-# -----------------------
-# Dynamically discover and import component classes
-# -----------------------
-components_dir = Path(__file__).parent
+# -------------------------------------------------------------------
+# Dynamic discovery of component classes
+# -------------------------------------------------------------------
+_components_dir = Path(__file__).parent
+_excluded = {"__init__.py", "base.py", "constants.py", "examples.txt"}
 
-# List of files to exclude from dynamic import
-exclude_files = ["__init__.py", "base.py", "constants.py", "examples.txt"]
-
-for file in components_dir.glob("*.py"):
-    if file.name in exclude_files:
+for file in _components_dir.glob("*.py"):
+    if file.name in _excluded:
         continue
 
     module_name = file.stem
     module = importlib.import_module(f".{module_name}", package=__name__)
 
-    # Iterate over all classes defined in this module
-    for name, obj in inspect.getmembers(module, inspect.isclass):
-        if obj.__module__ == module.__name__:
-            globals()[name] = obj
-            __all__.append(name)
+    # Promote classes from each module
+    for cls_name, cls_obj in inspect.getmembers(module, inspect.isclass):
+        if cls_obj.__module__ == module.__name__:
+            globals()[cls_name] = cls_obj
+            __all__.append(cls_name)
