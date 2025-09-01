@@ -1054,7 +1054,31 @@ class PipelineEngine:
         # NETWORK MODE
         # -----------------------
         if isinstance(net, PipelineNetwork):
-            # Assign flowrate to pipes if missing
+            # --------------------------------------------------
+            # Step 1: Detect pipes missing diameter definitions
+            # --------------------------------------------------
+            missing_diameter = any(
+                getattr(p, "internal_diameter", None) is None and getattr(p, "nominal_diameter", None) is None
+                for p in net.get_all_pipes()
+            )
+
+            # --------------------------------------------------
+            # Step 2: Auto-size missing diameters if any found
+            # --------------------------------------------------
+            if missing_diameter:
+                print("🔄 Auto-sizing network pipe diameters...")
+                sizing_results = self._solve_for_diameter_network(net, **self.data)
+                sizing_data = sizing_results.to_dict()
+
+                # Apply calculated diameters to network pipes
+                for comp in sizing_data.get("all_simulation_results", []):
+                    for pipe in net.get_all_pipes():
+                        if pipe.name == comp.get("network_name"):
+                            pipe.internal_diameter = comp["components"][0]["diameter"]
+
+            # --------------------------------------------------
+            # Step 3: Assign flowrate to pipes if missing
+            # --------------------------------------------------
             for p in net.get_all_pipes():
                 current_flow = getattr(p, "flow_rate", None)
                 if current_flow is None or _to_value(current_flow) <= 0:
@@ -1063,7 +1087,9 @@ class PipelineEngine:
                     except Exception:
                         p.flow_rate = q_in
 
-            # Solve network
+            # --------------------------------------------------
+            # Step 4: Solve the (now ready) network
+            # --------------------------------------------------
             solved_dict, solver_meta = self._solve_network_dual(net, q_in, tol)
             reports = solved_dict.get("reports", []) or []
 
@@ -1112,7 +1138,6 @@ class PipelineEngine:
                 },
                 "components": comp_list
             })
-
         # -----------------------
         # SINGLE PIPE MODE
         # -----------------------
