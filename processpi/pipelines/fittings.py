@@ -33,7 +33,7 @@ class Fitting:
         If Le depends on diameter and diameter is missing, raises a ValueError.
         """
         try:
-            return get_equivalent_length(self.fitting_type, self.diameter)
+            return get_equivalent_length(fitting_type=self.fitting_type)
         except ValueError as e:
             # Handle missing diameter case explicitly
             if "requires diameter" in str(e).lower():
