@@ -1,4 +1,4 @@
-__version__ = "0.1.2.10"
+__version__ = "0.1.2.11"
 
 from setuptools import setup, find_packages
 from pathlib import Path
@@ -23,7 +23,8 @@ setup(
         "matplotlib>=3.7.0",
         "networkx>=3.1",
         "CoolProp>=6.5.0",
-        "tqdm>=4.65.0"  # for loading animation
+        "tqdm>=4.65.0",
+        "plotly>=5.18.0",  # Added Plotly for interactive visualizations
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -39,7 +40,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "processpi=processpi.cli:main",  # if you have a CLI entry point
+            "processpi=processpi.cli:main",  # CLI entry point
         ],
     },
 )
