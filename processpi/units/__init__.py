@@ -1,44 +1,40 @@
 """
-Initializes the units module dynamically.
+ProcessPI Units Module
+======================
 
-This module automatically discovers all variable classes within the folder
-and exposes them for direct import. The base class `Variable` is always
-included.
+Automatically discovers and exposes all unit variable classes in this package.
+The base class `Variable` is always included.
 
-Example usage:
-
-    from processpi.units import Length, Temperature, Pressure
+Example:
+    from processpi.units import Length, Pressure, Temperature
 """
 
 import importlib
 import inspect
 from pathlib import Path
 
-# -----------------------
-# Import the base Variable class
-# -----------------------
+# -------------------------------------------------------------------
+# Base class import
+# -------------------------------------------------------------------
 from .base import Variable
 
-# Initialize __all__ with the base class
 __all__ = ["Variable"]
 
-# -----------------------
-# Dynamically discover and import variable classes
-# -----------------------
-units_dir = Path(__file__).parent
+# -------------------------------------------------------------------
+# Dynamic discovery of unit classes
+# -------------------------------------------------------------------
+_units_dir = Path(__file__).parent
+_excluded = {"__init__.py", "base.py", "example.txt", "strings.py"}
 
-# List of files to exclude from dynamic import
-exclude_files = ["__init__.py", "base.py", "example.txt", "strings.py"]
-
-for file in units_dir.glob("*.py"):
-    if file.name in exclude_files:
+for file in _units_dir.glob("*.py"):
+    if file.name in _excluded:
         continue
 
     module_name = file.stem
     module = importlib.import_module(f".{module_name}", package=__name__)
 
-    # Iterate over all classes defined in this module
-    for name, obj in inspect.getmembers(module, inspect.isclass):
-        if obj.__module__ == module.__name__:
-            globals()[name] = obj
-            __all__.append(name)
+    # Promote top-level classes to namespace
+    for cls_name, cls_obj in inspect.getmembers(module, inspect.isclass):
+        if cls_obj.__module__ == module.__name__:
+            globals()[cls_name] = cls_obj
+            __all__.append(cls_name)
