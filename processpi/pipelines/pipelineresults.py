@@ -117,10 +117,30 @@ class PipelineResults:
 
 
     def detailed_summary(self) -> None:
-        """Print a component-level breakdown in table form."""
+        """Print a component-level breakdown in table form.
+        Supports both old-style (nested dict) and new-style (flat keys) results.
+        Removes duplicate rows and fills missing types.
+        """
+        from tabulate import tabulate
+
         if not self._all_simulation_results:
             print("No simulation results available.")
             return
+
+        def _to_number(val, default=0.0):
+            """Safely convert unit-wrapped or raw values to float."""
+            if val is None:
+                return default
+            if hasattr(val, "value"):  # Units with .value attribute
+                return float(val.value)
+            if hasattr(val, "magnitude"):  # Pint or similar units
+                return float(val.magnitude)
+            if isinstance(val, (int, float, str)):
+                try:
+                    return float(val)
+                except ValueError:
+                    return default
+            return default
 
         for idx, result in enumerate(self._all_simulation_results):
             components = result.get("components", [])
@@ -129,29 +149,55 @@ class PipelineResults:
 
             print(f"\n=== Detailed Components for Result {idx+1} ({result.get('network_name', 'N/A')}) ===")
             rows = []
+            seen = set()  # to prevent duplicate rows
+
             for comp in components:
-                d_val = comp.get("diameter", 0.0)
-                d_obj = d_val if isinstance(d_val, Diameter) else Diameter(float(d_val)) if d_val else None
+
+                def get_val(keys, default=0.0):
+                    """Safe getter for nested or flat dict keys."""
+                    for key in keys:
+                        if "." in key:
+                            parent, child = key.split(".", 1)
+                            if isinstance(comp.get(parent), dict) and child in comp[parent]:
+                                return comp[parent][child]
+                        elif key in comp:
+                            return comp[key]
+                    return default
+
+                # Extract values
+                pressure_val = get_val(["pressure_drop.value", "pressure_drop", "pressure_drop_Pa", "dp_Pa"])
+                velocity_val = get_val(["velocity.value", "velocity", "velocity_mps", "vel_mps"])
+                reynolds_val = get_val(["reynolds.value", "reynolds"])
+                friction_val = get_val(["friction_factor.value", "friction_factor"])
+                diameter_val = get_val(["diameter"])
+
+                # Convert diameter to object
+                if isinstance(diameter_val, Diameter):
+                    diameter_obj = diameter_val
+                elif diameter_val:
+                    diameter_obj = Diameter(_to_number(diameter_val,"m").value)
+                else:
+                    diameter_obj = None
+
+                name = comp.get("name") or comp.get("type", "Component")
+                ctype = comp.get("type") or "Pipe"
+
+                # Deduplicate rows based on component name and diameter
+                key = (name, round(_to_number(velocity_val), 4))
+                if key in seen:
+                    continue
+                seen.add(key)
+
                 rows.append([
-                    comp.get("name") or comp.get("type", "Component"),
-                    comp.get("type"),
-                    Pressure(float(comp.get("pressure_drop", 0.0)), "Pa").to("kPa").value,
-                    Velocity(float(comp.get("velocity", 0.0)), "m/s").to("m/s").value,
-                    float(comp.get("reynolds", 0.0)),
-                    float(comp.get("friction_factor", 0.0)),
-                    d_obj.to("in").value if d_obj else None,
+                    name,
+                    ctype,
+                    Pressure(_to_number(pressure_val), "Pa").to("kPa").value,
+                    Velocity(_to_number(velocity_val), "m/s").to("m/s").value,
+                    _to_number(reynolds_val),
+                    _to_number(friction_val),
+                    diameter_obj.to("in") if diameter_obj else None,
                 ])
 
             headers = ["Name", "Type", "ΔP (kPa)", "Velocity (m/s)", "Re", "Friction", "Diameter (in)"]
             print(tabulate(rows, headers=headers, tablefmt="grid"))
 
-    # -------------------- Raw results --------------------
-    def to_dict(self) -> Dict[str, Any]:
-        """Export results for serialization or logging."""
-        data = self.results.copy()
-        if self.pipe_diameter:
-            data["pipe_diameter_in"] = self.pipe_diameter.to("in").value
-            data["pipe_diameter_m"] = self.pipe_diameter.to("m").value
-        data["velocity_mps"] = self.velocity.to("m/s").value
-        data["pressure_drop_kPa"] = self.total_pressure_drop.to("kPa").value
-        return data

@@ -1067,8 +1067,12 @@ class PipelineEngine:
             # --------------------------------------------------
             if missing_diameter:
                 print("🔄 Auto-sizing network pipe diameters...")
-                sizing_results = self._solve_for_diameter_network(net, **self.data)
-                sizing_data = sizing_results.to_dict()
+                kwargs = self.data.copy()
+                kwargs.pop("network", None)
+                sizing_results = self._solve_for_diameter_network(net, **kwargs)
+
+                # Access results directly
+                sizing_data = sizing_results.results
 
                 # Apply calculated diameters to network pipes
                 for comp in sizing_data.get("all_simulation_results", []):
