@@ -632,14 +632,48 @@ def get_standard_diameters_list() -> List[Diameter]:
     return sorted(list(PIPE_SCHEDULES.keys()), key=lambda d: d.value)
 
 
+from typing import Optional
+
 def get_equivalent_length(fitting_type: str) -> Optional[float]:
     """
     Return the equivalent length multiplier (Le/D) for a fitting type.
     """
     return EQUIVALENT_LENGTHS.get(fitting_type.lower())
 
-def get_k_factor(fitting_type: str) -> Optional[float]:
+
+def get_k_factor(
+    fitting_type: str,
+    reynolds_number: Optional[float] = None,
+    relative_roughness: Optional[float] = None,
+    diameter: Optional[float] = None,
+) -> Optional[float]:
     """
     Return the K-factor (resistance coefficient) for a fitting type.
+    Includes logic for Reynolds number-dependent fittings.
+    
+    Args:
+        fitting_type: The type of fitting.
+        reynolds_number: Reynolds number of the flow (for fittings where K depends on Re).
+        relative_roughness: Pipe roughness divided by diameter (not always used).
+        diameter: Pipe internal diameter in meters.
+
+    Returns:
+        The K-factor as a float, or None if not found.
     """
-    return K_FACTORS.get(fitting_type.lower())
+    
+    # 1. Look up a simple K-factor from the K_FACTORS dictionary
+    k_factor_value = K_FACTORS.get(fitting_type.lower())
+    
+    if k_factor_value is not None:
+        return k_factor_value
+
+    # 2. Fallback to calculating K from equivalent length
+    le_d_ratio = EQUIVALENT_LENGTHS.get(fitting_type.lower())
+    if le_d_ratio is not None and reynolds_number is not None and relative_roughness is not None:
+        # This part assumes you have a ColebrookWhite function or similar
+        # to calculate the friction factor 'f'
+        f = ColebrookWhite(reynolds_number, relative_roughness).calculate()
+        return f * le_d_ratio
+    
+    # Return None if no method yields a value
+    return None
