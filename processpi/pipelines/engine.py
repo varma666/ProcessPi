@@ -1147,6 +1147,7 @@ class PipelineEngine:
         # -----------------------
         else:
             pipe_instance = self._ensure_pipe_object()
+            setattr(pipe_instance, "fittings", self.data.get("fittings", []))
 
             if diameter is None:
                 # Solve for optimum diameter based on available_dp
