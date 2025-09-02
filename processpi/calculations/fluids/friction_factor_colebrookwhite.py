@@ -37,48 +37,41 @@ class ColebrookWhite(CalculationBase):
                 raise ValueError(f"Missing required input: {key}")
 
     def calculate(self):
-        """
-        Calculates the Darcy friction factor.
-
-        The method first checks if the flow is laminar (Re < 2000). If so, it
-        uses the simple and direct formula f = 64/Re. For turbulent flow (Re >= 2000),
-        it solves the implicit Colebrook-White equation iteratively.
-
-        Returns:
-            Dimensionless: The calculated Darcy friction factor.
-        """
-        # Retrieve and validate input values.
-        Re = self._get_value(self.inputs["reynolds_number"], "reynolds_number")
-        D = self._get_value(self.inputs["diameter"], "diameter")  # m
-        eps = self._get_value(self.inputs["roughness"], "roughness")  # mm
-
-        # Handle the special case of laminar flow, where the friction factor
-        # is a simple, direct calculation and not an iterative one.
-        if Re < 2000:
-            f = 64.0 / Re
-            return Dimensionless(f)
-
-        # For turbulent flow, solve the Colebrook-White equation iteratively.
-        # We start with a common initial guess for the friction factor.
-        f = 0.02
-        tol = 1e-6  # Tolerance for convergence
-        max_iter = 100  # Maximum number of iterations to prevent an infinite loop
-
-        for _ in range(max_iter):
-            # Calculate both sides of the rearranged Colebrook-White equation.
-            lhs = 1.0 / math.sqrt(f)
-            rhs = -2.0 * math.log10((eps / (3.7 * D)) + (2.51 / (Re * math.sqrt(f))))
-
-            # Calculate the new value of f based on the rhs.
-            new_f = 1.0 / (rhs**2)
-
-            # Check for convergence. If the change in f is less than the tolerance,
-            # we have a stable solution and can return the result.
-            if abs(new_f - f) < tol:
-                return Dimensionless(new_f)
+            """
+            Calculates the Darcy friction factor.
+            """
+            # Retrieve and validate input values.
+            Re = self._get_value(self.inputs["reynolds_number"], "reynolds_number")
+            D = self._get_value(self.inputs["diameter"], "diameter")  # m
+            eps = self._get_value(self.inputs["roughness"], "roughness")  # mm
+    
+            # Handle the special case of laminar flow
+            if Re < 2000:
+                f = 64.0 / Re
+                return Dimensionless(f)
             
-            # Update f for the next iteration.
-            f = new_f
+            # For turbulent flow, solve the Colebrook-White equation iteratively.
+            f = 0.02
+            tol = 1e-6
+            max_iter = 100
+    
+            # CORRECTED LINE: Convert roughness from mm to m
+            eps_m = eps / 1000.0
+    
+            for _ in range(max_iter):
+                # Calculate both sides of the rearranged Colebrook-White equation.
+                # Use the corrected 'eps_m' in the calculation
+                rhs = -2.0 * math.log10((eps_m / (3.7 * D)) + (2.51 / (Re * math.sqrt(f))))
+    
+                # Calculate the new value of f based on the rhs.
+                new_f = 1.0 / (rhs**2)
+    
+                if abs(new_f - f) < tol:
+                    return Dimensionless(new_f)
+                
+                f = new_f
+    
+            return Dimensionless(f)
 
         # If the loop finishes without converging, return the last calculated value.
         return Dimensionless(f)
