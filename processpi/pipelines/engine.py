@@ -388,16 +388,19 @@ class PipelineEngine:
     def _minor_dp_pa(self, fitting: Fitting, v: Velocity, f: Optional[float], d: Diameter) -> Pressure:
         """
         Calculates the minor pressure drop (fitting loss).
-
-        It prioritizes the K-factor method and falls back to the equivalent length method.
+    
+        It prioritizes the K-factor method and falls back to the equivalent length method,
+        then to standards lookup.
         """
-        # try K factor first
         rho = self._get_density().value
         v_val = v.value if hasattr(v, "value") else float(v)
+    
+        # 1. Try explicit K-factor first
         K = getattr(fitting, "K", None) or getattr(fitting, "K_factor", None) or getattr(fitting, "total_K", None)
         if K is not None:
             return Pressure(0.5 * rho * v_val * v_val * float(K), "Pa")
-        # equivalent length fallback
+        
+        # 2. Try explicit equivalent length
         Le = getattr(fitting, "Le", None) or getattr(fitting, "equivalent_length", None)
         if Le is not None:
             if f is None:
@@ -407,6 +410,22 @@ class PipelineEngine:
             else:
                 f_val = float(f)
             return Pressure(float(f_val) * (float(Le) / d.to("m").value) * 0.5 * rho * v_val * v_val, "Pa")
+    
+        # 3. Fallback to standards lookup
+        fitting_type = getattr(fitting, "fitting_type", None)
+        if fitting_type is not None:
+            # We need Reynolds number and roughness for the lookup
+            Re = self._reynolds(v, d)
+            roughness = self._resolve_roughness(getattr(fitting, "material", None))
+            
+            # This is the key line that calls the standards lookup:
+            K_from_standards = get_k_factor(fitting_type, Re, roughness, d.value)
+            
+            if K_from_standards is not None:
+                return Pressure(0.5 * rho * v_val * v_val * float(K_from_standards), "Pa")
+            else:
+                print(f"Warning: No standard K-factor found for fitting type '{fitting_type}'")
+    
         return Pressure(0.0, "Pa")
 
     # ---------------------- Pipe calculation (major+minor+elevation) ---------
