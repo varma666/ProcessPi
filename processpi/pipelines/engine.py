@@ -388,7 +388,7 @@ class PipelineEngine:
     def _minor_dp_pa(self, fitting: Fitting, v: Velocity, f: Optional[float], d: Diameter) -> Pressure:
         """
         Calculates the minor pressure drop (fitting loss).
-    
+        
         It prioritizes the K-factor method and falls back to the equivalent length method,
         then to standards lookup.
         """
@@ -414,9 +414,13 @@ class PipelineEngine:
         # 3. Fallback to standards lookup
         fitting_type = getattr(fitting, "fitting_type", None)
         if fitting_type is not None:
-            # We need Reynolds number and roughness for the lookup
+            # Get Reynolds number from the flow
             Re = self._reynolds(v, d)
-            roughness = self._resolve_roughness(getattr(fitting, "material", None))
+            
+            # This is the corrected line to get roughness from the pipe
+            # The 'get_roughness' function is imported from your standards module
+            pipe = self.data.get("pipe")
+            roughness = get_roughness(getattr(pipe, "material", None))
             
             # This is the key line that calls the standards lookup:
             K_from_standards = get_k_factor(fitting_type, Re, roughness, d.value)
