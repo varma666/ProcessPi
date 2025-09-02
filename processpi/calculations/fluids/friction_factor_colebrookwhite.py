@@ -37,41 +37,39 @@ class ColebrookWhite(CalculationBase):
                 raise ValueError(f"Missing required input: {key}")
 
     def calculate(self):
-            """
-            Calculates the Darcy friction factor.
-            """
-            # Retrieve and validate input values.
-            Re = self._get_value(self.inputs["reynolds_number"], "reynolds_number")
-            D = self._get_value(self.inputs["diameter"], "diameter")  # m
-            eps = self._get_value(self.inputs["roughness"], "roughness")  # mm
-    
-            # Handle the special case of laminar flow
-            if Re < 2000:
-                f = 64.0 / Re
-                return Dimensionless(f)
-            
-            # For turbulent flow, solve the Colebrook-White equation iteratively.
-            f = 0.02
-            tol = 1e-6
-            max_iter = 100
-    
-            # CORRECTED LINE: Convert roughness from mm to m
-            eps_m = eps / 1000.0
-    
-            for _ in range(max_iter):
-                # Calculate both sides of the rearranged Colebrook-White equation.
-                # Use the corrected 'eps_m' in the calculation
-                rhs = -2.0 * math.log10((eps_m / (3.7 * D)) + (2.51 / (Re * math.sqrt(f))))
-    
-                # Calculate the new value of f based on the rhs.
-                new_f = 1.0 / (rhs**2)
-    
-                if abs(new_f - f) < tol:
-                    return Dimensionless(new_f)
-                
-                f = new_f
-    
-            return Dimensionless(f)
+        """
+        Calculates the Darcy friction factor.
+        """
+        # Retrieve and validate input values.
+        Re = self._get_value(self.inputs["reynolds_number"], "reynolds_number")
+        D = self._get_value(self.inputs["diameter"], "diameter")  # m
+        roughness_val = self.inputs["roughness"]
+        
+        # Check if the roughness is a unit-aware Variable and convert to meters.
+        if isinstance(roughness_val, Variable):
+            eps_m = roughness_val.to("m").value
+        else:
+            # Fallback for raw numbers, assuming they are in mm as per the bug.
+            # A warning could be added here to alert the user of the assumption.
+            eps_m = float(roughness_val) / 1000.0
 
-        # If the loop finishes without converging, return the last calculated value.
+        # Handle the special case of laminar flow.
+        if Re < 2000:
+            f = 64.0 / Re
+            return Dimensionless(f)
+        
+        # For turbulent flow, solve the Colebrook-White equation iteratively.
+        f = 0.02
+        tol = 1e-6
+        max_iter = 100
+
+        for _ in range(max_iter):
+            rhs = -2.0 * math.log10((eps_m / (3.7 * D)) + (2.51 / (Re * math.sqrt(f))))
+            new_f = 1.0 / (rhs**2)
+
+            if abs(new_f - f) < tol:
+                return Dimensionless(new_f)
+            
+            f = new_f
+
         return Dimensionless(f)
