@@ -36,28 +36,29 @@ class ColebrookWhite(CalculationBase):
             if key not in self.inputs:
                 raise ValueError(f"Missing required input: {key}")
 
+        # In your `friction_factor_colebrookwhite.py` file
+
+    # In your `friction_factor_colebrookwhite.py` file
+
     def calculate(self):
         """
         Calculates the Darcy friction factor.
         """
-        # Retrieve and validate input values.
+        # Retrieve Reynolds number and diameter using _get_value
         Re = self._get_value(self.inputs["reynolds_number"], "reynolds_number")
-        D = self._get_value(self.inputs["diameter"], "diameter")  # m
-        roughness_val = self.inputs["roughness"]
-        
-        # Check if the roughness is a unit-aware Variable and convert to meters.
-        if isinstance(roughness_val, Variable):
-            eps_m = roughness_val.to("m").value
-        else:
-            # Fallback for raw numbers, assuming they are in mm as per the bug.
-            # A warning could be added here to alert the user of the assumption.
-            eps_m = float(roughness_val) / 1000.0
+        D = self._get_value(self.inputs["diameter"], "diameter")
+        #print(D)
+        eps_mm = self._get_value(self.inputs["roughness"], "roughness") 
+        #print(eps_mm)
+        eps_m = eps_mm / 1000  # Convert to mm
+        #print(eps_m)
+
 
         # Handle the special case of laminar flow.
         if Re < 2000:
             f = 64.0 / Re
             return Dimensionless(f)
-        
+
         # For turbulent flow, solve the Colebrook-White equation iteratively.
         f = 0.02
         tol = 1e-6
@@ -69,7 +70,7 @@ class ColebrookWhite(CalculationBase):
 
             if abs(new_f - f) < tol:
                 return Dimensionless(new_f)
-            
+
             f = new_f
 
         return Dimensionless(f)

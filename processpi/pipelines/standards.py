@@ -543,7 +543,7 @@ def get_thickness(nominal_diameter: Diameter, schedule: str = "STD") -> Optional
 
 def get_roughness(material: str) -> Variable:
     """Returns roughness for given material. Defaults if not found."""
-    roughness_mm = ROUGHNESS.get(material.lower(), ROUGHNESS["Other"])
+    roughness_mm = ROUGHNESS.get(material, ROUGHNESS["Other"])
     return Variable(roughness_mm, "mm")
 
 def get_recommended_velocity(service: str) -> Optional[Union[float, Tuple[float, float]]]:
