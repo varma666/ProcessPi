@@ -677,3 +677,39 @@ def get_k_factor(
     
     # Return None if no method yields a value
     return None
+
+def get_nominal_dia_from_internal_dia(internal_diameter: Diameter, schedule: str = "STD") -> Optional[Diameter]:
+    """
+    Finds the nominal diameter of a pipe given its internal diameter and schedule.
+
+    This function performs a reverse lookup in the PIPE_SCHEDULES data. It iterates
+    through all nominal diameters and calculates the corresponding internal diameter
+    for a given schedule. It returns the first nominal diameter that matches the
+    input internal diameter.
+
+    Args:
+        internal_diameter (Diameter): The internal diameter of the pipe.
+        schedule (str): The pipe schedule (e.g., "STD", "40", "80").
+
+    Returns:
+        Optional[Diameter]: The nominal diameter, or None if no match is found.
+    """
+    # Use a small tolerance for floating-point comparisons
+    TOLERANCE = 1e-6 
+
+    # Iterate through each nominal diameter in the standards data
+    for nom_dia, schedules in PIPE_SCHEDULES.items():
+        # Check if the requested schedule exists for the current nominal diameter
+        if schedule in schedules:
+            # The internal diameter is the third value in the tuple
+            data = schedules[schedule]
+            if data[2] is not None:
+                calculated_internal_dia = data[2]
+                
+                # Convert both diameters to a base unit (meters) for comparison
+                if abs(internal_diameter.to('m').value - calculated_internal_dia.to('m').value) < TOLERANCE:
+                    # Match found! Return the nominal diameter.
+                    return nom_dia
+
+    # No matching nominal diameter was found for the given internal diameter and schedule
+    return None

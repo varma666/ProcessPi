@@ -59,7 +59,7 @@ class PressureDropDarcy(CalculationBase):
         D = self._get_value(self.inputs["diameter"], "diameter")    # m
         rho = self._get_value(self.inputs["density"], "density")    # kg/m³
         v = self._get_value(self.inputs["velocity"], "velocity")    # m/s
-
+        #print(D)
         # Apply the Darcy-Weisbach formula to calculate the pressure drop.
         delta_P = f * (L / D) * (rho * v**2 / 2)
         

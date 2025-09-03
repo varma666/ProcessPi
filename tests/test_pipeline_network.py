@@ -102,20 +102,21 @@ model.summary()
 
 1.609882 kg/m3 0.019523 cP (dynamic)
 ✅ Found optimal diameter for available pressure drop.
-   Selected Diameter: 34.0 in (0.864 m)
-   Calculated Pressure Drop: 1639.05 Pa (allowed: 24000.00 Pa)
+   Selected Diameter: 22.0 in (0.559 m)
+   Calculated Pressure Drop: 18414.26 Pa (allowed: 24000.00 Pa)
+⚠️ Warning: Final velocity 31.41 m/s outside recommended range (8.00-15.00 m/s) for Carbon Dioxide.
 
 === Pipeline Result 1 (Main Pipe) ===
 Mode: Single_pipe
-Calculated Pipe Diameter: 34.00 in  (0.864 m)
+Calculated Pipe Diameter: 22.00 in  (0.559 m)
 Inlet Flow: 7.189 m3/s 
-Outlet Flow: 7.189 m3/s 
-Total Pressure Drop: 1.64 kPa
-Total Head Loss: 103.82 m
-Total Power Required: 16.83 kW
-Velocity: 12.274 m/s
-Reynolds Number: 874029 (dimensionless)
-Friction Factor: 0.0130 (dimensionless)
+Outlet Flow: 7.189 m3/s
+Total Pressure Drop: 18.41 kPa
+Total Head Loss: 1166.38 m
+Total Power Required: 189.12 kW
+Velocity: 31.415 m/s
+Reynolds Number: 1398318 (dimensionless)
+Friction Factor: 0.0128 (dimensionless)
 (.venv) PS P:\processpi> 
 
 """
@@ -169,77 +170,23 @@ print(results.total_pressure_drop.to("atm"))
 
 ✅ Found optimal diameter for available pressure drop.
    Selected Diameter: 8.0 in (0.203 m)
-   Calculated Pressure Drop: 28248.70 Pa (allowed: 50000.00 Pa)
+   Calculated Pressure Drop: 28658.34 Pa (allowed: 50000.00 Pa)
 
 === Pipeline Result 1 (Main Pipe) ===
 Mode: Single_pipe
 Calculated Pipe Diameter: 8.00 in  (0.203 m)
 Inlet Flow: 0.394 m3/s 
 Outlet Flow: 0.394 m3/s 
-Total Pressure Drop: 28.25 kPa
-Total Head Loss: 2727.01 m
-Total Power Required: 15.92 kW
-Velocity: 12.164 m/s
-Reynolds Number: 136892 (dimensionless)
-Friction Factor: 0.0183 (dimensionless)
-0.278793 atm
+Total Pressure Drop: 28.66 kPa
+Total Head Loss: 2766.55 m
+Total Power Required: 16.15 kW
+Velocity: 12.224 m/s
+Reynolds Number: 137230 (dimensionless)
+Friction Factor: 0.0182 (dimensionless)
+0.282836 atm
 (.venv) PS P:\processpi> 
 
 """
-
-# Example 3 V2
-
-from processpi.pipelines.engine import PipelineEngine
-from processpi.pipelines.network import PipelineNetwork
-from processpi.pipelines.pipes import Pipe
-from processpi.pipelines.fittings import Fitting
-from processpi.components import CarbonMonoxide
-from processpi.units import *
-
-# ----------------------
-# Fluid properties
-# ----------------------
-fluid = CarbonMonoxide(
-    temperature=Temperature(50, "C")
-)
-print(fluid.density(),fluid.viscosity().to("cP"))
-# ----------------------
-# Network setup
-# ----------------------
-pipe = Pipe(
-    name="main_line",
-    length=Length(4000, "m")
-)
-
-# Add fittings
-gate_valves = [Fitting("gate_valve") for _ in range(2)]
-elbows_45 = [Fitting("elbow_45") for _ in range(3)]
-elbows_90 = [Fitting("elbow_90") for _ in range(6)]
-
-net = PipelineNetwork.series("CO_line", pipe, *gate_valves, *elbows_45, *elbows_90)
-
-# ----------------------
-# Engine setup
-# ----------------------
-engine = PipelineEngine(
-    network=net,
-    fluid=fluid,
-    mass_flow=MassFlowRate(1500, "kg/h"),  # mass flow input
-    inlet_pressure=Pressure(50, "kPa"),  # gauge pressure at inlet
-    outlet_pressure=Pressure(0, "kPa"),  # atmospheric
-    available_dp=Pressure(50, "kPa"),    # available pressure drop for sizing
-)
-
-# ----------------------
-# Run calculation
-# ----------------------
-result = engine.run()
-
-# ----------------------
-# Show results
-# ----------------------
-print(result.summary())
-
 #Example 4
 """
 100 000 kg/h of water is to be transferred from canal to reservoir by gravity. Maximum
@@ -285,42 +232,42 @@ model2.summary()
 
 """
 (.venv) PS P:\processpi> & P:/processpi/.venv/Scripts/python.exe p:/processpi/test.py
-✅ ProcessPI Ready!
 ✅ Calculations module ready!
+✅ ProcessPI Ready!sPI ⠏
 📦 ProcessPI v0.1.0 | Chemical & Process Engineering Tools Loaded!
 
 ✅ Found optimal diameter for available pressure drop.
-   Selected Diameter: 8.0 in (0.203 m)
-   Calculated Pressure Drop: 1054335.33 Pa (allowed: 58768.50 Pa)
-⚠️ Warning: Final velocity 0.87 m/s outside recommended range (1.00-2.50 m/s) for Water.
+   Selected Diameter: 10.0 in (0.254 m)
+   Calculated Pressure Drop: 41071.98 Pa (allowed: 58768.50 Pa)
+⚠️ Warning: Final velocity 0.55 m/s outside recommended range (1.00-2.50 m/s) for Water.
 ✅ Found optimal diameter for available pressure drop.
-   Selected Diameter: 8.0 in (0.203 m)
-   Calculated Pressure Drop: 1054335.33 Pa (allowed: 58768.50 Pa)
-⚠️ Warning: Final velocity 0.87 m/s outside recommended range (1.00-2.50 m/s) for Water.
+   Selected Diameter: 10.0 in (0.254 m)
+   Calculated Pressure Drop: 31967.63 Pa (allowed: 58768.50 Pa)
+⚠️ Warning: Final velocity 0.55 m/s outside recommended range (1.00-2.50 m/s) for Water.
 
 === Pipeline Result 1 (Main Water Pipe) ===
 Mode: Single_pipe
-Calculated Pipe Diameter: 8.00 in  (0.203 m)
+Calculated Pipe Diameter: 10.00 in  (0.254 m)
 Inlet Flow: 0.028 m3/s
 Outlet Flow: 0.028 m3/s
-Total Pressure Drop: 1054.34 kPa
-Total Head Loss: 108.73 m
-Total Power Required: 42.31 kW
-Velocity: 0.866 m/s
-Reynolds Number: 259348 (dimensionless)
-Friction Factor: 0.1805 (dimensionless)
+Total Pressure Drop: 41.07 kPa
+Total Head Loss: 4.24 m
+Total Power Required: 1.65 kW
+Velocity: 0.552 m/s
+Reynolds Number: 207071 (dimensionless)
+Friction Factor: 0.0217 (dimensionless)
 
 === Pipeline Result 1 (Main Water Pipe) ===
 Mode: Single_pipe
-Calculated Pipe Diameter: 8.00 in  (0.203 m)
+Calculated Pipe Diameter: 10.00 in  (0.254 m)
 Inlet Flow: 0.028 m3/s
 Outlet Flow: 0.028 m3/s
-Total Pressure Drop: 1054.34 kPa
-Total Head Loss: 108.73 m
-Total Power Required: 42.31 kW
-Velocity: 0.866 m/s
-Reynolds Number: 259348 (dimensionless)
-Friction Factor: 0.1805 (dimensionless)
+Total Pressure Drop: 31.97 kPa
+Total Head Loss: 3.30 m
+Total Power Required: 1.28 kW
+Velocity: 0.552 m/s
+Reynolds Number: 207071 (dimensionless)
+Friction Factor: 0.0169 (dimensionless)
 (.venv) PS P:\processpi> 
 """
 
@@ -355,14 +302,14 @@ from processpi.pipelines.network import PipelineNetwork
 
 fluid = OrganicLiquid(density=Density(930, "kg/m3"),viscosity=Viscosity(0.91, "cP"))
 
-print(fluid.density(),fluid.viscosity(),fluid.specific_heat(),fluid.thermal_conductivity())
+
 mass_flow = MassFlowRate(5000, "kg/h")
 pipe = Pipe(name="Main Organic Liquid Pipe", length=Length(50, "m"))
 elbow = Fitting(fitting_type="standard_elbow_90_deg", quantity=6)
-tees = Fitting(fitting_type="standard_tee", quantity=2)
+tees = Fitting(fitting_type="standard_tee_through_flow", quantity=2)
 gate_valves = Fitting(fitting_type="gate_valve", quantity=2)
 globe_valves = Fitting(fitting_type="globe_valve", quantity=2)
-orifice = Fitting(fitting_type="orifice", quantity=1)
+orifice = Fitting(fitting_type="sudden_contraction", quantity=1)
 
 model = PipelineEngine()
 model.fit(
@@ -375,44 +322,21 @@ model.fit(
 
 model.run()
 model.summary()
-"""
-(.venv) PS P:\processpi> & P:/processpi/.venv/Scripts/python.exe p:/processpi/test.py
-✅ ProcessPI Ready!
+"""(.venv) PS P:\processpi> & P:/processpi/.venv/Scripts/python.exe p:/processpi/test.py
 ✅ Calculations module ready!
+✅ ProcessPI Ready!sPI ⠏
 📦 ProcessPI v0.1.0 | Chemical & Process Engineering Tools Loaded!
 
-930 kg/m3 0.91 cP (dynamic) 14084787.341536 J/kgK 0.107555 W/mK
-🔍 No available pressure drop given. Displaying results for three standard diameters:
-
---- Results for Diameter: 1.0 in (0.025 m) ---
-Velocity: 2.95 m/s
-Reynolds: 76485.26 (dimensionless)
-Total Pressure Drop: 26452835.62 Pa
-
---- Results for Diameter: 1.5 in (0.038 m) ---
-Velocity: 1.31 m/s
-Reynolds: 50990.18 (dimensionless)
-Total Pressure Drop: 1291383.42 Pa
-
---- Results for Diameter: 2.0 in (0.051 m) ---
-Velocity: 0.74 m/s
-Reynolds: 38242.63 (dimensionless)
-Total Pressure Drop: 187797.81 Pa
-⚠️ Warning: Final velocity 1.31 m/s outside recommended range (1.80-2.00 m/s) for Organic Liquid.
+✅ Found optimal diameter based on recommended velocity.
+   Selected Diameter: 1.5 in 
+   Calculated Pressure Drop: 31801.98 Pa
+⚠️ Warning: Final velocity 1.14 m/s outside recommended range (1.80-2.00 m/s) for Organic Liquid.
 
 === Pipeline Result 1 (Main Organic Liquid Pipe) ===
 Mode: Single_pipe
 Calculated Pipe Diameter: 1.50 in  (0.038 m)
-Inlet Flow: 0.001 m3/s
-Outlet Flow: 0.001 m3/s
-Total Pressure Drop: 1291.38 kPa
-Total Head Loss: 141.60 m
-Total Power Required: 2.75 kW
-Velocity: 1.310 m/s
-Reynolds Number: 50990 (dimensionless)
-Friction Factor: 1.2340 (dimensionless)
-(.venv) PS P:\processpi> 
-
+Inlet Flow: 0.001 m3/s 
+Outlet Flow: 0.001 m3/s 
 """
 
 from processpi.pipelines.network import PipelineNetwork

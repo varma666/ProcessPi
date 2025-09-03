@@ -59,7 +59,7 @@ class ReynoldsNumber(CalculationBase):
         v = self._get_value(self.inputs["velocity"], "velocity")       # m/s
         D = self._get_value(self.inputs["diameter"], "diameter")       # m
         viscosity = self.inputs["viscosity"]
-
+        #print(D,v,rho,viscosity)
         # Check the type of viscosity provided (dynamic or kinematic) and apply
         # the corresponding formula to calculate the Reynolds number.
         if viscosity.viscosity_type == "dynamic":

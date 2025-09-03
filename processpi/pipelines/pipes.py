@@ -65,6 +65,7 @@ class Pipe(PipelineBase):
 
         if internal_diameter:
             self.internal_diameter = internal_diameter
+            #self.nominal_diameter = internal_diameter + ( 2 * get_thickness(internal_diameter, self.schedule))
         elif nominal_diameter:
             self.internal_diameter = get_internal_diameter(
                 self.nominal_diameter, self.schedule
