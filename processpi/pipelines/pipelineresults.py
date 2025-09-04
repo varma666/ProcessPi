@@ -1,5 +1,7 @@
 from typing import Dict, Any, List, Optional
 from tabulate import tabulate
+
+from processpi.pipelines.standards import get_nearest_diameter
 from ..units import Diameter, Velocity, Pressure, Power, Length, VolumetricFlowRate, Dimensionless
 
 
@@ -83,7 +85,7 @@ class PipelineResults:
             print(f"\n=== Pipeline Result {idx+1} ({result.get('network_name', 'N/A')}) ===")
             print(f"Mode: {self.mode.capitalize()}")
             if diameter:
-                print(f"Calculated Pipe Diameter: {diameter.to('in'):.2f}  ({diameter.to('m'):.3f})")
+                print(f"Calculated Pipe Diameter: {get_nearest_diameter(diameter)} ")
             else:
                 print(f"Calculated Pipe Diameter: N/A")
             print(f"Inlet Flow: {self.inlet_flow.to('m3/s'):.3f} ")
@@ -122,25 +124,33 @@ class PipelineResults:
         Removes duplicate rows and fills missing types.
         """
         from tabulate import tabulate
+        from processpi.units import Pressure, Velocity, Diameter
 
         if not self._all_simulation_results:
             print("No simulation results available.")
             return
 
-        def _to_number(val, default=0.0):
-            """Safely convert unit-wrapped or raw values to float."""
+        def _get_value_and_unit(val, default_val=0.0):
+            """Safely extract value and unit from a variable."""
+            unit = ""
+            value = default_val
             if val is None:
-                return default
-            if hasattr(val, "value"):  # Units with .value attribute
-                return float(val.value)
-            if hasattr(val, "magnitude"):  # Pint or similar units
-                return float(val.magnitude)
-            if isinstance(val, (int, float, str)):
+                return default_val, unit
+            if hasattr(val, "value"):
+                value = float(val.value)
+                if hasattr(val, "unit"):
+                    unit = str(val.unit)
+            elif hasattr(val, "magnitude"):
+                value = float(val.magnitude)
+                if hasattr(val, "units"):
+                    unit = str(val.units)
+            elif isinstance(val, (int, float, str)):
                 try:
-                    return float(val)
+                    value = float(val)
                 except ValueError:
-                    return default
-            return default
+                    value = default_val
+            
+            return value, unit
 
         for idx, result in enumerate(self._all_simulation_results):
             components = result.get("components", [])
@@ -153,7 +163,7 @@ class PipelineResults:
 
             for comp in components:
 
-                def get_val(keys, default=0.0):
+                def get_val(keys, default=None):
                     """Safe getter for nested or flat dict keys."""
                     for key in keys:
                         if "." in key:
@@ -164,40 +174,48 @@ class PipelineResults:
                             return comp[key]
                     return default
 
-                # Extract values
-                pressure_val = get_val(["pressure_drop.value", "pressure_drop", "pressure_drop_Pa", "dp_Pa"])
-                velocity_val = get_val(["velocity.value", "velocity", "velocity_mps", "vel_mps"])
-                reynolds_val = get_val(["reynolds.value", "reynolds"])
-                friction_val = get_val(["friction_factor.value", "friction_factor"])
-                diameter_val = get_val(["diameter"])
-
-                # Convert diameter to object
-                if isinstance(diameter_val, Diameter):
-                    diameter_obj = diameter_val
-                elif diameter_val:
-                    diameter_obj = Diameter(_to_number(diameter_val,"m").value)
-                else:
-                    diameter_obj = None
-
+                # Extract variables directly
+                pressure_var = get_val(["pressure_drop", "pressure_drop_Pa", "dp_Pa"])
+                velocity_var = get_val(["velocity", "velocity_mps", "vel_mps"])
+                reynolds_var = get_val(["reynolds"])
+                friction_var = get_val(["friction_factor"])
+                diameter_var = get_val(["diameter"])
+                
+                # Extract names and types
                 name = comp.get("name") or comp.get("type", "Component")
                 ctype = comp.get("type") or "Pipe"
 
-                # Deduplicate rows based on component name and diameter
-                key = (name, round(_to_number(velocity_val), 4))
+                # Deduplicate rows based on component name and a key value
+                key = (name, _get_value_and_unit(velocity_var)[0])
                 if key in seen:
                     continue
                 seen.add(key)
+                
+                # Get values and units
+                pressure_val, pressure_unit = _get_value_and_unit(pressure_var)
+                velocity_val, velocity_unit = _get_value_and_unit(velocity_var)
+                reynolds_val, reynolds_unit = _get_value_and_unit(reynolds_var)
+                friction_val, friction_unit = _get_value_and_unit(friction_var)
+                
+                # Handle diameter conversion and display
+                diameter_display = "N/A"
+                if isinstance(diameter_var, Diameter):
+                    diameter_display = f"{get_nearest_diameter(diameter_var)}"
+                elif diameter_var is not None:
+                    diameter_val, diameter_unit = _get_value_and_unit(diameter_var)
+                    diameter_display = f"{diameter_val:.2f} {diameter_unit}"
 
+                # Append the raw values and their units to the row
                 rows.append([
                     name,
                     ctype,
-                    Pressure(_to_number(pressure_val), "Pa").to("kPa").value,
-                    Velocity(_to_number(velocity_val), "m/s").to("m/s").value,
-                    _to_number(reynolds_val),
-                    _to_number(friction_val),
-                    diameter_obj.to("in") if diameter_obj else None,
+                    f"{pressure_val:.2f} {pressure_unit}",
+                    f"{velocity_val:.2f} {velocity_unit}",
+                    f"{reynolds_val:.2f} {reynolds_unit}",
+                    f"{friction_val:.4f} {friction_unit}",
+                    diameter_var if isinstance(diameter_var, str) else diameter_display
                 ])
 
-            headers = ["Name", "Type", "ΔP (kPa)", "Velocity (m/s)", "Re", "Friction", "Diameter (in)"]
+            headers = ["Name", "Type", "Pressure Drop", "Velocity", "Reynolds", "Friction Factor", "Diameter"]
             print(tabulate(rows, headers=headers, tablefmt="grid"))
 

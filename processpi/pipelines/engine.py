@@ -450,7 +450,7 @@ class PipelineEngine:
             roughness = get_roughness(getattr(pipe, "material", None))
             
             K_from_standards = get_k_factor(fitting_type, Re, roughness, d.value)
-            
+            #print(K_from_standards)
             if K_from_standards is not None:
                 return Pressure(0.5 * rho * v_val * v_val * float(K_from_standards), "Pa")
             else:
