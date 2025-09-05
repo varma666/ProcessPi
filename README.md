@@ -3,7 +3,11 @@
 </p>
 
 <h1 align="center">Process PI</h1>
-
+<p align="center">
+  <a href="https://pepy.tech/projects/processpi">
+    <img src="https://static.pepy.tech/personalized-badge/processpi?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads"/>
+  </a>
+</p>
 <p align="center">
   <strong>Python toolkit for chemical engineering simulations, equipment design, and unit conversions</strong>
 </p>
