@@ -36,6 +36,16 @@
 </p>
 
 <p align="center">
+  <a href="https://colab.research.google.com/github/varma666/ProcessPi/blob/main/notebooks/getting_started.ipynb">
+    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"/>
+  </a>
+  <a href="https://mybinder.org/v2/gh/varma666/ProcessPi/HEAD?filepath=notebooks/getting_started.ipynb">
+    <img src="https://mybinder.org/badge_logo.svg" alt="Launch Binder"/>
+  </a>
+</p>
+
+
+<p align="center">
   <em>Built with ❤️ for chemical engineers.</em>
 </p>
 
