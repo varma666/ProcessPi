@@ -1,0 +1,51 @@
+site_name: ProcessPI
+site_description: Python toolkit for chemical engineering simulations, equipment design, and unit conversions
+site_author: Raviteja Varma Nadimpalli
+repo_url: https://github.com/varma666/ProcessPi
+repo_name: ProcessPi
+edit_uri: blob/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - search.highlight
+    - search.suggest
+  palette:
+    primary: blue
+    accent: teal
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Usage:
+      - Units: usage/units.md
+      - Components: usage/components.md
+      - Pipelines & Networks: usage/pipelines.md
+  - Roadmap: roadmap.md
+  - API Reference: api_reference.md
+  - Contributing: contributing.md
+  - License: license.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            docstring_style: google
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+  - footnotes
+  - tables
+  - tasklist
