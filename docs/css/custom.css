@@ -1,0 +1,85 @@
+/* ===============================
+   MAIN CONTENT & SIDEBAR
+   =============================== */
+
+/* Light grey background for main content */
+.md-content {
+    background-color: #f5f5f5;
+}
+
+/* Sidebar light grey */
+.md-sidebar {
+    background-color: #f5f5f5;
+}
+
+/* ===============================
+   HEADER / LOGO
+   =============================== */
+
+/* Adjust spacing around logo */
+.md-header-nav__logo img {
+    height: 50px;          /* Slightly bigger logo */
+    max-height: 50px;
+}
+
+/* Optional: center the logo in header */
+.md-header-nav__title {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ===============================
+   FOOTER (OVERRIDE DEFAULT)
+   =============================== */
+
+/* Orange background footer */
+.md-footer.md-footer--custom {
+    background-color: #E46216 !important;  /* Accent orange color */
+    color: white !important;               /* Force text white */
+    text-align: center;
+    font-weight: bold;
+    padding: 1rem 0;
+    font-size: 0.95rem;
+}
+
+/* Footer tagline */
+.md-footer.md-footer--custom .md-footer-meta {
+    content: none; /* remove default content if any */
+    color: white !important;               /* Ensure tagline is visible */
+    font-weight: normal;
+    font-size: 0.9rem;
+}
+
+/* Footer links (if any) */
+.md-footer.md-footer--custom a {
+    color: white !important;
+    text-decoration: underline;
+}
+
+.md-footer.md-footer--custom a:hover {
+    color: #212366 !important;            /* Optional hover effect */
+}
+
+/* ===============================
+   RESPONSIVE ADJUSTMENTS
+   =============================== */
+
+@media (max-width: 768px) {
+    /* Adjust logo height on smaller screens */
+    .md-header-nav__logo img {
+        height: 40px;
+        max-height: 40px;
+    }
+
+    /* Footer font size smaller for mobile */
+    .md-footer.md-footer--custom {
+        font-size: 0.85rem;
+        padding: 0.8rem 0;
+    }
+
+    /* Footer tagline smaller for mobile */
+    .md-footer.md-footer--custom .md-footer-meta {
+        font-size: 0.75rem;
+    }
+}

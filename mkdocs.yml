@@ -1,12 +1,16 @@
 site_name: ProcessPI
-site_description: Python toolkit for chemical engineering simulations, equipment design, and unit conversions
+site_description: "Chemical Engineering Toolkit"
 site_author: Raviteja Varma Nadimpalli
 repo_url: https://github.com/varma666/ProcessPi
-repo_name: ProcessPi
+repo_name: ProcessPI
 edit_uri: blob/main/docs/
+site_url: https://varma666.github.io/ProcessPi/
 
 theme:
   name: material
+  logo: assets/logo.png
+  favicon: assets/logo.png
+  custom_dir: docs/overrides       # For template overrides (header/footer)
   features:
     - navigation.tabs
     - navigation.sections
@@ -15,10 +19,23 @@ theme:
     - search.highlight
     - search.suggest
   palette:
-    primary: blue
-    accent: teal
+    primary: 
+      main: "#212366"
+      text: "white"
+    accent: 
+      main: "#E46216"
+      text: "white"
+    scheme: default
+  font:
+    text: Roboto
+    code: Roboto Mono
   icon:
     repo: fontawesome/brands/github
+  extra_css:
+    - css/custom.css               # Custom CSS for spacing, footer, etc.
+
+extra:
+  footer: "Made with ❤️ towards Chemical Engineering"  # Tagline in footer
 
 nav:
   - Home: index.md
@@ -27,6 +44,7 @@ nav:
       - Units: usage/units.md
       - Components: usage/components.md
       - Pipelines & Networks: usage/pipelines.md
+      - Calculations: usage/calculations.md
   - Roadmap: roadmap.md
   - API Reference: api_reference.md
   - Contributing: contributing.md
@@ -43,9 +61,9 @@ plugins:
 
 markdown_extensions:
   - admonition
-  - codehilite
   - toc:
       permalink: true
-  - footnotes
-  - tables
-  - tasklist
+  - pymdownx.tasklist
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.details
