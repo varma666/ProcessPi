@@ -1,8 +1,9 @@
-# ProcessPI 🧪
+# ProcessPI 
 
 Welcome to the **ProcessPI documentation**!
 
 ProcessPI is a modular **Python toolkit for chemical engineering** that enables:
+
 - ✅ Pipeline network simulations  
 - ✅ Unit conversions across SI, CGS, and Imperial systems  
 - ✅ Component-based property calculations  
