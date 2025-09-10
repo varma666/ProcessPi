@@ -16,7 +16,6 @@ print(length.to("ft"))  # convert to feet
 ---
 ## 🚀 Examples
 Below are some examples covering the most common engineering quantities.
-```
 
 ## 1. Velocity
 ```python
@@ -24,8 +23,8 @@ from processpi.units import Velocity
 
 v = Velocity(1.55, "m/s")
 print(v.to("ft/s"))
-```
 # Output: 5.085 ft/s
+```
 
 ## 2. Diameter
 ```python
@@ -34,25 +33,25 @@ from processpi.units import Diameter
 d = Diameter(10, "in")
 print(d.to("cm"))
 # Output: 25.4 cm
+```
+
 ## 3. Density
 ```python
 from processpi.units import Density
-
 den = Density(1000, "kg/m3")
 print(den.to("g/cm3"))
-```
 # Output: 1.0 g/cm3
+```
+
 ## 4. Heat Flux
 ```python
 from processpi.units import HeatFlux
-
 q = HeatFlux(5000, "W/m2")
 print(q.to("BTU/hft2"))
 ```
 ## 5. Heat of Vaporization
 ```python
 from processpi.units import HeatOfVaporization
-
 hv = HeatOfVaporization(2260, "J/kg")
 print(hv.to("BTU/lb"))
 ```
@@ -148,8 +147,9 @@ from processpi.units import Time
 
 t = Time(3600, "s")
 print(t.to("h"))
-```
 # Output: 1 h
+```
+
 ## 19. Molar Flow Rate
 ```python
 from processpi.units import MolarFlowRate
