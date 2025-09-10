@@ -1,69 +1,53 @@
-site_name: ProcessPI
-site_description: "Chemical Engineering Toolkit"
-site_author: Raviteja Varma Nadimpalli
+site_name: Process PI
+site_url: https://processpi.org
 repo_url: https://github.com/varma666/ProcessPi
-repo_name: ProcessPI
-edit_uri: blob/main/docs/
-site_url: https://varma666.github.io/ProcessPi/
+repo_name: GitHub
 
 theme:
   name: material
-  logo: assets/logo.png
-  favicon: assets/logo.png
-  custom_dir: docs/overrides       # For template overrides (header/footer)
   features:
-    - navigation.tabs
+    - navigation.top
     - navigation.sections
     - navigation.expand
-    - content.code.copy
-    - search.highlight
-    - search.suggest
+    - navigation.tracking
+    - toc.integrate   # integrates toc into sidebar only inside docs
   palette:
-    primary: 
-      main: "#212366"
-      text: "white"
-    accent: 
-      main: "#E46216"
-      text: "white"
-    scheme: default
+    - scheme: default
+      primary: blue
+      accent: indigo
+    - scheme: slate
+      primary: blue
+      accent: indigo
   font:
     text: Roboto
     code: Roboto Mono
-  icon:
-    repo: fontawesome/brands/github
-  extra_css:
-    - css/custom.css               # Custom CSS for spacing, footer, etc.
-
-extra:
-  footer: "Made with ❤️ towards Chemical Engineering"  # Tagline in footer
 
 nav:
   - Home: index.md
-  - Installation: installation.md
-  - Usage:
-      - Units: usage/units.md
-      - Components: usage/components.md
-      - Pipelines & Networks: usage/pipelines.md
-      - Calculations: usage/calculations.md
-  - Roadmap: roadmap.md
-  - API Reference: api_reference.md
-  - Contributing: contributing.md
-  - License: license.md
-
-plugins:
-  - search
-  - mkdocstrings:
-      handlers:
-        python:
-          options:
-            show_source: true
-            docstring_style: google
-
-markdown_extensions:
-  - admonition
-  - toc:
-      permalink: true
-  - pymdownx.tasklist
-  - pymdownx.highlight
-  - pymdownx.superfences
-  - pymdownx.details
+  - Install:
+      - Installation: getting-started/installation.md
+  - User Guide:
+      - Introduction: user-guide/introduction.md
+      - Features: user-guide/features.md
+      - Examples: user-guide/examples.md
+      - Units:
+          - Length: user-guide/units/length.md
+          - Pressure: user-guide/units/pressure.md
+          - Temperature: user-guide/units/temperature.md
+  - API:
+      - Overview: api/index.md
+      - Pipelines: api/pipelines.md
+      - Heat Transfer: api/heat-transfer.md
+      - Mass Transfer: api/mass-transfer.md
+      - Equipment: api/equipment.md
+  - Examples:
+      - Overview: examples/index.md
+      - Pipeline Example: examples/pipeline-example.md
+      - Heat Flux Example: examples/heatflux-example.md
+      - Pump Example: examples/pump-example.md
+  - Community:
+      - Roadmap: about/roadmap.md
+      - Contributing: about/contributing.md
+      - License: about/license.md
+      - Changelog: about/changelog.md
+  - GitHub: https://github.com/varma666/ProcessPi
