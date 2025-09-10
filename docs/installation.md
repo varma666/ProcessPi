@@ -31,8 +31,10 @@ Create and activate with venv:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate   # Linux / macOS
-.venv\Scripts\activate      # Windows
+# Linux / macOS
+source .venv/bin/activate
+# Windows 
+.venv\Scripts\activate      
 ```
 Install ProcessPI inside it:
 
@@ -67,12 +69,12 @@ You can use ProcessPI directly in Colab notebooks.
 
 At the top of your Colab notebook, run:
 
-```bash
+```python
 !pip install processpi
 ```
 
 Then import as usual:
-```bash
+```python
 from processpi.components import Water
 print(Water().density())
 ```
@@ -80,7 +82,7 @@ print(Water().density())
 ## ✅ Verification
 
 After installation, verify ProcessPI is available:
-```bash
+```python
 import processpi
 print("ProcessPI version:", processpi.__version__)
 ```
