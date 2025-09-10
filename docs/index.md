@@ -1,106 +1,68 @@
----
-title: Process PI
-hide:
-  - navigation
-  - toc
----
-
-# Process PI
-
+# ProcessPI
 **Chemical & Process Engineering in Python**
 
-Simple and efficient tools for equipment design and process simulation  
-Accessible to everybody, and reusable in various contexts  
-Built on NumPy, SciPy, and modern Python libraries  
-Open source, commercially usable – MIT License
+---
+
+!!! info ""
+    Simple and efficient tools for process engineering analysis  
+    Accessible to everybody, and reusable in various contexts  
+    Built on Python, NumPy, SciPy, and matplotlib  
+    Open source, commercially usable – MIT License  
 
 ---
 
-## Get Started
+## 🚀 Get Started
 
 <div class="grid cards" markdown>
 
--   :material-download: **[Install](getting-started/installation.md)**  
-    Instructions to install Process PI via PyPI.
+-   :material-download: **[Install](getting-started/installation.md)**
+    
+    How to install Process PI on your machine.
 
--   :material-book-open: **[User Guide](user-guide/introduction.md)**  
-    Learn how to use Process PI step by step.
+-   :material-book-open-page-variant: **[User Guide](user-guide/introduction.md)**
+    
+    Learn the concepts, features, and usage step by step.
 
--   :material-cogs: **[API Reference](api/index.md)**  
-    Full reference of all modules and classes.
+-   :material-api: **[API Reference](api/index.md)**
+    
+    Complete API documentation for all modules.
 
--   :material-chart-line: **[Examples](examples/index.md)**  
-    Practical examples and workflows.
+-   :material-chart-line: **[Examples](examples/index.md)**
+    
+    Practical use-cases, worked-out demos, and notebooks.
 
--   :material-account-group: **[Community](about/community.md)**  
-    Join discussions, get support, contribute.
+-   :material-account-group: **[Community](about/roadmap.md)**
+    
+    Roadmap, contributing guidelines, and discussions.
 
--   :material-github: **[GitHub](https://github.com/varma666/ProcessPi)**  
-    Source code and issue tracker.
+-   :material-github: **[GitHub](https://github.com/varma666/ProcessPi)**
+    
+    Source code, issues, and development updates.
 
 </div>
 
 ---
 
-## Core Features
+## 🌟 Modules Overview
 
-<div class="grid cards" markdown>
-
--   **Pipelines**  
-    Modeling fluid and energy flow in networks.  
-    *Applications*: Chilled water systems, cooling towers, utilities.  
-    *Examples*: [Pipeline Networks](examples/pipelines.md)
-
--   **Units & Conversions**  
-    Consistent engineering units everywhere.  
-    *Applications*: Length, Pressure, Temperature.  
-    *Examples*: [Length class](user-guide/units/length.md)
-
--   **Heat Transfer**  
-    Tools for conduction, convection, radiation.  
-    *Examples*: [Heat Flux](examples/heat.md)
-
--   **Mass Transfer**  
-    Equilibrium, diffusivity, and more.  
-    *Examples*: [Mass Transfer](examples/mass-transfer.md)
-
--   **Equipment**  
-    Pumps, heat exchangers, towers, reactors.  
-    *Examples*: [Pump design](examples/pump.md)
-
--   **Optimization**  
-    Parameter fitting, cost estimation, performance tuning.
-
-</div>
+- **Pipelines**: Hydraulic and process network calculations  
+- **Heat Transfer**: Heat flux, conduction, convection, radiation  
+- **Mass Transfer**: Diffusion, absorption, distillation design  
+- **Equipment**: Cooling towers, pumps, exchangers, reactors  
+- **Units**: Consistent SI units with conversions (Length, Pressure, Temperature, etc.)  
 
 ---
 
-## News
+## 📰 News
 
-- September 2025 — Process PI `v0.1.0` released 🎉  
-- Ongoing development: `v0.2.0` (New equipment + docs improvements)  
-- July 2025 — Documentation site launched  
-
-👉 [Changelog](about/changelog.md)
+- September 2025: Process PI v0.2 released 🚀  
+- August 2025: Added network visualization tools  
+- July 2025: Initial PyPI release 🎉  
 
 ---
 
-## Community
+## 🤝 Who Uses Process PI?
 
-- About us: [Team & Contributors](about/contributing.md)  
-- Related projects: NumPy, SciPy, CoolProp  
-- Support: Discussions, Issues, Stack Overflow  
-- Social: [GitHub](https://github.com/varma666/ProcessPi) · [LinkedIn](#) · [YouTube](#)
+> "Process PI makes advanced chemical engineering analysis in Python accessible to anyone."  
 
----
-
-## Testimonials
-
-> “Process PI makes process design accessible to chemical engineers without coding expertise.”  
-— User testimonial placeholder
-
----
-
-## Supported by
-
-Logos or sponsor section here.
+More testimonials coming soon…
