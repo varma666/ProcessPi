@@ -6,11 +6,16 @@ repo_name: GitHub
 theme:
   name: material
   features:
-    - navigation.top
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.instant
     - navigation.sections
     - navigation.expand
     - navigation.tracking
-    - toc.integrate   # integrates toc into sidebar only inside docs
+    - toc.integrate
+    - content.tabs.link
+    - content.code.copy   # keep this
+    # - content.action.edit  # remove this
   palette:
     - scheme: default
       primary: blue
@@ -25,7 +30,7 @@ theme:
 nav:
   - Home: index.md
   - Install:
-      - Installation: getting-started/installation.md
+      - Installation: installation.md
   - User Guide:
       - Introduction: user-guide/introduction.md
       - Features: user-guide/features.md
@@ -35,13 +40,11 @@ nav:
           - Pressure: user-guide/units/pressure.md
           - Temperature: user-guide/units/temperature.md
   - API:
-      - Overview: api/index.md
-      - Pipelines: api/pipelines.md
-      - Heat Transfer: api/heat-transfer.md
-      - Mass Transfer: api/mass-transfer.md
-      - Equipment: api/equipment.md
+      - Overview: api_reference.md
+      - Pipelines: user-guide/pipe-lines/pipelines.md
+      - Heat Transfer: user-guide/calculations/calculations.md
+      - Components: user-guide/components/components.md
   - Examples:
-      - Overview: examples/index.md
       - Pipeline Example: examples/pipeline-example.md
       - Heat Flux Example: examples/heatflux-example.md
       - Pump Example: examples/pump-example.md
@@ -51,3 +54,19 @@ nav:
       - License: about/license.md
       - Changelog: about/changelog.md
   - GitHub: https://github.com/varma666/ProcessPi
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/varma666/ProcessPi
+  hide:
+    - navigation.edit  # hides the edit button globally
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
