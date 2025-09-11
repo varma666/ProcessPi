@@ -1,12 +1,14 @@
-# **Length Class**
+# `Length`**Class**
 
-The Length class is a specialized Variable that represents a one-dimensional quantity. It is designed for clear, unit-aware calculations and conversions. All Length values are stored internally in the standard SI unit of **meters (**m**)**, which serves as the base unit for all conversions.
+The `Length` class is a subclass of `Variable` designed to represent a one-dimensional quantity with unit-aware capabilities. It ensures accurate calculations by storing all values internally in its base unit, meters (m).
+
+<a name="units"/>
 
 ## **Supported Units**
 
-The Length class supports the following units. You can initialize a Length object with any of these units, and convert to any of them.
+The following units are supported for initialization and conversion.
 
-| Unit | Symbol | Conversion to Meters (m) |
+| Unit | Symbol | Conversion Factor to Meters (m) |
 | :---- | :---- | :---- |
 | meters | m | 1 |
 | centimeters | cm | 0.01 |
@@ -15,55 +17,94 @@ The Length class supports the following units. You can initialize a Length objec
 | feet | ft | 0.3048 |
 | kilometers | km | 1000 |
 
-## **Initialization**
+## **Class Reference**
 
-You create a Length object by providing a numeric value and an optional unit. If no unit is specified, the value is assumed to be in meters.
+### **`class Length(value, units='m')`**
 
-\# Create a Length object of 30 meters  
-length1 \= Length(30)
+A class for handling length measurements with automatic unit conversion.
 
-\# Create a Length object of 30 inches  
-length2 \= Length(30, "in")
+**Parameters:**
 
-The constructor will raise a ValueError if the value is negative or if the specified unit is not supported.
+* `value` : `float` or `int`  
+  The numeric value of the length. Must be a positive number.  
+* `units` : `str`, default=`'m'`  
+  The unit of the provided value. Must be one of the supported units.
 
-## **The .to() Method**
+**Raises:**
 
-The .to() method is the primary function for converting a Length object to a different unit. It returns a **new** Length object with the same value, but represented in the target unit. The original object remains unchanged.
+* **`ValueError`** : If `value` is negative or `units` is not a valid unit.
 
-### **Syntax**
+**Examples:**
+```python
+# Create a Length object of 30 meters  
+>>> length1 = Length(30)
 
-length\_object.to(target\_unit)
+# Create a Length object of 30 inches  
+>>> length2 = Length(30, "in")
+```
+### **Properties**
 
-### **Example**
+| Property | Type | Description |
+| :---- | :---- | :---- |
+| **`.value`** | `float` | The numeric value of the length, **always in meters** (m). This is the internal representation used for all calculations. |
+| **`.original_value`** | `float` | The numeric value as provided during initialization. |
+| **`.original_unit`** | `str` | The unit as provided during initialization. |
 
-To convert a length from meters to feet:
+### **Methods**
 
-\# Initialize a length of 5 meters  
-distance\_m \= Length(5)
+#### **`to(target_unit)`**
 
-\# Convert to feet  
-distance\_ft \= distance\_m.to("ft")
+Returns a **new** `Length` object converted to the `target_unit`. The original object remains unchanged.
 
-\# Print the converted value  
-print(distance\_ft) \# Output: 16.4042 ft
+**Parameters:**
 
-The method ensures a clean separation of concerns, leaving the original object in its initial state while providing the flexibility to work with different units.
+* `target_unit` : `str`  
+  The unit to convert to. Must be one of the [supported units](#units)
 
-## **Arithmetic Operations**
+**Returns:**
 
-The Length class supports addition and comparison (==). When adding two Length objects, the result is a new Length object with the same unit as the first object.
+* `Length`  
+  A new `Length` object with the same value, represented in the target unit.
 
-\# Create two Length objects  
-length1 \= Length(1, "m")  
-length2 \= Length(10, "cm")
+**Raises:**
 
-\# Add them together  
-total\_length \= length1 \+ length2
+* **`ValueError`** : If `target_unit` is not a valid unit.
 
-\# The result is automatically in the same unit as the first operand  
-print(total\_length) \# Output: 1.1 m
+**Examples:**
+```python
+# Initialize a length of 5 meters  
+>>> distance_m = Length(5)
 
-## **String Representation**
+# Convert to feet  
+>>> distance_ft = distance_m.to("ft")
 
-Printing a Length object (print(obj)) or getting its string representation (str(obj)) will display the value in its original unit, rounded to six decimal places for clarity.
+>>> print(distance_ft)  
+16.4042 ft
+```
+#### **Arithmetic Operations**
+
+The `Length` class supports addition (`+`) and comparison (`==`).
+
+* `__add__(self, other)`  
+  Adds two Length objects. The result is a new Length object with the unit of the first operand.  
+* `__eq__(self, other)`  
+  Compares two Length objects for equality based on their internal meter values.
+
+**Examples:**
+```python
+# Create two Length objects  
+>>> length1 = Length(1, "m")  
+>>> length2 = Length(10, "cm")
+
+# Add them together  
+>>> total_length = length1 + length2
+
+>>> print(total_length)  
+1.1 m
+```
+#### **String Representation**
+
+* `__str__(self)`  
+  Returns a human-readable string representation of the length, rounded to six decimal places, using its original value and unit.  
+* `__repr__(self)`  
+  Returns an unambiguous string representation of the object.
