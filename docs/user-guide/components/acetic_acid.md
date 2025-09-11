@@ -10,7 +10,50 @@ This class provides a comprehensive set of physical and thermodynamic properties
 
 * **`name`** (string): The common name of the compound.  
 * **`formula`** (string): The chemical formula (CH<sub>3</sub>​COOH).  
-* **`molecular_weight`** (float): The molar mass in g/mol.  
+* **`molecular_weight`** (float): The molar mass in g/mol.
+
+### **Class Reference**
+
+### **`class AecticAcid()`**
+
+A class for handling Acetic Acid properties.
+
+**Parameters:**
+
+* `temperature` : `Temperature`, default = `Temperature(35,"C")`
+* `pressure` : `Pressure`, default = `Pressure(1,"atm")`
+* `density` : `Density`, default = `None`
+* `specific_heat` : `SpecificHeat`, default = `None`
+* `viscosity` : `Viscosity`, default = `None`  
+* `thermal_conductivity` : `ThermalConductivity`, default = `None`
+* `vapor_pressure` : `Pressure`, default = `None`  
+* `enthalpy` : `HeatOfVaporization`, default = `None` 
+
+
+**Examples:**
+
+## 1. Acetone at 35 °C
+
+```python
+from processpi.components.acetone import Acetone
+from processpi.units import *
+
+acetone = Acetone(temperature=Temperature(35, "C"))
+print(acetone.density().to("kg/m3"))
+print(acetone.viscosity().to("Pa·s"))
+print(acetone.specific_heat().to("J/kgK"))
+print(acetone.thermal_conductivity().to("W/mK"))
+print(acetone.vapor_pressure().to("Pa"))
+print(acetone.enthalpy().to("J/kg"))
+```
+
+## 2. Acetone at higher temperature (60 °C) with unit conversion
+```python
+acetone_high = Acetone(temperature=Temperature(60, "C"))
+print(acetone_high.density().to("lb/ft3"))
+print(acetone_high.viscosity().to("cP"))
+```
+
 
 ### **Methods**
 
