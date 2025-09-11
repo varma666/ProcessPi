@@ -1,85 +1,237 @@
-/* ===============================
-   MAIN CONTENT & SIDEBAR
-   =============================== */
-
-/* Light grey background for main content */
-.md-content {
-    background-color: #f5f5f5;
-}
-
-/* Sidebar light grey */
-.md-sidebar {
-    background-color: #f5f5f5;
-}
-
-/* ===============================
-   HEADER / LOGO
-   =============================== */
-
-/* Adjust spacing around logo */
-.md-header-nav__logo img {
-    height: 50px;          /* Slightly bigger logo */
-    max-height: 50px;
-}
-
-/* Optional: center the logo in header */
-.md-header-nav__title {
+/* Header wrapper: logo + nav + actions in one line */
+.md-header-nav-wrapper {
     display: flex;
-    flex-direction: column;
     align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 1.5rem;
+    flex-wrap: nowrap;      /* prevent wrapping */
 }
 
-/* ===============================
-   FOOTER (OVERRIDE DEFAULT)
-   =============================== */
+/* Logo + text */
+.md-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
 
-/* Orange background footer */
-.md-footer.md-footer--custom {
-    background-color: #E46216 !important;  /* Accent orange color */
-    color: white !important;               /* Force text white */
+/* Nav links horizontally */
+.md-header-nav {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: nowrap;      /* important */
+}
+
+/* Nav links active / hover */
+.md-header-nav__link {
+    font-weight: 500;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.35rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.md-header-nav__link:hover {
+    color: #C72208;
+}
+
+.md-header-nav__link--active {
+    color: #241E82;
+    font-weight: 600;
+}
+
+/* Dropdown menus */
+.md-nav__submenu {
+    background: var(--md-bg-color);
+    border-radius: 0.4rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Right actions (search + palette toggle) */
+.md-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;         /* prevent shrinking and breaking line */
+}
+
+/* Search input */
+.md-header-actions .md-search__input {
+    width: 180px;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid #ddd;
+}
+
+.md-header-actions .md-search__input:focus {
+    border-color: #C72208;
+    box-shadow: 0 0 6px rgba(199,34,8,0.3);
+}
+
+/* Palette toggle wrapper */
+.md-toggle-wrapper {
+    margin-left: 0.5rem;
+}
+
+/* Prevent wrapping on smaller screens */
+@media screen and (max-width: 1024px) {
+    .md-header-nav-wrapper {
+        flex-wrap: wrap;   /* allow wrapping only for smaller screens */
+    }
+    .md-header-nav {
+        justify-content: center;
+        gap: 1rem;
+    }
+    .md-header-actions {
+        margin-top: 0.5rem;
+        justify-content: center;
+        width: 100%;
+    }
+}
+
+/* Logo + heading container */
+.md-logo-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 1.5rem; /* increased from 1.2rem */
+  color: var(--md-primary-fg-color);
+  text-decoration: none;
+}
+
+.md-logo-heading img {
+  height: 48px; /* slightly larger logo */
+}
+
+.md-heading-text {
+  display: inline-block;
+}
+
+/* Adjust header tabs */
+.md-header-nav__link {
+  font-size: 1rem; /* slightly larger tabs */
+  padding: 0.4rem 0.8rem;
+}
+
+.md-header-nav__link--active {
+  font-weight: 600;
+  color: var(--md-primary-fg-color--light);
+}
+
+/* Search toggle */
+.md-search-toggle {
+  font-size: 1.2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+
+/* ================= CODE BLOCKS ================= */
+
+/* Make code blocks more vibrant but keep light background */
+.md-typeset pre > code {
+    border-radius: 0.5rem;
+    padding: 1rem !important;
+    font-size: 0.8rem;
+    background: #f8f9fa;
+    color: #212529;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+}
+
+/* Highlighted line effect */
+.highlight .hll {
+    background-color: rgba(255, 235, 59, 0.3) !important;
+    display: block;
+}
+
+/* Line numbers styling */
+.highlighttable .linenos {
+    color: #6c757d !important;
+    background: #f1f3f5 !important;
+    padding: 0.5rem;
+    border-radius: 0.5rem 0 0 0.5rem;
+    border-right: 1px solid #dee2e6;
+}
+
+/* Inline code styling */
+.md-typeset code {
+    background: #e9ecef;
+    color: #C72208;
+    padding: 0.2em 0.4em;
+    border-radius: 0.3rem;
+    font-size: 0.9em;
+    border: 1px solid #dee2e6;
+}
+
+/* ================= TABLES ================= */
+
+/* General table styling */
+.md-typeset table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    margin: 1em 0;
+    border: 1px solid #e0e0e0;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+/* Table header */
+.md-typeset table th {
+    background: #f1f3f5;
+    color: #212529;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+/* Prevent breaking in Property & Type columns */
+.md-typeset table td,
+.md-typeset table th {
+    white-space: nowrap;
+    word-break: keep-all;
+}
+
+/* Allow Description column to wrap normally */
+.md-typeset table td:last-child,
+.md-typeset table th:last-child {
+    white-space: normal;
+    text-align: left;
+}
+
+/* Center align Property & Type columns */
+.md-typeset table td:nth-child(1),
+.md-typeset table th:nth-child(1),
+.md-typeset table td:nth-child(2),
+.md-typeset table th:nth-child(2) {
     text-align: center;
-    font-weight: bold;
-    padding: 1rem 0;
-    font-size: 0.95rem;
 }
 
-/* Footer tagline */
-.md-footer.md-footer--custom .md-footer-meta {
-    content: none; /* remove default content if any */
-    color: white !important;               /* Ensure tagline is visible */
-    font-weight: normal;
+/* ================= FOOTER ================= */
+
+.md-footer {
+    background: #C72208 !important;
+    color: #fff !important;
+    text-align: center;
     font-size: 0.9rem;
+    border-top: none;
+    box-shadow: none;
 }
-
-/* Footer links (if any) */
-.md-footer.md-footer--custom a {
-    color: white !important;
+.md-footer .tagline {
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+.md-footer a {
+    color: #ffffff;
     text-decoration: underline;
+    font-weight: 500;
 }
-
-.md-footer.md-footer--custom a:hover {
-    color: #212366 !important;            /* Optional hover effect */
-}
-
-/* ===============================
-   RESPONSIVE ADJUSTMENTS
-   =============================== */
-
-@media (max-width: 768px) {
-    /* Adjust logo height on smaller screens */
-    .md-header-nav__logo img {
-        height: 40px;
-        max-height: 40px;
-    }
-
-    /* Footer font size smaller for mobile */
-    .md-footer.md-footer--custom {
-        font-size: 0.85rem;
-        padding: 0.8rem 0;
-    }
-
-    /* Footer tagline smaller for mobile */
-    .md-footer.md-footer--custom .md-footer-meta {
-        font-size: 0.75rem;
-    }
+.md-footer a:hover {
+    color: #ffe082;
 }

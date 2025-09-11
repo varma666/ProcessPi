@@ -2,8 +2,6 @@
 
 The `Length` class is a subclass of `Variable` designed to represent a one-dimensional quantity with unit-aware capabilities. It ensures accurate calculations by storing all values internally in its base unit, meters (m).
 
-<a name="units"/>
-
 ## **Supported Units**
 
 The following units are supported for initialization and conversion.
@@ -19,7 +17,7 @@ The following units are supported for initialization and conversion.
 
 ## **Class Reference**
 
-### **`class Length(value, units='m')`**
+**`class Length(value, units='m')`**
 
 A class for handling length measurements with automatic unit conversion.
 
@@ -42,7 +40,7 @@ A class for handling length measurements with automatic unit conversion.
 # Create a Length object of 30 inches  
 >>> length2 = Length(30, "in")
 ```
-### **Properties**
+## **Properties**
 
 | Property | Type | Description |
 | :---- | :---- | :---- |
@@ -50,16 +48,16 @@ A class for handling length measurements with automatic unit conversion.
 | **`.original_value`** | `float` | The numeric value as provided during initialization. |
 | **`.original_unit`** | `str` | The unit as provided during initialization. |
 
-### **Methods**
+## **Methods**
 
-#### **`to(target_unit)`**
+**`to(target_unit)`**
 
 Returns a **new** `Length` object converted to the `target_unit`. The original object remains unchanged.
 
 **Parameters:**
 
 * `target_unit` : `str`  
-  The unit to convert to. Must be one of the [supported units](#units)
+  The unit to convert to. Must be one of the [supported units]
 
 **Returns:**
 
@@ -81,7 +79,7 @@ Returns a **new** `Length` object converted to the `target_unit`. The original o
 >>> print(distance_ft)  
 16.4042 ft
 ```
-#### **Arithmetic Operations**
+**Arithmetic Operations**
 
 The `Length` class supports addition (`+`) and comparison (`==`).
 
@@ -102,7 +100,7 @@ The `Length` class supports addition (`+`) and comparison (`==`).
 >>> print(total_length)  
 1.1 m
 ```
-#### **String Representation**
+**String Representation**
 
 * `__str__(self)`  
   Returns a human-readable string representation of the length, rounded to six decimal places, using its original value and unit.  
