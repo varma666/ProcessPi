@@ -8,20 +8,22 @@ ProcessPI can be installed from PyPI, set up in a development environment, or us
 
 The simplest way to install ProcessPI:
 
-```bash
+``` 
 pip install processpi
 ```
+
 ---
 
 ## 🛠 Development Setup
 
 If you want to work on the source code:
 
-```bash
+```
 git clone https://github.com/varma666/ProcessPi.git
 cd ProcessPi
 pip install -e .
 ```
+
 ---
 ## 🐍 Using a Virtual Environment (Recommended)
 
@@ -29,7 +31,7 @@ To avoid conflicts with other Python packages, use a virtual environment.
 
 Create and activate with venv:
 
-```bash
+```
 python -m venv .venv
 # Linux / macOS
 source .venv/bin/activate
@@ -38,29 +40,31 @@ source .venv/bin/activate
 ```
 Install ProcessPI inside it:
 
-```bash
+```
 pip install processpi
 ```
+
 ---
 ## 📓 Using in Jupyter Notebook
 
 ProcessPI works inside Jupyter Notebooks.
 First, install Jupyter:
 
-```bash
+```
 pip install jupyter
 ```
 Launch
 
-```bash
+```
 jupyter notebook
 ```
 Inside a notebook, you can import ProcessPI:
 
-```bash
+```
 from processpi.units import Length, Pressure
 print(Length(1, "m").to("ft"))
 ```
+
 ---
 
 ## 🌐 Using in Google Colab
@@ -78,6 +82,7 @@ Then import as usual:
 from processpi.components import Water
 print(Water().density())
 ```
+
 ---
 ## ✅ Verification
 

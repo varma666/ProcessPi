@@ -10,9 +10,9 @@ theme:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.instant
-    - navigation.expand
+    #- navigation.expand
     - navigation.tracking
-    - navigation.top
+    #- navigation.top
     - search.suggest
     - content.tabs.link
     - content.code.copy
@@ -29,13 +29,13 @@ extra_css:
   - css/custom.css
 
 nav:
-  
+  #- Home: index.md
   - Install:
       - Installation: installation.md
   - User Guide:
       - Introduction: user-guide/introduction.md
       - Features: user-guide/features.md
-      - Examples: user-guide/examples.md
+
       - Units:
           - Length: user-guide/units/length.md
           - Pressure: user-guide/units/pressure.md
@@ -43,20 +43,11 @@ nav:
       - Components:
           - Overview: user-guide/components/components.md
           - Acetic Acid: user-guide/components/acetic_acid.md
-          - Pumps: user-guide/components/pumps.md
-          - Heat Exchangers: user-guide/components/heat-exchangers.md
-          - Valves: user-guide/components/valves.md
-          - Mixers: user-guide/components/mixers.md
-          - Splitters: user-guide/components/splitters.md
-  - API:
+  - Examples:
       - Overview: api_reference.md
       - Pipelines: user-guide/pipe-lines/pipelines.md
-      - Heat Transfer: user-guide/calculations/calculations.md
+      - Calculations: user-guide/calculations/calculations.md
       - Components: user-guide/components/components.md
-  - Examples:
-      - Pipeline Example: examples/pipeline-example.md
-      - Heat Flux Example: examples/heatflux-example.md
-      - Pump Example: examples/pump-example.md
   - Community:
       - Roadmap: about/roadmap.md
       - Contributing: about/contributing.md
