@@ -1,0 +1,1475 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://processpi.org/user-guide/pipe-lines/pipelines/">
+      
+      
+        <link rel="prev" href="../../../api_reference/">
+      
+      
+        <link rel="next" href="../../calculations/calculations/">
+      
+      
+      <link rel="icon" href="../../../assets/logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.19">
+    
+    
+      
+        <title>Pipelines - Process PI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../css/custom.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="processpi" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#processpi-pipeline-examples" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="Process PI" class="md-header__button md-logo" aria-label="Process PI" data-md-component="logo">
+      
+  <img src="../../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Process PI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Pipelines
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/varma666/ProcessPi" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../installation/" class="md-tabs__link">
+          
+  
+  
+  Install
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../introduction/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../../api_reference/" class="md-tabs__link">
+          
+  
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../../about/roadmap/" class="md-tabs__link">
+          
+  
+  
+  Community
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://github.com/varma666/ProcessPi" class="md-tabs__link">
+        
+  
+  
+    
+  
+  GitHub
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="Process PI" class="md-nav__button md-logo" aria-label="Process PI" data-md-component="logo">
+      
+  <img src="../../../assets/logo.png" alt="logo">
+
+    </a>
+    Process PI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/varma666/ProcessPi" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Install
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            Install
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Installation
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    User Guide
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Introduction
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Features
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Units
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Units
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../units/length/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Length
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../units/pressure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Pressure
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../units/temperature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Temperature
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_4" id="__nav_2_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Components
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_4">
+            <span class="md-nav__icon md-icon"></span>
+            Components
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../components/components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../components/acetic_acid/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Acetic Acid
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../api_reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Pipelines
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Pipelines
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-1-chlorine-gas-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 1: Chlorine Gas Pipeline
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-2-co2-transfer-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 2: CO₂ Transfer Pipeline
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-3-carbon-monoxide-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 3: Carbon Monoxide Pipeline
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-4-water-transfer-steel-vs-concrete" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 4: Water Transfer (Steel vs Concrete)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-5-organic-liquid-with-valves" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 5: Organic Liquid with Valves
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-6-complex-network-chilled-water-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 6: Complex Network (Chilled Water Loop)
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../calculations/calculations/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Calculations
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../components/components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Community
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Community
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../about/roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Roadmap
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../about/contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Contributing
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../about/license/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    License
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../about/changelog.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Changelog
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://github.com/varma666/ProcessPi" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    GitHub
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#example-1-chlorine-gas-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 1: Chlorine Gas Pipeline
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-2-co2-transfer-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 2: CO₂ Transfer Pipeline
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-3-carbon-monoxide-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 3: Carbon Monoxide Pipeline
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-4-water-transfer-steel-vs-concrete" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 4: Water Transfer (Steel vs Concrete)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-5-organic-liquid-with-valves" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 5: Organic Liquid with Valves
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-6-complex-network-chilled-water-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example 6: Complex Network (Chilled Water Loop)
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="processpi-pipeline-examples">ProcessPI - Pipeline Examples</h1>
+<p>This document contains worked examples using the <strong>ProcessPI</strong> pipeline
+engine and network module.</p>
+<hr />
+<h2 id="example-1-chlorine-gas-pipeline">Example 1: Chlorine Gas Pipeline</h2>
+<p>Estimate the optimum pipe diameter for a flow of dry chlorine gas of 10
+000 kg/h at 6 atm and 20°C through carbon steel pipe.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">processpi.components</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.units</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">PipelineEngine</span>
+
+<span class="c1"># Define fluid and mass flow</span>
+<span class="n">fluid</span> <span class="o">=</span> <span class="n">Chlorine</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">Temperature</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">),</span> <span class="n">pressure</span><span class="o">=</span><span class="n">Pressure</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="s2">&quot;atm&quot;</span><span class="p">))</span>
+<span class="n">mass_flow</span> <span class="o">=</span> <span class="n">MassFlowRate</span><span class="p">(</span><span class="mi">10000</span><span class="p">,</span> <span class="s2">&quot;kg/h&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">fluid</span><span class="o">.</span><span class="n">density</span><span class="p">())</span>
+
+<span class="c1"># Create engine without an explicit network</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">PipelineEngine</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">fluid</span><span class="o">=</span><span class="n">fluid</span><span class="p">,</span>
+    <span class="n">mass_flow</span><span class="o">=</span><span class="n">mass_flow</span>
+<span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>  <span class="c1"># auto diameter sizing</span>
+<span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">results</span><span class="o">.</span><span class="n">detailed_summary</span><span class="p">()</span>
+</code></pre></div>
+<p><strong>Output</strong></p>
+<div class="highlight"><pre><span></span><code>17.685884 kg/m3
+✅ Found optimal diameter based on recommended velocity.
+   Selected Diameter: 8.0 in 
+   Calculated Pressure Drop: 15.43 Pa
+⚠️ Warning: Final velocity 4.87 m/s outside recommended range (5.00-10.00 m/s) for Chlorine.
+</code></pre></div>
+<hr />
+<h2 id="example-2-co2-transfer-pipeline">Example 2: CO₂ Transfer Pipeline</h2>
+<p>Carbon dioxide is to be conveyed from the top of the stripper of ammonia
+plant to urea plant.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">processpi.units</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.components</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">PipelineEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.pipes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.fittings</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fitting</span>
+
+<span class="n">fluid</span> <span class="o">=</span> <span class="n">Carbondioxide</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">Temperature</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">fluid</span><span class="o">.</span><span class="n">density</span><span class="p">(),</span> <span class="n">fluid</span><span class="o">.</span><span class="n">viscosity</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;cP&quot;</span><span class="p">))</span>
+
+<span class="n">mass_flow</span> <span class="o">=</span> <span class="n">MassFlowRate</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="s2">&quot;t/day&quot;</span><span class="p">)</span>
+<span class="n">pipe</span> <span class="o">=</span> <span class="n">Pipe</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Main Pipe&quot;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="n">Length</span><span class="p">(</span><span class="mi">800</span><span class="p">,</span> <span class="s2">&quot;m&quot;</span><span class="p">),</span> <span class="n">material</span><span class="o">=</span><span class="s2">&quot;CS&quot;</span><span class="p">)</span>
+<span class="n">elbow</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">(</span><span class="n">fitting_type</span><span class="o">=</span><span class="s2">&quot;standard_elbow_90_deg&quot;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">valve</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">(</span><span class="n">fitting_type</span><span class="o">=</span><span class="s2">&quot;gate_valve&quot;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">nozzle</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">(</span><span class="n">fitting_type</span><span class="o">=</span><span class="s2">&quot;exit&quot;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">PipelineEngine</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">fluid</span><span class="o">=</span><span class="n">fluid</span><span class="p">,</span>
+    <span class="n">mass_flow</span><span class="o">=</span><span class="n">mass_flow</span><span class="p">,</span>
+    <span class="n">pipe</span><span class="o">=</span><span class="n">pipe</span><span class="p">,</span>
+    <span class="n">fittings</span><span class="o">=</span><span class="p">[</span><span class="n">elbow</span><span class="p">,</span> <span class="n">valve</span><span class="p">,</span> <span class="n">nozzle</span><span class="p">],</span>
+    <span class="n">available_dp</span><span class="o">=</span><span class="n">Pressure</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="s2">&quot;kPa&quot;</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">results</span><span class="o">.</span><span class="n">detailed_summary</span><span class="p">()</span>
+</code></pre></div>
+<p><strong>Output</strong></p>
+<div class="highlight"><pre><span></span><code>1.609882 kg/m3 0.019523 cP (dynamic)
+✅ Found optimal diameter for available pressure drop.
+   Selected Diameter: 22.0 in (0.559 m)
+   Calculated Pressure Drop: 18414.26 Pa (allowed: 24000.00 Pa)
+⚠️ Warning: Final velocity 31.41 m/s outside recommended range (8.00-15.00 m/s) for Carbon Dioxide.
+</code></pre></div>
+<hr />
+<h2 id="example-3-carbon-monoxide-pipeline">Example 3: Carbon Monoxide Pipeline</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">processpi.units</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.components</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">PipelineEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.pipes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.fittings</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fitting</span>
+
+<span class="n">fluid</span> <span class="o">=</span> <span class="n">CarbonMonoxide</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">Temperature</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">))</span>
+
+<span class="n">mass_flow</span> <span class="o">=</span> <span class="n">MassFlowRate</span><span class="p">(</span><span class="mi">1500</span><span class="p">,</span> <span class="s2">&quot;kg/h&quot;</span><span class="p">)</span>
+<span class="n">pipe</span> <span class="o">=</span> <span class="n">Pipe</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Main Pipe&quot;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="n">Length</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;km&quot;</span><span class="p">),</span> <span class="n">material</span><span class="o">=</span><span class="s2">&quot;CS&quot;</span><span class="p">)</span>
+<span class="n">valves</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">(</span><span class="n">fitting_type</span><span class="o">=</span><span class="s2">&quot;gate_valve&quot;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">elbows_45</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">(</span><span class="n">fitting_type</span><span class="o">=</span><span class="s2">&quot;standard_elbow_45_deg&quot;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">elbows_90</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">(</span><span class="n">fitting_type</span><span class="o">=</span><span class="s2">&quot;standard_elbow_90_deg&quot;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">PipelineEngine</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">fluid</span><span class="o">=</span><span class="n">fluid</span><span class="p">,</span>
+    <span class="n">mass_flow</span><span class="o">=</span><span class="n">mass_flow</span><span class="p">,</span>
+    <span class="n">pipe</span><span class="o">=</span><span class="n">pipe</span><span class="p">,</span>
+    <span class="n">fittings</span><span class="o">=</span><span class="p">[</span><span class="n">elbows_45</span><span class="p">,</span> <span class="n">elbows_90</span><span class="p">,</span> <span class="n">valves</span><span class="p">],</span>
+    <span class="n">available_dp</span><span class="o">=</span><span class="n">Pressure</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;kPa&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">total_pressure_drop</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s2">&quot;atm&quot;</span><span class="p">))</span>
+<span class="n">results</span><span class="o">.</span><span class="n">detailed_summary</span><span class="p">()</span>
+</code></pre></div>
+<p><strong>Output</strong></p>
+<div class="highlight"><pre><span></span><code>✅ Found optimal diameter for available pressure drop.
+   Selected Diameter: 8.0 in (0.203 m)
+   Calculated Pressure Drop: 28658.34 Pa (allowed: 50000.00 Pa)
+</code></pre></div>
+<hr />
+<h2 id="example-4-water-transfer-steel-vs-concrete">Example 4: Water Transfer (Steel vs Concrete)</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">processpi.components</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.units</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">PipelineEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.pipes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipe</span>
+
+<span class="n">fluid</span> <span class="o">=</span> <span class="n">Water</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">Temperature</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">))</span>
+<span class="n">length</span> <span class="o">=</span> <span class="n">Length</span><span class="p">(</span><span class="mi">3200</span><span class="p">,</span> <span class="s2">&quot;m&quot;</span><span class="p">)</span>
+<span class="n">pipe</span> <span class="o">=</span> <span class="n">Pipe</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Main Water Pipe&quot;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="n">material</span><span class="o">=</span><span class="s2">&quot;Concrete&quot;</span><span class="p">)</span>
+<span class="n">pipe2</span> <span class="o">=</span> <span class="n">Pipe</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Main Water Pipe&quot;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="n">material</span><span class="o">=</span><span class="s2">&quot;CS&quot;</span><span class="p">)</span>
+<span class="n">allowable_dp</span> <span class="o">=</span> <span class="n">Pressure</span><span class="p">(</span><span class="mf">0.58</span><span class="p">,</span> <span class="s2">&quot;atm&quot;</span><span class="p">)</span>
+<span class="n">flow_rate</span> <span class="o">=</span> <span class="n">MassFlowRate</span><span class="p">(</span><span class="mi">100000</span><span class="p">,</span> <span class="s2">&quot;kg/h&quot;</span><span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">PipelineEngine</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">fluid</span><span class="o">=</span><span class="n">fluid</span><span class="p">,</span> <span class="n">pipe</span><span class="o">=</span><span class="n">pipe</span><span class="p">,</span> <span class="n">mass_flow</span><span class="o">=</span><span class="n">flow_rate</span><span class="p">,</span> <span class="n">available_dp</span><span class="o">=</span><span class="n">allowable_dp</span><span class="p">)</span>
+
+<span class="n">model2</span> <span class="o">=</span> <span class="n">PipelineEngine</span><span class="p">()</span>
+<span class="n">model2</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">fluid</span><span class="o">=</span><span class="n">fluid</span><span class="p">,</span> <span class="n">pipe</span><span class="o">=</span><span class="n">pipe2</span><span class="p">,</span> <span class="n">mass_flow</span><span class="o">=</span><span class="n">flow_rate</span><span class="p">,</span> <span class="n">available_dp</span><span class="o">=</span><span class="n">allowable_dp</span><span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">results2</span> <span class="o">=</span> <span class="n">model2</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">results</span><span class="o">.</span><span class="n">detailed_summary</span><span class="p">()</span>
+<span class="n">model2</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">results2</span><span class="o">.</span><span class="n">detailed_summary</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<h2 id="example-5-organic-liquid-with-valves">Example 5: Organic Liquid with Valves</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">processpi.units</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.components</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">PipelineEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.pipes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.fittings</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fitting</span>
+
+<span class="n">fluid</span> <span class="o">=</span> <span class="n">OrganicLiquid</span><span class="p">(</span><span class="n">density</span><span class="o">=</span><span class="n">Density</span><span class="p">(</span><span class="mi">930</span><span class="p">,</span> <span class="s2">&quot;kg/m3&quot;</span><span class="p">),</span> <span class="n">viscosity</span><span class="o">=</span><span class="n">Viscosity</span><span class="p">(</span><span class="mf">0.91</span><span class="p">,</span> <span class="s2">&quot;cP&quot;</span><span class="p">))</span>
+<span class="n">mass_flow</span> <span class="o">=</span> <span class="n">MassFlowRate</span><span class="p">(</span><span class="mi">5000</span><span class="p">,</span> <span class="s2">&quot;kg/h&quot;</span><span class="p">)</span>
+
+<span class="n">pipe</span> <span class="o">=</span> <span class="n">Pipe</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Main Organic Liquid Pipe&quot;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="n">Length</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;m&quot;</span><span class="p">))</span>
+<span class="n">elbow</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">(</span><span class="n">fitting_type</span><span class="o">=</span><span class="s2">&quot;standard_elbow_90_deg&quot;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">tees</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">(</span><span class="n">fitting_type</span><span class="o">=</span><span class="s2">&quot;standard_tee_through_flow&quot;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">gate_valves</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">(</span><span class="n">fitting_type</span><span class="o">=</span><span class="s2">&quot;gate_valve&quot;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">globe_valves</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">(</span><span class="n">fitting_type</span><span class="o">=</span><span class="s2">&quot;globe_valve&quot;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">orifice</span> <span class="o">=</span> <span class="n">Fitting</span><span class="p">(</span><span class="n">fitting_type</span><span class="o">=</span><span class="s2">&quot;sudden_contraction&quot;</span><span class="p">,</span> <span class="n">quantity</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">PipelineEngine</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">fluid</span><span class="o">=</span><span class="n">fluid</span><span class="p">,</span>
+    <span class="n">mass_flow</span><span class="o">=</span><span class="n">mass_flow</span><span class="p">,</span>
+    <span class="n">pipe</span><span class="o">=</span><span class="n">pipe</span><span class="p">,</span>
+    <span class="n">fittings</span><span class="o">=</span><span class="p">[</span><span class="n">elbow</span><span class="p">,</span> <span class="n">tees</span><span class="p">,</span> <span class="n">gate_valves</span><span class="p">,</span> <span class="n">globe_valves</span><span class="p">,</span> <span class="n">orifice</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">results</span><span class="o">.</span><span class="n">detailed_summary</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+<h2 id="example-6-complex-network-chilled-water-loop">Example 6: Complex Network (Chilled Water Loop)</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.engine</span><span class="w"> </span><span class="kn">import</span> <span class="n">PipelineEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.pipes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.network</span><span class="w"> </span><span class="kn">import</span> <span class="n">PipelineNetwork</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.pumps</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pump</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.vessel</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vessel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.pipelines.equipment</span><span class="w"> </span><span class="kn">import</span> <span class="n">Equipment</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.units</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">processpi.components</span><span class="w"> </span><span class="kn">import</span> <span class="n">Water</span>
+
+<span class="c1"># Build network</span>
+<span class="n">net</span> <span class="o">=</span> <span class="n">PipelineNetwork</span><span class="p">(</span><span class="s2">&quot;Chilled Water Loop&quot;</span><span class="p">)</span>
+
+<span class="c1"># Nodes</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;Tank&quot;</span><span class="p">,</span> <span class="n">elevation</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;Pump_In&quot;</span><span class="p">,</span> <span class="n">elevation</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;Pump_Out&quot;</span><span class="p">,</span> <span class="n">elevation</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;Main_In&quot;</span><span class="p">,</span> <span class="n">elevation</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;Main_Out&quot;</span><span class="p">,</span> <span class="n">elevation</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="s2">&quot;Return_Tank&quot;</span><span class="p">,</span> <span class="n">elevation</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">pump</span> <span class="o">=</span> <span class="n">Pump</span><span class="p">(</span><span class="s2">&quot;Pump1&quot;</span><span class="p">,</span> <span class="n">pump_type</span><span class="o">=</span><span class="s2">&quot;Centrifugal&quot;</span><span class="p">,</span> <span class="n">inlet_pressure</span><span class="o">=</span><span class="n">Pressure</span><span class="p">(</span><span class="mi">101325</span><span class="p">,</span> <span class="s2">&quot;Pa&quot;</span><span class="p">),</span> <span class="n">outlet_pressure</span><span class="o">=</span><span class="n">Pressure</span><span class="p">(</span><span class="mi">201325</span><span class="p">,</span> <span class="s2">&quot;Pa&quot;</span><span class="p">))</span>
+<span class="n">vessel</span> <span class="o">=</span> <span class="n">Vessel</span><span class="p">(</span><span class="s2">&quot;ExpansionTank&quot;</span><span class="p">)</span>
+<span class="n">chiller</span> <span class="o">=</span> <span class="n">Equipment</span><span class="p">(</span><span class="s2">&quot;Chiller&quot;</span><span class="p">,</span> <span class="n">pressure_drop</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+
+<span class="c1"># Tank → Pump</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">Pipe</span><span class="p">(</span><span class="s2">&quot;TankPipe&quot;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span> <span class="s2">&quot;Tank&quot;</span><span class="p">,</span> <span class="s2">&quot;Pump_In&quot;</span><span class="p">)</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">pump</span><span class="p">,</span> <span class="s2">&quot;Pump_In&quot;</span><span class="p">,</span> <span class="s2">&quot;Pump_Out&quot;</span><span class="p">)</span>
+
+<span class="c1"># Pump → Main header</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">Pipe</span><span class="p">(</span><span class="s2">&quot;MainPipe&quot;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">15</span><span class="p">),</span> <span class="s2">&quot;Pump_Out&quot;</span><span class="p">,</span> <span class="s2">&quot;Main_In&quot;</span><span class="p">)</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">Pipe</span><span class="p">(</span><span class="s2">&quot;MainPipe_Out&quot;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span> <span class="s2">&quot;Main_In&quot;</span><span class="p">,</span> <span class="s2">&quot;Main_Out&quot;</span><span class="p">)</span>
+
+<span class="c1"># Returns → Tank</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">vessel</span><span class="p">,</span> <span class="s2">&quot;Main_Out&quot;</span><span class="p">,</span> <span class="s2">&quot;Return_Tank&quot;</span><span class="p">)</span>
+<span class="n">net</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">chiller</span><span class="p">,</span> <span class="s2">&quot;Return_Tank&quot;</span><span class="p">,</span> <span class="s2">&quot;Pump_In&quot;</span><span class="p">)</span>
+
+<span class="n">fluid</span> <span class="o">=</span> <span class="n">Water</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="n">Temperature</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">),</span> <span class="n">pressure</span><span class="o">=</span><span class="n">Pressure</span><span class="p">(</span><span class="mi">101325</span><span class="p">,</span> <span class="s2">&quot;Pa&quot;</span><span class="p">))</span>
+<span class="n">flow_rate</span> <span class="o">=</span> <span class="n">VolumetricFlowRate</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="s2">&quot;m3/h&quot;</span><span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">PipelineEngine</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">fluid</span><span class="o">=</span><span class="n">fluid</span><span class="p">,</span> <span class="n">flow_rate</span><span class="o">=</span><span class="n">flow_rate</span><span class="p">,</span> <span class="n">network</span><span class="o">=</span><span class="n">net</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">results</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">results</span><span class="o">.</span><span class="n">detailed_summary</span><span class="p">()</span>
+</code></pre></div>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+  <footer class="md-footer md-footer--custom " style="background-color: #FB3E05; margin-top: 2rem;">
+    <div class="md-footer-meta md-typeset" style="text-align:center; font-weight:bold; color:white; padding:0.5rem 0;">
+      Build with ❤️ towards Chemical Engineering
+    </div>
+  </footer>
+
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.instant", "navigation.tracking", "search.suggest", "content.tabs.link", "content.code.copy", "palette.toggle"], "search": "../../../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.92b07e13.min.js"></script>
+      
+    
+  </body>
+</html>

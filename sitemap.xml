@@ -1,43 +1,151 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://varma666.github.io/ProcessPi/</loc>
-         <lastmod>2025-09-09</lastmod>
+         <loc>https://processpi.org/</loc>
+         <lastmod>2025-09-12</lastmod>
     </url>
     <url>
-         <loc>https://varma666.github.io/ProcessPi/api_reference/</loc>
-         <lastmod>2025-09-09</lastmod>
+         <loc>https://processpi.org/api_reference/</loc>
+         <lastmod>2025-09-12</lastmod>
     </url>
     <url>
-         <loc>https://varma666.github.io/ProcessPi/contributing/</loc>
-         <lastmod>2025-09-09</lastmod>
+         <loc>https://processpi.org/installation/</loc>
+         <lastmod>2025-09-12</lastmod>
     </url>
     <url>
-         <loc>https://varma666.github.io/ProcessPi/installation/</loc>
-         <lastmod>2025-09-09</lastmod>
+         <loc>https://processpi.org/about/contributing/</loc>
+         <lastmod>2025-09-12</lastmod>
     </url>
     <url>
-         <loc>https://varma666.github.io/ProcessPi/license/</loc>
-         <lastmod>2025-09-09</lastmod>
+         <loc>https://processpi.org/about/license/</loc>
+         <lastmod>2025-09-12</lastmod>
     </url>
     <url>
-         <loc>https://varma666.github.io/ProcessPi/roadmap/</loc>
-         <lastmod>2025-09-09</lastmod>
+         <loc>https://processpi.org/about/roadmap/</loc>
+         <lastmod>2025-09-12</lastmod>
     </url>
     <url>
-         <loc>https://varma666.github.io/ProcessPi/usage/calculations/</loc>
-         <lastmod>2025-09-09</lastmod>
+         <loc>https://processpi.org/user-guide/examples/</loc>
+         <lastmod>2025-09-12</lastmod>
     </url>
     <url>
-         <loc>https://varma666.github.io/ProcessPi/usage/components/</loc>
-         <lastmod>2025-09-09</lastmod>
+         <loc>https://processpi.org/user-guide/features/</loc>
+         <lastmod>2025-09-12</lastmod>
     </url>
     <url>
-         <loc>https://varma666.github.io/ProcessPi/usage/pipelines/</loc>
-         <lastmod>2025-09-09</lastmod>
+         <loc>https://processpi.org/user-guide/introduction/</loc>
+         <lastmod>2025-09-12</lastmod>
     </url>
     <url>
-         <loc>https://varma666.github.io/ProcessPi/usage/units/</loc>
-         <lastmod>2025-09-09</lastmod>
+         <loc>https://processpi.org/user-guide/calculations/calculations/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/acetic_acid/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/components/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/pipe-lines/pipelines/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/area/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/density/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/diameter/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/dimensionless/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/heat_flow/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/heat_flux/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/heat_of_vapouraization/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/heat_transfer_coefficient/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/length/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/mass/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/mass_flowrate/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/power/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/pressure/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/specific_heat/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/string/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/temperature/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/thermal_conductivity/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/thermal_resistance/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/units/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/variable/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/velocity/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/viscosity/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/vollumetric_flowrate/</loc>
+         <lastmod>2025-09-12</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/volume/</loc>
+         <lastmod>2025-09-12</lastmod>
     </url>
 </urlset>
