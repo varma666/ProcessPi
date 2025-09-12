@@ -36,18 +36,73 @@ nav:
       - Introduction: user-guide/introduction.md
       - Features: user-guide/features.md
 
-      - Units:
+      - Units: 
+          - Overview: user-guide/units/overview.md
           - Length: user-guide/units/length.md
           - Pressure: user-guide/units/pressure.md
           - Temperature: user-guide/units/temperature.md
+          #- Time: user-guide/units/time.md
+          - Mass: user-guide/units/mass.md
+          - Volume: user-guide/units/volume.md
+          - Flow Rate:
+              - Volumetric Flow Rate: user-guide/units/volumetric_flowrate.md
+              - Mass Flow Rate: user-guide/units/mass_flowrate.md
+          - Density: user-guide/units/density.md
+          - Viscosity: user-guide/units/viscosity.md
+          - Area : user-guide/units/area.md
+          - Diameter: user-guide/units/diameter.md
+          - Dimensionless Numbers: user-guide/units/dimensionless.md
+          - Heat Flow: user-guide/units/heat_flow.md
+          - Heat Flux: user-guide/units/heat_flux.md
+          - Heat Transfer Coefficient: user-guide/units/heat_transfer_coefficient.md
+          - Heat Of Vaporization: user-guide/units/heat_of_vapouraization.md
+          - Power: user-guide/units/power.md
+          - Specific Heat: user-guide/units/specific_heat.md
+          - String: user-guide/units/string.md
+          - Thermal Conductivity: user-guide/units/thermal_conductivity.md
+          - Thermal Resistance: user-guide/units/thermal_resistance.md
+          - Velocity: user-guide/units/velocity.md
+          
       - Components:
           - Overview: user-guide/components/components.md
           - Acetic Acid: user-guide/components/acetic_acid.md
+          - Acetone: user-guide/components/acetone.md
+          - Acrylic Acid: user-guide/components/acrylic_acid.md
+          - Air : user-guide/components/air.md
+          - Ammonia: user-guide/components/ammonia.md
+          - Benzene: user-guide/components/benzene.md
+          - Benzoic Acid: user-guide/components/benzoic_acid.md
+          - Bromine: user-guide/components/bromine.md
+          - Butane: user-guide/components/butane.md
+          - Carbon Dioxide: user-guide/components/carbon_dioxide.md
+          - Carbon Monoxide: user-guide/components/carbon_monoxide.md
+          - Chlorine: user-guide/components/chlorine.md
+          - Chloroform: user-guide/components/chloroform.md
+          - Carbon Tetrachloride: user-guide/components/carbon_tetrachloride.md
+          - Cyclohexene: user-guide/components/cyclohexene.md
+          - Chloro Methane: user-guide/components/chloromethane.md
+          - Cynogen: user-guide/components/cynogen.md
+          - Ethane: user-guide/components/ethane.md
+          - Ethanol: user-guide/components/ethanol.md
+          - Ethylacetate: user-guide/components/ethylacetate.md
+          - Gas: user-guide/components/gas.md
+          - Inorganic Liquids: user-guide/components/inorganic_liquids.md
+          - Methanol: user-guide/components/methanol.md
+          - Oil: user-guide/components/oil.md
+          - Organic Liquids: user-guide/components/organic_liquids.md
+          - Steam: user-guide/components/steam.md
+          - Toluene: user-guide/components/toluene.md
+          - Vapor: user-guide/components/vapor.md
+          - Water: user-guide/components/water.md
+      - Calculations:
+          - Overview: user-guide/calculations/calculations.md
+          - Calculation Engine: user-guide/calculations/calculation_engine.md
+
   - Examples:
       - Overview: api_reference.md
-      - Pipelines: user-guide/pipe-lines/pipelines.md
-      - Calculations: user-guide/calculations/calculations.md
-      - Components: user-guide/components/components.md
+      - Pipelines: examples/pipe-lines/pipelines.md
+      - Calculations: examples/calculations/calculations.md
+      - Components: examples/components/components.md
   - Community:
       - Roadmap: about/roadmap.md
       - Contributing: about/contributing.md

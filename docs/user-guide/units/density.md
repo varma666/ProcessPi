@@ -78,7 +78,7 @@ Returns a **new** `Density` object converted to the `target_unit`. The original 
 >>> print(water_density_g)  
 1.0 g/cm3
 ```
-**String Representation**
+## **String Representation**
 
 * `__str__(self)`  
   Returns a human-readable string representation of the density, rounded to six decimal places, using its original value and unit.  

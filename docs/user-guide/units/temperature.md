@@ -45,7 +45,7 @@ A class for handling temperature measurements with automatic unit conversion.
 | **`.original_value`** | `float` | The numeric value as provided during initialization. |
 | **`.original_unit`** | `str` | The unit as provided during initialization. |
 
-### **Methods**
+## **Methods**
 
 **`to(target_unit)`**
 

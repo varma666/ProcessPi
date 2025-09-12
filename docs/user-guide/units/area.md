@@ -20,7 +20,7 @@ The following units are supported for initialization and conversion.
 
 ## **Class Reference**
 
-### **`class Area(value, units='m2')`**
+**`class Area(value, units='m2')`**
 
 A class for handling area measurements with automatic unit conversion.
 
@@ -45,7 +45,7 @@ A class for handling area measurements with automatic unit conversion.
 >>> a2 = Area(0.5, "m2")
 ```
 
-### **Properties**
+## **Properties**
 
 | Property | Type | Description |
 | :---- | :---- | :---- |
@@ -53,9 +53,9 @@ A class for handling area measurements with automatic unit conversion.
 | **`.original_value`** | `float` | The numeric value as provided during initialization. |
 | **`.original_unit`** | `str` | The unit as provided during initialization. |
 
-### **Methods**
+## **Methods**
 
-#### **`to(target_unit)`**
+**`to(target_unit)`**
 
 Returns a **new** `Area` object converted to the `target_unit`. The original object remains unchanged.
 
@@ -85,7 +85,7 @@ Returns a **new** `Area` object converted to the `target_unit`. The original obj
 1076.391 ft2
 ```
 
-#### **Arithmetic Operations**
+## **Arithmetic Operations**
 
 The `Area` class supports addition (`+`) and comparison (`==`).
 
@@ -107,7 +107,7 @@ The `Area` class supports addition (`+`) and comparison (`==`).
 >>> print(total_area)  
 1.05 m2
 ```
-#### **String Representation**
+## **String Representation**
 
 * `__str__(self)`  
   Returns a human-readable string representation of the area, rounded to six decimal places, using its original value and unit.  
