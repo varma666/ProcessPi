@@ -116,3 +116,9 @@ where `Q<sub>vol</sub> is volumetric flow rate, m is mass flow rate, and ρ is d
 >>> print(q_vol)  
 0.1 m3/s  
 ```
+## **String Representation**
+
+* `__str__(self)`  
+  Returns a human-readable string representation of the viscosity, rounded to six decimal places, using its original value, unit, and type.  
+* `__repr__(self)`  
+  Returns a string representation suitable for developers and debugging, showing the original value, unit, and viscosity type.
