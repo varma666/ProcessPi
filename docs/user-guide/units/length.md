@@ -6,7 +6,7 @@ The `Length` class is a subclass of `Variable` designed to represent a one-dimen
 
 The following units are supported for initialization and conversion.
 
-| Unit | Symbol | Conversion Factor to Meters (m) |
+| Unit | `str` | Conversion Factor to Meters (m) |
 | :---- | :---- | :---- |
 | meters | m | 1 |
 | centimeters | cm | 0.01 |
