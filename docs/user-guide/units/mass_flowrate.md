@@ -1,12 +1,12 @@
-# **MassFlowRate Class**
+# **`MassFlowRate` Class**
 
-The MassFlowRate class is a subclass of Variable designed to represent the mass of a substance passing per unit of time. It ensures accurate calculations by storing all values internally in its base SI unit, kilograms per second (kg/s).
+The `MassFlowRate` class is a subclass of `Variable` designed to represent the mass of a substance passing per unit of time. It ensures accurate calculations by storing all values internally in its base SI unit, kilograms per second (kg/s).
 
 ## **Supported Units**
 
 The following units are supported for initialization and conversion.
 
-| Unit | Symbol | Conversion Factor to Kilograms per Second (kg/s) |
+| Unit | `str` | Conversion Factor to Kilograms per Second (kg/s) |
 | :---- | :---- | :---- |
 | kilograms per second | kg/s | 1 |
 | kilograms per hour | kg/h | 1/3600 |
@@ -21,93 +21,73 @@ The following units are supported for initialization and conversion.
 
 ## **Class Reference**
 
-### **class MassFlowRate(value, units='kg/s')**
+**`class MassFlowRate(value, units='kg/s')`**
 
 A class for handling mass flow rate measurements with automatic unit conversion.
 
 **Parameters:**
 
-* value : float or int  
+* `value` : `float` or `int`  
   The numeric value of the mass flow rate. Must be a non-negative number.  
-* units : str, default='kg/s'  
+* `units` : `str`, default=`'kg/s'`  
   The unit of the provided value. Must be one of the supported units.
 
 **Raises:**
 
-* **ValueError** : If value is negative.  
-* **TypeError** : If units is not a valid unit.
+* **`ValueError`** : If `value` is negative.  
+* **`TypeError`** : If units is not a valid `unit`.
 
 **Examples:**
+```py
+# Create a MassFlowRate object of 100 kg/h  
+>>> mfr1 = MassFlowRate(100, "kg/h")
 
-\# Create a MassFlowRate object of 100 kg/h  
-\>\>\> mfr1 \= MassFlowRate(100, "kg/h")
-
-\# Create a MassFlowRate object of 0.5 lb/s  
-\>\>\> mfr2 \= MassFlowRate(0.5, "lb/s")
-
-### **Properties**
+# Create a MassFlowRate object of 0.5 lb/s  
+>>> mfr2 = MassFlowRate(0.5, "lb/s")
+```
+## **Properties**
 
 | Property | Type | Description |
 | :---- | :---- | :---- |
-| **.value** | float | The numeric value of the mass flow rate, **always in kilograms per second** (kg/s). This is the internal representation used for all calculations. |
-| **.original\_value** | float | The numeric value as provided during initialization. |
-| **.original\_unit** | str | The unit as provided during initialization. |
+| **`.value`** | `float` | The numeric value of the mass flow rate, **always in kilograms per second** (kg/s). This is the internal representation used for all calculations. |
+| **`.original_value`** | `float` | The numeric value as provided during initialization. |
+| **`.original_unit`** | `str` | The unit as provided during initialization. |
 
-### **Methods**
+## **Methods**
 
-#### **to(target\_unit)**
+**`to(target_unit)`**
 
-Returns a **new** MassFlowRate object converted to the target\_unit. The original object remains unchanged.
+Returns a **new** `MassFlowRate` object converted to the `target_unit`. The original object remains unchanged.
 
 **Parameters:**
 
-* target\_unit : str  
+* `target_unit` : `str`  
   The unit to convert to. Must be one of the supported units.
 
 **Returns:**
 
-* MassFlowRate  
-  A new MassFlowRate object with the same value, represented in the target unit.
+* `MassFlowRate`  
+  A new `MassFlowRate` object with the same `value`, represented in the target unit.
 
 **Raises:**
 
-* **TypeError** : If target\_unit is not a valid unit.
+* **`TypeError`** : If `target_unit` is not a valid unit.
 
 **Examples:**
+```py
+# Initialize a mass flow rate of 100 kg/h  
+>>> flow_kg_h = MassFlowRate(100, "kg/h")
 
-\# Initialize a mass flow rate of 100 kg/h  
-\>\>\> flow\_kg\_h \= MassFlowRate(100, "kg/h")
+# Convert to kg/s  
+>>> flow_kg_s = flow_kg_h.to("kg/s")
 
-\# Convert to kg/s  
-\>\>\> flow\_kg\_s \= flow\_kg\_h.to("kg/s")
-
-\>\>\> print(flow\_kg\_s)  
+>>> print(flow_kg_s)  
 0.027778 kg/s
+```
 
-#### **Arithmetic Operations**
+## **String Representation**
 
-The MassFlowRate class supports addition (+) and comparison (==).
-
-* \_\_add\_\_(self, other)  
-  Adds two MassFlowRate objects. The result is a new MassFlowRate object in the base unit (kg/s).  
-* \_\_eq\_\_(self, other)  
-  Compares two MassFlowRate objects for equality based on their internal base unit values.
-
-**Examples:**
-
-\# Create two MassFlowRate objects  
-\>\>\> mfr1 \= MassFlowRate(10, "kg/s")  
-\>\>\> mfr2 \= MassFlowRate(3600, "kg/h")
-
-\# Add them together  
-\>\>\> total\_mfr \= mfr1 \+ mfr2
-
-\>\>\> print(total\_mfr)  
-11.0 kg/s
-
-#### **String Representation**
-
-* \_\_str\_\_(self)  
+* `__str__(self)` 
   Returns a human-readable string representation of the mass flow rate, rounded to six decimal places, using its original value and unit.  
-* \_\_repr\_\_(self)  
+* `__repr__(self)`  
   Returns a string representation suitable for developers and debugging.
