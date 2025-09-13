@@ -72,34 +72,48 @@ hide:
 
 <div class="grid cards" markdown>
 
--   :material-download: **Installation**  
+-   :material-download: **[Installation](installation/)**  
     Quick setup guide to install Process PI and get started with Python.
 
--   :material-book-open-variant: **User Guide**  
+-   :material-book-open-variant: **[User Guide](user-guide/introduction/)**  
     Step-by-step tutorials and detailed documentation for all features.
 
--   :material-api: **API Reference**  
-    Comprehensive documentation of modules, classes, and functions.
-
--   :material-lightbulb-on-outline: **Examples**  
+-   :material-lightbulb-on-outline: **[Examples](examples/index.md)**  
     Real-world pipelines, heat transfer, and component simulations you can try immediately.
 
 </div>
 
 ---
 
-<!-- Latest Tutorials Section -->
-## Latest Tutorials & Examples
+<!-- Dependencies Section -->
+## Dependencies
+
+ProcessPI is built on top of powerful open-source libraries and AI tools:
 
 <div class="grid cards" markdown>
 
--   :material-flask-empty: **Pipeline Simulation 101**  
-    [Try it now](examples/pipeline-example.md) — Build and analyze a sample process network.
+-   **[tabulate](https://pypi.org/project/tabulate/)** `>=0.9.0`  
+    Table formatting for clean console and markdown output.
 
--   :material-fire: **Heat Exchanger Design**  
-    [Step-by-step guide](examples/heatflux-example.md) — Learn to model energy transfer and optimize exchangers.
+-   **[matplotlib](https://pypi.org/project/matplotlib/)** `>=3.7.0`  
+    Static 2D plotting for engineering charts and graphs.
 
--   :material-pump: **Pump & Mixer Analysis**  
-    [Hands-on example](examples/pump-example.md) — Simulate pumps, mixers, and flow performance.
+-   **[networkx](https://pypi.org/project/networkx/)** `>=3.1`  
+    Network analysis and graph modeling for pipelines and process flows.
+
+-   **[CoolProp](https://pypi.org/project/CoolProp/)** `>=6.5.0`  
+    Thermophysical property database for fluids and mixtures.
+
+-   **[tqdm](https://pypi.org/project/tqdm/)** `>=4.65.0`  
+    Progress bars for simulations and iterative computations.
+
+-   **[plotly](https://pypi.org/project/plotly/)** `>=5.18.0`  
+    Interactive plots and dashboards for process visualization.
+
+-   **[ChatGPT](https://openai.com/chatgpt)**  
+    AI assistant for documentation, code generation, and examples.
+
+-   **[Google Gemini](https://deepmind.google/technologies/gemini/)**  
+    AI model support for documentation and smart code assistance.
 
 </div>

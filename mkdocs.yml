@@ -109,19 +109,37 @@ nav:
           
       - Pipe Lines:
           - Overview: user-guide/pipe_lines/engine.md
+          - Pipes: user-guide/pipe_lines/pipes.md
+          - Fittings: user-guide/pipe_lines/fittings.md
+          - Pipe Line Networks: user-guide/pipe_lines/network.md
 
               
   - Examples:
-      - Overview: api_reference.md
-      - Pipelines: examples/pipe-lines/pipelines.md
-      - Calculations: examples/calculations/calculations.md
-      - Components: examples/components/components.md
+      - Overview: examples/index.md
+      - Pipelines:
+          - Chlorine Gas Optimum Diameter: examples/pipelines/chlorine_optimum_diameter.md
+          - Carbon Dioxide Gas Pipeline: examples/pipelines/co2_transfer_line.md
+          - Carbon Monoxide Gas Pipeline: examples/pipelines/carbon_monoxide_pipeline.md
+          - Water Pipeline: examples/pipelines/water_transfer_steel_vs_concrete.md
+          - Organic Liquid Pipeline: examples/pipelines/organic_liquid_discharge.md
+          - Complex Pipeline Network: examples/pipelines/complex_network.md
+          - Chilled Water Loop: examples/pipelines/chilled_water_loop.md
+      - Calculations:
+          - Fluid Velocity Calculation 1: examples/calculations/fluid_velocity.md
+          - Fluid Velocity Calculation 2: examples/calculations/fluid_velocity_2.md
+          - Velocity and Reynolds Number (USSC): examples/calculations/velocity_reynolds_us.md
+          - Velocity and Reynolds Number (Metric Units): examples/calculations/velocity_reynolds_si.md
+          - Friction Factor (Colebrook-White, US Units): examples/calculations/friction_factor_cw.md
+          - Darcy Pressure Drop (US Units): examples/calculations/pressure_drop_dracy.md
+          - Long Pipeline Pressure Drop (Metric Units): examples/calculations/long_pipe_friction_factor.md
+          - Hazen-Williams Pressure Drop (US Units): examples/calculations/pressure_drop_hw_us.md
+      
   - Community:
       - Roadmap: about/roadmap.md
       - Contributing: about/contributing.md
       - License: about/license.md
       - Changelog: about/changelog.md
-  - GitHub: https://github.com/varma666/ProcessPi
+  
 
 extra:
   social:
