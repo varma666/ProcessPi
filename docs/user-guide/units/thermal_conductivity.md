@@ -1,4 +1,4 @@
-# **`ThermalConductivity` Class**
+# **Class: `ThermalConductivity`**
 
 The `ThermalConductivity` class is a subclass of `Variable` designed to represent a material's ability to conduct heat. It ensures accurate calculations by storing all values internally in its base SI unit, Watts per meter-Kelvin (W/m.K).
 

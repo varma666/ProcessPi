@@ -1,4 +1,4 @@
-# **`Area` Class**
+# **Class: `Area`**
 
 The `Area` class is a subclass of `Variable` designed to represent a two-dimensional quantity with unit-aware capabilities. It ensures accurate calculations by storing all values internally in its base SI unit, square meters (m<sup>2</sup>).
 

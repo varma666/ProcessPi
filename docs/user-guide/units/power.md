@@ -1,4 +1,4 @@
-# **`Power` Class**
+# **Class: `Power`**
 
 The `Power` class is a subclass of `Variable` designed to represent the rate at which work is done or energy is transferred. It ensures accurate calculations by storing all values internally in its base SI unit, Watts (W).
 

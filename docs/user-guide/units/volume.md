@@ -1,4 +1,4 @@
-# **`Volume` Class**
+# **Class: `Volume`**
 
 The `Volume` class is a subclass of `Variable` designed to represent a quantity of volume. It handles automatic unit conversion by storing all internal values in the base SI unit, cubic meters (m<sup>3</sup>).
 

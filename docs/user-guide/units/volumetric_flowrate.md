@@ -1,4 +1,4 @@
-# **`VolumetricFlowRate` Class**
+# **Class: `VolumetricFlowRate`**
 
 The `VolumetricFlowRate` class is a subclass of `Variable` that represents the volume of fluid passing a point per unit of time. The base SI unit for volumetric flow rate is cubic meters per second (m<sup>3</sup>/s).
 

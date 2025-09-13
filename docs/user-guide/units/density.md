@@ -1,4 +1,4 @@
-# **`Density` Class**
+# **Class: `Density`**
 
 The `Density` class is a subclass of `Variable` designed to represent the mass per unit volume of a substance. It ensures accurate calculations by storing all values internally in its base SI unit, kilograms per cubic meter (kg/m<sup>3</sup>).
 

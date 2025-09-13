@@ -1,4 +1,4 @@
-# **`Temperature` Class**
+# **Class: `Temperature`**
 
 The `Temperature` class is a subclass of `Variable` designed to represent a temperature quantity. It ensures accurate conversions and calculations by storing all values internally in its base SI unit, Kelvin (K).
 

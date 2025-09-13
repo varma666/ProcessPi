@@ -1,4 +1,4 @@
-# **`Velocity` Class**
+# **Class: `Velocity`**
 
 The `Velocity` class is a subclass of `Variable` designed to represent a quantity of velocity. It handles automatic unit conversion by storing all internal values in the base SI unit, meters per second (m/s).
 

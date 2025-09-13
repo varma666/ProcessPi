@@ -1,4 +1,4 @@
-# **`StringUnit` Class**
+# **Class: `StringUnit`**
 
 The `StringUnit` class is a subclass of `Variable` designed to represent quantities that are categorical or string-based, rather than numeric. Examples include a material's phase, a flow type, or a component's status. It provides a simple way to handle these non-numeric values within a consistent framework.
 

@@ -1,4 +1,4 @@
-# **`Viscosity` Class**
+# **Class: `Viscosity`**
 
 The `Viscosity` class is a subclass of `Variable` designed to represent a quantity of viscosity. It uniquely handles **two different types of viscosity**: dynamic and kinematic. The class automatically determines the viscosity type based on the provided units and performs conversions only within that type.
 

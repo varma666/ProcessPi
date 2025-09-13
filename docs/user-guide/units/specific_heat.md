@@ -1,4 +1,4 @@
-# **`SpecificHeat` Class**
+# **Class: `SpecificHeat`**
 
 The `SpecificHeat` class is a subclass of `Variable` designed to represent the amount of energy required to raise the temperature of a unit mass of a substance by one degree. It stores all values internally in its base unit, kilojoules per kilogram-Kelvin (kJ/kg.K).
 

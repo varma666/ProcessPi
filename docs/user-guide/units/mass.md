@@ -1,4 +1,4 @@
-# **`Mass` Class**
+# **Class: `Mass`**
 
 The `Mass` class is a subclass of `Variable` designed to represent a quantity of mass. It ensures accurate calculations by storing all values internally in its base SI unit, kilograms (kg).
 

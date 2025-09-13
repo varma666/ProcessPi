@@ -1,4 +1,4 @@
-# **`HeatTransferCoefficient` Class**
+# **Class: `HeatTransferCoefficient`**
 
 The `HeatTransferCoefficient` class is a subclass of `Variable` designed to represent the heat transfer rate per unit area per unit temperature difference. It ensures accurate calculations by storing all values internally in its base SI unit, Watts per square meter-Kelvin (W/m<sup>2</sup>.K).
 

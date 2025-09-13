@@ -1,4 +1,4 @@
-# **`ThermalResistance` Class**
+# **Class: `ThermalResistance`**
 
 The `ThermalResistance` class is a subclass of `Variable` designed to represent a material's resistance to heat flow. It simplifies calculations by internally storing all values in its base SI unit, Kelvin per Watt (K/W).
 

@@ -1,4 +1,4 @@
-# **`HeatOfVaporization` Class**
+# **Class: `HeatOfVaporization`**
 
 The `HeatOfVaporization` class is a subclass of `Variable` designed to represent the heat required to change a unit mass of a substance from liquid to gas at a given pressure. It ensures accurate calculations by storing all values internally in its base SI unit, Joules per kilogram (J/kg).
 

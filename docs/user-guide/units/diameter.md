@@ -1,4 +1,4 @@
-# **`Diameter` Class**
+# **Class: `Diameter`**
 
 The `Diameter` class is a subclass of `Variable` designed to represent the length of a diameter. It ensures accurate calculations by storing all values internally in its base SI unit, meters (m).
 

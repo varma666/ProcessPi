@@ -1,4 +1,4 @@
-# **`HeatFlux` Class**
+# **Class: `HeatFlux`**
 
 The `HeatFlux` class is a subclass of `Variable` designed to represent heat transfer rate per unit area. It ensures accurate calculations by storing all values internally in its base SI unit, Watts per square meter (W/m<sup>2</sup>).
 

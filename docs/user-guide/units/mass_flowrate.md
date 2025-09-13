@@ -1,4 +1,4 @@
-# **`MassFlowRate` Class**
+# **Class: `MassFlowRate`**
 
 The `MassFlowRate` class is a subclass of `Variable` designed to represent the mass of a substance passing per unit of time. It ensures accurate calculations by storing all values internally in its base SI unit, kilograms per second (kg/s).
 

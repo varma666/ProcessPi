@@ -97,7 +97,20 @@ nav:
       - Calculations:
           - Overview: user-guide/calculations/calculations.md
           - Calculation Engine: user-guide/calculations/calculation_engine.md
+          - Fluid Mechanics:
+              - Reynolds Number: user-guide/calculations/fluid_mechanics/reynolds_number.md
+              - Pressure Drop:
+                  - Darcy-Weisbach Equation: user-guide/calculations/fluid_mechanics/pressure_drop/darcy_weisbach.md
+                  - Hazen-Williams Equation: user-guide/calculations/fluid_mechanics/pressure_drop/hazen_williams.md
+                  - Fanning Equation: user-guide/calculations/fluid_mechanics/pressure_drop/fanning.md
+              - Flow Regime: user-guide/calculations/fluid_mechanics/flow_regime.md
+              - Velocity: user-guide/calculations/fluid_mechanics/velocity.md
+          - Comming Soon: user-guide/calculations/comming_soon.md
+          
+      - Pipe Lines:
+          - Overview: user-guide/pipe_lines/engine.md
 
+              
   - Examples:
       - Overview: api_reference.md
       - Pipelines: examples/pipe-lines/pipelines.md
@@ -130,6 +143,8 @@ markdown_extensions:
   - md_in_html
   - pymdownx.details
   - pymdownx.superfences
+  - pymdownx.arithmatex:
+      generic: true
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.highlight
@@ -140,3 +155,7 @@ markdown_extensions:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 copyright: Copyright &copy; 2025 ProcessPI
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

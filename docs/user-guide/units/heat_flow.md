@@ -1,4 +1,4 @@
-# **`HeatFlow` Class**
+# **Class: `HeatFlow`**
 
 The `HeatFlow` class is a subclass of `Variable` designed to represent the total heat transfer rate. It ensures accurate calculations by storing all values internally in its base SI unit, Watts (W).
 

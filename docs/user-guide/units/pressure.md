@@ -1,4 +1,4 @@
-# **`Pressure` Class**
+# **Class: `Pressure`**
 
 The `Pressure` class is a subclass of `Variable` designed to represent a force per unit area. It ensures accurate calculations by storing all values internally in its base SI unit, Pascals (Pa).
 

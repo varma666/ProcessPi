@@ -1,4 +1,4 @@
-# `Length`**Class**
+# **Class: `Length`**
 
 The `Length` class is a subclass of `Variable` designed to represent a one-dimensional quantity with unit-aware capabilities. It ensures accurate calculations by storing all values internally in its base unit, meters (m).
 

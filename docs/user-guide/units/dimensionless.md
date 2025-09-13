@@ -1,4 +1,4 @@
-# **`Dimensionless` Class**
+# **Class: `Dimensionless`**
 
 The `Dimensionless` class is a subclass of `Variable` designed to represent quantities that do not have physical units. These are often ratios of other quantities, such as Reynolds number, friction factor, or efficiency. The class provides a foundation for performing arithmetic operations on these numbers while maintaining clarity about their unitless nature.
 
