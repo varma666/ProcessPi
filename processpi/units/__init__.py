@@ -17,24 +17,51 @@ from pathlib import Path
 # Base class import
 # -------------------------------------------------------------------
 from .base import Variable
+from .area import Area
+from .density import Density
+from .diameter import Diameter
+from .dimensionless import Dimensionless
+from .heat_flow import HeatFlow
+from .heat_flux import HeatFlux
+from .heat_of_vaporization import HeatOfVaporization
+from .heat_transfer_coefficient import HeatTransferCoefficient
+from .length import Length
+from .mass_flowrate import MassFlowRate
+from .mass import Mass
+from .power import Power
+from .pressure import Pressure
+from .specific_heat import SpecificHeat
+from .strings import StringUnit
+from .temperature import Temperature
+from .thermal_conductivity import ThermalConductivity
+from .thermal_resistance import ThermalResistance
+from .velocity import Velocity
+from .viscosity import Viscosity
+from .volume import Volume
+from .volumetric_flowrate import VolumetricFlowRate
 
-__all__ = ["Variable"]
+__all__ = ["Variable",           
+           "Area",
+           "Density",
+           "Diameter",
+           "Dimensionless",
+           "HeatFlow",
+           "HeatFlux",
+           "HeatOfVaporization",
+           "HeatTransferCoefficient",
+           "Length",
+           "MassFlowRate",
+           "Mass",
+           "Power",
+           "Pressure",
+           "SpecificHeat",
+           "StringUnit",
+           "Temperature",
+           "ThermalConductivity",
+           "ThermalResistance",
+           "Velocity",
+           "Viscosity",
+           "Volume",
+           "VolumetricFlowRate"
+           ]
 
-# -------------------------------------------------------------------
-# Dynamic discovery of unit classes
-# -------------------------------------------------------------------
-_units_dir = Path(__file__).parent
-_excluded = {"__init__.py", "base.py", "example.txt", "strings.py"}
-
-for file in _units_dir.glob("*.py"):
-    if file.name in _excluded:
-        continue
-
-    module_name = file.stem
-    module = importlib.import_module(f".{module_name}", package=__name__)
-
-    # Promote top-level classes to namespace
-    for cls_name, cls_obj in inspect.getmembers(module, inspect.isclass):
-        if cls_obj.__module__ == module.__name__:
-            globals()[cls_name] = cls_obj
-            __all__.append(cls_name)

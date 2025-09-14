@@ -24,7 +24,7 @@ Pipe(
 )
 ```
 
-### **Parameters**
+**Parameters**
 - **`name`** (`str`): Unique name of the pipe.  
 - **`nominal_diameter`** (`Optional[Diameter]`): Nominal pipe size. If `None`, the pipe is considered a candidate for optimization.  
 - **`schedule`** (`str`, default=`"STD"`): Pipe schedule.  
@@ -38,7 +38,7 @@ Pipe(
 
 ---
 
-## **Attributes**
+**Attributes**
 - **`is_optimization_target`** (`bool`): Whether this pipe is flagged for optimization (true if no diameter was provided).  
 - **`nominal_diameter`** (`Optional[Diameter]`): Nominal pipe diameter.  
 - **`schedule`** (`str`): Pipe schedule.  
@@ -56,7 +56,7 @@ Pipe(
 
 ## **Methods**
 
-### **`cross_sectional_area()`**
+**`cross_sectional_area()`**
 Returns the internal cross-sectional area of the pipe.  
 
 **Returns:**  
@@ -64,7 +64,7 @@ Returns the internal cross-sectional area of the pipe.
 
 ---
 
-### **`surface_area()`**
+**`surface_area()`**
 Returns the external surface area of the pipe.  
 
 **Returns:**  
@@ -72,7 +72,7 @@ Returns the external surface area of the pipe.
 
 ---
 
-### **`pressure_difference()`**
+**`pressure_difference()`**
 Computes the pressure difference between inlet and outlet.  
 
 **Returns:**  
@@ -80,7 +80,7 @@ Computes the pressure difference between inlet and outlet.
 
 ---
 
-### **`to_dict()`**
+**`to_dict()`**
 Exports all key pipe data as a dictionary.  
 
 **Returns:**  
@@ -88,7 +88,7 @@ Exports all key pipe data as a dictionary.
 
 ---
 
-### **`calculate()`**
+**`calculate()`**
 Compatibility hook for PipelineEngine. Returns the pipe data dictionary.  
 
 **Returns:**  

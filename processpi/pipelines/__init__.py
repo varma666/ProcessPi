@@ -23,7 +23,7 @@ __all__ = []
 _pipelines_dir = Path(__file__).parent
 
 # Files to skip for dynamic imports
-_excluded = {"__init__.py", "todo.md", "processpi_pipeline_engine_features.md"}
+_excluded = {"__init__.py", "todo.md", "processpi_pipeline_engine_features.md","example.txt"}
 
 # -------------------------------------------------------------------
 # Dynamic discovery of pipeline components

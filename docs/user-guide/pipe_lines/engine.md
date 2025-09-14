@@ -7,7 +7,7 @@ It performs **component-wise and network-wide calculations**, including **pressu
 
 ## Methods
 
-### **`fit()`**
+**`fit()`**
 Configures the `PipelineEngine` instance by processing input parameters, converting units, normalizing keys, and setting default values.
 
 **Parameters**  
@@ -39,7 +39,7 @@ Configures the `PipelineEngine` instance by processing input parameters, convert
 
 ---
 
-### **`run()`**
+**`run()`**
 Executes the pipeline simulation based on inputs from `fit()`.  
 Chooses between **Network Mode** or **Single Pipe Mode**.
 
@@ -64,7 +64,7 @@ Chooses between **Network Mode** or **Single Pipe Mode**.
 
 ---
 
-### **`summary()`**
+**`summary()`**
 Retrieves a summary of the most recent simulation.
 
 **Parameters**  
@@ -85,19 +85,19 @@ These private helper methods are used internally by the `PipelineEngine` class t
 
 ---
 
-### 🔹 Property Resolvers
+### Property Resolvers
 
-#### **`_get_density`**
+**`_get_density`**
 - Retrieves or infers fluid density.  
 - **Returns:** `Density`  
 - **Raises:** `ValueError` if not available.
 
-#### **`_get_viscosity`**
+**`_get_viscosity`**
 - Retrieves or infers viscosity.  
 - **Returns:** `Viscosity`  
 - **Raises:** `ValueError` if not available.
 
-#### **`_infer_flowrate`**
+**`_infer_flowrate`**
 - Infers volumetric flow rate from:
   - Direct `flowrate`
   - `mass_flowrate` + density
@@ -105,13 +105,13 @@ These private helper methods are used internally by the `PipelineEngine` class t
 - **Returns:** `VolumetricFlowRate`  
 - **Raises:** `ValueError` if inference fails.
 
-#### **`_maybe_velocity`**
+**`_maybe_velocity`**
 - Ensures velocity is available.  
 - Calculates from `flowrate` and `diameter` if missing.  
 - **Returns:** `Velocity`  
 - **Raises:** `ValueError` if data is insufficient.
 
-#### **`_resolve_internal_diameter`**
+**`_resolve_internal_diameter`**
 Determines the internal diameter of a pipe using a priority order:
 1. `pipe.internal_diameter` (explicitly defined)  
 2. `pipe.nominal_diameter` (nominal size)  
@@ -123,29 +123,29 @@ Determines the internal diameter of a pipe using a priority order:
 
 ---
 
-### 🔹 Primitive Calculators
+### Primitive Calculators
 
-#### **`_velocity`**
+**`_velocity`**
 - **Purpose:** Calculates fluid velocity.  
 - **Parameters:** `q (VolumetricFlowRate)`, `d (Diameter)`  
 - **Returns:** `Velocity`  
 
-#### **`_reynolds`**
+**`_reynolds`**
 - **Purpose:** Computes Reynolds number to determine flow regime.  
 - **Parameters:** `v (Velocity)`, `d (Diameter)`  
 - **Returns:** `float`  
 
-#### **`_friction_factor`**
+**`_friction_factor`**
 - **Purpose:** Friction factor using Colebrook-White correlation.  
 - **Parameters:** `Re (float)`, `d (Diameter)`, `material (Optional[str])`  
 - **Returns:** `float`  
 
-#### **`_major_dp_pa`**
+**`_major_dp_pa`**
 - **Purpose:** Major pressure drop due to friction.  
 - **Parameters:** `f (float)`, `L (Length)`, `d (Diameter)`, `v (Velocity)`  
 - **Returns:** `Pressure (Pa)`  
 
-#### **`_minor_dp_pa`**
+**`_minor_dp_pa`**
 - **Purpose:** Minor losses due to fittings (elbows, valves, etc.).  
 - **Priority Order:**  
   1. **K-Factor** (explicit)  
@@ -157,9 +157,9 @@ Determines the internal diameter of a pipe using a priority order:
 
 ---
 
-### 🔹 Composite Calculator
+### Composite Calculator
 
-#### **`_pipe_calculation`**
+**`_pipe_calculation`**
 Orchestrates all primitives to perform full pipe analysis.
 
 **Functionality**
@@ -181,12 +181,12 @@ Orchestrates all primitives to perform full pipe analysis.
 ---
 ### **Series and Network Evaluation**
 
-#### `_compute_series`
+**`_compute_series`**
 - **Purpose:** Calculates the total pressure drop for a series of pipes. In a series, the flow rate is constant, and the total pressure drop is the sum of the pressure drops of each individual pipe and its fittings.  
 - **Normalization:** It intelligently handles various inputs (a single Pipe, a list of Pipes, or a list of branches) by flattening them into a single series of pipes before calculation.  
 - **Returns:** A tuple containing the total pressure drop, a list of detailed reports for each pipe, and a summary of the series.  
 
-#### `_compute_network`
+**`_compute_network`**
 - **Purpose:** Serves as a high-level function for calculating the total pressure drop of a more complex network. It normalizes the network structure into a list of branches before performing calculations.  
 - **Logic:** It iterates through each branch and calls `_pipe_calculation` to get the pressure drop for each pipe within that branch. It then aggregates these results to provide a comprehensive report for the entire network.  
 - **Returns:** A tuple containing the total network pressure drop, a list of all element reports, and a network summary.  
@@ -195,15 +195,15 @@ Orchestrates all primitives to perform full pipe analysis.
 
 ### **Network Solvers**
 
-#### `_resolve_parallel_flows`
+**`_resolve_parallel_flows`**
 - **Purpose:** This is an iterative solver for parallel networks. It balances the flow rates between parallel branches until the pressure drop across all branches converges to a single value within a specified tolerance.  
 - **Logic:** It starts with an initial guess (usually an equal flow split), calculates the pressure drop for each branch, and then adjusts the flow rates to reduce the difference in pressure drops. This process repeats until a stable solution is found.  
 
-#### `_hardy_cross`
+**`_hardy_cross`**
 - **Purpose:** Implements the Hardy-Cross method, a classic iterative approach for solving flow and pressure problems in pipe networks, especially those with loops.  
 - **Logic:** It computes the flow corrections needed for each loop to satisfy the principle that the sum of head losses around any closed loop must be zero. This is a robust method for complex, interconnected systems.  
 
-#### `_matrix_solver` and `_solve_network_dual`
+**`_matrix_solver`** and **`_solve_network_dual`**
 - **Purpose:** These functions provide alternative, iterative methods for solving complex parallel networks. They use a similar principle to the Hardy-Cross method, iteratively adjusting branch flow rates to balance the pressure drops until the solution converges.  
 
 ---
@@ -221,27 +221,27 @@ Orchestrates all primitives to perform full pipe analysis.
 
 ## ✅ Key Features
 
-### 1. Single Pipeline Analysis
+**Single Pipeline Analysis**
 - Pressure drop & flow rate via:
   - **Darcy–Weisbach** (precise)  
   - **Hazen–Williams** (quick for water)  
 - Accounts for elevation, roughness, fittings, valves.
 
-### 2. Network Analysis
+**Network Analysis**
 - Branched/looped networks using:
   - Hardy–Cross iteration  
   - Direct matrix solver  
 - Supports plant utility networks, firewater loops, cooling systems.
 
-### 3. Component Loss Modeling
+**Component Loss Modeling**
 - Inline equipment & fittings (valves, bends, tees, orifices).  
 - Uses **K-factor data** for accurate modeling.
 
-### 4. Elevation & Static Head
+**Elevation & Static Head**
 - Includes elevation effects.  
 - Suitable for tanks, hilly terrains, sump transfers.
 
-### 5. Multiple Solver Options
+**Multiple Solver Options**
 
 | Solver            | Best For                       | Notes                            |
 |-------------------|--------------------------------|----------------------------------|
@@ -250,21 +250,21 @@ Orchestrates all primitives to perform full pipe analysis.
 | Hardy–Cross       | Small networks (≤10 pipes)      | Simple, easy debugging            |
 | Matrix Solver     | Moderate networks with loops    | Robust, faster                    |
 
-### 6. Typical Use Cases
+**Typical Use Cases**
 - Utility water networks  
 - Chemical transfer lines  
 - Cooling water loops  
 - Firewater ring mains  
 - Static head studies  
 
-### 7. Current Limitations
+**Current Limitations**
 - Steady-state only  
 - Single-phase only  
 - Constant density/viscosity  
 - No pump curves  
 - Limited to ~50 pipes  
 
-### 8. Planned Roadmap
+**Planned Roadmap**
 
 | Stage        | Feature                                      |
 |--------------|----------------------------------------------|
@@ -278,7 +278,7 @@ Orchestrates all primitives to perform full pipe analysis.
 
 ## 💻 Example Usage
 
-### Example 1 – Dry Chlorine Gas Pipeline
+**Dry Chlorine Gas Pipeline**
 
 ```python
 from processpi.components import *

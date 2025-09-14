@@ -2,150 +2,374 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://processpi.org/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/api_reference/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/installation/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/about/changelog/</loc>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/about/contributing/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/about/license/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/about/roadmap/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
-         <loc>https://processpi.org/user-guide/examples/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <loc>https://processpi.org/examples/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/calculations/fluid_velocity/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/calculations/fluid_velocity_2/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/calculations/friction_factor_cw/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/calculations/long_pipe_friction_factor/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/calculations/pressure_drop_dracy/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/calculations/pressure_drop_hw_us/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/calculations/velocity_reynolds_si/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/calculations/velocity_reynolds_us/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/pipelines/carbon_monoxide_pipeline/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/pipelines/chilled_water_loop/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/pipelines/chlorine_optimum_diameter/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/pipelines/co2_transfer_line/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/pipelines/complex_network/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/pipelines/organic_liquid_discharge/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/examples/pipelines/water_transfer_steel_vs_concrete/</loc>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/features/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/introduction/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/calculations/calculation_engine/</loc>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/calculations/calculations/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/calculations/comming_soon/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/calculations/fluid_mechanics/flow_regime/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/calculations/fluid_mechanics/reynolds_number/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/calculations/fluid_mechanics/velocity/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/calculations/fluid_mechanics/pressure_drop/darcy_weisbach/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/calculations/fluid_mechanics/pressure_drop/fanning/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/calculations/fluid_mechanics/pressure_drop/hazen_williams/</loc>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/components/acetic_acid/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/acetone/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/acrylic_acid/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/air/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/ammonia/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/benzene/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/benzoic_acid/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/bromine/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/butane/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/carbon_dioxide/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/carbon_monoxide/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/carbon_tetrachloride/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/chlorine/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/chloroform/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/chloromethane/</loc>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/components/components/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
-         <loc>https://processpi.org/user-guide/pipe-lines/pipelines/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <loc>https://processpi.org/user-guide/components/cyclohexene/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/cynogen/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/ethane/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/ethanol/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/ethylacetate/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/gas/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/inorganic_liquids/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/methanol/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/oil/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/organic_liquids/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/steam/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/toluene/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/vapor/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/components/water/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/pipe_lines/engine/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/pipe_lines/fittings/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/pipe_lines/network/</loc>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/pipe_lines/pipes/</loc>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/area/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/density/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/diameter/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/dimensionless/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/heat_flow/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/heat_flux/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/heat_of_vapouraization/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/heat_transfer_coefficient/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/length/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/mass/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/mass_flowrate/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/overview/</loc>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/power/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/pressure/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/specific_heat/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/string/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/temperature/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/thermal_conductivity/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/thermal_resistance/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/units/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/variable/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/velocity/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/viscosity/</loc>
-         <lastmod>2025-09-12</lastmod>
-    </url>
-    <url>
-         <loc>https://processpi.org/user-guide/units/vollumetric_flowrate/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
     </url>
     <url>
          <loc>https://processpi.org/user-guide/units/volume/</loc>
-         <lastmod>2025-09-12</lastmod>
+         <lastmod>2025-09-14</lastmod>
+    </url>
+    <url>
+         <loc>https://processpi.org/user-guide/units/volumetric_flowrate/</loc>
+         <lastmod>2025-09-14</lastmod>
     </url>
 </urlset>

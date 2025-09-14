@@ -5,8 +5,9 @@ It supports both **graph-based networks** (nodes & edges) and **hierarchical blo
 
 ## Classes and Types
 
-### `Node`
+`Node`
 Represents a junction or endpoint in the network.
+
 - **Attributes:**
   - `name` (str): Unique identifier.
   - `elevation` (float): Node elevation (m).
@@ -16,7 +17,8 @@ Represents a junction or endpoint in the network.
 
 ---
 
-### `Branch`
+`Branch`
+
 A branch in a parallel block can be one of:
 - `PipelineNetwork`
 - `Pipe`
@@ -27,7 +29,7 @@ A branch in a parallel block can be one of:
 
 ---
 
-### `PipelineNetwork`
+`PipelineNetwork`
 Defines the structure of a pipeline network.
 
 - **Attributes:**

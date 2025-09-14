@@ -59,7 +59,7 @@ which are essential in computing minor losses in pipelines.
 
 ## Methods
 
-### **`equivalent_length()`**
+**`equivalent_length()`**
 Computes the **equivalent length (Le)** of the fitting.  
 This is the effective pipe length that produces the same pressure drop as the fitting.
 
@@ -72,7 +72,7 @@ This is the effective pipe length that produces the same pressure drop as the fi
 
 ---
 
-### **`k_factor()`**
+**`k_factor()`**
 Retrieves the **K-factor** (dimensionless loss coefficient) of the fitting.  
 
 **Returns**  
@@ -84,7 +84,7 @@ Retrieves the **K-factor** (dimensionless loss coefficient) of the fitting.
 
 ---
 
-### **`calculate()`**
+**`calculate()`**
 Returns a **dictionary summary** of the fitting, including geometry and loss data.
 
 **Returns**  
