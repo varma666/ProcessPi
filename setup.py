@@ -15,7 +15,7 @@ setup(
     description="Python toolkit for chemical engineering simulations, equipment design, and unit conversions",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/varma666/ProcessPi",
+    url="https://processpi.org",
     packages=find_packages(exclude=["tests*", "docs*"]),
     python_requires=">=3.8",
     install_requires=[
@@ -34,10 +34,11 @@ setup(
         "Topic :: Scientific/Engineering :: Chemical Engineering",
     ],
     project_urls={
-        "Bug Tracker": "https://github.com/varma666/ProcessPi/issues",
-        "Documentation": "https://github.com/varma666/ProcessPi#readme",
-        "Source Code": "https://github.com/varma666/ProcessPi",
-    },
+            "Homepage": "https://processpi.org",
+            "Documentation": "https://processpi.org/user-guide/introduction/",
+            "Repository": "https://github.com/varma666/ProcessPi",
+            "Issue Tracker": "https://github.com/varma666/ProcessPi/issues",
+        },
     entry_points={
         "console_scripts": [
             "processpi=processpi.cli:main",  # CLI entry point
