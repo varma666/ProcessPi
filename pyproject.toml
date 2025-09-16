@@ -25,8 +25,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/varma666/ProcessPi"
-BugTracker = "https://github.com/varma666/ProcessPi/issues"
-SourceCode = "https://github.com/varma666/ProcessPi"
+Homepage = "https://processpi.org"
+Repository = "https://github.com/varma666/ProcessPi"
+Documentation = "https://processpi.org/user-guide/introduction/"
+IssueTracker = "https://github.com/varma666/ProcessPi/issues"
+
 
 
