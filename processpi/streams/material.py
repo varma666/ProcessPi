@@ -1,42 +1,78 @@
-from typing import Dict, Optional
-from ..units import Pressure, Temperature, Density, VolumetricFlowRate, MassFlowRate, MolarFlowRate
+# processpi/streams/material.py
+from typing import Dict, Optional, Union
+from ..units import (
+    Pressure, Temperature, Density, VolumetricFlowRate,
+    MassFlowRate, MolarFlowRate, HeatCapacity
+)
 
 class MaterialStream:
     """
     Represents a process material stream with thermodynamic state
-    and composition information. Acts as a connector between equipment.
+    and composition information.
+
+    Supports two initialization modes:
+    -----------------------------------
+    1) Component-based:
+        from processpi.components import Water
+        s1 = MaterialStream("Hot Water",
+                            component=Water(),
+                            temperature=Temperature(350, "K"),
+                            mass_flow=MassFlowRate(2, "kg/s"))
+
+    2) Manual property-based:
+        s2 = MaterialStream("Custom Fluid",
+                            temperature=Temperature(350, "K"),
+                            pressure=Pressure(2, "bar"),
+                            density=Density(1000, "kg/m3"),
+                            cp=HeatCapacity(4200, "J/kg-K"),
+                            flow_rate=VolumetricFlowRate(0.001, "m3/s"))
     """
 
     def __init__(
         self,
         name: str,
-        pressure: Pressure,
-        temperature: Temperature,
+        component: Optional[object] = None,   # e.g., Water(), Air()
+        pressure: Optional[Pressure] = None,
+        temperature: Optional[Temperature] = None,
         density: Optional[Density] = None,
+        cp: Optional[HeatCapacity] = None,
         flow_rate: Optional[VolumetricFlowRate] = None,
+        mass_flow: Optional[MassFlowRate] = None,
+        molar_flow: Optional[MolarFlowRate] = None,
         components: Optional[Dict[str, float]] = None,
-        basis: str = "mole",   # "mole" or "mass"
-        molecular_weights: Optional[Dict[str, float]] = None,  # g/mol
+        basis: str = "mole",
+        molecular_weights: Optional[Dict[str, float]] = None,
         phase: Optional[str] = None,
     ):
         self.name = name
-        self.pressure = pressure
-        self.temperature = temperature
-        self.density = density
-        self.flow_rate = flow_rate
         self.phase = phase
+        self.temperature = temperature
+        self.pressure = pressure
+        self.flow_rate = flow_rate
+        self._mass_flow = mass_flow
+        self._molar_flow = molar_flow
 
-        # Composition
-        self.components = components or {}
+        # --------------------
+        # Component mode
+        # --------------------
+        self.component = component
+        if component:
+            # Pull props if available
+            self.density = density or getattr(component, "density", None)
+            self.cp = cp or getattr(component, "cp", None)
+            self.molecular_weights = molecular_weights or {component.name: getattr(component, "mw", None)}
+            self.components = {component.name: 1.0}
+        else:
+            # --------------------
+            # Manual property mode
+            # --------------------
+            self.density = density
+            self.cp = cp
+            self.molecular_weights = molecular_weights or {}
+            self.components = components or {}
+
         self.basis = basis
         self._normalize()
-
-        # MW dictionary for molar ↔ mass conversions
-        self.molecular_weights = molecular_weights or {}
-
-        # For equipment connections (API clean-up)
-        self._inlet_equipment = None
-        self._outlet_equipment = None
 
     # -----------------------------
     # Composition handling
@@ -54,23 +90,19 @@ class MaterialStream:
         self._normalize()
 
     # -----------------------------
-    # Derived properties
+    # Derived flows
     # -----------------------------
-    @property
-    def volumetric_flow(self) -> Optional[float]:
-        return self.flow_rate.to("m3/s").value if self.flow_rate else None
-
-    @property
-    def rho(self) -> Optional[float]:
-        return self.density.to("kg/m3").value if self.density else None
-
     def mass_flow(self) -> Optional[MassFlowRate]:
+        if self._mass_flow:
+            return self._mass_flow
         if self.flow_rate and self.density:
-            m_dot = self.volumetric_flow * self.rho
+            m_dot = self.flow_rate.to("m3/s").value * self.density.to("kg/m3").value
             return MassFlowRate(m_dot, "kg/s")
         return None
 
     def molar_flow(self) -> Optional[MolarFlowRate]:
+        if self._molar_flow:
+            return self._molar_flow
         mass = self.mass_flow()
         if mass and self.avg_mw():
             n_dot = mass.to("kg/s").value / self.avg_mw()
@@ -87,6 +119,7 @@ class MaterialStream:
                 mw += x * (self.molecular_weights.get(c, 0) / 1000.0)
             return mw
         elif self.basis == "mass":
+            # Convert to mol basis first
             total_mass = sum(self.components.values())
             if total_mass <= 0:
                 return None
@@ -103,63 +136,24 @@ class MaterialStream:
             return sum(x * (self.molecular_weights.get(c, 0) / 1000.0) for c, x in mole_fracs.items())
 
     # -----------------------------
-    # Equipment connectivity
-    # -----------------------------
-    def connect_inlet(self, equipment: "Equipment"):
-        """Marks this stream as entering the given equipment."""
-        self.end_node = equipment
-
-    def connect_outlet(self, equipment: "Equipment"):
-        """Marks this stream as leaving the given equipment."""
-        self.start_node = equipment
-
-    @property
-    def inlet_equipment(self):
-        return self._inlet_equipment
-
-    @property
-    def outlet_equipment(self):
-        return self._outlet_equipment
-
-    # -----------------------------
     # Stream utilities
     # -----------------------------
     def copy(self, name: str):
         return MaterialStream(
             name=name,
+            component=self.component,
             pressure=self.pressure,
             temperature=self.temperature,
             density=self.density,
+            cp=self.cp,
             flow_rate=self.flow_rate,
+            mass_flow=self._mass_flow,
+            molar_flow=self._molar_flow,
             components=self.components.copy(),
             basis=self.basis,
             molecular_weights=self.molecular_weights.copy(),
             phase=self.phase,
         )
 
-    def split(self, ratio: float, name1="Split1", name2="Split2"):
-        if not self.flow_rate:
-            raise ValueError("Cannot split stream without flow_rate")
-        f1 = self.volumetric_flow * ratio
-        f2 = self.volumetric_flow * (1 - ratio)
-        return (
-            self.copy(name1)._with_flow(VolumetricFlowRate(f1, "m3/s")),
-            self.copy(name2)._with_flow(VolumetricFlowRate(f2, "m3/s")),
-        )
-
-    def mix(self, other: "MaterialStream", name="Mixed"):
-        if not self.flow_rate or not other.flow_rate:
-            raise ValueError("Both streams must have flow_rate defined")
-        f_total = self.volumetric_flow + other.volumetric_flow
-        mix = self.copy(name)
-        mix.flow_rate = VolumetricFlowRate(f_total, "m3/s")
-        # TODO: proper mixing of P, T, composition (future thermodynamics)
-        return mix
-
-    def _with_flow(self, flow: VolumetricFlowRate):
-        self.flow_rate = flow
-        return self
-
     def __repr__(self) -> str:
-        return (f"<MaterialStream {self.name}, P={self.pressure}, T={self.temperature}, "
-                f"Q={self.flow_rate}, ρ={self.density}, comps={self.components}>")
+        return f"<MaterialStream {self.name}, P={self.pressure}, T={self.temperature}, Q={self.flow_rate}, comps={self.components}>"
