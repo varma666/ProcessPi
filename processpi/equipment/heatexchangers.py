@@ -1,44 +1,123 @@
-from typing import Dict, Any
-from ..units import Temperature
-from ..streams import MaterialStream
+# processpi/equipment/heat_exchanger.py
+
+from __future__ import annotations
+from typing import Optional, Dict, Any
 from .base import Equipment
-from ..calculations import heatexchanger as hx_calc
+from processpi.streams import MaterialStream
+from processpi.calculations.lmtd import lmtd
+from processpi.calculations.ntu import ntu
+
 
 class HeatExchanger(Equipment):
-    def __init__(self, name: str, hx_type: str = "generic"):
-        # 2 inlets (hot, cold) and 2 outlets
-        super().__init__(name, inlet_ports=2, outlet_ports=2)
-        self.hx_type = hx_type
+    """
+    Heat Exchanger Equipment.
 
-    def calculate(self) -> Dict[str, Any]:
+    Supports both LMTD and NTU methods for outlet temperature predictions.
+    Uses MaterialStream to auto-fetch thermophysical properties from Component.
+    """
+
+    def __init__(self, method: str = "LMTD", U: Optional[float] = None,
+                 area: Optional[float] = None, effectiveness: Optional[float] = None):
+        super().__init__("HeatExchanger")
+        self.method = method.upper()
+        self.U = U
+        self.area = area
+        self.effectiveness = effectiveness
+
+        # Streams
+        self.hot_in: Optional[MaterialStream] = None
+        self.hot_out: Optional[MaterialStream] = None
+        self.cold_in: Optional[MaterialStream] = None
+        self.cold_out: Optional[MaterialStream] = None
+
+    def attach_stream(self, stream: MaterialStream, port: str):
         """
-        Uses attached MaterialStreams to calculate energy balance.
+        Attach material streams to the exchanger.
         """
-        hot_in, cold_in = self.inlets
-        hot_out, cold_out = self.outlets
+        if port == "hot_in":
+            self.hot_in = stream
+            stream.connect_outlet(self)
+        elif port == "hot_out":
+            self.hot_out = stream
+            stream.connect_inlet(self)
+        elif port == "cold_in":
+            self.cold_in = stream
+            stream.connect_outlet(self)
+        elif port == "cold_out":
+            self.cold_out = stream
+            stream.connect_inlet(self)
+        else:
+            raise ValueError(f"Invalid port: {port}")
 
-        if None in [hot_in, cold_in, hot_out, cold_out]:
-            raise ValueError("All 4 streams (2 in, 2 out) must be connected")
+    def simulate(self) -> Dict[str, Any]:
+        """
+        Run heat exchanger simulation.
+        """
+        if not all([self.hot_in, self.cold_in]):
+            raise ValueError("Both hot_in and cold_in streams must be attached.")
 
-        # Example: assume Cp given per stream for now
-        if not hasattr(hot_in, "cp") or not hasattr(cold_in, "cp"):
-            raise AttributeError("Streams must define cp (J/kg-K) for heat exchanger calculations")
+        # Fetch stream properties
+        Th_in = self.hot_in.temperature
+        Tc_in = self.cold_in.temperature
+        m_hot = self.hot_in.mass_flow
+        m_cold = self.cold_in.mass_flow
 
-        # Hot side
-        dT_hot = hot_in.temperature.to("K").value - hot_out.temperature.to("K").value
-        Q_hot = hx_calc.heat_duty(hot_in.mass_flow().to("kg/s").value,
-                                  hot_in.cp, dT_hot)
+        # Fetch cp from component (T-dependent)
+        cp_hot = self.hot_in.component.get_cp(Th_in)
+        cp_cold = self.cold_in.component.get_cp(Tc_in)
 
-        # Cold side
-        dT_cold = cold_out.temperature.to("K").value - cold_in.temperature.to("K").value
-        Q_cold = hx_calc.heat_duty(cold_in.mass_flow().to("kg/s").value,
-                                   cold_in.cp, dT_cold)
+        Ch = m_hot * cp_hot
+        Cc = m_cold * cp_cold
 
-        # Energy balance check
-        imbalance = Q_hot.to("W").value - Q_cold.to("W").value
+        results = {}
 
-        return {
-            "Q_hot": Q_hot,
-            "Q_cold": Q_cold,
-            "imbalance_W": imbalance
-        }
+        if self.method == "LMTD":
+            if not (self.U and self.area):
+                raise ValueError("U and area must be specified for LMTD method.")
+
+            # Assume counterflow
+            deltaT1 = Th_in - self.cold_out.temperature if self.cold_out else (Th_in - Tc_in)
+            deltaT2 = self.hot_out.temperature - Tc_in if self.hot_out else (Th_in - Tc_in)
+
+            deltaT_lm = lmtd(deltaT1, deltaT2)
+            Q = self.U * self.area * deltaT_lm
+
+            # Update outlet temps if not provided
+            if self.hot_out:
+                self.hot_out.temperature = Th_in - Q / Ch
+            if self.cold_out:
+                self.cold_out.temperature = Tc_in + Q / Cc
+
+            results.update({
+                "method": "LMTD",
+                "Q": Q,
+                "deltaT_lm": deltaT_lm,
+                "Th_out": self.hot_out.temperature if self.hot_out else None,
+                "Tc_out": self.cold_out.temperature if self.cold_out else None
+            })
+
+        elif self.method == "NTU":
+            if not (self.U and self.area and self.effectiveness):
+                raise ValueError("U, area, and effectiveness must be specified for NTU method.")
+
+            # NTU method calc
+            results_ntu = ntu(Cc, Ch, self.U, self.area, self.effectiveness, Th_in, Tc_in)
+            Q = results_ntu["Q"]
+
+            # Update outlet temps
+            if self.hot_out:
+                self.hot_out.temperature = Th_in - Q / Ch
+            if self.cold_out:
+                self.cold_out.temperature = Tc_in + Q / Cc
+
+            results.update({
+                "method": "NTU",
+                **results_ntu,
+                "Th_out": self.hot_out.temperature if self.hot_out else None,
+                "Tc_out": self.cold_out.temperature if self.cold_out else None
+            })
+
+        else:
+            raise ValueError(f"Unknown method: {self.method}")
+
+        return results
