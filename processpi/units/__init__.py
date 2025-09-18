@@ -39,6 +39,7 @@ from .velocity import Velocity
 from .viscosity import Viscosity
 from .volume import Volume
 from .volumetric_flowrate import VolumetricFlowRate
+from .molar_flowrate import MolarFlowRate
 
 __all__ = ["Variable",           
            "Area",
@@ -62,6 +63,7 @@ __all__ = ["Variable",
            "Velocity",
            "Viscosity",
            "Volume",
-           "VolumetricFlowRate"
+           "VolumetricFlowRate",
+           "MolarFlowRate"
            ]
 
