@@ -1,36 +1,28 @@
-from ..units import Power, Energy
+from ..units import *
 
 class EnergyStream:
     """
     Represents an energy stream (heat or work transfer).
-    Can bind to a MaterialStream to log duties automatically.
+    Can bind to equipment and log Q/W duties automatically.
     """
 
-    def __init__(self, name: str, duty: Power = None, energy: Energy = None):
+    def __init__(self, name: str):
         self.name = name
-        self.duty = duty   # instantaneous transfer rate (kW)
-        self.energy = energy  # accumulated energy (kJ), optional
-        self.bound_streams = []  # MaterialStreams connected
-        self.log = []  # history of duties per simulation
+        self.log = []  # list of dicts {equipment, tag, duty}
 
-    def bind(self, stream: "MaterialStream"):
-        """Bind this EnergyStream to a MaterialStream (inlet or outlet)."""
-        if stream not in self.bound_streams:
-            self.bound_streams.append(stream)
+    def bind_equipment(self, equipment):
+        """Optionally keep reference to equipment if needed later."""
+        self.log.append({"equipment": equipment.name, "tag": "bind", "duty": 0.0})
 
-    def record(self, duty: Power, equipment: str):
-        """
-        Record an energy duty event, tagged with equipment name.
-        """
-        self.duty = duty
-        self.log.append({"equipment": equipment, "duty": duty})
+    def record(self, duty: float, tag: str, equipment: str):
+        """Log an energy duty (positive = in, negative = out)."""
+        self.log.append({"equipment": equipment, "tag": tag, "duty": duty})
 
-    def total_duty(self):
-        """Return cumulative duty from all events."""
+    def total_duty(self, tag: Optional[str] = None) -> float:
+        """Return cumulative duty, optionally filtered by tag (Q_in, Q_out, W_in, W_out)."""
+        if tag:
+            return sum(event["duty"] for event in self.log if event["tag"] == tag)
         return sum(event["duty"] for event in self.log)
 
-    def __repr__(self) -> str:
-        return (
-            f"EnergyStream(name={self.name}, duty={self.duty}, "
-            f"total_logged={self.total_duty()})"
-        )
+    def __repr__(self):
+        return f"EnergyStream(name={self.name}, total={self.total_duty()}, entries={len(self.log)})"
