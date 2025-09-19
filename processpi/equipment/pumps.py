@@ -1,7 +1,7 @@
 # processpi/equipment/pumps.py
 from typing import Optional, Dict, Any
 from ..units import Pressure, Length, Power
-from ..streams import MaterialStream
+from ..streams import MaterialStream, EnergyStream
 from .base import Equipment
 from ..pipelines.standards import PUMP_EFFICIENCIES
 
@@ -13,9 +13,13 @@ class Pump(Equipment):
         self.pump_type = pump_type
         self.efficiency = efficiency or PUMP_EFFICIENCIES.get(pump_type, 0.7)
 
+        # EnergyStream will log brake power as work input
+        self.energy_stream: Optional[EnergyStream] = None
+
     def calculate(self) -> Dict[str, Any]:
         """
         Uses attached MaterialStreams to calculate head, power, etc.
+        Also attaches an EnergyStream to log brake power.
         """
         inlet: MaterialStream = self.inlets[0]
         outlet: MaterialStream = self.outlets[0]
@@ -36,9 +40,16 @@ class Pump(Equipment):
         hydraulic_power = rho * 9.81 * flow_rate * head_m
         brake_power = hydraulic_power / self.efficiency if self.efficiency > 0 else float("inf")
 
+        # Attach EnergyStream for work input
+        self.energy_stream = EnergyStream(
+            name=f"{self.name}_work_in",
+            duty=Power(brake_power, "W")
+        )
+
         return {
             "head": Length(head_m, "m"),
             "hydraulic_power": Power(hydraulic_power, "W"),
             "brake_power": Power(brake_power, "W"),
             "efficiency": self.efficiency,
+            "energy_stream": self.energy_stream
         }
