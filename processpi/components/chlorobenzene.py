@@ -14,4 +14,4 @@ class ChloroBenzene(Component):
     _viscosity_constants = [0.15772,540.5,-1.6075,1.50E+14,-6.00E+00] 
     _thermal_conductivity_constants = [0.1841, -0.0001917,0,0,0]
     _vapor_pressure_constants = [54.144,-6244.40,-4.5343,4.70E-18, 6] 
-    _enthalpy_constants = [5.148E-7,0.36614, 227.95,4.3707, 0]  # Placeholder for enthalpy constants
+    _enthalpy_constants = [5.148E-7,0.36614, 0,0, 0]  # Placeholder for enthalpy constants
