@@ -18,5 +18,5 @@ class Toluene(Component):
     _viscosity_constants = [-226.08, 6805.7,37.542,-0.060853, 1] 
     _thermal_conductivity_constants = [0.20463, -0.00024252, 0,0,0]
     _vapor_pressure_constants = [76.945, -6729.8, -8.179, 0.0000053017, 2] 
-    _enthalpy_constants = [4.9507E-7, 0.37742, 178.18, 4.3246, 0]  # Placeholder for enthalpy constants
+    _enthalpy_constants = [4.9507E-7, 0.37742, 0, 0, 0]  # Placeholder for enthalpy constants
     
