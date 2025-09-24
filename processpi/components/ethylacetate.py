@@ -14,4 +14,4 @@ class EthlylAcetate(Component):
     _viscosity_constants = [14.354,-154.6,-3.7887,0,0] 
     _thermal_conductivity_constants = [0.2501, -0.0003563,0,0,0]
     _vapor_pressure_constants = [66.824,-6227.60,-6.41,1.79E-17, 6] 
-    _enthalpy_constants = [4.933E-7,0.3847, 189.6,4.149, 0]  # Placeholder for enthalpy constants
+    _enthalpy_constants = [4.933E-7,0.3847, 0,0, 0]  # Placeholder for enthalpy constants
