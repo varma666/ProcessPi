@@ -55,12 +55,13 @@ class Ammonia(Component):
 
 
     @PropertyMethod
-     def specific_heat(self) -> SpecificHeat:
+    def specific_heat(self) -> SpecificHeat:
         if self._specific_heat is not None:
             return self._specific_heat
         T = self.temperature.value
-        cp = sum(c * (T ** i) for i, c in enumerate(self._specific_heat_constants))
-        #cp *= self.molecular_weight
+        Tr = T / self._critical_temperature.value
+        t = 1 - Tr
+        cp = (self._sepcific_heat_constants[0] / t ) + (self._sepcific_heat_constants[1]) - ( 2 * self._sepcific_heat_constants[0] * self._sepcific_heat_constants[2] * t) - (self._sepcific_heat_constants[0] * self._sepcific_heat_constants[3] * (t**2)) - ((self._sepcific_heat_constants[2]**2)*(t**3)/3) - ((self._sepcific_heat_constants[2] * self._sepcific_heat_constants[3] * (t**4))/2) - ((self._sepcific_heat_constants[0]**2) * (t**5)/5) 
         return SpecificHeat(cp, "J/kgK")
 
         
