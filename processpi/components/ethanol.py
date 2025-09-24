@@ -17,4 +17,4 @@ class Ethanol(Component):
     _viscosity_constants = [7.875, 781.98, -3.0418, 0, 0] 
     _thermal_conductivity_constants = [0.2468, -0.000264, 0,0,0]
     _vapor_pressure_constants = [73.304, -7122.3, -7.1424, 0.0000028853, 2] 
-    _enthalpy_constants = [5.5789E-7, 0.31245, 159.05, 4.9694, 0]  # Placeholder for enthalpy constants
+    _enthalpy_constants = [5.5789E-7, 0.31245, 0, 0, 0]  # Placeholder for enthalpy constants
