@@ -122,7 +122,7 @@ class Component(ABC):
             return self._specific_heat
         T = self.temperature.value
         cp = sum(c * (T ** i) for i, c in enumerate(self._specific_heat_constants))
-        cp *= self.molecular_weight
+        #cp *= self.molecular_weight
         return SpecificHeat(cp, "J/kgK")
 
     # ----------------------------------------------------------------------
