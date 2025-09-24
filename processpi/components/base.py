@@ -198,5 +198,5 @@ class Component(ABC):
                        (self._enthalpy_constants[2] * tau) +
                        (self._enthalpy_constants[3] * tau ** 2) +
                        (self._enthalpy_constants[4] * tau ** 3))))
-        dH *= self.molecular_weight
+        #dH *= self.molecular_weight
         return HeatOfVaporization(dH, "J/kg")
