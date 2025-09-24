@@ -14,4 +14,4 @@ class Cyclohexane(Component):
     _viscosity_constants = [-33.763,2497.2,3.2236,0,0] 
     _thermal_conductivity_constants = [0.19813, -0.0002505,0,0,0]
     _vapor_pressure_constants = [51.087,-5226.40,-4.2278,19.76E-18, 6] 
-    _enthalpy_constants = [4.4902E-7,0.39881, 279.69,3.392, 0]  # Placeholder for enthalpy constants
+    _enthalpy_constants = [4.4902E-7,0.39881, 0,0, 0]  # Placeholder for enthalpy constants
