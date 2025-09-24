@@ -54,7 +54,7 @@ class Ammonia(Component):
     _enthalpy_constants = [3.1523E-7, 0.3914, -0.2289,0.2309, 0]  # Placeholder for enthalpy constants
 
 
-    @PropertyMethod
+    #@PropertyMethod
     def specific_heat(self) -> SpecificHeat:
         if self._specific_heat is not None:
             return self._specific_heat

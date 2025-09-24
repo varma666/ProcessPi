@@ -17,7 +17,7 @@ class CarbonMonoxide(Component):
     _enthalpy_constants = [0.8585E-7, 0.4921, -0.326,0.2231, 0]  # Placeholder for enthalpy constants
 
 
-    @PropertyMethod
+    #@PropertyMethod
     def specific_heat(self) -> SpecificHeat:
         if self._specific_heat is not None:
             return self._specific_heat

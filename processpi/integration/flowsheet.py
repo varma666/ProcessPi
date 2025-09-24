@@ -1,9 +1,9 @@
 # processpi/flowsheet.py
 
 from typing import List, Dict, Union
-from .equipment.base import Equipment
-from .streams.material import MaterialStream
-from .streams.energy import EnergyStream
+from ..equipment.base import Equipment
+from ..streams.material import MaterialStream
+from ..streams.energy import EnergyStream
 
 
 class Flowsheet:
@@ -49,15 +49,18 @@ class Flowsheet:
         """
         if isinstance(src, MaterialStream) and isinstance(dst, Equipment):
             if port == "inlet":
-                dst.inlets.append(src)
+                dst.inlets[0] = src
+                
             elif port == "outlet":
-                dst.outlets.append(src)
+                print(dst.outlets)
+                dst.outlets[0] = src
+                print(dst.outlets)
             else:
                 raise ValueError("Invalid port name for Equipment.")
             self.connections.append({"from": src, "to": dst})
 
         elif isinstance(src, Equipment) and isinstance(dst, MaterialStream):
-            src.outlets.append(dst)
+            src.outlets[0] = dst
             self.connections.append({"from": src, "to": dst})
 
         elif isinstance(src, Equipment) and isinstance(dst, Equipment):
@@ -74,15 +77,16 @@ class Flowsheet:
     # --------------------------
     def run(self):
         for unit in self.equipment:
+            #print(unit)
             result = unit.simulate()
-            unit.last_results = result  # store for reporting
+            unit.data = result  # store for reporting
 
     def summary(self):
         print(f"\nFlowsheet: {self.name}")
         print("=" * 40)
         for unit in self.equipment:
             print(f"{unit.name} ({unit.__class__.__name__})")
-            if hasattr(unit, "last_results"):
-                for k, v in unit.last_results.items():
+            if hasattr(unit, "data"):
+                for k, v in unit.data.items():
                     print(f"  {k}: {v}")
             print("-" * 30)

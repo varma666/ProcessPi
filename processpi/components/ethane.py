@@ -16,7 +16,7 @@ class Ethane(Component):
     _vapor_pressure_constants = [51.857,-2598.70,-5.1283,1.49E-05, 2] 
     _enthalpy_constants = [2.1091E-7,0.60646, -0.55492,0.32799, 0]  # Placeholder for enthalpy constants
 
-    @PropertyMethod
+    #@PropertyMethod
     def specific_heat(self) -> SpecificHeat:
         if self._specific_heat is not None:
             return self._specific_heat

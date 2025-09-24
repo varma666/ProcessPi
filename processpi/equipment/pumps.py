@@ -7,16 +7,18 @@ from ..pipelines.standards import PUMP_EFFICIENCIES
 
 
 class Pump(Equipment):
+
+    data = {}
     def __init__(self, name: str, pump_type: str,
                  efficiency: Optional[float] = None):
         super().__init__(name, inlet_ports=1, outlet_ports=1)
         self.pump_type = pump_type
         self.efficiency = efficiency or PUMP_EFFICIENCIES.get(pump_type, 0.7)
-
+        #self.data = {}
         # EnergyStream will log brake power as work input
         self.energy_stream: Optional[EnergyStream] = None
-
-    def calculate(self) -> Dict[str, Any]:
+    
+    def simulate(self) -> Dict[str, Any]:
         """
         Uses attached MaterialStreams to calculate head, power, etc.
         Also attaches an EnergyStream to log brake power.
@@ -32,24 +34,27 @@ class Pump(Equipment):
 
         # Pressure rise
         dp = outlet.pressure.to("Pa").value - inlet.pressure.to("Pa").value
-        rho = inlet.rho
-        head_m = dp / (rho * 9.81)
+        rho = inlet.density()
+        print(rho)
+        head_m = dp / (rho.value * 9.81)
 
         # Hydraulic and brake power
-        flow_rate = inlet.volumetric_flow
-        hydraulic_power = rho * 9.81 * flow_rate * head_m
+        flow_rate = inlet.flow_rate
+        hydraulic_power = rho.value * 9.81 * flow_rate.value * head_m
         brake_power = hydraulic_power / self.efficiency if self.efficiency > 0 else float("inf")
 
         # Attach EnergyStream for work input
+        """
         self.energy_stream = EnergyStream(
             name=f"{self.name}_work_in",
             duty=Power(brake_power, "W")
-        )
+        )"""
+
 
         return {
             "head": Length(head_m, "m"),
             "hydraulic_power": Power(hydraulic_power, "W"),
             "brake_power": Power(brake_power, "W"),
             "efficiency": self.efficiency,
-            "energy_stream": self.energy_stream
+            #"energy_stream": self.energy_stream
         }
