@@ -14,4 +14,4 @@ class ChloroMethane(Component):
     _viscosity_constants = [-25.132,1381.9,2.0811,-4.50E-27,10] 
     _thermal_conductivity_constants = [0.41067, -0.0008478,0,0,0]
     _vapor_pressure_constants = [64.697,-4048.10,-6.8066,1.04E-05, 2] 
-    _enthalpy_constants = [2.9745E-7,0.353, 175.43,2.452, 0]  # Placeholder for enthalpy constants
+    _enthalpy_constants = [2.9745E-7,0.353, 0,0, 0]  # Placeholder for enthalpy constants
