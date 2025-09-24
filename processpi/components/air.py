@@ -46,9 +46,9 @@ class Air(Component):
     _critical_acentric_factor = 0  # Placeholder for critical acentric factor
     
     # Constants for various property correlations
-    _density_constants = [0.26733, 132.45, 0.27341,59.15]
+    _density_constants = [2.8963, 0.26733, 132.45,0.2734]
     _specific_heat_constants = [-214460,9185.1,-106.12,0.41616,0]
     _viscosity_constants = [-20.077, 285.15, 1.784,-6.2382E-22, 10] 
     _thermal_conductivity_constants = [0.28472, -0.0017393, 0,0,0]
     _vapor_pressure_constants = [21.662, -692.39, -0.392, 0.0047574, 1] 
-    _enthalpy_constants = [0.3822E-7, 59.15,0.6759,132.45, 0]  # Placeholder for enthalpy constants
+    _enthalpy_constants = [0.8474E-7, 0.3822,0,0,0]  # Placeholder for enthalpy constants
