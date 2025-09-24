@@ -52,3 +52,15 @@ class Ammonia(Component):
     _thermal_conductivity_constants = [1.169, -0.002314, 0,0,0]
     _vapor_pressure_constants = [90.483, -4669.70, -11.607, 1.72E-02, 1] 
     _enthalpy_constants = [3.1523E-7, 0.3914, -0.2289,0.2309, 0]  # Placeholder for enthalpy constants
+
+
+    @PropertyMethod
+     def specific_heat(self) -> SpecificHeat:
+        if self._specific_heat is not None:
+            return self._specific_heat
+        T = self.temperature.value
+        cp = sum(c * (T ** i) for i, c in enumerate(self._specific_heat_constants))
+        #cp *= self.molecular_weight
+        return SpecificHeat(cp, "J/kgK")
+
+        
