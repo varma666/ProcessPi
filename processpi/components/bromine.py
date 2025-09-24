@@ -16,4 +16,4 @@ class Bromine(Component):
     _viscosity_constants = [16.775,-314,-3.9763,0, 0] 
     _thermal_conductivity_constants = [-0.2185, 0.0042143,-0.000017753,3.10E-08,-2.01E-11]
     _vapor_pressure_constants = [108.26, -6592, -14.16,1.60E-02, 1] 
-    _enthalpy_constants = [4E-7, 0.351, 265.85,3.2323, 0]  # Placeholder for enthalpy constants
+    _enthalpy_constants = [4E-7, 0.351, 0,0, 0]  # Placeholder for enthalpy constants
