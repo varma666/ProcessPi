@@ -14,4 +14,4 @@ class CarbonTetrachloride(Component):
     _viscosity_constants = [-8.0738,1121.1,-0.4726,0, 0] 
     _thermal_conductivity_constants = [0.1589, -0.0001987,0,0,0]
     _vapor_pressure_constants = [78.441,-6128.10,-8.5766,6.85E-06, 2] 
-    _enthalpy_constants = [4.3252E-7, 0.37688, 250.33,3.4528, 0]  # Placeholder for enthalpy constants
+    _enthalpy_constants = [4.3252E-7, 0.37688, 0,0, 0]  # Placeholder for enthalpy constants
