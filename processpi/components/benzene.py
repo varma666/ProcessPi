@@ -28,7 +28,7 @@ class Benzene(Component):
     _viscosity_constants = [7.5117, 294.68, -2.794, 0, 0]
     _thermal_conductivity_constants = [0.23444, -0.00030572, 0, 0, 0]
     _vapor_pressure_constants = [83.107, -6486.2, -9.2194, 0.0000069844, 2]
-    _enthalpy_constants = [4.5346E-7, 0.39053, 278.68, 3.4705, 0]  # Placeholder for enthalpy constants
+    _enthalpy_constants = [4.5346E-7, 0.39053, 0, 0, 0]  # Placeholder for enthalpy constants
 
     def specific_heat(self, temperature: Temperature):
         """
