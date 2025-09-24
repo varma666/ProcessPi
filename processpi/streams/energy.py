@@ -1,5 +1,5 @@
 from ..units import *
-
+from typing import Dict, Optional, Union
 class EnergyStream:
     """
     Represents an energy stream (heat or work transfer).

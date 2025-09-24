@@ -2,7 +2,7 @@
 from typing import Dict, Optional, Union
 from ..units import (
     Pressure, Temperature, Density, VolumetricFlowRate,
-    MassFlowRate, MolarFlowRate, HeatCapacity
+    MassFlowRate, MolarFlowRate, SpecificHeat
 )
 
 class MaterialStream:
@@ -35,11 +35,11 @@ class MaterialStream:
         pressure: Optional[Pressure] = None,
         temperature: Optional[Temperature] = None,
         density: Optional[Density] = None,
-        cp: Optional[HeatCapacity] = None,
+        cp: Optional[SpecificHeat] = None,
         flow_rate: Optional[VolumetricFlowRate] = None,
         mass_flow: Optional[MassFlowRate] = None,
         molar_flow: Optional[MolarFlowRate] = None,
-        components: Optional[Dict[str, float]] = None,
+        composition: Optional[Dict[str, float]] = None,
         basis: str = "mole",
         molecular_weights: Optional[Dict[str, float]] = None,
         phase: Optional[str] = None,
@@ -69,7 +69,7 @@ class MaterialStream:
             self.density = density
             self.cp = cp
             self.molecular_weights = molecular_weights or {}
-            self.components = components or {}
+            self.components = composition or {}
 
         self.basis = basis
         self._normalize()
@@ -149,7 +149,7 @@ class MaterialStream:
             flow_rate=self.flow_rate,
             mass_flow=self._mass_flow,
             molar_flow=self._molar_flow,
-            components=self.components.copy(),
+            composition=self.components.copy(),
             basis=self.basis,
             molecular_weights=self.molecular_weights.copy(),
             phase=self.phase,

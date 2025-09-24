@@ -35,11 +35,11 @@ class Absorber(Equipment):
             self.liquid_in is None or self.liquid_out is None):
             raise ValueError(f"Absorber {self.name} must have gas_in, gas_out, liquid_in, liquid_out streams.")
 
-        F_gas = self.gas_in.flow
-        F_liq = self.liquid_in.flow
+        F_gas = self.gas_in.flow_rate
+        F_liq = self.liquid_in.flow_rate
 
-        z_gas = self.gas_in.composition.copy()
-        z_liq = self.liquid_in.composition.copy()
+        z_gas = self.gas_in.components.copy()
+        z_liq = self.liquid_in.components.copy()
 
         # Pick solute (for demo: assume first component in gas is solute)
         solute = list(z_gas.keys())[0]
@@ -50,18 +50,18 @@ class Absorber(Equipment):
         solute_out_gas = solute_in_gas - absorbed
 
         # Update outlet streams
-        self.gas_out.copy_from(self.gas_in)
-        self.liquid_out.copy_from(self.liquid_in)
+        self.gas_out.copy(self.gas_in)
+        self.liquid_out.copy(self.liquid_in)
 
-        self.gas_out.flow = F_gas
-        self.liquid_out.flow = F_liq + absorbed  # solute added to solvent
+        self.gas_out.flow_rate = F_gas
+        self.liquid_out.flow_rate = F_liq + absorbed  # solute added to solvent
 
         # Adjust compositions
-        self.gas_out.composition[solute] = solute_out_gas / F_gas
-        self.liquid_out.composition[solute] = absorbed / self.liquid_out.flow
+        self.gas_out.components[solute] = solute_out_gas / F_gas
+        self.liquid_out.components[solute] = absorbed / self.liquid_out.flow_rate
 
         return {
             "absorbed": absorbed,
-            "gas_out_comp": self.gas_out.composition,
-            "liq_out_comp": self.liquid_out.composition,
+            "gas_out_comp": self.gas_out.components,
+            "liq_out_comp": self.liquid_out.components,
         }
