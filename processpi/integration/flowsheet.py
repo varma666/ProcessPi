@@ -4,16 +4,18 @@ from typing import List, Dict, Union
 from ..equipment.base import Equipment
 from ..streams.material import MaterialStream
 from ..streams.energy import EnergyStream
+from collections import defaultdict, deque
 
 
 class Flowsheet:
     """
-    A simple flowsheet manager for sequential simulation.
+    A flowsheet manager for sequential simulation.
 
     Responsibilities:
     - Hold equipment + streams
     - Define explicit connections
-    - Run equipment in added order
+    - Auto-build execution order from connections
+    - Run equipment automatically
     - Collect results for summary
     """
 
@@ -22,7 +24,7 @@ class Flowsheet:
         self.equipment: List[Equipment] = []
         self.material_streams: List[MaterialStream] = []
         self.energy_streams: List[EnergyStream] = []
-        self.connections: List[Dict[str, Union[Equipment, MaterialStream]]] = []
+        self.connections: List[Dict[str, Union[Equipment, MaterialStream, EnergyStream]]] = []
 
     # --------------------------
     # Add units + streams
@@ -39,47 +41,99 @@ class Flowsheet:
     # --------------------------
     # Connections
     # --------------------------
-    def connect(self, src, dst, port: str = "inlet"):
+    def connect(self, src, dst, port: str):
         """
-        Connect streams or equipment.
+        Connect equipment and streams via named ports.
 
-        - (Stream → Equipment)
-        - (Equipment → Stream)
-        - (Equipment → Equipment)
+        - (Stream → Equipment, port="inlet1" or "energy_in1")
+        - (Equipment → Stream, port="outlet1" or "energy_out1")
+        - (Equipment → Equipment, port="inletX" or "energy_inX")
         """
         if isinstance(src, MaterialStream) and isinstance(dst, Equipment):
-            if port == "inlet":
-                dst.inlets[0] = src
-                
-            elif port == "outlet":
-                print(dst.outlets)
-                dst.outlets[0] = src
-                print(dst.outlets)
-            else:
-                raise ValueError("Invalid port name for Equipment.")
-            self.connections.append({"from": src, "to": dst})
+            dst.inlets[port] = src
+            self.connections.append({"from": src, "to": dst, "port": port})
+
+        elif isinstance(src, EnergyStream) and isinstance(dst, Equipment):
+            dst.energy_in[port] = src
+            self.connections.append({"from": src, "to": dst, "port": port})
 
         elif isinstance(src, Equipment) and isinstance(dst, MaterialStream):
-            src.outlets[0] = dst
-            self.connections.append({"from": src, "to": dst})
+            src.outlets[port] = dst
+            self.connections.append({"from": src, "to": dst, "port": port})
+
+        elif isinstance(src, Equipment) and isinstance(dst, EnergyStream):
+            src.energy_out[port] = dst
+            self.connections.append({"from": src, "to": dst, "port": port})
 
         elif isinstance(src, Equipment) and isinstance(dst, Equipment):
-            # simple 1-to-1 pipe assumption
-            if src.outlets and dst.inlets:
-                dst.inlets.append(src.outlets[0])
-            self.connections.append({"from": src, "to": dst})
+            # Infer correct connection based on port prefix
+            if port.startswith("inlet"):
+                dst.inlets[port] = list(src.outlets.values())[0]  # take first outlet
+            elif port.startswith("energy_in"):
+                dst.energy_in[port] = list(src.energy_out.values())[0]  # take first energy outlet
+            else:
+                raise ValueError("Invalid port name for Equipment → Equipment connection.")
+            self.connections.append({"from": src, "to": dst, "port": port})
 
         else:
             raise ValueError("Unsupported connection type")
 
     # --------------------------
+    # Dependency graph
+    # --------------------------
+    def _build_dependency_graph(self):
+        """Build graph of unit dependencies based on connections"""
+        graph = defaultdict(list)
+        indegree = {u.name: 0 for u in self.equipment}
+
+        for conn in self.connections:
+            src, dst = conn["from"], conn["to"]
+
+            if isinstance(src, Equipment) and isinstance(dst, Equipment):
+                graph[src.name].append(dst.name)
+                indegree[dst.name] += 1
+
+            elif isinstance(src, (MaterialStream, EnergyStream)) and isinstance(dst, Equipment):
+                # Stream → Equipment (dependency comes from its producer)
+                pass
+
+            elif isinstance(src, Equipment) and isinstance(dst, (MaterialStream, EnergyStream)):
+                # Equipment → Stream (stream is not an executable unit)
+                pass
+
+        return graph, indegree
+
+    def _topological_order(self):
+        """Return equipment execution order"""
+        graph, indegree = self._build_dependency_graph()
+        queue = deque([u.name for u in self.equipment if indegree[u.name] == 0])
+        order = []
+
+        while queue:
+            u = queue.popleft()
+            order.append(u)
+            for v in graph[u]:
+                indegree[v] -= 1
+                if indegree[v] == 0:
+                    queue.append(v)
+
+        if len(order) != len(self.equipment):
+            raise RuntimeError("Cyclic dependency detected!")
+
+        return order
+
+    # --------------------------
     # Simulation
     # --------------------------
     def run(self):
-        for unit in self.equipment:
-            #print(unit)
+        order = self._topological_order()
+        name_to_unit = {u.name: u for u in self.equipment}
+
+        for uname in order:
+            unit = name_to_unit[uname]
+            print(f"➡️ Running {unit.name} ({unit.__class__.__name__})")
             result = unit.simulate()
-            unit.data = result  # store for reporting
+            unit.data = result
 
     def summary(self):
         print(f"\nFlowsheet: {self.name}")
