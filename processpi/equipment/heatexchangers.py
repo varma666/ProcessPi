@@ -15,52 +15,67 @@ class HeatExchanger(Equipment):
     Can optionally log energy duties to an EnergyStream.
     """
 
-    def __init__(self, method: str = "LMTD", 
+    def __init__(self, name: str = "HeatExchanger",
+                 method: str = "LMTD",
                  U: Optional[float] = None,
                  area: Optional[float] = None,
                  effectiveness: Optional[float] = None,
                  energy_stream: Optional[EnergyStream] = None):
-        super().__init__("HeatExchanger")
+        # Explicitly register 2 inlets (hot_in, cold_in) and 2 outlets (hot_out, cold_out)
+        super().__init__(name, inlet_ports=2, outlet_ports=2)
+
         self.method = method.upper()
         self.U = U
         self.area = area
         self.effectiveness = effectiveness
         self.energy_stream = energy_stream
 
-        # Streams
-        self.hot_in: Optional[MaterialStream] = None
-        self.hot_out: Optional[MaterialStream] = None
-        self.cold_in: Optional[MaterialStream] = None
-        self.cold_out: Optional[MaterialStream] = None
-
         if self.energy_stream:
             self.energy_stream.bind_equipment(self)
 
-    def attach_stream(self, stream: MaterialStream, port: str):
+    def attach_stream(self, stream: MaterialStream, port: str, index: Optional[int] = None):
         """
-        Attach material streams to the exchanger.
+        Attach material streams to the exchanger by logical name.
+
+        Ports:
+        - hot_in   (inlet[0])
+        - hot_out  (outlet[0])
+        - cold_in  (inlet[1])
+        - cold_out (outlet[1])
         """
         if port == "hot_in":
-            self.hot_in = stream
-            stream.connect_outlet(self)
+            self.attach_registered_stream(stream, "inlet", 0)
         elif port == "hot_out":
-            self.hot_out = stream
-            stream.connect_inlet(self)
+            self.attach_registered_stream(stream, "outlet", 0)
         elif port == "cold_in":
-            self.cold_in = stream
-            stream.connect_outlet(self)
+            self.attach_registered_stream(stream, "inlet", 1)
         elif port == "cold_out":
-            self.cold_out = stream
-            stream.connect_inlet(self)
+            self.attach_registered_stream(stream, "outlet", 1)
         else:
             raise ValueError(f"Invalid port: {port}")
+
+    @property
+    def hot_in(self) -> Optional[MaterialStream]:
+        return self.inlets[0]
+
+    @property
+    def hot_out(self) -> Optional[MaterialStream]:
+        return self.outlets[0]
+
+    @property
+    def cold_in(self) -> Optional[MaterialStream]:
+        return self.inlets[1]
+
+    @property
+    def cold_out(self) -> Optional[MaterialStream]:
+        return self.outlets[1]
 
     def simulate(self) -> Dict[str, Any]:
         """
         Run heat exchanger simulation.
         """
-        if not all([self.hot_in, self.cold_in]):
-            raise ValueError("Both hot_in and cold_in streams must be attached.")
+        if not self.hot_in or not self.cold_in:
+            raise ValueError(f"{self.name}: both hot_in and cold_in streams must be attached.")
 
         # Fetch inlet conditions
         Th_in = self.hot_in.temperature.to("K").value
@@ -68,22 +83,27 @@ class HeatExchanger(Equipment):
         m_hot = self.hot_in.mass_flow().to("kg/s").value
         m_cold = self.cold_in.mass_flow().to("kg/s").value
 
-        # Heat capacities (J/kg-K) from component
+        # Heat capacities (J/kg-K) from components
         cp_hot = self.hot_in.component.get_cp(self.hot_in.temperature)
         cp_cold = self.cold_in.component.get_cp(self.cold_in.temperature)
 
         Ch = m_hot * cp_hot
         Cc = m_cold * cp_cold
 
-        results = {}
+        results: Dict[str, Any] = {}
 
         if self.method == "LMTD":
             if not (self.U and self.area):
-                raise ValueError("U and area must be specified for LMTD method.")
+                raise ValueError(f"{self.name}: U and area must be specified for LMTD method.")
 
-            # Use inlet values if outlet not pre-defined
-            Th_out_guess = self.hot_out.temperature.to("K").value if self.hot_out and self.hot_out.temperature else Th_in
-            Tc_out_guess = self.cold_out.temperature.to("K").value if self.cold_out and self.cold_out.temperature else Tc_in
+            Th_out_guess = (
+                self.hot_out.temperature.to("K").value
+                if self.hot_out and self.hot_out.temperature else Th_in
+            )
+            Tc_out_guess = (
+                self.cold_out.temperature.to("K").value
+                if self.cold_out and self.cold_out.temperature else Tc_in
+            )
 
             deltaT1 = Th_in - Tc_out_guess
             deltaT2 = Th_out_guess - Tc_in
@@ -91,7 +111,6 @@ class HeatExchanger(Equipment):
             deltaT_lm = lmtd(deltaT1, deltaT2)
             Q = self.U * self.area * deltaT_lm
 
-            # Update outlet streams (phase auto-updated inside MaterialStream)
             if self.hot_out:
                 self.hot_out.update_from_enthalpy(h=None, P=self.hot_in.pressure, deltaQ=-Q)
             if self.cold_out:
@@ -107,7 +126,7 @@ class HeatExchanger(Equipment):
 
         elif self.method == "NTU":
             if not (self.U and self.area and self.effectiveness):
-                raise ValueError("U, area, and effectiveness must be specified for NTU method.")
+                raise ValueError(f"{self.name}: U, area, and effectiveness must be specified for NTU method.")
 
             results_ntu = ntu(Cc, Ch, self.U, self.area, self.effectiveness, Th_in, Tc_in)
             Q = results_ntu["Q"]
@@ -125,7 +144,7 @@ class HeatExchanger(Equipment):
             })
 
         else:
-            raise ValueError(f"Unknown method: {self.method}")
+            raise ValueError(f"{self.name}: unknown method {self.method}")
 
         # EnergyStream logging
         if self.energy_stream:
