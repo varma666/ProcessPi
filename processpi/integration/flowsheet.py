@@ -31,6 +31,10 @@ class Flowsheet:
     # --------------------------
     def add_equipment(self, unit: Equipment):
         self.equipment.append(unit)
+        # Auto-register EnergyStream if present
+        if hasattr(unit, "energy_stream") and unit.energy_stream is not None:
+            if unit.energy_stream not in self.energy_streams:
+                self.energy_streams.append(unit.energy_stream)
 
     def add_material_stream(self, stream: MaterialStream):
         self.material_streams.append(stream)
