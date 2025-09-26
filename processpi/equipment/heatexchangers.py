@@ -12,7 +12,7 @@ class HeatExchanger(Equipment):
 
     Supports both LMTD and NTU methods for outlet temperature predictions.
     Uses MaterialStream to auto-fetch thermophysical properties from Component.
-    Can optionally log energy duties to an EnergyStream.
+    Automatically creates an EnergyStream if none is supplied.
     """
 
     def __init__(self, name: str = "HeatExchanger",
@@ -28,10 +28,15 @@ class HeatExchanger(Equipment):
         self.U = U
         self.area = area
         self.effectiveness = effectiveness
-        self.energy_stream = energy_stream
 
-        if self.energy_stream:
-            self.energy_stream.bind_equipment(self)
+        # Auto-create EnergyStream if none provided
+        if energy_stream is None:
+            self.energy_stream = EnergyStream(name=f"{name}_Q")
+        else:
+            self.energy_stream = energy_stream
+
+        # Bind to this equipment
+        self.energy_stream.bind_equipment(self)
 
     def attach_stream(self, stream: MaterialStream, port: str, index: Optional[int] = None):
         """
@@ -146,8 +151,7 @@ class HeatExchanger(Equipment):
         else:
             raise ValueError(f"{self.name}: unknown method {self.method}")
 
-        # EnergyStream logging
-        if self.energy_stream:
-            self.energy_stream.record(Q, tag="Q_exchanger", equipment=self.name)
+        # Log energy duty
+        self.energy_stream.record(Q, tag="Q_exchanger", equipment=self.name)
 
         return results
