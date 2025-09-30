@@ -2,8 +2,6 @@ from __future__ import annotations
 from typing import Optional, Dict, Any
 from .base import Equipment
 from processpi.streams import MaterialStream, EnergyStream
-from processpi.calculations.lmtd import lmtd
-from processpi.calculations.ntu import ntu
 
 
 class HeatExchanger(Equipment):

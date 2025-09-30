@@ -35,7 +35,7 @@ class MaterialStream:
         pressure: Optional[Pressure] = None,
         temperature: Optional[Temperature] = None,
         density: Optional[Density] = None,
-        cp: Optional[SpecificHeat] = None,
+        specific_heat: Optional[SpecificHeat] = None,
         flow_rate: Optional[VolumetricFlowRate] = None,
         mass_flow: Optional[MassFlowRate] = None,
         molar_flow: Optional[MolarFlowRate] = None,
@@ -46,8 +46,8 @@ class MaterialStream:
     ):
         self.name = name
         self.phase = phase
-        self.temperature = temperature
-        self.pressure = pressure
+        self.temperature = temperature or getattr(component,"temperature", None)
+        self.pressure = pressure or getattr(component,"pressure", None)
         self.flow_rate = flow_rate
         self._mass_flow = mass_flow
         self._molar_flow = molar_flow
@@ -58,8 +58,8 @@ class MaterialStream:
         self.component = component
         if component:
             # Pull props if available
-            self.density = density or getattr(component, "density", None)
-            self.cp = cp or getattr(component, "cp", None)
+            self.density = density or getattr(component,"density", None)()
+            self.specific_heat = specific_heat or getattr(component,"specific_heat", None)()
             self.molecular_weights = molecular_weights or {component.name: getattr(component, "mw", None)}
             self.components = {component.name: 1.0}
         else:
@@ -67,7 +67,7 @@ class MaterialStream:
             # Manual property mode
             # --------------------
             self.density = density
-            self.cp = cp
+            self.specific_heat = specific_heat
             self.molecular_weights = molecular_weights or {}
             self.components = composition or {}
 

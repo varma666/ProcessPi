@@ -1,26 +1,79 @@
-# processpi/equipment/heatexchangers/__init__.py
+from __future__ import annotations
+from typing import Optional, Dict, Any
 
-from ..heatexchangers import HeatExchanger
-# Mechanical design modules
-from .classification import Classification
-from .basic_params import BasicParameters
-from .double_pipe import DoublePipeExchanger
-from .shell_tube import ShellAndTube
-from .kern_method import KernDesign
-from .bell_method import BellDesign
-from .condenser import Condenser
-from .reboiler import Reboiler
-from .evaporator import Evaporator
+from ..base import Equipment
+from processpi.streams import MaterialStream, EnergyStream
 
-__all__ = [
-    "HeatExchanger",
-    "Classification",
-    "BasicParameters",
-    "DoublePipeExchanger",
-    "ShellAndTube",
-    "KernDesign",
-    "BellDesign",
-    "Condenser",
-    "Reboiler",
-    "Evaporator",
-]
+from . import simulation as sim
+from . import mechanical as mech
+
+
+class HeatExchanger(Equipment):
+    """
+    Unified HeatExchanger class.
+    Combines thermal simulation and mechanical design.
+    """
+
+    def __init__(
+        self,
+        name: str = "HeatExchanger",
+        method: str = "LMTD",
+        U: Optional[float] = None,
+        area: Optional[float] = None,
+        effectiveness: Optional[float] = None,
+        energy_stream: Optional[EnergyStream] = None
+    ):
+        super().__init__(name, inlet_ports=2, outlet_ports=2)
+        self.method = method.upper()
+        self.U = U
+        self.area = area
+        self.effectiveness = effectiveness
+
+        if energy_stream is None:
+            self.energy_stream = EnergyStream(name=f"{name}_Q")
+        else:
+            self.energy_stream = energy_stream
+
+        self.energy_stream.bind_equipment(self)
+
+    # ------------------------
+    # Stream attachment
+    # ------------------------
+    def attach_stream(self, stream: MaterialStream, port: str, index: Optional[int] = None):
+        mapping = {"hot_in": 0, "hot_out": 0, "cold_in": 1, "cold_out": 1}
+        #print(port)
+        if port in ["hot_in", "cold_in"]:
+            super().attach_stream(stream, "inlet", mapping[port])
+        elif port in ["hot_out", "cold_out"]:
+            super().attach_stream(stream, "outlet", mapping[port])
+        else:
+            raise ValueError(f"Invalid port: {port}")
+
+    @property
+    def hot_in(self) -> Optional[MaterialStream]: return self.inlets[0]
+    @property
+    def hot_out(self) -> Optional[MaterialStream]: return self.outlets[0]
+    @property
+    def cold_in(self) -> Optional[MaterialStream]: return self.inlets[1]
+    @property
+    def cold_out(self) -> Optional[MaterialStream]: return self.outlets[1]
+
+    # ------------------------
+    # Thermal simulation
+    # ------------------------
+    def simulate(self) -> Dict[str, Any]:
+        """
+        Run heat exchanger simulation.
+        Delegates calculations to simulation.py
+        """
+        return sim.run_simulation(self)
+
+    # ------------------------
+    # Mechanical design
+    # ------------------------
+    def design(self, **kwargs) -> Dict[str, Any]:
+        """
+        Run mechanical design calculations.
+        Delegates calculations to mechanical.py
+        """
+        return mech.run_mechanical_design(self, **kwargs)

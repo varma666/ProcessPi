@@ -1,112 +1,131 @@
 from typing import Dict, Any
-from . import HeatExchanger
-from processpi.calculations.lmtd import lmtd
-from processpi.calculations.ntu import ntu
+from .__init__ import HeatExchanger
+from processpi.calculations.heat_transfer.lmtd import LMTD
+from processpi.calculations.heat_transfer.ntu import NTUHeatExchanger
+from processpi.components import *
+from ...streams.material import MaterialStream
+from ...units import *
 
 
-# --------------------------
-# Helper Functions
-# --------------------------
-def fetch_inlet_conditions(hx: HeatExchanger) -> Dict[str, Any]:
-    """Fetch mass flows, temperatures, and heat capacities of hot and cold streams."""
-    if not hx.hot_in or not hx.cold_in:
-        raise ValueError(f"{hx.name}: both hot_in and cold_in streams must be attached.")
-
-    Th_in = hx.hot_in.temperature.to("K").value
-    Tc_in = hx.cold_in.temperature.to("K").value
-    m_hot = hx.hot_in.mass_flow().to("kg/s").value
-    m_cold = hx.cold_in.mass_flow().to("kg/s").value
-
-    cp_hot = hx.hot_in.component.get_cp(hx.hot_in.temperature)
-    cp_cold = hx.cold_in.component.get_cp(hx.cold_in.temperature)
-
-    Ch = m_hot * cp_hot
-    Cc = m_cold * cp_cold
-
-    return {
-        "Th_in": Th_in,
-        "Tc_in": Tc_in,
-        "m_hot": m_hot,
-        "m_cold": m_cold,
-        "cp_hot": cp_hot,
-        "cp_cold": cp_cold,
-        "Ch": Ch,
-        "Cc": Cc
-    }
-
-
-def update_outlets(hx: HeatExchanger, Q: float):
-    """Update hot and cold outlet streams with heat duty."""
-    if hx.hot_out:
-        hx.hot_out.update_from_enthalpy(h=None, P=hx.hot_in.pressure, deltaQ=-Q)
-    if hx.cold_out:
-        hx.cold_out.update_from_enthalpy(h=None, P=hx.cold_in.pressure, deltaQ=Q)
-
-
-def log_energy(hx: HeatExchanger, Q: float):
-    """Record energy duty in the associated energy stream."""
-    hx.energy_stream.record(Q, tag="Q_exchanger", equipment=hx.name)
-
-
-# --------------------------
-# Main Simulation Function
-# --------------------------
 def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
     """Run heat exchanger simulation for LMTD or NTU method."""
-    conds = fetch_inlet_conditions(hx)
-    Th_in = conds["Th_in"]
-    Tc_in = conds["Tc_in"]
-    Ch = conds["Ch"]
-    Cc = conds["Cc"]
+    results = {}
+    parms = _get_parms(hx)
+    Th_in = _get_value(parms["Th_in"], "Hot In")
+    Th_out = _get_value(parms["Th_out"], "Hot Out")
+    Tc_in = _get_value(parms["Tc_in"], "Cold In")
+    Tc_out = _get_value(parms["Tc_out"], "Cold Out")
+    m_hot = _get_value(parms["m_hot"], "Hot Flow Rate")
+    m_cold = _get_value(parms["m_cold"], "Cold Flow Rate")
+    cP_hot = _get_value(parms["cP_hot"], "Hot Specific Heat")
+    cP_cold = _get_value(parms["cP_cold"], "Cold Specific Heat")
 
-    results: Dict[str, Any] = {}
+    if m_hot is not None and m_cold is None:
+        
+         
+         
 
-    # --------------------------
-    # LMTD Method
-    # --------------------------
-    if hx.method == "LMTD":
-        if not (hx.U and hx.area):
-            raise ValueError(f"{hx.name}: U and area must be specified for LMTD method.")
+    if Th_out is None or Tc_out is None:
+        Th_out,Tc_out = _get_outlet_temperature(Th_in,Tc_in,m_hot,m_cold,cP_hot,cP_cold) 
 
-        Th_out_guess = hx.hot_out.temperature.to("K").value if hx.hot_out and hx.hot_out.temperature else Th_in
-        Tc_out_guess = hx.cold_out.temperature.to("K").value if hx.cold_out and hx.cold_out.temperature else Tc_in
+    
+    Q_hot = m_hot * cP_hot * (Th_in - Th_out)
+    Q_cold = m_cold * cP_cold * (Tc_out - Tc_in)
 
-        deltaT1 = Th_in - Tc_out_guess
-        deltaT2 = Th_out_guess - Tc_in
-        deltaT_lm = lmtd(deltaT1, deltaT2)
-        Q = hx.U * hx.area * deltaT_lm
+    results = {
+         "Q_hot" : Q_hot,
+         "Q_cold" : Q_cold,
+         "Hot in Temp" : Th_in,
+         "Hot Out Temp" : Th_out,
+         "Cold in Temp" : Tc_in,
+         "Cold Out Temp" : Tc_out
+    }
+    
+    return results
 
-        update_outlets(hx, Q)
 
-        results.update({
-            "method": "LMTD",
-            "Q": Q,
-            "deltaT_lm": deltaT_lm,
-            "Th_out": hx.hot_out.temperature if hx.hot_out else None,
-            "Tc_out": hx.cold_out.temperature if hx.cold_out else None
-        })
+def _get_outlet_temperature(Th_in,Tc_in,m_hot,m_cold,cP_hot,cP_cold):
+     
+    C_hot = m_hot * cP_hot
+    C_cold = m_cold * cP_cold
+    deltaT_max = Th_in - Tc_in
+    Q = min(C_cold,C_hot) * deltaT_max
 
-    # --------------------------
-    # NTU Method
-    # --------------------------
-    elif hx.method == "NTU":
-        if not (hx.U and hx.area and hx.effectiveness):
-            raise ValueError(f"{hx.name}: U, area, and effectiveness must be specified for NTU method.")
-
-        results_ntu = ntu(Cc, Ch, hx.U, hx.area, hx.effectiveness, Th_in, Tc_in)
-        Q = results_ntu["Q"]
-
-        update_outlets(hx, Q)
-
-        results.update({
-            "method": "NTU",
-            **results_ntu,
-            "Th_out": hx.hot_out.temperature if hx.hot_out else None,
-            "Tc_out": hx.cold_out.temperature if hx.cold_out else None
-        })
+    if C_hot < C_cold:
+        Th_out = Th_in - Q / C_hot
+        Tc_out = Tc_in + Q / C_cold
 
     else:
-        raise ValueError(f"{hx.name}: unknown method {hx.method}")
+        Th_out = Th_in - Q / C_hot
+        Tc_out = Tc_in + Q / C_cold
 
-    log_energy(hx, Q)
+    return Th_out,Tc_out
+         
+
+def _get_parms(hx: HeatExchanger) -> Dict[str, Any]:
+
+    if hx.cold_in is None or hx.hot_in is None:
+         return ValueError(f"Inlet and Outlet Stream Temperatures are Must")
+    
+    hot_fluid_inlet_temperature = hx.hot_in.temperature.to("K")    
+    if hx.hot_out is None:
+         hot_fluid_outlet_temperature = None
+    else:
+         hot_fluid_outlet_temperature = hx.hot_out.temperature.to("K")
+    cold_fluid_inlet_temperature = hx.cold_in.temperature.to("K")
+    if hx.cold_out is None:
+         cold_fluid_outlet_temperature = None
+    else:
+         cold_fluid_outlet_temperature = hx.cold_out.temperature.to("K")
+    
+    hot_fluid_flowrate = hx.hot_in.mass_flow().to("kg/s") or None
+    
+    cold_fluid_flowrate = hx.cold_in.mass_flow().to("kg/s") or None
+    
+    hot_fluid_cp = hx.hot_in.specific_heat.to("J/kgK")
+    cold_fluid_cp = hx.cold_in.specific_heat.to("J/kgK")
+
+    results = {
+        "Th_in" : hot_fluid_inlet_temperature,
+        "Th_out" : hot_fluid_outlet_temperature,
+        "Tc_in" : cold_fluid_inlet_temperature,
+        "Tc_out" : cold_fluid_outlet_temperature,
+        "m_hot" : hot_fluid_flowrate,
+        "m_cold" : cold_fluid_flowrate,
+        "cP_hot" : hot_fluid_cp,
+        "cP_cold" : cold_fluid_cp
+    }
+
     return results
+
+def _get_value(x, name):
+        """
+        A static utility method to extract the numeric value from an input.
+
+        This method handles both simple numeric types (like `int`, `float`)
+        and custom objects that have a `.value` attribute, such as unit objects.
+        It raises a `TypeError` if the value cannot be interpreted as a number.
+
+        Args:
+            x: The input value, which can be a number or a unit object.
+            name (str): The name of the input, used for a more informative
+                        error message.
+
+        Returns:
+            float: The numeric value of the input.
+
+        Raises:
+            TypeError: If the input value cannot be converted to a float.
+        """
+        if x is None:
+             return None
+        
+        if hasattr(x, "value"):
+            return x.value
+        try:
+            # Accept numpy/scalar numbers.
+            return float(x)
+        except (TypeError, ValueError):
+            raise TypeError(f"Could not interpret {name} value: {x!r}")
+
+

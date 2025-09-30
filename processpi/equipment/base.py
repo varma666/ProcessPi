@@ -37,7 +37,7 @@ class Equipment:
             if self.inlets[index] is not None:
                 raise ValueError(f"Inlet port {index} of {self.name} already occupied")
             self.inlets[index] = stream
-            stream.connect_outlet(self)  # stream → equipment consistency
+            #stream.connect_outlet(self)  # stream → equipment consistency
 
         elif port == "outlet":
             if index >= len(self.outlets) or index < 0:
@@ -45,7 +45,7 @@ class Equipment:
             if self.outlets[index] is not None:
                 raise ValueError(f"Outlet port {index} of {self.name} already occupied")
             self.outlets[index] = stream
-            stream.connect_inlet(self)  # stream ← equipment consistency
+            #stream.connect_inlet(self)  # stream ← equipment consistency
 
         else:
             raise ValueError("port must be 'inlet' or 'outlet'")
