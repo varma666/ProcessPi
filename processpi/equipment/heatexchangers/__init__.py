@@ -1,7 +1,6 @@
 # processpi/equipment/heatexchangers/__init__.py
 
-from .heatexchanger import HeatExchanger
-
+from ..heatexchangers import HeatExchanger
 # Mechanical design modules
 from .classification import Classification
 from .basic_params import BasicParameters
