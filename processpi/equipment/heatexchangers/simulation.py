@@ -21,9 +21,13 @@ def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
     cP_cold = _get_value(parms["cP_cold"], "Cold Specific Heat")
 
     if m_hot is not None and m_cold is None:
-        
-         
-         
+         if Th_in is not None and Th_out is not None and Tc_in is not None and Tc_out is not None:
+              Q_hot = m_hot * cP_hot * (Th_in - Th_out)
+              m_cold = Q_hot / (cP_cold * (Tc_out - Tc_in))
+    if m_cold is not None and m_hot is None:
+         if Th_in is not None and Th_out is not None and Tc_in is not None and Tc_out is not None:
+              Q_cold = m_cold * cP_cold * (Tc_out - Tc_in)
+              m_hot = Q_cold / (cP_hot * (Th_in - Th_out))
 
     if Th_out is None or Tc_out is None:
         Th_out,Tc_out = _get_outlet_temperature(Th_in,Tc_in,m_hot,m_cold,cP_hot,cP_cold) 
@@ -31,6 +35,22 @@ def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
     
     Q_hot = m_hot * cP_hot * (Th_in - Th_out)
     Q_cold = m_cold * cP_cold * (Tc_out - Tc_in)
+    dT1 = Th_in - Tc_out
+    dT2 = Th_out - Tc_in
+    delta_Tlm = LMTD(dT1=dT1, dT2=dT2).calculate()
+
+    if hx.U is None:
+         if hx.hot_in.component is None or hx.cold_in.component is None:
+              raise ValueError(f"U is Not initiated please initiate U or add a component")
+         else:
+              hot_fluid = hx.hot_in.component.name
+              cold_fluid = hx.cold_in.component.name
+              U = get_U(hot_fluid,cold_fluid)
+              print("U Not Declared")
+
+         
+    else:
+         U = hx.U
 
     results = {
          "Q_hot" : Q_hot,
@@ -38,7 +58,12 @@ def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
          "Hot in Temp" : Th_in,
          "Hot Out Temp" : Th_out,
          "Cold in Temp" : Tc_in,
-         "Cold Out Temp" : Tc_out
+         "Cold Out Temp" : Tc_out,
+         "m_hot" : m_hot,
+         "m_cold" : m_cold,
+         "cP_hot" : cP_hot,
+         "cP_cold" : cP_cold,
+         "delta_Tlm" : delta_Tlm
     }
     
     return results
@@ -78,10 +103,20 @@ def _get_parms(hx: HeatExchanger) -> Dict[str, Any]:
     else:
          cold_fluid_outlet_temperature = hx.cold_out.temperature.to("K")
     
-    hot_fluid_flowrate = hx.hot_in.mass_flow().to("kg/s") or None
+    if hx.hot_in.mass_flow() is None and hx.cold_in.mass_flow() is None:
+        return ValueError(f"At least one of the fluid flow rates must be specified")
     
-    cold_fluid_flowrate = hx.cold_in.mass_flow().to("kg/s") or None
-    
+    if hx.hot_in.mass_flow() is None:
+         hot_fluid_flowrate = None
+    else:
+         hot_fluid_flowrate = hx.hot_in.mass_flow().to("kg/s")
+
+    if hx.cold_in.mass_flow() is None:
+         cold_fluid_flowrate = None
+    else:
+         cold_fluid_flowrate = hx.cold_in.mass_flow().to("kg/s")
+
+
     hot_fluid_cp = hx.hot_in.specific_heat.to("J/kgK")
     cold_fluid_cp = hx.cold_in.specific_heat.to("J/kgK")
 
