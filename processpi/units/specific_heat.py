@@ -14,7 +14,7 @@ class SpecificHeat(Variable):
         "kJ/kgK": 1,
         "J/kgK": 0.001,
         "cal/gK": 4.1868 * 0.001,   # 1 cal/g.K = 4.1868 kJ/kg.K
-        "BTU/lbF": 4.1868 * 2.326,  # approx conversion to kJ/kg.K
+        "BTU/lbF": 4.1868 * 1000,  # approx conversion to kJ/kg.K
         "kcal/kgK": 4.1868
     }
 

@@ -5,6 +5,7 @@ from processpi.calculations.heat_transfer.ntu import NTUHeatExchanger
 from processpi.components import *
 from ...streams.material import MaterialStream
 from ...units import *
+from .standards import get_typical_U
 
 
 def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
@@ -43,14 +44,17 @@ def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
          if hx.hot_in.component is None or hx.cold_in.component is None:
               raise ValueError(f"U is Not initiated please initiate U or add a component")
          else:
-              hot_fluid = hx.hot_in.component.name
-              cold_fluid = hx.cold_in.component.name
-              U = get_U(hot_fluid,cold_fluid)
-              print("U Not Declared")
-
-         
+              hot_fluid = hx.hot_in.component.httype()
+              cold_fluid = hx.cold_in.component.httype()
+             
+              U_set= get_typical_U(hot_fluid,cold_fluid)
+              U = HeatTransferCoefficient((U_set[0].value + U_set[1].value)/2)
+              #print(hot_fluid,cold_fluid,U)
+        
     else:
          U = hx.U
+    area = Area(Q_hot / (U.value * delta_Tlm),"m2")
+         
 
     results = {
          "Q_hot" : Q_hot,
@@ -63,9 +67,14 @@ def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
          "m_cold" : m_cold,
          "cP_hot" : cP_hot,
          "cP_cold" : cP_cold,
-         "delta_Tlm" : delta_Tlm
+         "delta_Tlm" : delta_Tlm,
+         "U" : U,
+         "Area" : area
     }
     
+    hx.area = area
+    hx.U = U
+
     return results
 
 

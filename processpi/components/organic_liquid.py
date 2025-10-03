@@ -5,6 +5,8 @@ class OrganicLiquid(Component):
     name = "Organic Liquid"
     formula = "R-CH"
     molecular_weight = 100.0
+    httype = "organicliquid"
+    p_h = "liquid"
     _critical_temperature = Temperature(550, "K")
     _critical_pressure = Pressure(4.5, "MPa")
     _critical_volume = Volume(0.25, "m3")
@@ -16,3 +18,12 @@ class OrganicLiquid(Component):
     _thermal_conductivity_constants = [0.2, -0.0003, 0, 0, 0]
     _vapor_pressure_constants = [70, -6000, -7.0, 0.000006, 2]
     _enthalpy_constants = [4.2E-7, 0.3, 180, 3.5, 0]
+    
+    def httype(self):
+        P = self.pressure.to("Pa").value
+        Pvap = self.vapor_pressure().to("Pa").value
+        if P < Pvap:
+            httype = "organicvapour"
+        else:
+            httype = "organicliquid"
+        return httype
