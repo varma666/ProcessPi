@@ -11,20 +11,20 @@ class SpecificHeat(Variable):
     """
 
     _conversion = {
-        "kJ/kgK": 1,
-        "J/kgK": 0.001,
-        "cal/gK": 4.1868 * 0.001,   # 1 cal/g.K = 4.1868 kJ/kg.K
+        "J/kgK": 1,
+        "kJ/kgK": 1000,
+        "cal/gK": 4.1868 * 1000,   # 1 cal/g.K = 4.1868 kJ/kg.K
         "BTU/lbF": 4.1868 * 1000,  # approx conversion to kJ/kg.K
-        "kcal/kgK": 4.1868
+        "kcal/kgK": 4.1868 * 1000  # 1 kcal/kg.K = 4.1868 kJ/kg.K
     }
 
-    def __init__(self, value, units="kJ/kgK"):
+    def __init__(self, value, units="J/kgK"):
         if value < 0:
             raise ValueError("Specific heat must be positive.")
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for SpecificHeat")
         base_value = round(value * self._conversion[units], 6)
-        super().__init__(base_value, "kJ/kgK")
+        super().__init__(base_value, "J/kgK")
         self.original_value = value
         self.original_unit = units
 
@@ -38,7 +38,7 @@ class SpecificHeat(Variable):
         if not isinstance(other, SpecificHeat):
             raise TypeError("Addition only supported between SpecificHeat instances")
         total = self.value + other.value
-        return SpecificHeat(round(total, 6), "kJ/kgK")
+        return SpecificHeat(round(total, 6), "J/kgK")
 
     def __eq__(self, other):
         return isinstance(other, SpecificHeat) and self.value == other.value

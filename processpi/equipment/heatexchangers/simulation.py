@@ -21,6 +21,10 @@ def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
     cP_hot = _get_value(parms["cP_hot"], "Hot Specific Heat")
     cP_cold = _get_value(parms["cP_cold"], "Cold Specific Heat")
 
+    #print(parms)
+
+    #print(cP_cold,cP_hot)
+
     if m_hot is not None and m_cold is None:
          if Th_in is not None and Th_out is not None and Tc_in is not None and Tc_out is not None:
               Q_hot = m_hot * cP_hot * (Th_in - Th_out)
@@ -57,16 +61,16 @@ def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
          
 
     results = {
-         "Q_hot" : Q_hot,
-         "Q_cold" : Q_cold,
-         "Hot in Temp" : Th_in,
-         "Hot Out Temp" : Th_out,
-         "Cold in Temp" : Tc_in,
-         "Cold Out Temp" : Tc_out,
-         "m_hot" : m_hot,
-         "m_cold" : m_cold,
-         "cP_hot" : cP_hot,
-         "cP_cold" : cP_cold,
+         "Q_hot" : HeatFlow(Q_hot,"W"),
+         "Q_cold" : HeatFlow(Q_cold,"W"),
+         "Hot in Temp" : Temperature(Th_in,"K"),
+         "Hot Out Temp" : Temperature(Th_out,"K"),
+         "Cold in Temp" : Temperature(Tc_in,"K"),
+         "Cold Out Temp" : Temperature(Tc_out,"K"),
+         "m_hot" : MassFlowRate(m_hot,"kg/s"),
+         "m_cold" : MassFlowRate(m_cold,"kg/s"),
+         "cP_hot" : SpecificHeat(cP_hot,"J/kgK"),
+         "cP_cold" : SpecificHeat(cP_cold,"J/kgK"),
          "delta_Tlm" : delta_Tlm,
          "U" : U,
          "Area" : area
@@ -125,8 +129,9 @@ def _get_parms(hx: HeatExchanger) -> Dict[str, Any]:
     else:
          cold_fluid_flowrate = hx.cold_in.mass_flow().to("kg/s")
 
-
+    #print(hx.hot_in.specific_heat)
     hot_fluid_cp = hx.hot_in.specific_heat.to("J/kgK")
+    #print(hot_fluid_cp)
     cold_fluid_cp = hx.cold_in.specific_heat.to("J/kgK")
 
     results = {
@@ -165,6 +170,7 @@ def _get_value(x, name):
              return None
         
         if hasattr(x, "value"):
+            #print(x)
             return x.value
         try:
             # Accept numpy/scalar numbers.

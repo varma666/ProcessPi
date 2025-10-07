@@ -77,3 +77,17 @@ class HeatExchanger(Equipment):
         Delegates calculations to mechanical.py
         """
         return mech.run_mechanical_design(self, **kwargs)
+    
+    def __str__(self):
+        return f"Heat Exchanger: {self.name}\n" +\
+               f"  Method: {self.method}\n" +\
+               f"  U: {self.U}\n" +\
+               f"  Area: {self.area}\n" +\
+               f"  Effectiveness: {self.effectiveness}\n" +\
+               f"  Hot In: {self.hot_in}\n" +\
+               f"  Hot Out: {self.hot_out}\n" +\
+               f"  Cold In: {self.cold_in}\n" +\
+               f"  Cold Out: {self.cold_out}\n" +\
+               f"  Energy Stream: {self.energy_stream}\n"
+    def __repr__(self):
+        return f"HeatExchanger(name={self.name}, method={self.method}, U={self.U}, area={self.area}, effectiveness={self.effectiveness})"

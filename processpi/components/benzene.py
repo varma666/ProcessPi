@@ -1,4 +1,4 @@
-from .base import Component
+from .base import Component, PropertyMethod
 from processpi.units import *
 
 
@@ -29,8 +29,9 @@ class Benzene(Component):
     _thermal_conductivity_constants = [0.23444, -0.00030572, 0, 0, 0]
     _vapor_pressure_constants = [83.107, -6486.2, -9.2194, 0.0000069844, 2]
     _enthalpy_constants = [4.5346E-7, 0.39053, 0, 0, 0]  # Placeholder for enthalpy constants
-
-    def specific_heat(self, temperature: Temperature):
+    
+    @PropertyMethod
+    def specific_heat(self):
         """
         Calculates the specific heat of Benzene at a given temperature.
 
@@ -45,7 +46,7 @@ class Benzene(Component):
         Returns:
             SpecificHeat: The calculated specific heat in units of J/kgK.
         """
-        T = temperature.value
+        T = self.temperature.value
         # Use a conditional to select the correct set of polynomial constants.
         if T <= 353.24:
             constants = self._specific_heat_constants_1
