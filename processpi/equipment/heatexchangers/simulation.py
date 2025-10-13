@@ -1,5 +1,5 @@
 from typing import Dict, Any
-from .__init__ import HeatExchanger
+from .base import HeatExchanger
 from processpi.calculations.heat_transfer.lmtd import LMTD
 from processpi.calculations.heat_transfer.ntu import NTUHeatExchanger
 from processpi.components import *
@@ -64,9 +64,9 @@ def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
          "Q_hot" : HeatFlow(Q_hot,"W"),
          "Q_cold" : HeatFlow(Q_cold,"W"),
          "Hot in Temp" : Temperature(Th_in,"K"),
-         "Hot Out Temp" : Temperature(Th_out,"K"),
+         "Hot out Temp" : Temperature(Th_out,"K"),
          "Cold in Temp" : Temperature(Tc_in,"K"),
-         "Cold Out Temp" : Temperature(Tc_out,"K"),
+         "Cold out Temp" : Temperature(Tc_out,"K"),
          "m_hot" : MassFlowRate(m_hot,"kg/s"),
          "m_cold" : MassFlowRate(m_cold,"kg/s"),
          "cP_hot" : SpecificHeat(cP_hot,"J/kgK"),
@@ -78,6 +78,7 @@ def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
     
     hx.area = area
     hx.U = U
+    hx.simulated_params = results
 
     return results
 

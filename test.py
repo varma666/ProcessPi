@@ -1,6 +1,6 @@
 from unittest import result
 from processpi.streams import MaterialStream
-from processpi.equipment.heatexchangers import HeatExchanger
+from processpi.equipment.heatexchangers.base import HeatExchanger
 from processpi.units import *
 from processpi.components import Water, OrganicLiquid, Benzene
 
@@ -30,6 +30,9 @@ hx.attach_stream(cold_out,port = "cold_out")
 # Thermal simulation
 result = hx.simulate()
 print(hx)
+
+design = hx.design(type="DoublePipe")
+print(design)
 
 
 '''# Mechanical design → Double Pipe

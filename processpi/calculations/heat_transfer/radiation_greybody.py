@@ -1,9 +1,9 @@
 from ..base import CalculationBase
 from ...units import *
 
-class GraybodyRadiation(CalculationBase):
+class GreybodyRadiation(CalculationBase):
     """
-    Graybody radiation with emissivity factor.
+    Greybody radiation with emissivity factor.
 
     **Formula:**
         q = ε * σ * T^4

@@ -62,3 +62,5 @@ def get_typical_U(fluid1, fluid2):
         return TYPICAL_U[reverse_key]
     else:
         raise ValueError(f"No typical heat transfer coefficient values found for the fluid pair: {fluid1} and {fluid2}.")
+
+

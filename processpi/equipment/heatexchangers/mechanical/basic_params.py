@@ -18,47 +18,62 @@ def run(hx, **kwargs) -> Dict[str, Any]:
     # -----------------------------
     # Fetch stream info safely
     # -----------------------------
-    hot_in = hx.hot_in
-    cold_in = hx.cold_in
+ 
+    if hx.cold_in is None or hx.hot_in is None:
+         return ValueError(f"Inlet and Outlet Stream Temperatures are Must")
+    
+    hot_fluid_inlet_temperature = hx.hot_in.temperature.to("K")    
+    if hx.hot_out is None:
+         hot_fluid_outlet_temperature = None
+    else:
+         hot_fluid_outlet_temperature = hx.hot_out.temperature.to("K")
+    cold_fluid_inlet_temperature = hx.cold_in.temperature.to("K")
+    if hx.cold_out is None:
+         cold_fluid_outlet_temperature = None
+    else:
+         cold_fluid_outlet_temperature = hx.cold_out.temperature.to("K")
+    
+    if hx.hot_in.mass_flow() is None and hx.cold_in.mass_flow() is None:
+        return ValueError(f"At least one of the fluid flow rates must be specified")
+    
+    if hx.hot_in.mass_flow() is None:
+         hot_fluid_flowrate = None
+    else:
+         hot_fluid_flowrate = hx.hot_in.mass_flow().to("kg/s")
 
-    if not hot_in or not cold_in:
-        raise ValueError(f"{hx.name}: Both hot_in and cold_in streams must be attached.")
+    if hx.cold_in.mass_flow() is None:
+         cold_fluid_flowrate = None
+    else:
+         cold_fluid_flowrate = hx.cold_in.mass_flow().to("kg/s")
 
-    # Mass flow rates in kg/s
-    m_hot = hot_in.mass_flow().to("kg/s").value
-    m_cold = cold_in.mass_flow().to("kg/s").value
-
-    # Heat capacities (J/kg-K)
-    cp_hot = hot_in.component.get_cp(hot_in.temperature)
-    cp_cold = cold_in.component.get_cp(cold_in.temperature)
-
-    # Inlet temperatures
-    Th_in = hot_in.temperature.to("K").value
-    Tc_in = cold_in.temperature.to("K").value
+    #print(hx.hot_in.specific_heat)
+    hot_fluid_cp = hx.hot_in.specific_heat.to("J/kgK")
+    #print(hot_fluid_cp)
+    cold_fluid_cp = hx.cold_in.specific_heat.to("J/kgK")
 
     # -----------------------------
     # Calculate basic parameters
     # -----------------------------
     # Heat capacity rates
-    Ch = m_hot * cp_hot
-    Cc = m_cold * cp_cold
+    Ch = hot_fluid_flowrate * hot_fluid_cp
+    Cc = cold_fluid_flowrate * cold_fluid_cp
 
     # Maximum possible heat transfer
     C_min = min(Ch, Cc)
     C_max = max(Ch, Cc)
 
     results.update({
-        "Th_in": Th_in,
-        "Tc_in": Tc_in,
-        "m_hot": m_hot,
-        "m_cold": m_cold,
-        "cp_hot": cp_hot,
-        "cp_cold": cp_cold,
+        "Th_in": hot_fluid_inlet_temperature,
+        "Tc_in": cold_fluid_inlet_temperature,
+        "m_hot": hot_fluid_flowrate,
+        "m_cold": cold_fluid_flowrate,
+        "cp_hot": hot_fluid_cp,
+        "cp_cold": cold_fluid_cp,
         "Ch": Ch,
         "Cc": Cc,
         "C_min": C_min,
         "C_max": C_max,
-        "delta_T_max": abs(Th_in - Tc_in)
+        "delta_T_max": abs(hot_fluid_inlet_temperature - cold_fluid_inlet_temperature)
     })
 
     # Optional: allow user to override values via kwargs

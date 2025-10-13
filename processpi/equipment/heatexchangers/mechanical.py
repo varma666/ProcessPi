@@ -1,5 +1,5 @@
 from typing import Dict, Any
-from . import HeatExchanger
+from .base import HeatExchanger
 
 def run_mechanical_design(hx: HeatExchanger, type: str = "ShellAndTube", **kwargs) -> Dict[str, Any]:
     """

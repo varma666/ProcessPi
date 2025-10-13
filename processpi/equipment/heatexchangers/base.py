@@ -4,8 +4,6 @@ from typing import Optional, Dict, Any
 from ..base import Equipment
 from processpi.streams import MaterialStream, EnergyStream
 
-from . import simulation as sim
-from . import mechanical as mech
 
 
 class HeatExchanger(Equipment):
@@ -21,7 +19,8 @@ class HeatExchanger(Equipment):
         U: Optional[float] = None,
         area: Optional[float] = None,
         effectiveness: Optional[float] = None,
-        energy_stream: Optional[EnergyStream] = None
+        energy_stream: Optional[EnergyStream] = None,
+        simulated_params: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(name, inlet_ports=2, outlet_ports=2)
         self.method = method.upper()
@@ -35,6 +34,7 @@ class HeatExchanger(Equipment):
             self.energy_stream = energy_stream
 
         self.energy_stream.bind_equipment(self)
+        self.simulated_params = simulated_params or {}
 
     # ------------------------
     # Stream attachment
@@ -62,6 +62,7 @@ class HeatExchanger(Equipment):
     # Thermal simulation
     # ------------------------
     def simulate(self) -> Dict[str, Any]:
+        from processpi.equipment.heatexchangers import simulation as sim
         """
         Run heat exchanger simulation.
         Delegates calculations to simulation.py
@@ -71,12 +72,14 @@ class HeatExchanger(Equipment):
     # ------------------------
     # Mechanical design
     # ------------------------
-    def design(self, **kwargs) -> Dict[str, Any]:
+    def design(self, type: str, **kwargs) -> Dict[str, Any]:
+        from processpi.equipment.heatexchangers import mechanical as mech
         """
         Run mechanical design calculations.
         Delegates calculations to mechanical.py
         """
-        return mech.run_mechanical_design(self, **kwargs)
+        
+        return mech.run_mechanical_design(self, type=type, **kwargs)
     
     def __str__(self):
         return f"Heat Exchanger: {self.name}\n" +\
