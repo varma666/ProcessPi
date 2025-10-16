@@ -75,71 +75,13 @@ class HeatExchanger(Equipment):
 
     def design(self, module: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         """
-        Advanced design with:
-        - Automatic hot/cold stream assignment
-        - Multi-phase detection: Condenser, Reboiler, Evaporator
-        - Zone-wise LMTD/U iterative convergence
-        - Subcooling / superheating zones
-        - Internally uses HXDispatcher
+        Unified design interface.
+        Delegates to HXClassification which handles multi-phase, 
+        subcooling/superheating, zone-wise U/LMTD iterations, etc.
         """
-        from processpi.equipment.heatexchangers.classification import HXDispatcher
-        from processpi.equipment.heatexchangers.condenser import design_condenser
-        from processpi.equipment.heatexchangers.evaporator import design_evaporator
-        from processpi.equipment.heatexchangers.reboiler import design_reboiler
-    
-        # ------------------------
-        # Auto-assign hot and cold streams if missing
-        # ------------------------
-        if self.hot_in is None or self.cold_in is None:
-            streams = [s for s in self.inlets if isinstance(s, MaterialStream)]
-            if len(streams) >= 2:
-                streams_sorted = sorted(streams, key=lambda s: s.temperature.to("K").value, reverse=True)
-                self.hot_in = streams_sorted[0]
-                self.cold_in = streams_sorted[-1]
-    
-        hot = self.hot_in
-        cold = self.cold_in
-    
-        # ------------------------
-        # Multi-phase detection
-        # ------------------------
-        hot_comp = getattr(hot, "component", None)
-        cold_comp = getattr(cold, "component", None)
-    
-        is_hot_vapor = hasattr(hot_comp, "is_vapor") and hot_comp.is_vapor()
-        is_cold_liquid = hasattr(cold_comp, "is_liquid") and cold_comp.is_liquid()
-    
-        hot_sat = hasattr(hot_comp, "saturation_temperature") and abs(hot.temperature.to("K").value - hot_comp.saturation_temperature().to("K").value) < 2.0
-        cold_sat = hasattr(cold_comp, "saturation_temperature") and abs(cold.temperature.to("K").value - cold_comp.saturation_temperature().to("K").value) < 2.0
-    
-        # ------------------------
-        # Determine module automatically
-        # ------------------------
-        if module is None:
-            if is_hot_vapor and is_cold_liquid:
-                module = "Condenser" if hot_sat else "ShellTube"
-            elif hasattr(cold_comp, "is_reboiler_liquid") and cold_comp.is_reboiler_liquid():
-                module = "Reboiler"
-            elif hasattr(cold_comp, "is_evaporator_liquid") and cold_comp.is_evaporator_liquid():
-                module = "Evaporator"
-            else:
-                duty_guess = hot.mass_flowrate.to("kg/s").value * hot.cp.to("J/kg-K").value * abs(hot.temperature.to("K").value - cold.temperature.to("K").value)
-                module = "DoublePipe" if duty_guess < 1e5 else "ShellTube"
-    
-        # ------------------------
-        # Condenser / Evaporator / Reboiler design with zone-wise iteration
-        # ------------------------
-        if module.lower() == "condenser":
-            return design_condenser(hot, cold, **kwargs)
-        elif module.lower() == "evaporator":
-            return design_evaporator(hot, cold, **kwargs)
-        elif module.lower() == "reboiler":
-            return design_reboiler(hot, cold, **kwargs)
-        else:
-            # For standard mechanical exchangers, use HXDispatcher
-            dispatcher = HXDispatcher(hot_stream=hot, cold_stream=cold, **kwargs)
-            return dispatcher.design(module=module)
-
+        from processpi.equipment.heatexchangers.classification import HXClassification
+        hx_class = HXClassification(hot=self.hot_in, cold=self.cold_in)
+        return hx_class.design(module=module, **kwargs)
     
     def __str__(self):
         return f"Heat Exchanger: {self.name}\n" +\
