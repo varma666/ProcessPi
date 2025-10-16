@@ -1,32 +1,39 @@
 # processpi/equipment/heatexchangers/classification.py
 
-"""
-Heat Exchanger Classification & Dispatcher
-------------------------------------------
-Automatically selects the appropriate heat exchanger module or routes
-to a specified module for design calculations.
-
-Usage:
-------
-from processpi.equipment.heatexchangers.classification import HXDispatcher
-
-hx = HXDispatcher(hot_stream, cold_stream)
-hx.design(module="DoublePipe")  # directly calls DoublePipe design
-hx.design()  # auto-selects the best exchanger type
-"""
-
 from .doublepipe import design_doublepipe
 from .shell_tube import design_shelltube
 from .condenser import design_condenser
 from .evaporator import design_evaporator
 from .reboiler import design_reboiler
 from typing import Optional, Dict, Any
+from processpi.streams.material import MaterialStream
+from processpi.equipment.heatexchangers.base import HeatExchanger
 
 class HXDispatcher:
-    def __init__(self, hot_stream, cold_stream, **kwargs):
-        self.hot = hot_stream
-        self.cold = cold_stream
+    """
+    Automatically selects hot/cold streams and appropriate module
+    based on the HeatExchanger object's attached streams.
+    """
+
+    def __init__(self, hx: HeatExchanger, **kwargs):
+        self.hx = hx
         self.kwargs = kwargs
+        self.hot, self.cold = self._auto_assign_streams()
+
+    def _auto_assign_streams(self) -> tuple[MaterialStream, MaterialStream]:
+        """
+        Pick hot and cold streams from the HeatExchanger's attached streams
+        based on temperature: highest temperature → hot, lowest → cold.
+        """
+        streams = [s for s in [self.hx.hot_in, self.hx.hot_out,
+                               self.hx.cold_in, self.hx.cold_out]
+                   if isinstance(s, MaterialStream) and s.temperature is not None]
+
+        if len(streams) < 2:
+            raise ValueError("At least two streams with temperature required for auto-selection.")
+
+        sorted_streams = sorted(streams, key=lambda s: s.temperature.to("K").value, reverse=True)
+        return sorted_streams[0], sorted_streams[-1]
 
     def _auto_select_module(self) -> str:
         """
