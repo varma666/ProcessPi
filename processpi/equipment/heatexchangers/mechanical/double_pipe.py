@@ -15,7 +15,9 @@ Updated double-pipe heat exchanger design routine:
 
 import math
 from typing import Dict, Any, Optional, Tuple, List, Union
-from ....units import Diameter, Length, Pressure, Temperature, MassFlowRate, Conductivity, Variable
+
+from processpi.calculations.heat_transfer.overall_u import OverallHeatTransferCoefficient
+from ....units import *
 from ....streams.material import MaterialStream
 from ..base import HeatExchanger
 
@@ -239,7 +241,7 @@ def fouling_rate_from_temp_trend(U_initial: float, Thot_in: float, Thot_out_init
 # ------------------------------------------------------------------
 # Top-level design function (end-to-end)
 # ------------------------------------------------------------------
-def design_double_pipe_aspen_like(
+def design_doublepipe(
     hx: HeatExchanger,
     *,
     innerpipe_dia: Optional[Diameter] = None,
@@ -253,7 +255,7 @@ def design_double_pipe_aspen_like(
     pass_layout: Optional[str] = None, # e.g., "1-1","1-2","2-1","1-4","2-2" -> use chart Ft if provided
     target_dp: Optional[Pressure] = None,
     pipe_library: Optional[Dict[Diameter, Dict[str, Tuple[Length, Diameter, Diameter]]]] = None,
-    wall_k: Union[float, Conductivity] = _DEFAULT_WALL_K,
+    wall_k: Union[float, ThermalConductivity] = _DEFAULT_WALL_K,
     roughness: float = _DEFAULT_ROUGHNESS,
     fouling_tube: float = _DEFAULT_FOULING_TUBE,
     fouling_shell: float = _DEFAULT_FOULING_SHELL,
@@ -261,9 +263,9 @@ def design_double_pipe_aspen_like(
     k_minor_annulus: float = _DEFAULT_K_MINOR_ANNULUS,
     max_iters: int = _DEFAULT_MAX_ITERS,
     tol: float = _DEFAULT_TOL,
-    hairpin_length_m: Optional[float] = None,   # if provided, compute hairpin count
-    hairpin_pipe_inner_id_m: Optional[float] = None,  # required if hairpin counting requested
-    hairpin_pipe_outer_od_m: Optional[float] = None,
+    hairpin_length: Optional[float] = None,   # if provided, compute hairpin count
+    hairpin_pipe_inner_id: Optional[float] = None,  # required if hairpin counting requested
+    hairpin_pipe_outer_od: Optional[float] = None,
 ) -> Dict[str, Any]:
     """
     Perform a detailed double-pipe heat exchanger design with Ft integration.
@@ -563,41 +565,41 @@ def design_double_pipe_aspen_like(
             # scoring metric: minimize total length + dp penalty
             score = L_total + penalty
 
-            # hairpin counting if requested (hairpin_length_m provided)
+            # hairpin counting if requested (hairpin_length provided)
             hairpin_info = {}
-            if hairpin_length_m and hairpin_pipe_inner_id_m and hairpin_pipe_outer_od_m:
+            if hairpin_length and hairpin_pipe_inner_id and hairpin_pipe_outer_od:
                 # area per hairpin (single hairpin has inner_perimeter * length * passes_per_hairpin)
                 # hairpin is typically one U-turn: treat each hairpin as a single inner tube of length hairpin_length
-                hairpin_area_per = math.pi * Di * hairpin_length_m
+                hairpin_area_per = math.pi * hairpin_pipe_inner_id * hairpin_length
                 hairpins_required = math.ceil((A_required) / hairpin_area_per) if A_required != float("inf") else None
                 hairpin_info = {
-                    "hairpin_length_m": hairpin_length_m,
+                    "hairpin_length_m": hairpin_length,
                     "hairpin_area_m2": hairpin_area_per,
                     "hairpins_required": hairpins_required
                 }
 
             result = {
-                "pipe_Di_m": Di,
-                "pipe_Do_m": Do,
+                "innerpipe_dia": Diameter(Di,"m"),
+                "outerpipe_dia": Diameter(Do,"m"), 
                 "assignment": assignment,
                 "inner_mode": inner_mode,
                 "passes": passes,
                 "annulus_parallel": annulus_parallel,
-                "L_total_m": L_total,
-                "L_per_pass_m": L_per_pass,
-                "U_ref_W_m2K": U_ref,
-                "U_new_W_m2K": U_new,
+                "total_length": Length(L_total,"m"),
+                "length_per_pass": Length(L_per_pass,"m"),
+                "U_ref": HeatTransferCoefficient(U_ref,"W/m2K"),
+                "U_max": HeatTransferCoefficient(U_new,"W/m2K"),
                 "Ft": Ft,
-                "A_required_m2": A_required,
-                "effective_inner_area_m2": effective_inner_area,
-                "Q_W": Q,
-                "Re_tube": Re_t_final,
-                "Re_annulus": Re_a_final,
-                "Nu_tube": Nu_t,
-                "Nu_annulus": Nu_a,
-                "dp_tube_Pa": dp_tube_total,
-                "dp_annulus_Pa": dp_ann_total,
-                "total_dp_Pa": total_dp,
+                "required_area": Area(A_required,"m2"),
+                "effective_area": Area(effective_inner_area,"m2"),
+                "Q": HeatFlow(Q,"W"),
+                "Re_tube": Dimensionless(Re_t_final),
+                "Re_annulus": Dimensionless(Re_a_final),
+                "Nu_tube": Dimensionless(Nu_t),
+                "Nu_annulus": Dimensionless(Nu_a),
+                "dp_tube": Pressure(dp_tube_total,"Pa"),
+                "dp_annulus": Pressure(dp_ann_total,"Pa"),
+                "total_dp": Pressure(total_dp,"Pa"),
                 "converged": converged,
                 "iterations": iteration + 1,
                 "hairpin_info": hairpin_info,

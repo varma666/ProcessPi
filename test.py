@@ -29,10 +29,10 @@ hx.attach_stream(cold_out,port = "cold_out")
 
 # Thermal simulation
 result = hx.simulate()
-print(hx)
+#print(hx)
 
-design = hx.design(type="DoublePipe")
-print(design)
+design = hx.design(module="DoublePipe",innerpipe_dia=Diameter(1.25,"in"), outerpipe_dia=Diameter(2,"in"), hairpin_length=Length(16,"ft"))
+print(design["total_length"].to("ft"))
 
 
 '''# Mechanical design → Double Pipe

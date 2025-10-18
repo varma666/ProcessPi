@@ -16,7 +16,7 @@ Notes:
 
 import math
 from typing import Dict, Any, Optional, Tuple, List, Union
-from ....units import Diameter, Length, Pressure, Conductivity, Variable
+from ....units import Diameter, Length, Pressure, ThermalConductivity, Variable
 from ....streams.material import MaterialStream
 from ..base import HeatExchanger
 
@@ -436,7 +436,7 @@ def _epsilon_from_arrangement(arr: str, NTU: float, C: float) -> float:
 # -------------------------------------------------------------------------
 # Top-level design function using Bell-Delaware, packing, header design, mechanical summary
 # -------------------------------------------------------------------------
-def design_shell_tube_bell_delaware(
+def design_shelltube(
     hx: HeatExchanger,
     *,
     tube_nominal: Optional[Diameter] = None,
@@ -451,7 +451,7 @@ def design_shell_tube_bell_delaware(
     target_dp_tube: Optional[Pressure] = None,
     target_dp_shell: Optional[Pressure] = None,
     pipe_schedule_db: Optional[Dict] = None,
-    wall_k: Union[float, Conductivity] = _DEFAULT_WALL_K,
+    wall_k: Union[float, ThermalConductivity] = _DEFAULT_WALL_K,
     roughness: float = _DEFAULT_ROUGHNESS,
     fouling_tube: float = _DEFAULT_FOULING_TUBE,
     fouling_shell: float = _DEFAULT_FOULING_SHELL,
