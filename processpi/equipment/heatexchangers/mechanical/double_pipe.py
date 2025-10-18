@@ -395,10 +395,10 @@ def design_doublepipe(
 
                 # fetch fluid properties from stream components at film temps; fall back to cp_nom if missing
                 try:
-                    mu_t = tube_stream.component.viscosity(T_tube_bulk).to("Pa*s").value
-                    rho_t = tube_stream.component.density(T_tube_bulk).to("kg/m^3").value
-                    k_t = tube_stream.component.thermal_conductivity(T_tube_bulk).to("W/m-K").value
-                    cp_t = tube_stream.component.specific_heat(T_tube_bulk).to("J/kg-K").value
+                    mu_t = tube_stream.component.viscosity(T_tube_bulk).to("Pa.s").value
+                    rho_t = tube_stream.component.density(T_tube_bulk).to("kg/m3").value
+                    k_t = tube_stream.component.thermal_conductivity(T_tube_bulk).to("W/mK").value
+                    cp_t = tube_stream.component.specific_heat(T_tube_bulk).to("J/kgK").value
                 except Exception:
                     # fallback assumptions (less ideal)
                     mu_t = 1e-3
@@ -407,10 +407,10 @@ def design_doublepipe(
                     cp_t = cp_tube_nom
 
                 try:
-                    mu_a = ann_stream.component.viscosity(T_ann_bulk).to("Pa*s").value
-                    rho_a = ann_stream.component.density(T_ann_bulk).to("kg/m^3").value
-                    k_a = ann_stream.component.thermal_conductivity(T_ann_bulk).to("W/m-K").value
-                    cp_a = ann_stream.component.specific_heat(T_ann_bulk).to("J/kg-K").value
+                    mu_a = ann_stream.component.viscosity(T_ann_bulk).to("Pa.s").value
+                    rho_a = ann_stream.component.density(T_ann_bulk).to("kg/m3").value
+                    k_a = ann_stream.component.thermal_conductivity(T_ann_bulk).to("W/mK").value
+                    cp_a = ann_stream.component.specific_heat(T_ann_bulk).to("J/kgK").value
                 except Exception:
                     mu_a = 1e-3
                     rho_a = 1000.0
