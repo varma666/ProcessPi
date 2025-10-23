@@ -1,6 +1,6 @@
 from .base import Component
 from processpi.units import *
-class Ethlylene(Component):
+class FluoroBenzene(Component):
     name = "Fluorobenzene"
     formula = "C6H5F"
     molecular_weight = 96.102
