@@ -64,4 +64,14 @@ class Benzene(Component):
         # the molecular weight (g/mol), since 1 kmol is 1000 mol and 1 kg
         # is 1000 g.
         cp_kg = cp_kmol / self.molecular_weight
+        
         return SpecificHeat(cp_kg, "J/kgK")
+
+    def httype(self):
+        P = self.pressure.to("Pa").value
+        Pvap = self.vapor_pressure().to("Pa").value
+        if P < Pvap:
+            httype = "organicvapour"
+        else:
+            httype = "organicliquid"
+        return httype

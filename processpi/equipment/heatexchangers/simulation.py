@@ -18,8 +18,11 @@ def run_simulation(hx: HeatExchanger) -> Dict[str, Any]:
     Tc_out = _get_value(parms["Tc_out"], "Cold Out")
     m_hot = _get_value(parms["m_hot"], "Hot Flow Rate")
     m_cold = _get_value(parms["m_cold"], "Cold Flow Rate")
-    cP_hot = _get_value(parms["cP_hot"], "Hot Specific Heat")
-    cP_cold = _get_value(parms["cP_cold"], "Cold Specific Heat")
+    cP_hot = _get_value(parms["cP_hot"], "Hot Specific Heat") * 1000  # Convert kJ/kgK to J/kgK
+
+    #print(cP_hot)
+    cP_cold = _get_value(parms["cP_cold"], "Cold Specific Heat") * 1000  # Convert kJ/kgK to J/kgK
+    #print(cP_cold)
 
     #print(parms)
 
@@ -134,6 +137,7 @@ def _get_parms(hx: HeatExchanger) -> Dict[str, Any]:
     hot_fluid_cp = hx.hot_in.specific_heat.to("J/kgK")
     #print(hot_fluid_cp)
     cold_fluid_cp = hx.cold_in.specific_heat.to("J/kgK")
+    #print(cold_fluid_cp)
 
     results = {
         "Th_in" : hot_fluid_inlet_temperature,

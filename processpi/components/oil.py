@@ -16,3 +16,13 @@ class Oil(Component):
     _thermal_conductivity_constants = [0.18, -0.00025, 0, 0, 0]
     _vapor_pressure_constants = [75, -7000, -7.2, 0.000007, 2]
     _enthalpy_constants = [4.5E-7, 0.34, 200, 3.6, 0]
+
+    def httype(self):
+        P = self.pressure.to("Pa").value
+        Pvap = self.vapor_pressure().to("Pa").value
+        if P < Pvap:
+            httype = "heavyoil"
+        else:
+            httype = "lightoil"
+        return httype
+    

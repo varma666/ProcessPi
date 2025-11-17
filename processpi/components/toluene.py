@@ -19,4 +19,13 @@ class Toluene(Component):
     _thermal_conductivity_constants = [0.20463, -0.00024252, 0,0,0]
     _vapor_pressure_constants = [76.945, -6729.8, -8.179, 0.0000053017, 2] 
     _enthalpy_constants = [4.9507E-7, 0.37742, 0, 0, 0]  # Placeholder for enthalpy constants
+
+    def httype(self):
+        P = self.pressure.to("Pa").value
+        Pvap = self.vapor_pressure().to("Pa").value
+        if P < Pvap:
+            httype = "organicvapour"
+        else:
+            httype = "organicliquid"
+        return httype
     

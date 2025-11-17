@@ -33,7 +33,7 @@ class HXClassification():  # extending your existing class
         if module is None:
             hot_comp = getattr(hot, "component", None)
             cold_comp = getattr(cold, "component", None)
-            duty_guess = hot.mass_flowrate.to("kg/s").value * hot.cp.to("J/kg-K").value * \
+            duty_guess = hot.mass_flow().to("kg/s").value * hot.specific_heat.to("J/kgK").value * \
                          abs(hot.temperature.to("K").value - cold.temperature.to("K").value)
 
             if hasattr(hot_comp, "is_vapor") and hot_comp.is_vapor() and \

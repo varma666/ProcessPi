@@ -279,6 +279,7 @@ def design_doublepipe(
     parms = _get_parms(hx)
 
     # Extract required simulated params (must exist)
+    #print("Extracting parameters...")
     Th_in = _val(parms.get("Hot in Temp"), "Hot In Temp")
     Th_out = _val(parms.get("Hot out Temp"), "Hot Out Temp")
     Tc_in = _val(parms.get("Cold in Temp"), "Cold In Temp")
@@ -288,17 +289,20 @@ def design_doublepipe(
     cp_hot = _val(parms.get("cP_hot"), "cP_hot")      # J/kg-K
     cp_cold = _val(parms.get("cP_cold"), "cP_cold")   # J/kg-K
     delta_Tlm_param = parms.get("delta_Tlm")  # optional; keep unit-wrapped
+    #print("Parameters extracted.")
 
     # energy
     Q_hot = m_hot * cp_hot * (Th_in - Th_out)
     Q_cold = m_cold * cp_cold * (Tc_out - Tc_in)
     # Prefer the average of two when both exist to avoid sign issues
+    #print("Calculating heat duty...")
     if abs(Q_hot) > 0 and abs(Q_cold) > 0:
         Q = 0.5 * (Q_hot + Q_cold)
     else:
         Q = Q_hot if abs(Q_hot) > 0 else Q_cold
 
     # convert options
+    #print("Converting options...")
     wall_k_val = wall_k.value if hasattr(wall_k, "value") else float(wall_k)
     dp_limit = None
     if target_dp is not None:
@@ -308,6 +312,7 @@ def design_doublepipe(
             dp_limit = target_dp.value if hasattr(target_dp, "value") else float(target_dp)
 
     # pipe library fallback (inner ID, outer OD) pairs in meters
+    #print("Selecting pipe library...")
     if pipe_library is None:
         pipe_pairs = [
             (0.0127, 0.0213),  # 1/2" ID ~12.7mm, OD ~21.3mm
@@ -333,10 +338,12 @@ def design_doublepipe(
             pipe_pairs.append((Di, Od))
 
     # override if explicit diameters provided
+
     if innerpipe_dia is not None and outerpipe_dia is not None:
         pipe_pairs = [(innerpipe_dia.to("m").value, outerpipe_dia.to("m").value)]
 
     # assignments to try
+    #print("Setting up assignments...")
     assignments = [
         ("hot_tube", "cold_annulus"),
         ("cold_tube", "hot_annulus"),
@@ -344,10 +351,11 @@ def design_doublepipe(
 
     best_result = None
     best_score = float("inf")
-
+    #print("Starting design iterations...")
     for (Di, Do) in pipe_pairs:
         if Do <= Di * 1.05:
             continue
+        #print(f"Trying pipe pair: Inner Diameter = {Di} m, Outer Diameter = {Do} m")
 
         for assignment in assignments:
             # map streams
@@ -377,7 +385,7 @@ def design_doublepipe(
             U_ref = 200.0
             converged = False
             iteration = 0
-
+            #print("Starting iterations...")
             for iteration in range(max_iters):
                 # per-pass length
                 if inner_mode == "series":
@@ -522,10 +530,11 @@ def design_doublepipe(
 
                 L_total = L_total_new
                 U_ref = U_new
-
+                #print(f"Iteration {iteration+1}: L_total = {L_total}, U_ref = {U_ref}")
             # end iterative loop
-
+            #print("Design iterations completed.")
             # Final recomputation after converge/exit for dp calculations
+            #print("Recomputing pressure drops and final parameters...")
             if inner_mode == "parallel":
                 n_inner_channels = passes
             else:

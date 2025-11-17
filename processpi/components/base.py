@@ -121,9 +121,11 @@ class Component(ABC):
         if self._specific_heat is not None:
             return self._specific_heat
         T = self.temperature.value
-        cp = sum(c * (T ** i) for i, c in enumerate(self._specific_heat_constants))
-        #cp *= self.molecular_weight
-        return SpecificHeat(cp, "J/kgK")
+        cp_kmol = sum(c * (T ** i) for i, c in enumerate(self._specific_heat_constants))
+        cp_kg = cp_kmol / self.molecular_weight
+        
+        return SpecificHeat(cp_kg, "J/kgK")
+
 
     # ----------------------------------------------------------------------
     # Viscosity
