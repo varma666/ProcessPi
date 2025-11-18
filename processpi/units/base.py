@@ -78,7 +78,7 @@ class Variable:
     
     def __format__(self, format_spec):
         """
-        Formats the VolumetricFlowRate object based on the given format specifier.
+        Formats the Variable object based on the given format specifier.
         """
         # Get the value to be formatted.
         value = self.original_value
