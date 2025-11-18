@@ -64,3 +64,55 @@ def get_typical_U(fluid1, fluid2):
         raise ValueError(f"No typical heat transfer coefficient values found for the fluid pair: {fluid1} and {fluid2}.")
 
 
+# Typical thermal conductivity values for metals used in heat exchangers
+# Values in W/m.K (typical range at/near room temperature)
+TYPICAL_K_METALS = {
+    "copper (electrolytic)": (ThermalConductivity(350, "W/mK"), ThermalConductivity(390, "W/mK")),  # very high
+    "aluminum 6061": (ThermalConductivity(150, "W/mK"), ThermalConductivity(170, "W/mK")),       # typical 6061-T6 ~152-167
+    "aluminum (general)": (ThermalConductivity(200, "W/mK"), ThermalConductivity(240, "W/mK")),   # high-conductivity Al alloys
+    "brass": (ThermalConductivity(100, "W/mK"), ThermalConductivity(130, "W/mK")),
+    "bronze": (ThermalConductivity(50, "W/mK"), ThermalConductivity(80, "W/mK")),
+    "carbon steel / plain steel": (ThermalConductivity(35, "W/mK"), ThermalConductivity(60, "W/mK")), 
+    "stainless steel 304": (ThermalConductivity(14, "W/mK"), ThermalConductivity(17, "W/mK")),    # 304 typical ~16 W/mK
+    "stainless steel 316": (ThermalConductivity(13, "W/mK"), ThermalConductivity(16, "W/mK")),
+    "nickel (commercially pure)": (ThermalConductivity(60, "W/mK"), ThermalConductivity(90, "W/mK")),
+    "inconel 625": (ThermalConductivity(9.0, "W/mK"), ThermalConductivity(13.0, "W/mK")),         # low, increases with T
+    "hastelloy (C-276)": (ThermalConductivity(10.0, "W/mK"), ThermalConductivity(14.0, "W/mK")),
+    "titanium (Grade 2)": (ThermalConductivity(15.0, "W/mK"), ThermalConductivity(21.0, "W/mK")),
+    "monel": (ThermalConductivity(20.0, "W/mK"), ThermalConductivity(40.0, "W/mK")),
+    "nickel-chromium (nichrome)": (ThermalConductivity(11.0, "W/mK"), ThermalConductivity(20.0, "W/mK")),
+    # add other alloys / special materials as needed...
+}
+
+def get_typical_k(metal_name: str):
+    """
+    Return typical (low, high) ThermalConductivity tuple for a metal/alloy.
+    Accepts case-insensitive lookups; raises ValueError if missing.
+    """
+    key = metal_name.lower().strip()
+    # simple normalization: allow short forms like "cu" -> "copper (electrolytic)"
+    aliases = {
+        "cu": "copper (electrolytic)",
+        "copper": "copper (electrolytic)",
+        "al6061": "aluminum 6061",
+        "al": "aluminum (general)",
+        "ss304": "stainless steel 304",
+        "ss316": "stainless steel 316",
+        "carbon steel": "carbon steel / plain steel",
+        "cs" : "carbon steel / plain steel",
+        "inconel625": "inconel 625",
+        "hastelloy c276": "hastelloy (C-276)",
+        "hastelloy" : "hastelloy (C-276)",
+        "ti grade 2": "titanium (Grade 2)",
+        "ti" : "titanium (Grade 2)",
+    }
+    if key in TYPICAL_K_METALS:
+        return TYPICAL_K_METALS[key]
+    if key in aliases and aliases[key] in TYPICAL_K_METALS:
+        return TYPICAL_K_METALS[aliases[key]]
+    # try fuzzy match: exact word in keys
+    for k in TYPICAL_K_METALS.keys():
+        if key in k:
+            return TYPICAL_K_METALS[k]
+    raise ValueError(f"No typical thermal conductivity entry for '{metal_name}'")
+
