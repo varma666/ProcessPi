@@ -20,6 +20,7 @@ from processpi.calculations.heat_transfer.overall_u import OverallHeatTransferCo
 from ....units import *
 from ....streams.material import MaterialStream
 from ..base import HeatExchanger
+from ....pipelines import Pipe
 
 # ------------------------------------------------------------------
 # TUNABLE DEFAULTS
@@ -266,6 +267,8 @@ def design_doublepipe(
     hairpin_length: Optional[float] = None,   # if provided, compute hairpin count
     hairpin_pipe_inner_id: Optional[float] = None,  # required if hairpin counting requested
     hairpin_pipe_outer_od: Optional[float] = None,
+    inner_pipe: Optional[Pipe] = None,
+    outer_pipe: Optional[Pipe] = None
 ) -> Dict[str, Any]:
     """
     Perform a detailed double-pipe heat exchanger design with Ft integration.
