@@ -21,6 +21,7 @@ from ....units import *
 from ....streams.material import MaterialStream
 from ..base import HeatExchanger
 from ....pipelines import Pipe
+from ..standards import get_typical_k
 
 # ------------------------------------------------------------------
 # TUNABLE DEFAULTS
@@ -289,8 +290,8 @@ def design_doublepipe(
     Tc_out = _val(parms.get("Cold out Temp"), "Cold Out Temp")
     m_hot = _val(parms.get("m_hot"), "m_hot")          # kg/s
     m_cold = _val(parms.get("m_cold"), "m_cold")      # kg/s
-    cp_hot = _val(parms.get("cP_hot"), "cP_hot")      # J/kg-K
-    cp_cold = _val(parms.get("cP_cold"), "cP_cold")   # J/kg-K
+    cp_hot = _val(parms.get("cP_hot"), "cP_hot") * 1000      # converting kJ/kgK to J/kg-K
+    cp_cold = _val(parms.get("cP_cold"), "cP_cold") * 1000      # converting kJ/kgK to J/kg-K   # J/kg-K
     delta_Tlm_param = parms.get("delta_Tlm")  # optional; keep unit-wrapped
     #print("Parameters extracted.")
 
@@ -306,7 +307,10 @@ def design_doublepipe(
 
     # convert options
     #print("Converting options...")
-    wall_k_val = wall_k.value if hasattr(wall_k, "value") else float(wall_k)
+    if inner_pipe is not None:
+        wall_k_val = get_typical_k(inner_pipe.material)
+    else:
+        wall_k_val = wall_k.value if hasattr(wall_k, "value") else float(wall_k)
     dp_limit = None
     if target_dp is not None:
         try:
