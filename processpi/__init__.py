@@ -29,8 +29,11 @@ from . import calculations
 from . import pipelines
 from . import units
 from . import components
+from . import equipment
+from . import integration
+from . import streams
 
-__all__ = ["calculations", "pipelines", "units", "components"]
+__all__ = ["calculations", "pipelines", "units", "components","equipment","integration","streams"]
 
 # -------------------------------------------------------------------
 # Loading animation (only for interactive sessions)
