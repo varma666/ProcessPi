@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "processpi"
-version = "0.2.0.2"
+version = "0.2.0.3"
 description = "Python toolkit for chemical engineering simulations, equipment design, and unit conversions"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -29,6 +29,7 @@ Homepage = "https://processpi.org"
 Repository = "https://github.com/varma666/ProcessPi"
 Documentation = "https://processpi.org/user-guide/introduction/"
 IssueTracker = "https://github.com/varma666/ProcessPi/issues"
+
 
 
 
