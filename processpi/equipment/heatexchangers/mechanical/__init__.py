@@ -1,53 +1,35 @@
 from typing import Dict, Any
 
-# Import mechanical submodules
-from . import classification
-from . import basic_params
-from . import double_pipe
-from . import shell_tube
-from . import kern_method
-from . import bell_method
-from . import condenser
-from . import reboiler
-from . import evaporator
+from .classification import HXClassification
+from .double_pipe import design_doublepipe
+from .shell_tube import design_shelltube
+from .condenser import design_condenser
+from .reboiler import design_reboiler
+from .evaporator import design_evaporator
 
-# Mapping for design_type strings to submodules
+
 _design_type_map = {
-    "DoublePipe": double_pipe,
-    "ShellAndTube": shell_tube,
-    "Condenser": condenser,
-    "Reboiler": reboiler,
-    "Evaporator": evaporator
+    "DoublePipe": design_doublepipe,
+    "ShellAndTube": design_shelltube,
+    "Condenser": design_condenser,
+    "Reboiler": design_reboiler,
+    "Evaporator": design_evaporator,
 }
 
-_design_method_map = {
-    "Kern": kern_method,
-    "KernMethod": kern_method,
-    "Bell": bell_method,
-    "BellMethod": bell_method
-}
 
-def run_mechanical_design(hx, type: str, method: str = "BellMethod", **kwargs) -> Dict[str, Any]:
-    """
-    Dispatch mechanical design calculations to the appropriate submodule.
-    
-    Default method: Bell-Delaware method
-    Optional: Kern's method
-    """
+def run_mechanical_design(hx, type: str = "ShellAndTube", method: str = "BellMethod", **kwargs) -> Dict[str, Any]:
+    """Dispatch mechanical design calculations to the selected heat exchanger model."""
 
-    method = method or "BellMethod"
-    type = type or "Classification"
-    if method not in _design_method_map:
-        raise ValueError(
-            f"Unknown method '{method}'. Available options: {list(_design_method_map.keys())}"
-        )
-    
+    # Keep argument for backward compatibility; currently unused by design functions.
+    _ = method
+
+    if type == "Classification":
+        return HXClassification().design(hx, **kwargs)
+
     if type not in _design_type_map:
         raise ValueError(
-            f"Unknown type '{type}'. Available options: {list(_design_type_map.keys())}"
+            f"Unknown type '{type}'. Available options: {list(_design_type_map.keys()) + ['Classification']}"
         )
 
-    module = _design_type_map[type]
-    
-    return module.run(hx, **kwargs)
-
+    design_fn = _design_type_map[type]
+    return design_fn(hx, **kwargs)
