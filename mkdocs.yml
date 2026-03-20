@@ -139,6 +139,7 @@ nav:
       - Contributing: about/contributing.md
       - License: about/license.md
       - Changelog: about/changelog.md
+      - Knowledge Transfer: about/knowledge_transfer.md
   
 
 extra:
