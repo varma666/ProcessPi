@@ -1,7 +1,7 @@
 from typing import Dict, Any
 
 from .classification import HXClassification
-from .double_pipe import design_doublepipe
+from .double_pipe import design_doublepipe, HXSolver, HXOptimizer, DesignConstraints
 from .shell_tube import design_shelltube
 from .condenser import design_condenser
 from .reboiler import design_reboiler
