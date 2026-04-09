@@ -190,20 +190,30 @@ class Component(ABC):
     # ----------------------------------------------------------------------
     @PropertyMethod
     def enthalpy(self) -> HeatOfVaporization:
-        # ✅ Guard: Above critical → no phase change
+        if self._enthalpy is not None:
+            return self._enthalpy
+    
+        # ✅ Define first
+        T = self.temperature.to("K").value
+        Tc = self._critical_temperature.to("K").value
+    
+        # ✅ Then use
         if T >= Tc:
             return HeatOfVaporization(0.0, "J/kg")
     
         Tr = T / Tc
         tau = 1 - Tr
+    
         A, B, C, D, E = self._enthalpy_constants
+    
         exponent = B + C*tau + D*(tau**2) + E*(tau**3)
+    
         dH = A * (tau ** exponent)
     
-        # ✅ CRITICAL FIX: convert to J/kg
+        # ✅ Scaling
         dH *= self.molecular_weight * 1000
     
-        # ✅ Safety guard
+        # ✅ Safety
         if dH < 0 or isinstance(dH, complex):
             dH = 0.0
     
