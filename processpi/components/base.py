@@ -120,10 +120,22 @@ class Component(ABC):
     def specific_heat(self) -> SpecificHeat:
         if self._specific_heat is not None:
             return self._specific_heat
-        T = self.temperature.value
-        cp_kmol = sum(c * (T ** i) for i, c in enumerate(self._specific_heat_constants))
+    
+        # ✅ Always use Kelvin
+        T = self.temperature.to("K").value
+    
+        a, b, c, d, e = self._specific_heat_constants
+    
+        # Cp in J/kmol·K
+        cp_kmol = a + b*T + c*(T**2) + d*(T**3) + e*(T**4)
+    
+        # ✅ Convert to J/kg·K
         cp_kg = cp_kmol / self.molecular_weight
-        
+    
+        # ✅ Safety check
+        if cp_kg < 0 or cp_kg > 10000:
+            raise ValueError(f"Unphysical Cp detected: {cp_kg} J/kgK")
+    
         return SpecificHeat(cp_kg, "J/kgK")
 
 
