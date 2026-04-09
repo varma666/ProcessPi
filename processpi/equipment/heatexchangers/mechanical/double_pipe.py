@@ -47,6 +47,8 @@ class DesignConstraints:
     pressure_drop_limit: Pressure = _DEFAULT_DP_LIMIT
     default_velocity_limit: Velocity = _DEFAULT_VELOCITY_LIMIT
     enforce_typical_u: bool = True
+    velocity_limit_factor: float = 1.0
+    u_max_factor: float = 1.0
 
     def _fluid_name(self, stream: MaterialStream) -> str:
         comp = getattr(stream, "component", None)
@@ -57,10 +59,10 @@ class DesignConstraints:
         service = self._fluid_name(stream)
         recommended = get_recommended_velocity(service)
         if isinstance(recommended, tuple):
-            return float(recommended[1])
+            return float(recommended[1]) * self.velocity_limit_factor
         if isinstance(recommended, (int, float)):
-            return float(recommended)
-        return self.default_velocity_limit.to("m/s").value
+            return float(recommended) * self.velocity_limit_factor
+        return self.default_velocity_limit.to("m/s").value * self.velocity_limit_factor
 
     def _u_range_for_hx(self, hx: HeatExchanger) -> Optional[Tuple[float, float]]:
         if not self.enforce_typical_u:
@@ -69,7 +71,7 @@ class DesignConstraints:
             hot = self._fluid_name(hx.hot_in).replace("_", "")
             cold = self._fluid_name(hx.cold_in).replace("_", "")
             u_min, u_max = get_typical_U(hot, cold)
-            return u_min.to("W/m2K").value, u_max.to("W/m2K").value
+            return u_min.to("W/m2K").value, u_max.to("W/m2K").value * self.u_max_factor
         except Exception:
             return None
 
@@ -215,6 +217,138 @@ class HXOptimizer:
         best_result = min(feasible_designs, key=lambda item: item["objective_cost"].value)
         hx.design_results = best_result
         return best_result
+
+
+class AdaptiveHXOptimizer:
+    """
+    Adaptive wrapper around HXOptimizer.
+
+    If no feasible design is found, constraints are relaxed stepwise:
+    1) velocity limit (+20% each step, max 2x)
+    2) pressure-drop limit (+50% each step, max 5 bar)
+    3) typical U upper bound (+30% max)
+    """
+
+    def __init__(
+        self,
+        optimizer: Optional[HXOptimizer] = None,
+        *,
+        velocity_growth: float = 1.2,
+        velocity_max_factor: float = 2.0,
+        pressure_growth: float = 1.5,
+        pressure_max: Pressure = Pressure(5.0, "bar"),
+        u_max_factor_cap: float = 1.3,
+    ) -> None:
+        self.optimizer = optimizer or HXOptimizer()
+        self.velocity_growth = velocity_growth
+        self.velocity_max_factor = velocity_max_factor
+        self.pressure_growth = pressure_growth
+        self.pressure_max = pressure_max
+        self.u_max_factor_cap = u_max_factor_cap
+
+    def _make_constraints(
+        self,
+        base: DesignConstraints,
+        *,
+        velocity_factor: float,
+        pressure_limit: Pressure,
+        u_max_factor: float,
+    ) -> DesignConstraints:
+        return DesignConstraints(
+            pressure_drop_limit=pressure_limit,
+            default_velocity_limit=base.default_velocity_limit,
+            enforce_typical_u=base.enforce_typical_u,
+            velocity_limit_factor=velocity_factor,
+            u_max_factor=u_max_factor,
+        )
+
+    def _suggestions(self) -> List[str]:
+        return [
+            "Increase pipe diameter",
+            "Use multiple passes",
+            "Reduce heat duty",
+            "Use different fluid assignment (swap tube/annulus)",
+            "Consider different heat exchanger type",
+        ]
+
+    def optimize(
+        self,
+        hx: HeatExchanger,
+        *,
+        pipe_pairs: List[Tuple[float, float]],
+        inner_mode: str,
+        passes: int,
+        annulus_parallel: int,
+        arrangement: str,
+        pass_layout: Optional[str],
+    ) -> Dict[str, Any]:
+        base = self.optimizer.constraints
+        velocity_factor = 1.0
+        pressure_limit = base.pressure_drop_limit
+        u_max_factor = 1.0
+        relaxation_steps = 0
+        history: List[Dict[str, Any]] = [{
+            "step": 0,
+            "velocity_factor": Dimensionless(velocity_factor),
+            "pressure_drop_limit": pressure_limit,
+            "u_max_factor": Dimensionless(u_max_factor),
+        }]
+        design = None
+
+        while True:
+            self.optimizer.constraints = self._make_constraints(
+                base,
+                velocity_factor=velocity_factor,
+                pressure_limit=pressure_limit,
+                u_max_factor=u_max_factor,
+            )
+            try:
+                design = self.optimizer.optimize(
+                    hx,
+                    pipe_pairs=pipe_pairs,
+                    inner_mode=inner_mode,
+                    passes=passes,
+                    annulus_parallel=annulus_parallel,
+                    arrangement=arrangement,
+                    pass_layout=pass_layout,
+                )
+                break
+            except RuntimeError:
+                can_relax_velocity = velocity_factor < self.velocity_max_factor
+                can_relax_pressure = pressure_limit.to("bar").value < self.pressure_max.to("bar").value
+                can_relax_u = u_max_factor < self.u_max_factor_cap
+                if not (can_relax_velocity or can_relax_pressure or can_relax_u):
+                    break
+
+                if can_relax_velocity:
+                    velocity_factor = min(self.velocity_max_factor, velocity_factor * self.velocity_growth)
+                elif can_relax_pressure:
+                    new_bar = min(self.pressure_max.to("bar").value, pressure_limit.to("bar").value * self.pressure_growth)
+                    pressure_limit = Pressure(new_bar, "bar")
+                elif can_relax_u:
+                    u_max_factor = self.u_max_factor_cap
+
+                relaxation_steps += 1
+                history.append({
+                    "step": relaxation_steps,
+                    "velocity_factor": Dimensionless(velocity_factor),
+                    "pressure_drop_limit": pressure_limit,
+                    "u_max_factor": Dimensionless(u_max_factor),
+                })
+
+        constraints_used = {
+            "original": history[0],
+            "relaxed": history[-1],
+            "history": history,
+        }
+        is_feasible = design is not None
+        return {
+            "design": design,
+            "is_feasible": is_feasible,
+            "relaxation_steps": relaxation_steps,
+            "constraints_used": constraints_used,
+            "suggestions": [] if is_feasible else self._suggestions(),
+        }
 
 # ------------------------------------------------------------------
 # Utilities: must match your units API (adapt if needed)
@@ -510,15 +644,30 @@ def design_doublepipe(
     )
     constraints = DesignConstraints(pressure_drop_limit=target_dp or _DEFAULT_DP_LIMIT)
     optimizer = HXOptimizer(solver=solver, constraints=constraints)
-    best_result = optimizer.optimize(
-        hx,
-        pipe_pairs=pipe_pairs,
-        inner_mode=inner_mode,
-        passes=passes,
-        annulus_parallel=annulus_parallel,
-        arrangement=arrangement,
-        pass_layout=pass_layout,
-    )
+    try:
+        best_result = optimizer.optimize(
+            hx,
+            pipe_pairs=pipe_pairs,
+            inner_mode=inner_mode,
+            passes=passes,
+            annulus_parallel=annulus_parallel,
+            arrangement=arrangement,
+            pass_layout=pass_layout,
+        )
+    except RuntimeError:
+        adaptive = AdaptiveHXOptimizer(optimizer=optimizer)
+        adaptive_result = adaptive.optimize(
+            hx,
+            pipe_pairs=pipe_pairs,
+            inner_mode=inner_mode,
+            passes=passes,
+            annulus_parallel=annulus_parallel,
+            arrangement=arrangement,
+            pass_layout=pass_layout,
+        )
+        if not adaptive_result["is_feasible"]:
+            return adaptive_result
+        best_result = adaptive_result["design"]
     if hairpin_length and hairpin_pipe_inner_id and hairpin_pipe_outer_od:
         area_required = best_result["required_area"].to("m2").value
         hairpin_area_per = math.pi * hairpin_pipe_inner_id * hairpin_length
