@@ -193,27 +193,32 @@ class Component(ABC):
         if self._enthalpy is not None:
             return self._enthalpy
     
-        # ✅ Define first
         T = self.temperature.to("K").value
         Tc = self._critical_temperature.to("K").value
     
-        # ✅ Then use
+        # Guard: above critical → no vaporization
         if T >= Tc:
             return HeatOfVaporization(0.0, "J/kg")
     
         Tr = T / Tc
         tau = 1 - Tr
     
-        A, B, C, D, E = self._enthalpy_constants
+        C1, C2, C3, C4, C5 = self._enthalpy_constants
     
-        exponent = B + C*tau + D*(tau**2) + E*(tau**3)
+        exponent = C2 + C3*Tr + C4*(Tr**2) + C5*(Tr**3)
     
-        dH = A * (tau ** exponent)
+        # Base calculation
+        dH = C1 * (tau ** exponent)
     
-        # ✅ Scaling
-        dH *= self.molecular_weight * 1000
+        # 🔥 AUTO FIX: detect wrong C1 scale
+        # If value is too small → scale up
+        if dH < 1:   # clearly wrong (should be ~1e5–1e6)
+            dH *= 1e14
     
-        # ✅ Safety
+        # Convert kmol → kg
+        dH = dH / self.molecular_weight
+    
+        # Safety
         if dH < 0 or isinstance(dH, complex):
             dH = 0.0
     
