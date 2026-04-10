@@ -18,7 +18,7 @@ Notes:
 
 import math
 from typing import Dict, Any, Optional, Tuple, List, Union
-from ....units import Diameter, Length, Pressure, ThermalConductivity, Variable
+from ....units import Diameter, Length, Pressure, ThermalConductivity, Variable, Temperature
 from ....streams.material import MaterialStream
 from ..base import HeatExchanger
 
@@ -50,6 +50,120 @@ _HEADER_KS = {
     "entrance": 0.5,
     "exit": 1.0
 }
+
+
+class ShellAndTubeHeatExchanger(HeatExchanger):
+    """
+    Class-based shell-and-tube exchanger aligned with flowsheet-style named ports.
+    """
+
+    def __init__(self, name: str = "ShellAndTubeHeatExchanger", **kwargs):
+        super().__init__(name=name, **kwargs)
+        self.inlets = {"hot_in": None, "cold_in": None}
+        self.outlets = {"hot_out": None, "cold_out": None}
+        self.results: Dict[str, Any] = {}
+        self._design_kwargs: Dict[str, Any] = {}
+
+    @property
+    def hot_in(self) -> Optional[MaterialStream]:
+        return self.inlets["hot_in"]
+
+    @hot_in.setter
+    def hot_in(self, stream: MaterialStream):
+        self.inlets["hot_in"] = stream
+
+    @property
+    def cold_in(self) -> Optional[MaterialStream]:
+        return self.inlets["cold_in"]
+
+    @cold_in.setter
+    def cold_in(self, stream: MaterialStream):
+        self.inlets["cold_in"] = stream
+
+    @property
+    def hot_out(self) -> Optional[MaterialStream]:
+        return self.outlets["hot_out"]
+
+    @hot_out.setter
+    def hot_out(self, stream: MaterialStream):
+        self.outlets["hot_out"] = stream
+
+    @property
+    def cold_out(self) -> Optional[MaterialStream]:
+        return self.outlets["cold_out"]
+
+    @cold_out.setter
+    def cold_out(self, stream: MaterialStream):
+        self.outlets["cold_out"] = stream
+
+    def connect_inlet(self, port: str, stream: MaterialStream) -> None:
+        if port not in self.inlets:
+            raise ValueError(f"Invalid inlet port '{port}'. Expected one of: {list(self.inlets.keys())}")
+        self.inlets[port] = stream
+
+    def connect_outlet(self, port: str, stream: MaterialStream) -> None:
+        if port not in self.outlets:
+            raise ValueError(f"Invalid outlet port '{port}'. Expected one of: {list(self.outlets.keys())}")
+        self.outlets[port] = stream
+
+    def _design_shelltube(self, **kwargs) -> Dict[str, Any]:
+        return _design_shelltube_impl(self, **kwargs)
+
+    def _collect_base_data(self) -> None:
+        hot_in = self.inlets["hot_in"]
+        cold_in = self.inlets["cold_in"]
+        hot_out = self.outlets["hot_out"]
+        cold_out = self.outlets["cold_out"]
+
+        if any(s is None for s in [hot_in, cold_in, hot_out, cold_out]):
+            raise ValueError("All inlet and outlet streams must be connected before simulation.")
+
+        Th_in = hot_in.temperature.to("K").value if hasattr(hot_in.temperature, "to") else float(hot_in.temperature)
+        Th_out = hot_out.temperature.to("K").value if hasattr(hot_out.temperature, "to") else float(hot_out.temperature)
+        Tc_in = cold_in.temperature.to("K").value if hasattr(cold_in.temperature, "to") else float(cold_in.temperature)
+        Tc_out = cold_out.temperature.to("K").value if hasattr(cold_out.temperature, "to") else float(cold_out.temperature)
+
+        hot_mdot = hot_in.mass_flow() if callable(getattr(hot_in, "mass_flow", None)) else hot_in.mass_flow
+        cold_mdot = cold_in.mass_flow() if callable(getattr(cold_in, "mass_flow", None)) else cold_in.mass_flow
+        m_hot = hot_mdot.to("kg/s").value if hasattr(hot_mdot, "to") else float(hot_mdot)
+        m_cold = cold_mdot.to("kg/s").value if hasattr(cold_mdot, "to") else float(cold_mdot)
+
+        T_hot_mean = 0.5 * (Th_in + Th_out)
+        T_cold_mean = 0.5 * (Tc_in + Tc_out)
+
+        try:
+            cp_hot_obj = hot_in.component.specific_heat(Temperature(T_hot_mean, "K"))
+        except TypeError:
+            cp_hot_obj = hot_in.component.specific_heat()
+        try:
+            cp_cold_obj = cold_in.component.specific_heat(Temperature(T_cold_mean, "K"))
+        except TypeError:
+            cp_cold_obj = cold_in.component.specific_heat()
+        cp_hot = cp_hot_obj.to("J/kgK").value if hasattr(cp_hot_obj, "to") else float(cp_hot_obj)
+        cp_cold = cp_cold_obj.to("J/kgK").value if hasattr(cp_cold_obj, "to") else float(cp_cold_obj)
+
+        self.simulated_params = {
+            "Hot in Temp": Th_in,
+            "Hot out Temp": Th_out,
+            "Cold in Temp": Tc_in,
+            "Cold out Temp": Tc_out,
+            "m_hot": m_hot,
+            "m_cold": m_cold,
+            "cP_hot": cp_hot,
+            "cP_cold": cp_cold,
+        }
+
+        for key, val in self.simulated_params.items():
+            if val is None:
+                raise ValueError(f"Missing parameter: {key}")
+
+    def simulate(self, **kwargs) -> Dict[str, Any]:
+        self._collect_base_data()
+        if kwargs:
+            self._design_kwargs.update(kwargs)
+        self.results = self._design_shelltube(**self._design_kwargs)
+        self.design_results = self.results
+        return self.results
 
 # -------------------------------------------------------------------------
 # Small utilities
@@ -376,7 +490,7 @@ def _epsilon_from_arrangement(arr: str, NTU: float, C: float) -> float:
 # -------------------------------------------------------------------------
 # Top-level design function using Bell-Delaware, packing, header design, mechanical summary
 # -------------------------------------------------------------------------
-def design_shelltube(
+def _design_shelltube_impl(
     hx: HeatExchanger,
     *,
     tube_nominal: Optional[Diameter] = None,
@@ -684,3 +798,16 @@ def design_shelltube(
 
     hx.design_results = best
     return best
+
+
+def design_shelltube(
+    hx: HeatExchanger,
+    **kwargs
+) -> Dict[str, Any]:
+    """
+    Backward-compatible functional API.
+    Delegates to class method when available.
+    """
+    if hasattr(hx, "_design_shelltube"):
+        return hx._design_shelltube(**kwargs)
+    return _design_shelltube_impl(hx, **kwargs)
