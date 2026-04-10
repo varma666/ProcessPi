@@ -18,7 +18,7 @@ Notes:
 
 import math
 from typing import Dict, Any, Optional, Tuple, List, Union
-from ....units import Diameter, Length, Pressure, ThermalConductivity, Variable
+from ....units import Diameter, Length, Pressure, ThermalConductivity, Variable, Temperature
 from ....streams.material import MaterialStream
 from ..base import HeatExchanger
 
@@ -50,6 +50,155 @@ _HEADER_KS = {
     "entrance": 0.5,
     "exit": 1.0
 }
+
+
+class ShellAndTube(HeatExchanger):
+    """Unified shell-and-tube exchanger with mode-based operation."""
+
+    _ALLOWED_MODES = {"sensible", "condenser", "reboiler", "evaporator"}
+
+    def __init__(self, name: str = "ShellAndTube", mode: str = "sensible", **kwargs):
+        super().__init__(name=name, **kwargs)
+        mode_norm = (mode or "sensible").lower().strip()
+        if mode_norm not in self._ALLOWED_MODES:
+            raise ValueError(f"Unsupported mode '{mode}'. Allowed: {sorted(self._ALLOWED_MODES)}")
+        self.mode = mode_norm
+        self.inlets = {"hot_in": None, "cold_in": None}
+        self.outlets = {"hot_out": None, "cold_out": None}
+        self.results: Dict[str, Any] = {}
+        self._design_kwargs: Dict[str, Any] = {}
+
+    @property
+    def hot_in(self) -> Optional[MaterialStream]:
+        return self.inlets["hot_in"]
+
+    @hot_in.setter
+    def hot_in(self, stream: MaterialStream):
+        self.inlets["hot_in"] = stream
+
+    @property
+    def cold_in(self) -> Optional[MaterialStream]:
+        return self.inlets["cold_in"]
+
+    @cold_in.setter
+    def cold_in(self, stream: MaterialStream):
+        self.inlets["cold_in"] = stream
+
+    @property
+    def hot_out(self) -> Optional[MaterialStream]:
+        return self.outlets["hot_out"]
+
+    @hot_out.setter
+    def hot_out(self, stream: MaterialStream):
+        self.outlets["hot_out"] = stream
+
+    @property
+    def cold_out(self) -> Optional[MaterialStream]:
+        return self.outlets["cold_out"]
+
+    @cold_out.setter
+    def cold_out(self, stream: MaterialStream):
+        self.outlets["cold_out"] = stream
+
+    def connect_inlet(self, port: str, stream: MaterialStream) -> None:
+        if port not in self.inlets:
+            raise ValueError(f"Invalid inlet port '{port}'. Expected one of: {list(self.inlets.keys())}")
+        self.inlets[port] = stream
+
+    def connect_outlet(self, port: str, stream: MaterialStream) -> None:
+        if port not in self.outlets:
+            raise ValueError(f"Invalid outlet port '{port}'. Expected one of: {list(self.outlets.keys())}")
+        self.outlets[port] = stream
+
+    def _design_shelltube(self, **kwargs) -> Dict[str, Any]:
+        return _design_shelltube_impl(self, **kwargs)
+
+    def _safe_enthalpy(self, component, temperature_k: float, fallback: float) -> float:
+        try:
+            val = component.enthalpy(Temperature(temperature_k, "K"))
+        except Exception:
+            try:
+                val = component.enthalpy(temperature_k)
+            except Exception:
+                return fallback
+        if hasattr(val, "to"):
+            try:
+                return float(val.to("J/kg").value)
+            except Exception:
+                return float(getattr(val, "value", fallback))
+        return float(val) if isinstance(val, (int, float)) else fallback
+
+    def _collect_base_data(self) -> None:
+        hot_in = self.inlets["hot_in"]
+        cold_in = self.inlets["cold_in"]
+        hot_out = self.outlets["hot_out"]
+        cold_out = self.outlets["cold_out"]
+
+        if any(s is None for s in [hot_in, cold_in, hot_out, cold_out]):
+            raise ValueError("All inlet and outlet streams must be connected before simulation.")
+
+        Th_in = hot_in.temperature.to("K").value if hasattr(hot_in.temperature, "to") else float(hot_in.temperature)
+        Th_out = hot_out.temperature.to("K").value if hasattr(hot_out.temperature, "to") else float(hot_out.temperature)
+        Tc_in = cold_in.temperature.to("K").value if hasattr(cold_in.temperature, "to") else float(cold_in.temperature)
+        Tc_out = cold_out.temperature.to("K").value if hasattr(cold_out.temperature, "to") else float(cold_out.temperature)
+
+        hot_mdot = hot_in.mass_flow() if callable(getattr(hot_in, "mass_flow", None)) else hot_in.mass_flow
+        cold_mdot = cold_in.mass_flow() if callable(getattr(cold_in, "mass_flow", None)) else cold_in.mass_flow
+        m_hot = hot_mdot.to("kg/s").value if hasattr(hot_mdot, "to") else float(hot_mdot)
+        m_cold = cold_mdot.to("kg/s").value if hasattr(cold_mdot, "to") else float(cold_mdot)
+
+        T_hot_mean = 0.5 * (Th_in + Th_out)
+        T_cold_mean = 0.5 * (Tc_in + Tc_out)
+
+        try:
+            cp_hot_obj = hot_in.component.specific_heat(Temperature(T_hot_mean, "K"))
+        except TypeError:
+            cp_hot_obj = hot_in.component.specific_heat()
+        try:
+            cp_cold_obj = cold_in.component.specific_heat(Temperature(T_cold_mean, "K"))
+        except TypeError:
+            cp_cold_obj = cold_in.component.specific_heat()
+        cp_hot = cp_hot_obj.to("J/kgK").value if hasattr(cp_hot_obj, "to") else float(cp_hot_obj)
+        cp_cold = cp_cold_obj.to("J/kgK").value if hasattr(cp_cold_obj, "to") else float(cp_cold_obj)
+
+        self.simulated_params = {
+            "Hot in Temp": Th_in,
+            "Hot out Temp": Th_out,
+            "Cold in Temp": Tc_in,
+            "Cold out Temp": Tc_out,
+            "m_hot": m_hot,
+            "m_cold": m_cold,
+            "cP_hot": cp_hot,
+            "cP_cold": cp_cold,
+            "mode": self.mode,
+        }
+
+        if self.mode in {"condenser", "reboiler", "evaporator"}:
+            if self.mode == "condenser":
+                h_in = self._safe_enthalpy(hot_in.component, Th_in, fallback=cp_hot * Th_in)
+                h_out = self._safe_enthalpy(hot_out.component, Th_out, fallback=cp_hot * Th_out)
+                q_duty = abs(m_hot * (h_in - h_out))
+            else:
+                h_in = self._safe_enthalpy(cold_in.component, Tc_in, fallback=cp_cold * Tc_in)
+                h_out = self._safe_enthalpy(cold_out.component, Tc_out, fallback=cp_cold * Tc_out)
+                q_duty = abs(m_cold * (h_out - h_in))
+            self.simulated_params["Q_duty"] = q_duty
+
+        for key, val in self.simulated_params.items():
+            if val is None:
+                raise ValueError(f"Missing parameter: {key}")
+
+    def simulate(self, **kwargs) -> Dict[str, Any]:
+        self._collect_base_data()
+        if kwargs:
+            self._design_kwargs.update(kwargs)
+        self.results = self._design_shelltube(**self._design_kwargs)
+        self.design_results = self.results
+        return self.results
+
+
+# backward-compatible alias
+ShellAndTubeHeatExchanger = ShellAndTube
 
 # -------------------------------------------------------------------------
 # Small utilities
@@ -376,7 +525,7 @@ def _epsilon_from_arrangement(arr: str, NTU: float, C: float) -> float:
 # -------------------------------------------------------------------------
 # Top-level design function using Bell-Delaware, packing, header design, mechanical summary
 # -------------------------------------------------------------------------
-def design_shelltube(
+def _design_shelltube_impl(
     hx: HeatExchanger,
     *,
     tube_nominal: Optional[Diameter] = None,
@@ -415,7 +564,11 @@ def design_shelltube(
 
     Q_hot = m_hot * cp_hot * (Th_in - Th_out)
     Q_cold = m_cold * cp_cold * (Tc_out - Tc_in)
-    Q = 0.5 * (Q_hot + Q_cold) if abs(Q_hot)>0 and abs(Q_cold)>0 else (Q_hot if abs(Q_hot)>0 else Q_cold)
+    Q_override = parms.get("Q_duty")
+    if Q_override is not None:
+        Q = abs(_val(Q_override, "Q_duty"))
+    else:
+        Q = 0.5 * (Q_hot + Q_cold) if abs(Q_hot)>0 and abs(Q_cold)>0 else (Q_hot if abs(Q_hot)>0 else Q_cold)
 
     wall_k_val = wall_k.value if hasattr(wall_k, "value") else float(wall_k)
     target_dp_t_val = target_dp_tube.to("Pa").value if target_dp_tube else None
@@ -684,3 +837,16 @@ def design_shelltube(
 
     hx.design_results = best
     return best
+
+
+def design_shelltube(
+    hx: HeatExchanger,
+    **kwargs
+) -> Dict[str, Any]:
+    """
+    Backward-compatible functional API.
+    Delegates to class method when available.
+    """
+    if hasattr(hx, "_design_shelltube"):
+        return hx._design_shelltube(**kwargs)
+    return _design_shelltube_impl(hx, **kwargs)
