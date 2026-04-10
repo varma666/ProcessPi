@@ -22,3 +22,12 @@ class Water(Component):
         den = 17.863 + (58.606 * (tou**0.35)) -  (95.396 * (tou**(2/3))) + (213.89 * tou) - (141.26 * (tou**(4/3)))
         den = den * self.molecular_weight
         return Density(den, "kg/m3")
+
+    def httype(self):
+        P = self.pressure.to("Pa").value
+        Pvap = self.vapor_pressure().to("Pa").value
+        if P < Pvap:
+            httype = "water"
+        else:
+            httype = "steam"
+        return httype
