@@ -52,13 +52,17 @@ _HEADER_KS = {
 }
 
 
-class ShellAndTubeHeatExchanger(HeatExchanger):
-    """
-    Class-based shell-and-tube exchanger aligned with flowsheet-style named ports.
-    """
+class ShellAndTube(HeatExchanger):
+    """Unified shell-and-tube exchanger with mode-based operation."""
 
-    def __init__(self, name: str = "ShellAndTubeHeatExchanger", **kwargs):
+    _ALLOWED_MODES = {"sensible", "condenser", "reboiler", "evaporator"}
+
+    def __init__(self, name: str = "ShellAndTube", mode: str = "sensible", **kwargs):
         super().__init__(name=name, **kwargs)
+        mode_norm = (mode or "sensible").lower().strip()
+        if mode_norm not in self._ALLOWED_MODES:
+            raise ValueError(f"Unsupported mode '{mode}'. Allowed: {sorted(self._ALLOWED_MODES)}")
+        self.mode = mode_norm
         self.inlets = {"hot_in": None, "cold_in": None}
         self.outlets = {"hot_out": None, "cold_out": None}
         self.results: Dict[str, Any] = {}
@@ -109,6 +113,21 @@ class ShellAndTubeHeatExchanger(HeatExchanger):
     def _design_shelltube(self, **kwargs) -> Dict[str, Any]:
         return _design_shelltube_impl(self, **kwargs)
 
+    def _safe_enthalpy(self, component, temperature_k: float, fallback: float) -> float:
+        try:
+            val = component.enthalpy(Temperature(temperature_k, "K"))
+        except Exception:
+            try:
+                val = component.enthalpy(temperature_k)
+            except Exception:
+                return fallback
+        if hasattr(val, "to"):
+            try:
+                return float(val.to("J/kg").value)
+            except Exception:
+                return float(getattr(val, "value", fallback))
+        return float(val) if isinstance(val, (int, float)) else fallback
+
     def _collect_base_data(self) -> None:
         hot_in = self.inlets["hot_in"]
         cold_in = self.inlets["cold_in"]
@@ -151,7 +170,19 @@ class ShellAndTubeHeatExchanger(HeatExchanger):
             "m_cold": m_cold,
             "cP_hot": cp_hot,
             "cP_cold": cp_cold,
+            "mode": self.mode,
         }
+
+        if self.mode in {"condenser", "reboiler", "evaporator"}:
+            if self.mode == "condenser":
+                h_in = self._safe_enthalpy(hot_in.component, Th_in, fallback=cp_hot * Th_in)
+                h_out = self._safe_enthalpy(hot_out.component, Th_out, fallback=cp_hot * Th_out)
+                q_duty = abs(m_hot * (h_in - h_out))
+            else:
+                h_in = self._safe_enthalpy(cold_in.component, Tc_in, fallback=cp_cold * Tc_in)
+                h_out = self._safe_enthalpy(cold_out.component, Tc_out, fallback=cp_cold * Tc_out)
+                q_duty = abs(m_cold * (h_out - h_in))
+            self.simulated_params["Q_duty"] = q_duty
 
         for key, val in self.simulated_params.items():
             if val is None:
@@ -164,6 +195,10 @@ class ShellAndTubeHeatExchanger(HeatExchanger):
         self.results = self._design_shelltube(**self._design_kwargs)
         self.design_results = self.results
         return self.results
+
+
+# backward-compatible alias
+ShellAndTubeHeatExchanger = ShellAndTube
 
 # -------------------------------------------------------------------------
 # Small utilities
@@ -529,7 +564,11 @@ def _design_shelltube_impl(
 
     Q_hot = m_hot * cp_hot * (Th_in - Th_out)
     Q_cold = m_cold * cp_cold * (Tc_out - Tc_in)
-    Q = 0.5 * (Q_hot + Q_cold) if abs(Q_hot)>0 and abs(Q_cold)>0 else (Q_hot if abs(Q_hot)>0 else Q_cold)
+    Q_override = parms.get("Q_duty")
+    if Q_override is not None:
+        Q = abs(_val(Q_override, "Q_duty"))
+    else:
+        Q = 0.5 * (Q_hot + Q_cold) if abs(Q_hot)>0 and abs(Q_cold)>0 else (Q_hot if abs(Q_hot)>0 else Q_cold)
 
     wall_k_val = wall_k.value if hasattr(wall_k, "value") else float(wall_k)
     target_dp_t_val = target_dp_tube.to("Pa").value if target_dp_tube else None
