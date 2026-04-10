@@ -1,10 +1,11 @@
 # processpi/flowsheet.py
 
-from typing import List, Dict, Union
-from ..equipment.base import Equipment
-from ..streams.material import MaterialStream
-from ..streams.energy import EnergyStream
 from collections import defaultdict, deque
+from typing import Dict, List, Optional, Union
+
+from ..equipment.base import Equipment
+from ..streams.energy import EnergyStream
+from ..streams.material import MaterialStream
 
 
 class Flowsheet:
@@ -42,45 +43,76 @@ class Flowsheet:
     def add_energy_stream(self, stream: EnergyStream):
         self.energy_streams.append(stream)
 
+    def _ensure_unit_registered(self, unit: Equipment) -> None:
+        if unit not in self.equipment:
+            self.add_equipment(unit)
+
+    def _ensure_stream_registered(self, stream: Union[MaterialStream, EnergyStream]) -> None:
+        if isinstance(stream, MaterialStream) and stream not in self.material_streams:
+            self.add_material_stream(stream)
+        if isinstance(stream, EnergyStream) and stream not in self.energy_streams:
+            self.add_energy_stream(stream)
+
     # --------------------------
     # Connections
     # --------------------------
-    def connect(self, src, dst, port: str):
+    def connect(self, *args):
         """
-        Connect equipment and streams via named ports.
+        Connect stream between units using named ports.
 
-        - (Stream → Equipment, port="inlet1" or "energy_in1")
-        - (Equipment → Stream, port="outlet1" or "energy_out1")
-        - (Equipment → Equipment, port="inletX" or "energy_inX")
+        Preferred signature:
+            connect(stream, from_unit, from_port, to_unit, to_port)
+
+        Backward-compatible signature:
+            connect(stream, to_unit, to_port)
         """
-        if isinstance(src, MaterialStream) and isinstance(dst, Equipment):
-            dst.inlets[port] = src
-            self.connections.append({"from": src, "to": dst, "port": port})
-
-        elif isinstance(src, EnergyStream) and isinstance(dst, Equipment):
-            dst.energy_in[port] = src
-            self.connections.append({"from": src, "to": dst, "port": port})
-
-        elif isinstance(src, Equipment) and isinstance(dst, MaterialStream):
-            src.outlets[port] = dst
-            self.connections.append({"from": src, "to": dst, "port": port})
-
-        elif isinstance(src, Equipment) and isinstance(dst, EnergyStream):
-            src.energy_out[port] = dst
-            self.connections.append({"from": src, "to": dst, "port": port})
-
-        elif isinstance(src, Equipment) and isinstance(dst, Equipment):
-            # Infer correct connection based on port prefix
-            if port.startswith("inlet"):
-                dst.inlets[port] = list(src.outlets.values())[0]  # take first outlet
-            elif port.startswith("energy_in"):
-                dst.energy_in[port] = list(src.energy_out.values())[0]  # take first energy outlet
-            else:
-                raise ValueError("Invalid port name for Equipment → Equipment connection.")
-            self.connections.append({"from": src, "to": dst, "port": port})
-
+        if len(args) == 5:
+            stream, from_unit, from_port, to_unit, to_port = args
+        elif len(args) == 3:
+            stream, to_unit, to_port = args
+            from_unit = None
+            from_port = None
         else:
-            raise ValueError("Unsupported connection type")
+            raise TypeError("connect expects either 3 args or 5 args.")
+
+        if not isinstance(stream, (MaterialStream, EnergyStream)):
+            raise TypeError("First argument must be MaterialStream or EnergyStream.")
+        if not isinstance(to_unit, Equipment):
+            raise TypeError("Destination unit must be an Equipment instance.")
+        if from_unit is not None and not isinstance(from_unit, Equipment):
+            raise TypeError("Source unit must be an Equipment instance.")
+
+        self._ensure_stream_registered(stream)
+        self._ensure_unit_registered(to_unit)
+        if from_unit is not None:
+            self._ensure_unit_registered(from_unit)
+
+        # Validate destination inlet
+        if to_port not in to_unit.inlets:
+            raise ValueError(f"{to_unit.name}: inlet port '{to_port}' does not exist.")
+        if to_unit.inlets[to_port] is not None and to_unit.inlets[to_port] is not stream:
+            raise ValueError(f"{to_unit.name}: inlet port '{to_port}' already has a stream.")
+
+        if from_unit is not None:
+            # Validate source outlet
+            if from_port not in from_unit.outlets:
+                raise ValueError(f"{from_unit.name}: outlet port '{from_port}' does not exist.")
+            if from_unit.outlets[from_port] is not None and from_unit.outlets[from_port] is not stream:
+                raise ValueError(f"{from_unit.name}: outlet port '{from_port}' already has a stream.")
+
+            from_unit.connect_outlet(from_port, stream) if from_unit.outlets[from_port] is None else None
+
+        to_unit.connect_inlet(to_port, stream) if to_unit.inlets[to_port] is None else None
+
+        conn = {
+            "stream": stream,
+            "from_unit": from_unit,
+            "from_port": from_port,
+            "to_unit": to_unit,
+            "to_port": to_port,
+        }
+        if conn not in self.connections:
+            self.connections.append(conn)
 
     # --------------------------
     # Dependency graph
@@ -91,19 +123,11 @@ class Flowsheet:
         indegree = {u.name: 0 for u in self.equipment}
 
         for conn in self.connections:
-            src, dst = conn["from"], conn["to"]
-
-            if isinstance(src, Equipment) and isinstance(dst, Equipment):
+            src: Optional[Equipment] = conn.get("from_unit")  # type: ignore[assignment]
+            dst: Equipment = conn["to_unit"]  # type: ignore[assignment]
+            if src is not None and src is not dst:
                 graph[src.name].append(dst.name)
                 indegree[dst.name] += 1
-
-            elif isinstance(src, (MaterialStream, EnergyStream)) and isinstance(dst, Equipment):
-                # Stream → Equipment (dependency comes from its producer)
-                pass
-
-            elif isinstance(src, Equipment) and isinstance(dst, (MaterialStream, EnergyStream)):
-                # Equipment → Stream (stream is not an executable unit)
-                pass
 
         return graph, indegree
 
@@ -130,6 +154,7 @@ class Flowsheet:
     # Simulation
     # --------------------------
     def run(self):
+        """Topologically sorted flowsheet solve."""
         order = self._topological_order()
         name_to_unit = {u.name: u for u in self.equipment}
 
@@ -138,6 +163,12 @@ class Flowsheet:
             print(f"➡️ Running {unit.name} ({unit.__class__.__name__})")
             result = unit.simulate()
             unit.data = result
+
+    def solve_sequential(self):
+        """Simple sequential solve in registration order."""
+        for unit in self.equipment:
+            print(f"➡️ Running {unit.name} ({unit.__class__.__name__})")
+            unit.data = unit.simulate()
 
     def summary(self):
         print(f"\nFlowsheet: {self.name}")
