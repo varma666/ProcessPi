@@ -51,6 +51,75 @@ _HEADER_KS = {
     "exit": 1.0
 }
 
+
+class ShellAndTubeHeatExchanger(HeatExchanger):
+    """
+    Class-based shell-and-tube exchanger aligned with flowsheet-style named ports.
+    """
+
+    def __init__(self, name: str = "ShellAndTubeHeatExchanger", **kwargs):
+        super().__init__(name=name, **kwargs)
+        self.inlets = {"hot_in": None, "cold_in": None}
+        self.outlets = {"hot_out": None, "cold_out": None}
+        self.results: Dict[str, Any] = {}
+        self._design_kwargs: Dict[str, Any] = {}
+
+    @property
+    def hot_in(self) -> Optional[MaterialStream]:
+        return self.inlets["hot_in"]
+
+    @hot_in.setter
+    def hot_in(self, stream: MaterialStream):
+        self.inlets["hot_in"] = stream
+
+    @property
+    def cold_in(self) -> Optional[MaterialStream]:
+        return self.inlets["cold_in"]
+
+    @cold_in.setter
+    def cold_in(self, stream: MaterialStream):
+        self.inlets["cold_in"] = stream
+
+    @property
+    def hot_out(self) -> Optional[MaterialStream]:
+        return self.outlets["hot_out"]
+
+    @hot_out.setter
+    def hot_out(self, stream: MaterialStream):
+        self.outlets["hot_out"] = stream
+
+    @property
+    def cold_out(self) -> Optional[MaterialStream]:
+        return self.outlets["cold_out"]
+
+    @cold_out.setter
+    def cold_out(self, stream: MaterialStream):
+        self.outlets["cold_out"] = stream
+
+    def connect_inlet(self, port: str, stream: MaterialStream) -> None:
+        if port not in self.inlets:
+            raise ValueError(f"Invalid inlet port '{port}'. Expected one of: {list(self.inlets.keys())}")
+        self.inlets[port] = stream
+
+    def connect_outlet(self, port: str, stream: MaterialStream) -> None:
+        if port not in self.outlets:
+            raise ValueError(f"Invalid outlet port '{port}'. Expected one of: {list(self.outlets.keys())}")
+        self.outlets[port] = stream
+
+    def _design_shelltube(self, **kwargs) -> Dict[str, Any]:
+        return _design_shelltube_impl(self, **kwargs)
+
+    def simulate(self, **kwargs) -> Dict[str, Any]:
+        hot_stream = self.inlets["hot_in"]
+        cold_stream = self.inlets["cold_in"]
+        if hot_stream is None or cold_stream is None:
+            raise ValueError("Both 'hot_in' and 'cold_in' must be connected before simulate().")
+        if kwargs:
+            self._design_kwargs.update(kwargs)
+        self.results = self._design_shelltube(**self._design_kwargs)
+        self.design_results = self.results
+        return self.results
+
 # -------------------------------------------------------------------------
 # Small utilities
 # -------------------------------------------------------------------------
@@ -376,7 +445,7 @@ def _epsilon_from_arrangement(arr: str, NTU: float, C: float) -> float:
 # -------------------------------------------------------------------------
 # Top-level design function using Bell-Delaware, packing, header design, mechanical summary
 # -------------------------------------------------------------------------
-def design_shelltube(
+def _design_shelltube_impl(
     hx: HeatExchanger,
     *,
     tube_nominal: Optional[Diameter] = None,
@@ -684,3 +753,16 @@ def design_shelltube(
 
     hx.design_results = best
     return best
+
+
+def design_shelltube(
+    hx: HeatExchanger,
+    **kwargs
+) -> Dict[str, Any]:
+    """
+    Backward-compatible functional API.
+    Delegates to class method when available.
+    """
+    if hasattr(hx, "_design_shelltube"):
+        return hx._design_shelltube(**kwargs)
+    return _design_shelltube_impl(hx, **kwargs)
