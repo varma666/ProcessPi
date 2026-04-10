@@ -22,7 +22,13 @@ class HeatExchanger(Equipment):
         energy_stream: Optional[EnergyStream] = None,
         simulated_params: Optional[Dict[str, Any]] = None,
     ):
-        super().__init__(name, inlet_ports=2, outlet_ports=2)
+        super().__init__(
+            name,
+            inlet_ports=2,
+            outlet_ports=2,
+            inlet_names=["hot_in", "cold_in"],
+            outlet_names=["hot_out", "cold_out"],
+        )
         self.method = method.upper()
         self.U = U
         self.area = area
@@ -40,42 +46,40 @@ class HeatExchanger(Equipment):
     # Stream attachment
     # ------------------------
     def attach_stream(self, stream: MaterialStream, port: str, index: Optional[int] = None):
-        mapping = {"hot_in": 0, "hot_out": 0, "cold_in": 1, "cold_out": 1}
-        #print(port)
         if port in ["hot_in", "cold_in"]:
-            super().attach_stream(stream, "inlet", mapping[port])
+            self.connect_inlet(port, stream)
         elif port in ["hot_out", "cold_out"]:
-            super().attach_stream(stream, "outlet", mapping[port])
+            self.connect_outlet(port, stream)
         else:
             raise ValueError(f"Invalid port: {port}")
 
     @property
-    def hot_in(self) -> Optional[MaterialStream]: return self.inlets[0]
+    def hot_in(self) -> Optional[MaterialStream]: return self.inlets["hot_in"]
     # Add a setter for hot_in
     @hot_in.setter
     def hot_in(self, stream: MaterialStream): 
-        self.inlets[0] = stream
+        self.inlets["hot_in"] = stream
 
     @property
-    def hot_out(self) -> Optional[MaterialStream]: return self.outlets[0]
+    def hot_out(self) -> Optional[MaterialStream]: return self.outlets["hot_out"]
     # Add a setter for hot_out (optional, but good practice if you want to set it)
     @hot_out.setter
     def hot_out(self, stream: MaterialStream): 
-        self.outlets[0] = stream
+        self.outlets["hot_out"] = stream
 
     @property
-    def cold_in(self) -> Optional[MaterialStream]: return self.inlets[1]
+    def cold_in(self) -> Optional[MaterialStream]: return self.inlets["cold_in"]
     # Add a setter for cold_in
     @cold_in.setter
     def cold_in(self, stream: MaterialStream): 
-        self.inlets[1] = stream
+        self.inlets["cold_in"] = stream
 
     @property
-    def cold_out(self) -> Optional[MaterialStream]: return self.outlets[1]
+    def cold_out(self) -> Optional[MaterialStream]: return self.outlets["cold_out"]
     # Add a setter for cold_out (optional)
     @cold_out.setter
     def cold_out(self, stream: MaterialStream): 
-        self.outlets[1] = stream
+        self.outlets["cold_out"] = stream
 
     # ... hot_stream and cold_stream properties remain the same ...
     @property
