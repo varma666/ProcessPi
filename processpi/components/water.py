@@ -24,10 +24,15 @@ class Water(Component):
         return Density(den, "kg/m3")
 
     def httype(self):
-        P = self.pressure.to("Pa").value
-        Pvap = self.vapor_pressure().to("Pa").value
-        if P < Pvap:
-            httype = "water"
+        if self.pressure is None:
+            # assume atmospheric if not provided
+            P = 101325
         else:
-            httype = "steam"
-        return httype
+            P = self.pressure.to("Pa").value
+    
+        Pvap = self.vapor_pressure().to("Pa").value
+    
+        if P < Pvap:
+            return "steam"
+        else:
+            return "water"
