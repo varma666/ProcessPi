@@ -1,3 +1,5 @@
+from .hx_kern import SensibleDuty, LatentDuty, Reynolds, DittusBoelter, KernShellNu, ConvectiveH, TubeCountFromArea, ShellDiameterEstimate, DarcyDrop
+from .heat_exchanger import SensibleHeatDuty, LatentHeatDuty, KernNusselt, ConvectiveCoefficient, DarcyPressureDrop, ReynoldsFromProperties
 from .conduction_heat_loss import ConductionHeatLoss
 from .convection_heat_loss import ConvectionHeatLoss
 from .heat_exchanger_area import HeatExchangerArea
@@ -55,5 +57,20 @@ __all__ = ["ConductionHeatLoss",
            "ThermalResistanceParallel",
            "RayleighNumber",
            "RohsenowBoiling",
-           "StefanBoltzmann"
+           "StefanBoltzmann",
+           "SensibleHeatDuty",
+           "LatentHeatDuty",
+           "KernNusselt",
+           "ConvectiveCoefficient",
+           "DarcyPressureDrop",
+           "ReynoldsFromProperties",
+           "SensibleDuty",
+           "LatentDuty",
+           "Reynolds",
+           "DittusBoelter",
+           "KernShellNu",
+           "ConvectiveH",
+           "TubeCountFromArea",
+           "ShellDiameterEstimate",
+           "DarcyDrop"
     ]

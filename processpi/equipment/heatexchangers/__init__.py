@@ -1,9 +1,20 @@
 from .base import HeatExchanger
-from .mechanical import run_mechanical_design
-from .mechanical.shell_tube import ShellAndTube
+from .bell_delaware import BellDelawareHX
+from .condenser import CondenserHX
+from .double_pipe import DoublePipeHX
+from .engine import HeatExchangerEngine, HeatExchangerResults
+from .evaporator import EvaporatorHX
+from .reboiler import ReboilerHX
+from .shell_and_tube import ShellAndTubeHX
 
 __all__ = [
     "HeatExchanger",
-    "ShellAndTube",
-    "run_mechanical_design",
+    "HeatExchangerEngine",
+    "HeatExchangerResults",
+    "ShellAndTubeHX",
+    "DoublePipeHX",
+    "CondenserHX",
+    "ReboilerHX",
+    "EvaporatorHX",
+    "BellDelawareHX",
 ]
