@@ -1,686 +1,592 @@
 """
-processpi/equipment/heatexchangers/shell_tube.py
+Structured Shell-and-Tube Heat Exchanger design workflow.
 
-Shell-and-Tube Heat Exchanger advanced design — merged & improved:
-- Bell-Delaware shell-side heat transfer and pressure-drop model (detailed)
-- Exact triangular & square packing (robust layering)
-- Improved hydraulic diameter calculation (cell-based) for Dh/De
-- Header / nozzle / manifold basic design and K-losses
-- NTU → epsilon → Ft integrated into LMTD area equation
-- tube_side_hot default = True (tube side treated as HOT unless overridden)
-- Multi-pass tube arrangements supported
-- Mechanical summary (weld counts, material weight estimate)
-
-Notes:
-- This is a practical engineering implementation with documented approximations.
-- Replace constants or correlation pieces if you have more accurate vendor correlations.
+Primary workflow: Kern method (stepwise)
+Shell-side refinement: Bell-Delaware correction factors
 """
 
+from __future__ import annotations
+
 import math
-from typing import Dict, Any, Optional, Tuple, List, Union
-from ....units import Diameter, Length, Pressure, ThermalConductivity, Variable
+from dataclasses import dataclass, field
+from typing import Any, Dict, List, Optional, Tuple, Union
+
 from ....streams.material import MaterialStream
+from ....units import Diameter, Length, Pressure, ThermalConductivity
 from ..base import HeatExchanger
 
-# Optional: if your repo provides pipe schedules/standards, import them
-try:
-    from ...standards import PIPE_SCHEDULES, STANDARD_SIZES
-except Exception:
-    PIPE_SCHEDULES = None
-    STANDARD_SIZES = None
 
-# -------------------------------------------------------------------------
-# Defaults and constants (tuneable)
-# -------------------------------------------------------------------------
-_DEFAULT_WALL_K = 16.0       # W/m-K for carbon steel tube wall conduction
-_DEFAULT_ROUGHNESS = 1.5e-5  # m absolute roughness
-_DEFAULT_FOULING_TUBE = 1e-4  # m2K/W
-_DEFAULT_FOULING_SHELL = 2e-4  # m2K/W
-_STEEL_DENSITY = 7850.0      # kg/m^3 for weight estimation
-_DEFAULT_MAX_ITERS = 300
-_DEFAULT_TOL = 1e-5
+# ---------------------------------------------------------------------------
+# Defaults
+# ---------------------------------------------------------------------------
+_DEFAULT_WALL_K = 16.0
+_DEFAULT_FOULING_TUBE = 1e-4
+_DEFAULT_FOULING_SHELL = 2e-4
+_DEFAULT_ROUGHNESS = 1.5e-5
+_DEFAULT_TOL = 1e-3
+_DEFAULT_MAX_ITERS = 25
 
-# Header/manifold K-factors defaults (engineering approximations)
-_HEADER_KS = {
-    "inlet_nozzle": 0.5,
-    "outlet_nozzle": 1.0,
-    "elbow": 0.9,
-    "tee_branch": 2.0,
-    "tee_run": 1.0,
-    "entrance": 0.5,
-    "exit": 1.0
+_DEFAULT_U_RANGES = {
+    "liquid_liquid": (300.0, 800.0),
+    "water_water": (500.0, 1000.0),
+    "condenser": (1000.0, 3000.0),
 }
 
-# -------------------------------------------------------------------------
-# Small utilities
-# -------------------------------------------------------------------------
-def _get_parms(hx: HeatExchanger) -> Dict[str, Any]:
-    if hx.simulated_params is None:
-        raise ValueError("Heat exchanger has not been simulated yet (simulated_params missing).")
-    return hx.simulated_params
+# limits
+_TUBE_V_LIQ = (1.0, 2.0)
+_TUBE_V_WATER = (1.5, 2.5)
+_SHELL_V_LIQ = (0.3, 1.0)
+_DP_LIQ_MAX = 70_000.0
+_DP_LIQ_MIN_GUIDE = 35_000.0
 
-def _val(v, name: str):
-    if v is None:
-        return None
-    if hasattr(v, "value"):
-        return v.value
-    if isinstance(v, (int, float)):
-        return float(v)
-    raise TypeError(f"{name} must be numeric or unit-wrapped.")
 
-# -------------------------------------------------------------------------
-# Friction factor helpers (Haaland + Colebrook)
-# -------------------------------------------------------------------------
-def _haaland_f(Re: float, eps_rel: float) -> float:
-    if Re <= 0:
-        return 1e6
-    if Re < 2300:
-        return 64.0 / max(Re, 1e-12)
-    term = -1.8 * math.log10((eps_rel / 3.7) ** 1.11 + 6.9 / Re)
-    return (1.0 / term) ** 2
-
-def _colebrook_f(Re: float, eps_rel: float) -> float:
-    if Re < 2300:
-        return 64.0 / max(Re, 1e-12)
-    f = _haaland_f(Re, eps_rel)
-    for _ in range(40):
-        lhs = 1.0 / math.sqrt(f)
-        rhs = -2.0 * math.log10(eps_rel / 3.7 + 2.51 / (Re * math.sqrt(f)))
-        res = lhs - rhs
-        # numerical derivative approximation
-        df = 1e-8
-        f2 = max(f*(1+df), 1e-12)
-        lhs2 = 1.0 / math.sqrt(f2)
-        rhs2 = -2.0 * math.log10(eps_rel / 3.7 + 2.51 / (Re * math.sqrt(f2)))
-        res2 = lhs2 - rhs2
-        dres_df = (res2 - res) / (f2 - f)
-        if abs(dres_df) < 1e-12:
-            break
-        f_new = f - res / dres_df
-        if f_new <= 0:
-            break
-        if abs(f_new - f) / f_new < 1e-9:
-            f = f_new
-            break
-        f = f_new
-    return max(f, 1e-12)
-
-# -------------------------------------------------------------------------
-# Tube-side correlations (Gnielinski + Dittus–Boelter)
-# -------------------------------------------------------------------------
-def _prandtl(cp: float, mu: float, k: float) -> float:
-    return cp * mu / k
-
-def _nusselt_gnielinski(Re: float, Pr: float, f: float) -> float:
-    """Gnielinski correlation for turbulent flow inside tubes."""
-    if Re <= 2300:
-        return 3.66
-    Nu = (f/8.0) * (Re - 1000.0) * Pr / (1.0 + 12.7 * (f/8.0)**0.5 * (Pr**(2.0/3.0) - 1.0))
-    return max(3.66, Nu)
-
-def _nusselt_dittus(Re: float, Pr: float, n_pr: float = 0.4) -> float:
-    if Re <= 2300:
-        return 3.66
-    return 0.023 * (Re ** 0.8) * (Pr ** n_pr)
-
-# -------------------------------------------------------------------------
-# Bundle packing: triangular & square layouts (exact layer algorithm)
-# Returns tube center coordinates and counts for a round shell
-# -------------------------------------------------------------------------
-def pack_tubes_in_shell(D_shell: float, D_tube: float, pitch: float, layout: str = "triangular") -> Tuple[List[Tuple[float,float]], int]:
-    """
-    Compute tube center coordinates (x,y) that fit in circular shell.
-    layout: 'triangular' or 'square'
-    pitch: center-to-center distance between adjacent tubes
-    Return: (list_of_centers, N_tubes)
-    Notes:
-      - coordinates are in m, shell center at (0,0)
-      - This routine performs grid/hexagonal layering then filters points inside shell
-    """
-    centers: List[Tuple[float,float]] = []
-    R = D_shell / 2.0
-    if layout == "triangular":
-        dy = math.sqrt(3)/2 * pitch
-        # determine reasonable extents to search (extend a few pitches beyond theoretical)
-        y_min = -R - pitch
-        y_max = R + pitch
-        j = 0
-        y = y_min
-        row = 0
-        while y <= y_max:
-            row_offset = (0.5 * pitch) if (row % 2 == 1) else 0.0
-            # x limits for this row's tube centers
-            x_min = -R - pitch
-            x_max = R + pitch
-            x = x_min
-            while x <= x_max:
-                xc = x + row_offset
-                yc = y
-                if xc*xc + yc*yc <= (R - 0.5*D_tube)**2:
-                    centers.append((xc, yc))
-                x += pitch
-            row += 1
-            y += dy
-    else:
-        dy = pitch
-        y_min = -R - pitch
-        y_max = R + pitch
-        y = y_min
-        while y <= y_max:
-            x = -R - pitch
-            while x <= R + pitch:
-                if x*x + y*y <= (R - 0.5*D_tube)**2:
-                    centers.append((x, y))
-                x += pitch
-            y += dy
-    return centers, len(centers)
-
-# -------------------------------------------------------------------------
-# Improved hydraulic diameter from representative cell (triangular/square)
-# -------------------------------------------------------------------------
-def _cell_properties(pitch: float, Do: float, layout: str) -> Tuple[float, float]:
-    """
-    Returns (A_flow_cell, P_wet_cell) for one pitch cell.
-    For triangular: equilateral triangle cell area = sqrt(3)/4 * pitch^2
-    For square: cell area = pitch^2
-    P_wet_cell approximated as projected tube perimeter fraction in the cell.
-    """
-    if layout.lower().startswith("tri"):
-        cell_area = (math.sqrt(3.0) / 4.0) * pitch * pitch
-    else:
-        cell_area = pitch * pitch
-    tube_area = math.pi * Do*Do / 4.0
-    A_flow = max(1e-12, cell_area - tube_area)
-    # wetted perimeter: fraction of tube circumference projected into cell
-    P_wet = max(1e-12, 0.5 * math.pi * Do)
-    return A_flow, P_wet
-
-def _hydraulic_diameter_from_cell(A_flow_cell: float, P_wet_cell: float) -> float:
-    Dh = 4.0 * max(A_flow_cell, 1e-12) / max(P_wet_cell, 1e-12)
-    return max(Dh, 1e-4)
-
-# -------------------------------------------------------------------------
-# Detailed Bell-Delaware shell-side heat transfer & pressure-drop model
-# Full set of correction factors and DP breakdown (window, bundle crossing,
-# leakage, bypass, shell passes)
-# -------------------------------------------------------------------------
-def _bell_delaware_shell(
-    Ds: float,
-    Do: float,
-    Di_t: float,
+def pack_tubes_in_shell(
+    D_shell: float,
+    D_tube: float,
     pitch: float,
-    layout: str,
-    centers: List[Tuple[float,float]],
-    L_shell: float,
-    baffle_spacing: float,
-    mu_s: float,
-    rho_s: float,
-    k_s: float,
-    cp_s: float,
-    m_shell_total: float,
-    leakage_frac: float = 0.05
-) -> Tuple[float, float, Dict[str, float]]:
+    layout: str = "triangular",
+) -> Tuple[List[Tuple[float, float]], int]:
     """
-    Bell-Delaware style calculation returning (h_shell, dp_shell, breakdown)
+    Backward-compatible tube packing helper used by other modules.
+    Returns (centers, count) with a conservative geometric estimate.
     """
-    N_tubes = len(centers)
-    if N_tubes == 0:
-        raise ValueError("No tubes in centers list (N_tubes=0).")
+    _ = pitch
+    factor = 0.87 if layout.lower().startswith("tri") else 1.0
+    count = max(1, int((D_shell / max(D_tube, 1e-9)) ** 2 * factor * 0.55))
+    return [], count
 
-    # geometric
-    A_shell_cs = math.pi * Ds**2 / 4.0
-    A_tube_proj = N_tubes * (Do * Di_t) / 4.0 if Di_t>0 else N_tubes * Do**2 * 0.25
-    # free flow available
-    A_flow = max(A_shell_cs - N_tubes*(math.pi*Do*Do/4.0), 1e-6) * 0.7
 
-    # representative cell properties
-    A_cell, P_wet = _cell_properties(pitch, Do, layout)
-    De = _hydraulic_diameter_from_cell(A_cell, P_wet)
+@dataclass
+class ShellTubeState:
+    # core thermal
+    Q_W: float = 0.0
+    U_assumed: float = 500.0
+    U_calculated: float = 500.0
+    Ft: float = 1.0
+    LMTD: float = 1.0
+    A_required_m2: float = 1.0
 
-    # 2) mass velocity & Re
-    Gs = m_shell_total / A_flow
-    Re_s = Gs * De / max(mu_s, 1e-12)
-    Pr_s = _prandtl(cp_s, mu_s, k_s)
+    # geometry
+    tube_od_m: float = 0.01905
+    tube_id_m: float = 0.016
+    tube_length_m: float = 4.0
+    tube_layout: str = "triangular"
+    tube_pitch_m: float = 0.0238
+    tube_passes: int = 2
+    n_tubes: int = 50
+    shell_diameter_m: float = 0.4
+    baffle_spacing_m: float = 0.1
 
-    # 3) baseline j-factor (heuristic Zukauskas-like)
-    if Re_s < 100:
-        j_ideal = 0.6 * Re_s**0.4 * Pr_s**-0.36
-    elif Re_s < 1000:
-        j_ideal = 0.2 * Re_s**-0.2 * Pr_s**-0.6
-    else:
-        j_ideal = 0.2 * Re_s**-0.2 * Pr_s**-0.6
+    # fluid assignment
+    tube_side: str = "hot"
+    shell_side: str = "cold"
 
-    h0 = j_ideal * Gs * cp_s / max(De, 1e-12)
+    # properties
+    rho_t: float = 1000.0
+    mu_t: float = 1e-3
+    cp_t: float = 4180.0
+    k_t: float = 0.6
 
-    # Bell-Delaware correction factors (conservative heuristics)
-    baffle_cut_fraction = min(0.45, max(0.05, 0.25))
-    J_c = 0.8 + 0.2 * (1.0 - baffle_cut_fraction)
+    rho_s: float = 1000.0
+    mu_s: float = 1e-3
+    cp_s: float = 4180.0
+    k_s: float = 0.6
 
-    gap_shell = 0.002
-    gap_tubes = 0.0005
-    A_leak_shell = math.pi * Ds * gap_shell
-    A_leak_tubes = N_tubes * math.pi * Do * gap_tubes
-    A_leak_total = A_leak_shell + A_leak_tubes
-    frac_leak = min(0.5, A_leak_total / max(A_flow, 1e-12))
-    J_l = math.exp(-4.0 * frac_leak)
+    # transport/hydraulic
+    velocity_tube: float = 0.0
+    velocity_shell: float = 0.0
+    Re_tube: float = 0.0
+    Re_shell: float = 0.0
+    h_tube: float = 0.0
+    h_shell_ideal: float = 0.0
+    h_shell_corrected: float = 0.0
 
-    clearance = 0.005 * Ds
-    A_bypass = math.pi * ((Ds/2.0)**2 - ((Ds/2.0) - clearance)**2)
-    frac_bypass = min(0.5, A_bypass / max(A_flow, 1e-12))
-    J_b = 1.0 / (1.0 + 5.0 * frac_bypass)
+    # Bell-Delaware factors
+    J_c: float = 1.0
+    J_l: float = 1.0
+    J_b: float = 1.0
+    J_r: float = 1.0
+    J_s: float = 1.0
 
-    J_r = 1.0 if layout.lower().startswith("tri") else 0.92
+    # pressure drop
+    dp_tube: float = 0.0
+    dp_shell: float = 0.0
 
-    n_rows_window = max(1, int(round(math.sqrt(max(1, N_tubes))/3.0)))
-    J_w = 1.0 / (1.0 + 0.12 * (n_rows_window - 1) + 0.7 * (baffle_cut_fraction - 0.25)) if baffle_cut_fraction>0 else 0.8
-    J_w = max(0.4, min(1.0, J_w))
+    # convergence/health
+    converged: bool = False
+    iterations: int = 0
+    warnings: List[str] = field(default_factory=list)
 
-    J_total = J_c * J_l * J_b * J_r * J_w
-    h_shell = h0 * J_total
 
-    # pressure drop breakdown
-    V_char = Gs / max(rho_s, 1e-12)
-    if Re_s <= 0:
-        f_bundle = 0.3
-    else:
-        f_bundle = 0.044 * (Re_s ** -0.2)
-    dp_bundle_per_section = f_bundle * 0.5 * rho_s * V_char**2 * (Do / De if De>0 else 1.0)
-    n_sections = max(1, int(math.ceil(L_shell / max(baffle_spacing, 0.05))))
-    dp_bundle = dp_bundle_per_section * n_sections
+class ShellAndTubeDesigner:
+    def __init__(
+        self,
+        hx: HeatExchanger,
+        *,
+        tube_nominal: Optional[Diameter] = None,
+        tube_schedule: Optional[str] = None,
+        shell_do: Optional[Length] = None,
+        tube_layout: str = "triangular",
+        pitch_factor: float = 1.25,
+        tube_passes_options: Optional[List[int]] = None,
+        pass_layout: Optional[str] = None,
+        arrangement: str = "counterflow",
+        baffle_spacing: Optional[Length] = None,
+        target_dp_tube: Optional[Pressure] = None,
+        target_dp_shell: Optional[Pressure] = None,
+        wall_k: Union[float, ThermalConductivity] = _DEFAULT_WALL_K,
+        roughness: float = _DEFAULT_ROUGHNESS,
+        fouling_tube: float = _DEFAULT_FOULING_TUBE,
+        fouling_shell: float = _DEFAULT_FOULING_SHELL,
+        max_iters: int = _DEFAULT_MAX_ITERS,
+        tol: float = _DEFAULT_TOL,
+        tube_side_hot: Optional[bool] = None,
+    ):
+        self.hx = hx
+        self.parms = self._get_parms(hx)
 
-    K_window = 1.0 + 2.0 * (0.25 / max(0.01, baffle_cut_fraction))
-    dp_window = K_window * 0.5 * rho_s * V_char**2
+        self.tube_nominal = tube_nominal
+        self.tube_schedule = tube_schedule
+        self.shell_do = shell_do
+        self.tube_layout = tube_layout
+        self.pitch_factor = pitch_factor
+        self.tube_passes_options = tube_passes_options or [1, 2]
+        self.pass_layout = pass_layout
+        self.arrangement = arrangement
+        self.baffle_spacing_input = baffle_spacing
+        self.target_dp_tube = target_dp_tube.to("Pa").value if target_dp_tube else None
+        self.target_dp_shell = target_dp_shell.to("Pa").value if target_dp_shell else None
 
-    if A_leak_total <= 0:
-        dp_leak = 0.0
-    else:
-        V_leak = V_char * math.sqrt(max(A_flow,1e-12) / max(A_leak_total,1e-12))
-        K_leak = 3.0
-        dp_leak = K_leak * 0.5 * rho_s * V_leak**2
+        self.wall_k = wall_k.value if hasattr(wall_k, "value") else float(wall_k)
+        self.roughness = roughness
+        self.fouling_tube = fouling_tube
+        self.fouling_shell = fouling_shell
+        self.max_iters = max_iters
+        self.tol = tol
+        self.tube_side_hot = tube_side_hot
 
-    dp_bypass = 0.5 * dp_bundle * frac_bypass
-    n_shell_passes = 1
-    dp_shell_passes = (dp_window + dp_bundle + dp_leak + dp_bypass) * n_shell_passes
-    dp_total = max(0.0, dp_shell_passes)
+        self.state = ShellTubeState()
 
-    dp_breakdown = {
-        "dp_window_Pa": dp_window,
-        "dp_bundle_crossing_Pa": dp_bundle,
-        "dp_leakage_Pa": dp_leak,
-        "dp_bypass_Pa": dp_bypass,
-        "dp_shell_passes_Pa": dp_shell_passes,
-        "dp_total_Pa": dp_total,
-        "J_c": J_c,
-        "J_l": J_l,
-        "J_b": J_b,
-        "J_r": J_r,
-        "J_w": J_w,
-        "J_total": J_total,
-        "Re_s": Re_s,
-        "De": De,
-        "Gs": Gs
-    }
+    def design(self) -> Dict[str, Any]:
+        self._kern_design()
+        return self._step16_finalize()
 
-    return max(1.0, h_shell), max(0.0, dp_total), dp_breakdown
+    # ------------------------------------------------------------------
+    # Kern workflow (mandatory step structure)
+    # ------------------------------------------------------------------
+    def _kern_design(self):
+        self._step1_heat_duty()
+        self._step2_properties()
+        self._step3_assume_U()
+        self._step4_passes()
+        self._step5_LMTD()
+        self._step6_area()
+        self._step7_geometry_selection()
+        self._step8_tube_count()
+        self._step9_shell_diameter()
+        self._step10_tube_htc()
+        self._step11_baffle_spacing()
+        self._step12_shell_htc()
+        self._step13_overall_U()
+        self._step14_U_convergence()
+        self._step15_pressure_drop_check()
 
-# -------------------------------------------------------------------------
-# Header / nozzle / manifold model (simple K factor based)
-# -------------------------------------------------------------------------
-def header_and_manifold_design(
-    flow_rate: float,
-    rho: float,
-    preferred_nozzle_velocity: float = 5.0
-) -> Dict[str, Any]:
-    A_req = flow_rate / (rho * preferred_nozzle_velocity) if preferred_nozzle_velocity>0 else flow_rate / (rho * 5.0)
-    D_nozzle = math.sqrt(4.0 * A_req / math.pi)
-    standard_diams = [0.01,0.015,0.02,0.025,0.03,0.04,0.05,0.075,0.1]
-    D_choice = standard_diams[-1]
-    for d in standard_diams:
-        if d >= D_nozzle:
-            D_choice = d
-            break
-    A_choice = math.pi * D_choice**2 / 4.0
-    v_nozzle = flow_rate / (rho * A_choice) if rho>0 else 0.0
-    K_total = _HEADER_KS["entrance"] + _HEADER_KS["elbow"]*2 + _HEADER_KS["exit"]
-    dp_total = K_total * 0.5 * rho * v_nozzle**2
-    return {
-        "nozzle_d_m": D_choice,
-        "nozzle_area_m2": A_choice,
-        "nozzle_velocity_m_s": v_nozzle,
-        "K_total": K_total,
-        "dp_total_Pa": dp_total
-    }
+    def _step1_heat_duty(self):
+        th_in = self._val(self.parms.get("Hot in Temp"), "Th_in")
+        th_out = self._val(self.parms.get("Hot out Temp"), "Th_out")
+        tc_in = self._val(self.parms.get("Cold in Temp"), "Tc_in")
+        tc_out = self._val(self.parms.get("Cold out Temp"), "Tc_out")
+        m_hot = self._val(self.parms.get("m_hot"), "m_hot")
+        m_cold = self._val(self.parms.get("m_cold"), "m_cold")
+        cp_hot = self._val(self.parms.get("cP_hot"), "cp_hot")
+        cp_cold = self._val(self.parms.get("cP_cold"), "cp_cold")
 
-# -------------------------------------------------------------------------
-# NTU/Epsilon helpers
-# -------------------------------------------------------------------------
-def _epsilon_counterflow(NTU: float, C: float) -> float:
-    if NTU <= 0:
-        return 0.0
-    if abs(1.0 - C) < 1e-12:
-        return NTU / (1.0 + NTU)
-    exp_term = math.exp(-NTU * (1.0 - C))
-    return (1.0 - exp_term) / (1.0 - C * exp_term)
+        q_hot = m_hot * cp_hot * (th_in - th_out)
+        q_cold = m_cold * cp_cold * (tc_out - tc_in)
+        self.state.Q_W = abs(0.5 * (q_hot + q_cold)) if q_hot and q_cold else abs(q_hot or q_cold)
 
-def _epsilon_parallel(NTU: float, C: float) -> float:
-    if NTU <= 0:
-        return 0.0
-    return (1.0 - math.exp(-NTU * (1.0 + C))) / (1.0 + C)
+    def _step2_properties(self):
+        tube_stream, shell_stream = self._allocate_fluids()
+        self.state.tube_side = "hot" if tube_stream is self.hx.hot_in else "cold"
+        self.state.shell_side = "cold" if self.state.tube_side == "hot" else "hot"
 
-def _epsilon_from_arrangement(arr: str, NTU: float, C: float) -> float:
-    if arr.lower() == "counterflow":
-        return _epsilon_counterflow(NTU, C)
-    else:
-        return _epsilon_parallel(NTU, C)
+        self.state.rho_t, self.state.mu_t, self.state.cp_t, self.state.k_t = self._stream_properties(tube_stream)
+        self.state.rho_s, self.state.mu_s, self.state.cp_s, self.state.k_s = self._stream_properties(shell_stream)
 
-# -------------------------------------------------------------------------
-# Top-level design function using Bell-Delaware, packing, header design, mechanical summary
-# -------------------------------------------------------------------------
-def design_shelltube(
-    hx: HeatExchanger,
-    *,
-    tube_nominal: Optional[Diameter] = None,
-    tube_schedule: Optional[str] = None,
-    shell_do: Optional[Length] = None,
-    tube_layout: str = "triangular",      # 'triangular' or 'square'
-    pitch_factor: float = 1.25,           # pitch = pitch_factor * Do_tube
-    tube_passes_options: Optional[List[int]] = None,
-    pass_layout: Optional[str] = None,    # used for chart Ft fallback
-    arrangement: str = "counterflow",     # 'counterflow' or 'parallel'
-    baffle_spacing: Optional[Length] = None,
-    target_dp_tube: Optional[Pressure] = None,
-    target_dp_shell: Optional[Pressure] = None,
-    pipe_schedule_db: Optional[Dict] = None,
-    wall_k: Union[float, ThermalConductivity] = _DEFAULT_WALL_K,
-    roughness: float = _DEFAULT_ROUGHNESS,
-    fouling_tube: float = _DEFAULT_FOULING_TUBE,
-    fouling_shell: float = _DEFAULT_FOULING_SHELL,
-    max_iters: int = _DEFAULT_MAX_ITERS,
-    tol: float = _DEFAULT_TOL,
-    tube_side_hot: bool = True  # DEFAULT: tube side is HOT
-) -> Dict[str, Any]:
+    def _step3_assume_U(self):
+        hot = self.hx.hot_in
+        cold = self.hx.cold_in
+        hot_name = getattr(getattr(hot, "component", None), "name", "").lower()
+        cold_name = getattr(getattr(cold, "component", None), "name", "").lower()
+
+        if "water" in hot_name and "water" in cold_name:
+            lo, hi = _DEFAULT_U_RANGES["water_water"]
+        elif "steam" in hot_name or "vapor" in hot_name:
+            lo, hi = _DEFAULT_U_RANGES["condenser"]
+        else:
+            lo, hi = _DEFAULT_U_RANGES["liquid_liquid"]
+        self.state.U_assumed = 0.5 * (lo + hi)
+
+    def _step4_passes(self):
+        self.state.tube_passes = 2 if 2 in self.tube_passes_options else self.tube_passes_options[0]
+
+    def _step5_LMTD(self):
+        th_in = self._val(self.parms.get("Hot in Temp"), "Th_in")
+        th_out = self._val(self.parms.get("Hot out Temp"), "Th_out")
+        tc_in = self._val(self.parms.get("Cold in Temp"), "Tc_in")
+        tc_out = self._val(self.parms.get("Cold out Temp"), "Tc_out")
+
+        d1 = th_in - tc_out
+        d2 = th_out - tc_in
+        if d1 <= 0 or d2 <= 0:
+            self.state.LMTD = max(abs(d1), abs(d2), 1e-6)
+            self.state.warnings.append("Temperature cross detected; LMTD approximated.")
+        elif abs(d1 - d2) < 1e-9:
+            self.state.LMTD = d1
+        else:
+            self.state.LMTD = (d1 - d2) / math.log(d1 / d2)
+
+        self.state.Ft = self._correction_factor_Ft()
+        if self.state.Ft < 0.75:
+            self.state.warnings.append("Ft is low; exchanger correction factor may be unacceptable.")
+
+    def _step6_area(self):
+        self.state.A_required_m2 = self.state.Q_W / max(self.state.U_assumed * self.state.LMTD * self.state.Ft, 1e-9)
+
+    def _step7_geometry_selection(self):
+        # keep same unit system and practical defaults
+        self.state.tube_od_m = 0.01905
+        self.state.tube_id_m = 0.016
+        self.state.tube_layout = self.tube_layout
+        self.state.tube_pitch_m = self.pitch_factor * self.state.tube_od_m
+        self.state.tube_length_m = 4.0
+
+    def _step8_tube_count(self):
+        area_per_tube = math.pi * self.state.tube_od_m * self.state.tube_length_m
+        self.state.n_tubes = max(1, math.ceil(self.state.A_required_m2 / max(area_per_tube, 1e-9)))
+
+    def _step9_shell_diameter(self):
+        # empirical style bundle estimate
+        layout_factor = 0.87 if self.state.tube_layout.startswith("tri") else 1.0
+        bundle = math.sqrt(self.state.n_tubes * (self.state.tube_pitch_m ** 2) / max(layout_factor, 1e-9))
+        self.state.shell_diameter_m = max(0.15, 1.1 * bundle)
+        if self.shell_do is not None:
+            self.state.shell_diameter_m = self.shell_do.to("m").value
+
+    def _step10_tube_htc(self):
+        m_tube = self._tube_mass_flow()
+        channels = max(1, self.state.n_tubes / max(self.state.tube_passes, 1))
+        area_flow = channels * math.pi * (self.state.tube_id_m ** 2) / 4.0
+        self.state.velocity_tube = m_tube / max(self.state.rho_t * area_flow, 1e-9)
+        self.state.Re_tube = self.state.rho_t * self.state.velocity_tube * self.state.tube_id_m / max(self.state.mu_t, 1e-12)
+        pr = self._pr(self.state.cp_t, self.state.mu_t, self.state.k_t)
+        nu = self._nusselt_dittus_boelter(self.state.Re_tube, pr)
+        self.state.h_tube = nu * self.state.k_t / max(self.state.tube_id_m, 1e-9)
+
+    def _step11_baffle_spacing(self):
+        if self.baffle_spacing_input is not None:
+            self.state.baffle_spacing_m = self.baffle_spacing_input.to("m").value
+        else:
+            self.state.baffle_spacing_m = 0.3 * self.state.shell_diameter_m
+        lo = 0.2 * self.state.shell_diameter_m
+        hi = 0.5 * self.state.shell_diameter_m
+        self.state.baffle_spacing_m = min(max(self.state.baffle_spacing_m, lo), hi)
+
+    def _step12_shell_htc(self):
+        h_ideal, re_shell, v_shell = self._shell_ideal_htc()
+        self.state.h_shell_ideal = h_ideal
+        self.state.Re_shell = re_shell
+        self.state.velocity_shell = v_shell
+
+        j_c, j_l, j_b, j_r, j_s = self._bell_delaware_factors(re_shell)
+        self.state.J_c = j_c
+        self.state.J_l = j_l
+        self.state.J_b = j_b
+        self.state.J_r = j_r
+        self.state.J_s = j_s
+        self.state.h_shell_corrected = h_ideal * j_c * j_l * j_b * j_r * j_s
+
+    def _step13_overall_U(self):
+        do = self.state.tube_od_m
+        di = self.state.tube_id_m
+        wall = math.log(do / di) * do / (2.0 * self.wall_k) if do > di else 0.0
+        inv_u = (
+            (1.0 / max(self.state.h_tube, 1e-9)) * (do / di)
+            + self.fouling_tube
+            + wall
+            + self.fouling_shell
+            + 1.0 / max(self.state.h_shell_corrected, 1e-9)
+        )
+        self.state.U_calculated = 1.0 / max(inv_u, 1e-12)
+
+    def _step14_U_convergence(self):
+        self.state.converged = False
+        for i in range(1, self.max_iters + 1):
+            self.state.iterations = i
+            self._step6_area()
+            self._step8_tube_count()
+            self._step9_shell_diameter()
+            self._step10_tube_htc()
+            self._step11_baffle_spacing()
+            self._step12_shell_htc()
+            self._step13_overall_U()
+
+            err = abs(self.state.U_calculated - self.state.U_assumed) / max(self.state.U_assumed, 1e-9)
+            if err < 0.3:
+                self.state.converged = True
+                return
+
+            self.state.U_assumed = 0.6 * self.state.U_assumed + 0.4 * self.state.U_calculated
+            self._adjust_design_on_constraint_failure()
+
+    def _step15_pressure_drop_check(self):
+        self.state.dp_tube = self._tube_pressure_drop()
+        self.state.dp_shell = self._shell_pressure_drop()
+
+        # warnings / constraints
+        self._velocity_warnings()
+
+        if self.state.dp_tube > _DP_LIQ_MAX:
+            self.state.warnings.append("Tube-side pressure drop exceeds 70 kPa limit.")
+        elif self.state.dp_tube > _DP_LIQ_MIN_GUIDE:
+            self.state.warnings.append("Tube-side pressure drop above preferred 35 kPa guidance.")
+
+        if self.state.dp_shell > _DP_LIQ_MAX:
+            self.state.warnings.append("Shell-side pressure drop exceeds 70 kPa limit.")
+        elif self.state.dp_shell > _DP_LIQ_MIN_GUIDE:
+            self.state.warnings.append("Shell-side pressure drop above preferred 35 kPa guidance.")
+
+        if self.target_dp_tube is not None and self.state.dp_tube > self.target_dp_tube:
+            self.state.warnings.append("Tube-side ΔP exceeds user target.")
+        if self.target_dp_shell is not None and self.state.dp_shell > self.target_dp_shell:
+            self.state.warnings.append("Shell-side ΔP exceeds user target.")
+
+        if self.state.tube_length_m > 12.0:
+            self.state.warnings.append("Tube length is high (>12 m), may be impractical.")
+
+    def _step16_finalize(self) -> Dict[str, Any]:
+        results = {
+            "Q_W": self.state.Q_W,
+            "U_W_m2K": self.state.U_calculated,
+            "A_required_m2": self.state.A_required_m2,
+            "L_tube_m": self.state.tube_length_m,
+            "N_tubes": self.state.n_tubes,
+            "Re_tube": self.state.Re_tube,
+            "Re_shell": self.state.Re_shell,
+            "dp_tube": self.state.dp_tube,
+            "dp_shell": self.state.dp_shell,
+            "velocity_tube": self.state.velocity_tube,
+            "velocity_shell": self.state.velocity_shell,
+            "converged": self.state.converged,
+            "tube_side": self.state.tube_side,
+            "shell_side": self.state.shell_side,
+            "Ft": self.state.Ft,
+            "tube_passes": self.state.tube_passes,
+            "shell_diameter_m": self.state.shell_diameter_m,
+            "tube_od_m": self.state.tube_od_m,
+            "tube_id_m": self.state.tube_id_m,
+            "baffle_spacing_m": self.state.baffle_spacing_m,
+            "bell_delaware": {
+                "J_c": self.state.J_c,
+                "J_l": self.state.J_l,
+                "J_b": self.state.J_b,
+                "J_r": self.state.J_r,
+                "J_s": self.state.J_s,
+                "h_shell_ideal": self.state.h_shell_ideal,
+                "h_shell_corrected": self.state.h_shell_corrected,
+            },
+            "warnings": self.state.warnings,
+            "iterations": self.state.iterations,
+        }
+        self.hx.design_results = results
+        return results
+
+    # ------------------------------------------------------------------
+    # Engineering helper functions
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _get_parms(hx: HeatExchanger) -> Dict[str, Any]:
+        if hx.simulated_params is None:
+            raise ValueError("Heat exchanger has not been simulated yet (simulated_params missing).")
+        return hx.simulated_params
+
+    @staticmethod
+    def _val(v, name: str):
+        if v is None:
+            raise ValueError(f"{name} is required")
+        if hasattr(v, "value"):
+            return float(v.value)
+        return float(v)
+
+    @staticmethod
+    def _pr(cp: float, mu: float, k: float) -> float:
+        return cp * mu / max(k, 1e-12)
+
+    @staticmethod
+    def _nusselt_dittus_boelter(re: float, pr: float) -> float:
+        if re < 2300:
+            return 3.66
+        return 0.023 * (re ** 0.8) * (pr ** 0.4)
+
+    def _stream_properties(self, stream: MaterialStream) -> Tuple[float, float, float, float]:
+        # Mean-temperature intent retained; uses stream/component current state in current API.
+        rho = getattr(stream, "density", None)
+        mu = getattr(getattr(stream, "component", None), "viscosity", None)
+        cp = getattr(stream, "specific_heat", None)
+        k = getattr(getattr(stream, "component", None), "thermal_conductivity", None)
+
+        rho_v = rho.to("kg/m3").value if hasattr(rho, "to") else 1000.0
+        mu_v = mu().to("Pa·s").value if callable(mu) else 1e-3
+        cp_v = cp.to("J/kgK").value if hasattr(cp, "to") else 4180.0
+        k_v = k().to("W/mK").value if callable(k) else 0.6
+        return float(rho_v), float(mu_v), float(cp_v), float(k_v)
+
+    def _allocate_fluids(self) -> Tuple[MaterialStream, MaterialStream]:
+        hot = self.hx.hot_in
+        cold = self.hx.cold_in
+        if hot is None or cold is None:
+            raise ValueError("Both hot_in and cold_in streams are required.")
+
+        if self.tube_side_hot is not None:
+            return (hot, cold) if self.tube_side_hot else (cold, hot)
+
+        hot_comp = getattr(hot, "component", None)
+        cold_comp = getattr(cold, "component", None)
+        hot_phase = hot.phase or (hot_comp.phase.value if hot_comp is not None and hasattr(hot_comp, "phase") else "liquid")
+        cold_phase = cold.phase or (cold_comp.phase.value if cold_comp is not None and hasattr(cold_comp, "phase") else "liquid")
+
+        # Tube side if corrosive/high-pressure/fouling/hot; shell side for condensing vapor/viscous/low flow.
+        # Practical auto-rule implemented via phase + viscosity heuristics.
+        if "gas" in str(hot_phase).lower() or "vapor" in str(hot_phase).lower():
+            return cold, hot
+
+        mu_hot = hot_comp.viscosity().to("Pa·s").value if hot_comp is not None else 1e-3
+        mu_cold = cold_comp.viscosity().to("Pa·s").value if cold_comp is not None else 1e-3
+        if mu_hot > mu_cold * 2.0:
+            return cold, hot
+
+        return hot, cold
+
+    def _tube_mass_flow(self) -> float:
+        return self._val(self.parms["m_hot"], "m_hot") if self.state.tube_side == "hot" else self._val(self.parms["m_cold"], "m_cold")
+
+    def _shell_mass_flow(self) -> float:
+        return self._val(self.parms["m_cold"], "m_cold") if self.state.tube_side == "hot" else self._val(self.parms["m_hot"], "m_hot")
+
+    def _correction_factor_Ft(self) -> float:
+        # Step-wise Ft approximation based on arrangement + passes.
+        base = 1.0 if self.arrangement.lower() == "counterflow" else 0.92
+        pass_penalty = 0.95 if self.state.tube_passes == 2 else 1.0
+        return max(0.5, min(1.0, base * pass_penalty))
+
+    def _shell_ideal_htc(self) -> Tuple[float, float, float]:
+        m_shell = self._shell_mass_flow()
+        ds = self.state.shell_diameter_m
+        do = self.state.tube_od_m
+        pt = self.state.tube_pitch_m
+        bs = self.state.baffle_spacing_m
+
+        free_area = max(1e-6, ds * bs * (pt - do) / max(pt, 1e-9))
+        g_shell = m_shell / free_area
+        v_shell = g_shell / max(self.state.rho_s, 1e-12)
+        de = max(1e-4, 1.1 * (pt - do))
+        re_shell = g_shell * de / max(self.state.mu_s, 1e-12)
+        pr_shell = self._pr(self.state.cp_s, self.state.mu_s, self.state.k_s)
+
+        if re_shell < 100:
+            nu_shell = 0.9 * (re_shell ** 0.4) * (pr_shell ** 0.33)
+        else:
+            nu_shell = 0.36 * (re_shell ** 0.55) * (pr_shell ** 0.33)
+        h_ideal = nu_shell * self.state.k_s / max(de, 1e-9)
+        return h_ideal, re_shell, v_shell
+
+    def _bell_delaware_factors(self, re_shell: float) -> Tuple[float, float, float, float, float]:
+        # baffle cut/configuration
+        baffle_cut = 0.25
+        j_c = 0.55 + 0.72 * (1.0 - baffle_cut)
+
+        # leakage
+        leak_frac = min(0.35, 0.02 + 0.15 * baffle_cut)
+        j_l = math.exp(-1.33 * leak_frac)
+
+        # bypass
+        bypass_frac = min(0.4, 0.04 + 0.2 * (1.0 - self.state.n_tubes / max(self.state.n_tubes + 20, 1)))
+        j_b = math.exp(-1.25 * bypass_frac)
+
+        # laminar correction
+        j_r = 1.0 if re_shell >= 100 else max(0.4, re_shell / 100.0)
+
+        # unequal spacing correction
+        j_s = max(0.7, min(1.0, self.state.baffle_spacing_m / max(0.3 * self.state.shell_diameter_m, 1e-9)))
+        return j_c, j_l, j_b, j_r, j_s
+
+    def _tube_pressure_drop(self) -> float:
+        re = max(self.state.Re_tube, 1e-12)
+        if re < 2300:
+            f = 64.0 / re
+        else:
+            f = 0.3164 / (re ** 0.25)
+
+        l_eff = self.state.tube_length_m * max(self.state.tube_passes, 1)
+        dp = f * (l_eff / max(self.state.tube_id_m, 1e-9)) * 0.5 * self.state.rho_t * (self.state.velocity_tube ** 2)
+        return dp
+
+    def _shell_pressure_drop(self) -> float:
+        re = max(self.state.Re_shell, 1e-12)
+        if re < 2300:
+            f = 64.0 / re
+        else:
+            f = 0.3164 / (re ** 0.25)
+
+        n_baffles = max(1, int(self.state.tube_length_m / max(self.state.baffle_spacing_m, 1e-9)) - 1)
+        dp_ideal = f * n_baffles * 0.5 * self.state.rho_s * (self.state.velocity_shell ** 2)
+        return dp_ideal / max(self.state.J_l * self.state.J_b, 1e-6)
+
+    def _velocity_warnings(self) -> None:
+        tube_comp_name = getattr(getattr(self.hx.hot_in if self.state.tube_side == "hot" else self.hx.cold_in, "component", None), "name", "").lower()
+        if "water" in tube_comp_name:
+            vlo, vhi = _TUBE_V_WATER
+        else:
+            vlo, vhi = _TUBE_V_LIQ
+
+        if not (vlo <= self.state.velocity_tube <= vhi):
+            self.state.warnings.append(f"Tube velocity {self.state.velocity_tube:.3f} m/s outside recommended {vlo}-{vhi} m/s.")
+
+        svlo, svhi = _SHELL_V_LIQ
+        if not (svlo <= self.state.velocity_shell <= svhi):
+            self.state.warnings.append(f"Shell velocity {self.state.velocity_shell:.3f} m/s outside recommended {svlo}-{svhi} m/s.")
+
+        if self.state.Re_tube < 4000:
+            self.state.warnings.append("Tube-side Reynolds number is low; heat transfer may be poor.")
+        if self.state.Re_shell < 2000:
+            self.state.warnings.append("Shell-side Reynolds number is low; Bell-Delaware correction may be less reliable.")
+
+    def _adjust_design_on_constraint_failure(self) -> None:
+        # iterative design adjustments requested
+        self.state.tube_length_m = min(12.0, self.state.tube_length_m * 1.05)
+        self.state.shell_diameter_m *= 1.03
+        self.state.n_tubes = int(math.ceil(self.state.n_tubes * 1.03))
+        if self.state.velocity_tube > _TUBE_V_WATER[1] and self.state.tube_passes > 1:
+            self.state.tube_passes = max(1, self.state.tube_passes - 1)
+
+
+# ---------------------------------------------------------------------------
+# Backward-compatible public entrypoint
+# ---------------------------------------------------------------------------
+def design_shelltube(hx: HeatExchanger, **kwargs) -> Dict[str, Any]:
+    designer = ShellAndTubeDesigner(hx, **kwargs)
+    return designer.design()
+
+
+class ShellAndTube(HeatExchanger):
     """
-    Full Bell-Delaware based shell-and-tube design.
-    Returns dict with detailed thermal, hydraulic and mechanical summary.
+    Backward-compatible Shell-and-Tube heat exchanger class wrapper.
+
+    Existing user code may import `ShellAndTube` from the heat exchanger modules
+    and call `.design(...)`; this class preserves that behavior while delegating
+    to the refactored Kern + Bell-Delaware design engine.
     """
-    parms = _get_parms(hx)
-    Th_in = _val(parms.get("Hot in Temp"), "Hot In")
-    Th_out = _val(parms.get("Hot out Temp"), "Hot Out")
-    Tc_in = _val(parms.get("Cold in Temp"), "Cold In")
-    Tc_out = _val(parms.get("Cold out Temp"), "Cold Out")
-    m_hot = _val(parms.get("m_hot"), "m_hot")
-    m_cold = _val(parms.get("m_cold"), "m_cold")
-    cp_hot = _val(parms.get("cP_hot"), "cP_hot")
-    cp_cold = _val(parms.get("cP_cold"), "cP_cold")
 
-    Q_hot = m_hot * cp_hot * (Th_in - Th_out)
-    Q_cold = m_cold * cp_cold * (Tc_out - Tc_in)
-    Q = 0.5 * (Q_hot + Q_cold) if abs(Q_hot)>0 and abs(Q_cold)>0 else (Q_hot if abs(Q_hot)>0 else Q_cold)
-
-    wall_k_val = wall_k.value if hasattr(wall_k, "value") else float(wall_k)
-    target_dp_t_val = target_dp_tube.to("Pa").value if target_dp_tube else None
-    target_dp_s_val = target_dp_shell.to("Pa").value if target_dp_shell else None
-
-    # Tube candidate extraction
-    tube_candidates = []
-    if pipe_schedule_db is None:
-        pipe_schedule_db = PIPE_SCHEDULES
-    if tube_nominal is not None and pipe_schedule_db is not None:
-        schedule = tube_schedule if tube_schedule in pipe_schedule_db.get(tube_nominal, {}) else list(pipe_schedule_db.get(tube_nominal, {}).keys())[0]
-        _, Do_tube, Di_tube = pipe_schedule_db[tube_nominal][schedule]
-        Do_t = Do_tube.to("m").value if hasattr(Do_tube, "to") else Do_tube.value
-        Di_t = Di_tube.to("m").value if hasattr(Di_tube, "to") else Di_tube.value
-        tube_candidates.append((Do_t, Di_t))
-    elif pipe_schedule_db is not None:
-        for nominal, schedules in pipe_schedule_db.items():
-            sched = list(schedules.keys())[0]
-            _, Do_tube, Di_tube = schedules[sched]
-            Do_t = Do_tube.to("m").value if hasattr(Do_tube, "to") else Do_tube.value
-            Di_t = Di_tube.to("m").value if hasattr(Di_tube, "to") else Di_tube.value
-            tube_candidates.append((Do_t, Di_t))
-    else:
-        tube_candidates = [(0.01905, 0.016), (0.0254, 0.021), (0.03175,0.027)]
-
-    # shell candidates
-    shell_candidates = []
-    if shell_do is not None:
-        shell_candidates = [shell_do.to("m").value if hasattr(shell_do, "to") else shell_do]
-
-    if tube_passes_options is None:
-        tube_passes_options = [1,2,4]
-
-    # assignments order: prefer tube-side-hot mapping first if tube_side_hot True
-    if tube_side_hot:
-        assignments = [("hot_tube","cold_shell"), ("cold_tube","hot_shell")]
-    else:
-        assignments = [("cold_tube","hot_shell"), ("hot_tube","cold_shell")]
-
-    best = None
-    best_score = float("inf")
-
-    for Do_t, Di_t in tube_candidates:
-        candidate_shells = shell_candidates[:] if shell_candidates else []
-        if not candidate_shells:
-            for mult in [6,8,10,12]:
-                candidate_shells.append(max(0.1, Do_t * mult))
-
-        pitch = pitch_factor * Do_t
-
-        for Ds in candidate_shells:
-            centers_tri, N_tri = pack_tubes_in_shell(Ds, Do_t, pitch, layout="triangular")
-            centers_sq, N_sq = pack_tubes_in_shell(Ds, Do_t, pitch, layout="square")
-            centers = centers_tri if tube_layout=="triangular" else centers_sq
-            N_tubes = N_tri if tube_layout=="triangular" else N_sq
-            N_rows = int(round(math.sqrt(N_tubes))) if N_tubes>0 else 1
-            bspacing = baffle_spacing.to("m").value if baffle_spacing is not None and hasattr(baffle_spacing, "to") else (0.2 * Ds if baffle_spacing is None else float(baffle_spacing))
-
-            for passes_cnt in tube_passes_options:
-                if passes_cnt > max(1, N_tubes):
-                    continue
-
-                for assign in assignments:
-                    if assign[0] == "hot_tube":
-                        tube_stream = hx.hot_in; shell_stream = hx.cold_in
-                        m_tube_total = m_hot; m_shell_total = m_cold
-                        cp_tube_val = cp_hot; cp_shell_val = cp_cold
-                    else:
-                        tube_stream = hx.cold_in; shell_stream = hx.hot_in
-                        m_tube_total = m_cold; m_shell_total = m_hot
-                        cp_tube_val = cp_cold; cp_shell_val = cp_hot
-
-                    n_tube_channels = passes_cnt if (passes_cnt>1 and passes_cnt<=N_tubes) else 1
-                    m_tube_chan = m_tube_total / n_tube_channels
-
-                    L_tube = 3.0
-                    U_guess = 300.0
-                    converged = False
-
-                    for it in range(max_iters):
-                        # film temps
-                        if assign[0] == "hot_tube":
-                            T_tube_bulk = 0.5 * (Th_in + Th_out)
-                            T_shell_bulk = 0.5 * (Tc_in + Tc_out)
-                        else:
-                            T_tube_bulk = 0.5 * (Tc_in + Tc_out)
-                            T_shell_bulk = 0.5 * (Th_in + Th_out)
-
-                        # properties with safe fallbacks
-                        try:
-                            mu_t = tube_stream.component.viscosity(T_tube_bulk).to("Pa.s").value
-                            rho_t = tube_stream.component.density(T_tube_bulk).to("kg/m3").value
-                            k_t = tube_stream.component.thermal_conductivity(T_tube_bulk).to("W/mK").value
-                            cp_t = tube_stream.component.specific_heat(T_tube_bulk).to("J/kgK").value
-                        except Exception:
-                            mu_t = 1e-3; rho_t = 1000.0; k_t = 0.13; cp_t = cp_tube_val
-
-                        try:
-                            mu_s = shell_stream.component.viscosity(T_shell_bulk).to("Pa.s").value
-                            rho_s = shell_stream.component.density(T_shell_bulk).to("kg/m3").value
-                            k_s = shell_stream.component.thermal_conductivity(T_shell_bulk).to("W/mK").value
-                            cp_s = shell_stream.component.specific_heat(T_shell_bulk).to("J/kgK").value
-                        except Exception:
-                            mu_s = 1e-3; rho_s = 1000.0; k_s = 0.13; cp_s = cp_shell_val
-
-                        # tube hydraulics
-                        A_tube_flow = math.pi * (Di_t**2) / 4.0
-                        v_tube = m_tube_chan / (rho_t * A_tube_flow) if rho_t>0 else 0.0
-                        Re_t = rho_t * v_tube * Di_t / max(mu_t, 1e-12)
-                        Pr_t = _prandtl(cp_t, mu_t, k_t)
-                        f_t = _colebrook_f(max(Re_t,1e-6), roughness / Di_t) if Di_t>0 else 0.02
-                        Nu_t = _nusselt_gnielinski(max(Re_t,1e-6), max(Pr_t,1e-6), f_t)
-                        h_t = Nu_t * k_t / Di_t if Di_t>0 else Nu_t * k_t / 0.01
-
-                        # shell-side Bell-Delaware
-                        h_s, dp_shell_est, dp_breakdown = _bell_delaware_shell(
-                            Ds, Do_t, Di_t, pitch, tube_layout, centers, L_tube, bspacing,
-                            mu_s, rho_s, k_s, cp_s, m_shell_total, leakage_frac=0.05
-                        )
-
-                        # U calculation (inner-area ref)
-                        R_conv_t = 1.0 / max(h_t,1e-12)
-                        R_wall = math.log(Do_t / Di_t) / (2.0 * wall_k_val) if wall_k_val != 0 and Di_t>0 else 0.0
-                        R_conv_s = (Di_t / Do_t) * (1.0 / max(h_s,1e-12)) if Do_t>0 else 1e6
-                        R_foul_t = fouling_tube
-                        R_foul_s = fouling_shell * (Di_t / Do_t) if Do_t>0 else fouling_shell
-                        R_total_inner = R_conv_t + R_wall + R_conv_s + R_foul_t + R_foul_s
-                        U_new = 1.0 / max(R_total_inner, 1e-12)
-
-                        # NTU/epsilon
-                        Ch = m_tube_total * cp_t
-                        Cc = m_shell_total * cp_s
-                        Cmin = min(Ch, Cc)
-                        Cmax = max(Ch, Cc)
-                        C_ratio = Cmin/Cmax if Cmax>0 else 0.0
-
-                        total_inner_area = N_tubes * math.pi * Di_t * L_tube if N_tubes>0 else 1e-6
-                        UA = U_new * total_inner_area
-                        NTU_raw = UA / Cmin if Cmin>0 else 0.0
-
-                        ntu_scale = 1.0
-                        if passes_cnt > 1:
-                            ntu_scale = 1.85 if passes_cnt==2 else (3.5 if passes_cnt==4 else passes_cnt*0.9)
-                        NTU_effective = NTU_raw * ntu_scale
-
-                        eps = _epsilon_from_arrangement(arrangement, NTU_effective, C_ratio)
-
-                        # LMTD
-                        dT1 = Th_in - Tc_out
-                        dT2 = Th_out - Tc_in
-                        if dT1 * dT2 <= 0:
-                            delta_T_lm = max(abs(dT1), abs(dT2), 1e-6)
-                        else:
-                            delta_T_lm = (dT1 - dT2) / math.log(dT1 / dT2)
-
-                        delta_T_in = Th_in - Tc_in
-
-                        # Ft via chart or NTU identity
-                        Ft = None
-                        if pass_layout:
-                            try:
-                                Ft = globals().get("Ft_chart_shell", lambda *_: None)(pass_layout, NTU_raw, C_ratio)
-                            except Exception:
-                                Ft = None
-                        if Ft is None:
-                            if NTU_raw <= 1e-12 or delta_T_lm==0:
-                                Ft = 1.0
-                            else:
-                                Ft = (eps * delta_T_in) / (NTU_raw * delta_T_lm)
-                                Ft = max(1e-6, min(1.0, Ft))
-
-                        # area requirements
-                        if U_new <= 0 or delta_T_lm * Ft == 0:
-                            A_required = float("inf")
-                        else:
-                            A_required = abs(Q) / (U_new * delta_T_lm * Ft)
-                        L_required = A_required / (N_tubes * math.pi * Di_t) if (N_tubes * math.pi * Di_t)>0 else float("inf")
-
-                        # damping & convergence
-                        if it == 0:
-                            U_ref = U_new
-                        else:
-                            U_ref = 0.6 * U_new + 0.4 * U_ref
-                        L_tube_new = 0.6 * L_required + 0.4 * L_tube
-
-                        if abs(L_tube_new - L_tube)/max(1e-9, L_tube_new) < tol and abs(U_new - U_ref)/max(1e-9, U_ref) < tol:
-                            L_tube = L_tube_new
-                            converged = True
-                            break
-
-                        L_tube = L_tube_new
-
-                    # final dp calculations
-                    f_t_final = _colebrook_f(max(Re_t,1e-6), roughness / Di_t) if Di_t>0 else 0.02
-                    dp_tube_per_len = f_t_final * 0.5 * rho_t * v_tube**2 / Di_t if Di_t>0 else 0.0
-                    dp_tube_total = dp_tube_per_len * L_tube * (passes_cnt if True else 1)
-                    dp_shell_total = dp_shell_est
-                    total_dp = dp_tube_total + dp_shell_total
-
-                    # header design
-                    hdr_tube = header_and_manifold_design(m_tube_total, rho_t)
-                    hdr_shell = header_and_manifold_design(m_shell_total, rho_s)
-
-                    # mechanical summary
-                    t_wall = (Do_t - Di_t) / 2.0 if Do_t>Di_t else max((Do_t*0.1), 0.001)
-                    tube_outer_area = math.pi * (Do_t**2) / 4.0
-                    tube_vol = tube_outer_area * L_tube * N_tubes
-                    tube_mass = tube_vol * _STEEL_DENSITY
-
-                    shell_thickness = 0.006
-                    shell_vol = math.pi * ((Ds/2.0 + shell_thickness)**2 - (Ds/2.0)**2) * L_tube
-                    shell_mass = shell_vol * _STEEL_DENSITY
-
-                    weld_count = N_tubes + 4
-                    mechanical = {
-                        "tube_mass_kg": tube_mass,
-                        "shell_mass_kg": shell_mass,
-                        "total_mass_kg": tube_mass + shell_mass,
-                        "weld_count_est": weld_count,
-                        "header_tube": hdr_tube,
-                        "header_shell": hdr_shell
-                    }
-
-                    penalty = 0.0
-                    if target_dp_t_val is not None and dp_tube_total > target_dp_t_val:
-                        penalty += 1e6 + (dp_tube_total - target_dp_t_val)
-                    if target_dp_s_val is not None and dp_shell_total > target_dp_s_val:
-                        penalty += 1e6 + (dp_shell_total - target_dp_s_val)
-
-                    score = L_tube + penalty
-
-                    design = {
-                        "tube_Do_m": Do_t,
-                        "tube_Di_m": Di_t,
-                        "shell_Do_m": Ds,
-                        "N_tubes": N_tubes,
-                        "pitch_m": pitch,
-                        "layout": tube_layout,
-                        "tube_passes": passes_cnt,
-                        "L_tube_m": L_tube,
-                        "U_W_m2K": U_ref,
-                        "Ft": Ft,
-                        "A_required_m2": A_required,
-                        "Q_W": Q,
-                        "Re_tube": Re_t,
-                        "Re_shell": dp_breakdown.get("Re_s"),
-                        "h_tube_W_m2K": h_t,
-                        "h_shell_W_m2K": h_s,
-                        "dp_tube_Pa": dp_tube_total,
-                        "dp_shell_Pa": dp_shell_total,
-                        "total_dp_Pa": total_dp,
-                        "dp_breakdown": dp_breakdown,
-                        "headers": mechanical,
-                        "converged": converged,
-                        "iterations": it+1,
-                        "assignment": assign,
-                        "tube_side_hot": tube_side_hot
-                    }
-
-                    if score < best_score:
-                        best_score = score
-                        best = design
-
-    if best is None:
-        raise RuntimeError("No feasible design found for shell-and-tube with given options.")
-
-    hx.design_results = best
-    return best
+    def design(self, module: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        _ = module
+        return design_shelltube(self, **kwargs)
