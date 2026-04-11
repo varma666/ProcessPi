@@ -2,10 +2,10 @@ from typing import Dict, Any
 
 from .classification import HXClassification
 from .double_pipe import design_doublepipe, HXSolver, HXOptimizer, DesignConstraints, AdaptiveHXOptimizer
-from .shell_tube import design_shelltube, ShellAndTube, ShellAndTubeHeatExchanger
-from .condenser import design_condenser, Condenser, CondenserHeatExchanger
-from .reboiler import design_reboiler, Reboiler, ReboilerHeatExchanger
-from .evaporator import design_evaporator, Evaporator, EvaporatorHeatExchanger
+from .shell_tube import design_shelltube, ShellAndTube
+from .condenser import design_condenser
+from .reboiler import design_reboiler
+from .evaporator import design_evaporator
 
 
 _design_type_map = {

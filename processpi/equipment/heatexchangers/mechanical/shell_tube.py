@@ -576,3 +576,17 @@ class ShellAndTubeDesigner:
 def design_shelltube(hx: HeatExchanger, **kwargs) -> Dict[str, Any]:
     designer = ShellAndTubeDesigner(hx, **kwargs)
     return designer.design()
+
+
+class ShellAndTube(HeatExchanger):
+    """
+    Backward-compatible Shell-and-Tube heat exchanger class wrapper.
+
+    Existing user code may import `ShellAndTube` from the heat exchanger modules
+    and call `.design(...)`; this class preserves that behavior while delegating
+    to the refactored Kern + Bell-Delaware design engine.
+    """
+
+    def design(self, module: Optional[str] = None, **kwargs) -> Dict[str, Any]:
+        _ = module
+        return design_shelltube(self, **kwargs)
