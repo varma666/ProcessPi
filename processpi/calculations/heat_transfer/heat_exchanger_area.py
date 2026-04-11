@@ -14,7 +14,9 @@ class HeatExchangerArea(CalculationBase):
         for key in required:
             if key not in self.inputs:
                 raise ValueError(f"Missing required input: {key}")
-        if self.inputs["log_mean_temp_diff"].value <= 0:
+        dtlm = self.inputs["log_mean_temp_diff"]
+        dtlm_val = dtlm.value if hasattr(dtlm, "value") else float(dtlm)
+        if dtlm_val <= 0:
             raise ValueError("Log mean temperature difference must be positive")
 
     def calculate(self):
