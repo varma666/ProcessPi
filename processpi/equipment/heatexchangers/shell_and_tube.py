@@ -20,7 +20,7 @@ from .base import HeatExchanger
 class ShellAndTubeHX(HeatExchanger):
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("U") is not None:
-            return float(self.specs["U"])
+            return float(self.specs["U"].to("W/m2K").value)
         phase_pair = {hot["phase"], cold["phase"]}
         if "vapor" in phase_pair:
             return 900.0
@@ -68,40 +68,77 @@ class ShellAndTubeHX(HeatExchanger):
         tube_length = float(self.specs.get("tube_length", 5.0))
         tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
 
+        # Temperatures
         th_in = hot["t_k"]
         tc_in = cold["t_k"]
+
         if self.hot_out and self.hot_out.temperature:
             th_out = self.hot_out.temperature.to("K").value
         else:
             th_out = th_in - q_w / max(hot["m_dot"] * hot["cp"], 1e-9)
+
         if self.cold_out and self.cold_out.temperature:
             tc_out = self.cold_out.temperature.to("K").value
         else:
             tc_out = tc_in + q_w / max(cold["m_dot"] * cold["cp"], 1e-9)
 
         dtlm = self.lmtd(th_in, th_out, tc_in, tc_out)
+
         u_assumed = self._assume_u(hot, cold)
 
         iterations = 0
-        u_calculated = u_assumed
-        area = float(self.specs.get("area", 0.0))
         warnings: List[str] = []
 
         while iterations < 25:
             iterations += 1
-            if area <= 0.0:
-                area = self.area(q_w, u_assumed, dtlm)
 
-            tube_count = TubeCountFromArea(area=area, tube_od=tube_od, tube_length=tube_length).calculate()
-            shell_diameter = ShellDiameterEstimate(tube_count=tube_count, tube_pitch=tube_pitch).calculate()
-            baffle_spacing = float(self.specs.get("baffle_spacing", max(0.3 * shell_diameter, min(0.5 * shell_diameter, 0.45 * shell_diameter))))
+            # --- STEP 1: Thermal Area Requirement ---
+            # Ensure Q is in Watts
+            q_watts = q_w * 1000.0
 
-            tube_area_flow = max(tube_count / tube_passes * math.pi * tube_id**2 / 4.0, 1e-12)
-            shell_area_flow = max(shell_diameter * baffle_spacing * (tube_pitch - tube_od) / tube_pitch, 1e-12)
+            area_required = q_watts / max(u_assumed * dtlm, 1e-6)
 
-            v_tube = FluidVelocity(volumetric_flow_rate=hot["m_dot"] / hot["density"], diameter=(4 * tube_area_flow / math.pi) ** 0.5).calculate().to("m/s").value
-            v_shell = FluidVelocity(volumetric_flow_rate=cold["m_dot"] / cold["density"], diameter=(4 * shell_area_flow / math.pi) ** 0.5).calculate().to("m/s").value
+            # --- STEP 2: Tube-side velocity design ---
+            v_target = float(self.specs.get("tube_velocity_target", 1.5))
+            q_vol_hot = hot["m_dot"] / hot["density"]
 
+            flow_area_required = q_vol_hot / max(v_target, 1e-6)
+            area_per_tube_flow = math.pi * tube_id**2 / 4.0
+
+            tube_count_velocity = int(flow_area_required / max(area_per_tube_flow, 1e-12) * tube_passes)
+
+            # --- STEP 3: Thermal tube requirement ---
+            area_per_tube_surface = math.pi * tube_od * tube_length
+            tube_count_thermal = math.ceil(area_required / max(area_per_tube_surface, 1e-12))
+
+            # --- FINAL tube count ---
+            tube_count = max(tube_count_velocity, tube_count_thermal, 10)
+
+            # --- STEP 4: Area from geometry ---
+            area = tube_count * math.pi * tube_od * tube_length
+
+            # --- STEP 5: Shell-side velocity design ---
+            v_shell_target = float(self.specs.get("shell_velocity_target", 0.5))
+            q_vol_cold = cold["m_dot"] / cold["density"]
+
+            required_shell_area = q_vol_cold / max(v_shell_target, 1e-6)
+            shell_diameter = math.sqrt(4 * required_shell_area / math.pi)
+
+            baffle_spacing = float(
+                self.specs.get(
+                    "baffle_spacing",
+                    max(0.3 * shell_diameter, min(0.5 * shell_diameter, 0.45 * shell_diameter))
+                )
+            )
+
+            # --- Velocities ---
+            tube_area_flow = tube_count / tube_passes * area_per_tube_flow
+            v_tube = q_vol_hot / max(tube_area_flow, 1e-12)
+
+            shell_area_flow = math.pi * shell_diameter**2 / 4.0
+            v_shell = q_vol_cold / max(shell_area_flow, 1e-12)
+
+            # --- Heat transfer coefficients ---
             re_t = Reynolds(density=hot["density"], velocity=v_tube, diameter=tube_id, viscosity=hot["viscosity"]).calculate()
             pr_t = max(hot["cp"] * hot["viscosity"] / max(hot["k"], 1e-12), 1e-12)
             nu_t = DittusBoelter(reynolds=max(re_t, 1.0), prandtl=pr_t, n=0.4).calculate()
@@ -113,25 +150,54 @@ class ShellAndTubeHX(HeatExchanger):
             nu_s = KernShellNu(reynolds=max(re_s, 1.0), prandtl=pr_s).calculate()
             h_s = ConvectiveH(nusselt=nu_s, k=cold["k"], diameter=de_shell).calculate().to("W/m2K").value
 
-            u_calculated = self.overall_u(h_tube=h_t, h_shell=h_s, fouling_factor=float(self.specs.get("fouling_factor", 0.0)))
+            u_calculated = self.overall_u(
+                h_tube=h_t,
+                h_shell=h_s,
+                fouling_factor=float(self.specs.get("fouling_factor", 0.0))
+            )
+
+            # --- Convergence check ---
             if abs((u_calculated - u_assumed) / max(u_assumed, 1e-6)) < 0.30:
                 break
-            u_assumed = u_calculated
-            area = 0.0
 
+            u_assumed = u_calculated
+
+        # --- Pressure drop ---
         f_tube = float(self.specs.get("f_tube", 0.005))
         f_shell = float(self.specs.get("f_shell", 0.02))
-        tube_dp = DarcyDrop(f=f_tube, length=tube_length * tube_passes, diameter=tube_id, density=hot["density"], velocity=v_tube).calculate().to("Pa").value
-        shell_dp = DarcyDrop(f=f_shell, length=max(shell_passes, 1) * shell_diameter, diameter=max(shell_diameter, 1e-6), density=cold["density"], velocity=v_shell).calculate().to("Pa").value
 
-        tube_limit = float(self.specs.get("tube_dp", self._dp_limit(hot)))
-        shell_limit = float(self.specs.get("shell_dp", self._dp_limit(cold)))
+        tube_dp = DarcyDrop(
+            f=f_tube,
+            length=tube_length * tube_passes,
+            diameter=tube_id,
+            density=hot["density"],
+            velocity=v_tube
+        ).calculate().to("Pa").value
+
+        shell_dp = DarcyDrop(
+            f=f_shell,
+            length=max(shell_passes, 1) * shell_diameter,
+            diameter=max(shell_diameter, 1e-6),
+            density=cold["density"],
+            velocity=v_shell
+        ).calculate().to("Pa").value
+
+        # --- Limits ---
+        tube_limit = float(self.specs.get("tube_dp", self._dp_limit(hot)).to("Pa").value)
+        shell_limit = float(self.specs.get("shell_dp", self._dp_limit(cold)).to("Pa").value)
+
         if tube_dp > tube_limit:
             warnings.append(f"Tube-side pressure drop {tube_dp:.1f} Pa exceeds limit {tube_limit:.1f} Pa")
         if shell_dp > shell_limit:
             warnings.append(f"Shell-side pressure drop {shell_dp:.1f} Pa exceeds limit {shell_limit:.1f} Pa")
 
+        # --- Velocity warnings ---
         warnings.extend(self._velocity_warnings(v_tube, v_shell, hot, cold))
+
+        # --- Thermal safety ---
+        if area < area_required:
+            warnings.append("Heat transfer area insufficient")
+
         status = "OK" if (not warnings and iterations < 25) else "VIOLATION"
 
         return {
