@@ -20,7 +20,7 @@ from .base import HeatExchanger
 class ShellAndTubeHX(HeatExchanger):
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("U") is not None:
-            return float(self.specs["U"].to("W/m2K").value)
+            return float(self.specs["U"])
         phase_pair = {hot["phase"], cold["phase"]}
         if "vapor" in phase_pair:
             return 900.0
@@ -124,8 +124,8 @@ class ShellAndTubeHX(HeatExchanger):
         tube_dp = DarcyDrop(f=f_tube, length=tube_length * tube_passes, diameter=tube_id, density=hot["density"], velocity=v_tube).calculate().to("Pa").value
         shell_dp = DarcyDrop(f=f_shell, length=max(shell_passes, 1) * shell_diameter, diameter=max(shell_diameter, 1e-6), density=cold["density"], velocity=v_shell).calculate().to("Pa").value
 
-        tube_limit = float(self.specs.get("tube_dp", self._dp_limit(hot)).to("Pa").value)
-        shell_limit = float(self.specs.get("shell_dp", self._dp_limit(cold)).to("Pa").value)
+        tube_limit = float(self.specs.get("tube_dp", self._dp_limit(hot)))
+        shell_limit = float(self.specs.get("shell_dp", self._dp_limit(cold)))
         if tube_dp > tube_limit:
             warnings.append(f"Tube-side pressure drop {tube_dp:.1f} Pa exceeds limit {tube_limit:.1f} Pa")
         if shell_dp > shell_limit:

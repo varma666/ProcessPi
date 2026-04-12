@@ -100,3 +100,9 @@ class HeatExchangerEngine:
             print("No results available for summary.")
             return None
         return self._results.summary()
+    def results(self):
+        """Return design results"""
+        if not hasattr(self, "_results"):
+            raise RuntimeError("Run the model first using hx.run()")
+        return self._results
+
