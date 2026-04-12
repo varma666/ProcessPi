@@ -1,27 +1,96 @@
-'''
-Example 2
-Double Kpe Dube Oil-Crude Oil Exchanger. 6,900 lb /hr of a 26°API lube oil must be cooled from 450 to. 350°F by 72,500 lb/hr of 34°API mid-conti¬ nent crude oil. 
-The crude oil .will be heated from 300 to 310°F.
-A fouling factor of 0.003 should be provided for each stream, and the allowable pressure drop on each stream will be 10 psi.
-A number of 20-ft hairpins of 3- by 2-in. IPS pipe are available. How many must be used, and how shall they be arranged? 
-The viscosity of the crude oil may be obtained from Kg. 14. For the lube oil, viscosities are 1.4 centipoises at 500°F, 
-3.0 at 400°F, and 7.7 at 300°F. These viscosities are great enough to introduce an error if = 1 is assumed.
-'''
+# ============================================
+# EXAMPLE 1 — BENZENE COOLING
+# ============================================
+
+# Problem:
+# 21000 kg/h of liquid benzene at 90°C is to be cooled to 30°C
+# using a heat exchanger.
+# Cooling water available: 60500 kg/h at 15°C
+# Maximum allowable pressure drop: 1 bar on both sides
+
+
+# ============================================
+# IMPORTS
+# ============================================
+
 from processpi.units import *
 from processpi.components import *
 from processpi.streams import MaterialStream
-cold_fluid = Oil()
-hot_fluid = Oil()
-cold_in = MaterialStream("cold_in", component=cold_fluid, temperature=Temperature(300, "F"), mass_flow=MassFlowRate(72500, "lb/h"))
-hot_in = MaterialStream("hot_in", component=hot_fluid, temperature=Temperature(450, "F"), mass_flow=MassFlowRate(6900, "lb/h"))
-cold_out = MaterialStream("cold_out", component=cold_fluid, temperature=Temperature(310, "F"))
-hot_out = MaterialStream("hot_out", component=hot_fluid, temperature=Temperature(350, "F"))
-from processpi.equipment.heatexchangers import HeatExchanger
-hx = HeatExchanger("HX1")
-hx.cold_in = cold_in
-hx.cold_out = cold_out
-hx.hot_in = hot_in
-hx.hot_out = hot_out
-hx.simulate()
-design_results = hx.design()
-print(design_results)
+from processpi.equipment.heatexchangers import HeatExchangerEngine
+
+
+# ============================================
+# DEFINE FLUIDS
+# ============================================
+
+benzene = Benzene(
+    density=Density(876, "kg/m3"),
+    viscosity=Viscosity(0.6, "cP"),
+    specific_heat=SpecificHeat(1.74, "kJ/kgK"),
+)
+
+water = Water(
+    density=Density(1000, "kg/m3"),
+    viscosity=Viscosity(1.0, "cP"),
+    specific_heat=SpecificHeat(4.18, "kJ/kgK"),
+)
+
+
+# ============================================
+# DEFINE STREAMS
+# ============================================
+
+hot_in = MaterialStream(
+    "hot_in",
+    component=benzene,
+    temperature=Temperature(90, "C"),
+    mass_flow=MassFlowRate(21000, "kg/h"),
+)
+
+hot_out = MaterialStream(
+    "hot_out",
+    component=benzene,
+    temperature=Temperature(30, "C"),
+)
+
+cold_in = MaterialStream(
+    "cold_in",
+    component=water,
+    temperature=Temperature(15, "C"),
+    mass_flow=MassFlowRate(60500, "kg/h"),
+)
+
+# Outlet temperature unknown → to be calculated
+cold_out = MaterialStream(
+    "cold_out",
+    component=water
+)
+
+
+# ============================================
+# RUN HEAT EXCHANGER MODEL
+# ============================================
+
+hx = HeatExchangerEngine()
+
+hx.fit(
+    hot_in=hot_in,
+    hot_out=hot_out,
+    cold_in=cold_in,
+    cold_out=cold_out,
+    U=HeatTransferCoefficient(300, "W/m2K"),
+    shell_dp=Pressure(1, "bar"),
+    tube_dp=Pressure(1, "bar"),
+)
+
+hx.run()
+
+results = hx.results()
+
+
+# ============================================
+# DISPLAY RESULTS
+# ============================================
+
+print("\n=== DESIGN RESULTS ===")
+print(results)
