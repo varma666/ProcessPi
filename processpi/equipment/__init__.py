@@ -1,6 +1,6 @@
 """Equipment package for ProcessPI v0.3.0."""
 
-from .heat_exchangers import *
+from .heatexchangers import *
 
 __all__ = [
     "HeatExchanger",
@@ -11,4 +11,5 @@ __all__ = [
     "CondenserHX",
     "ReboilerHX",
     "EvaporatorHX",
+    "BellDelawareHX",
 ]
