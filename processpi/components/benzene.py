@@ -11,6 +11,7 @@ class Benzene(Component):
     and constants for various property calculations.
     """
     name = "Benzene"
+    hx_type = "organic"
     formula = "C6H6"
     molecular_weight = 78.114
     # Critical properties of Benzene. These are essential reference points for

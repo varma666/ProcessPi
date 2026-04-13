@@ -15,17 +15,21 @@ from processpi.calculations.heat_transfer.hx_kern import (
 )
 
 from .base import HeatExchanger
+from .standards import get_u_range
 
 
 class ShellAndTubeHX(HeatExchanger):
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("U") is not None:
-            #print(self.specs)
             return float(self.specs["U"].to("W/m2K").value)
-        phase_pair = {hot["phase"], cold["phase"]}
-        if "vapor" in phase_pair:
-            return 900.0
-        return 400.0
+        hot_type = getattr(self.hot_in.component, "hx_type", "generic")
+        cold_type = getattr(self.cold_in.component, "hx_type", "generic")
+        service_type = getattr(self, "service_type", "heat_exchanger")
+        u_range = get_u_range("shell_and_tube", service_type, hot_type, cold_type)
+        if u_range:
+            u_min, u_max = u_range
+            return 0.5 * (u_min + u_max)
+        return 300.0
 
     def _velocity_warnings(self, tube_v: float, shell_v: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
         warnings: List[str] = []
@@ -60,6 +64,16 @@ class ShellAndTubeHX(HeatExchanger):
     def design(self) -> Dict[str, Any]:
         hot = self._stream_props(self.hot_in)
         cold = self._stream_props(self.cold_in)
+
+        if hot["phase"] == "vapor":
+            self.service_type = "condenser"
+        elif cold["phase"] == "vapor":
+            self.service_type = "vaporizer"
+        elif hot["t_k"] > cold["t_k"]:
+            self.service_type = "cooler"
+        else:
+            self.service_type = "heater"
+
         q_w = self.heat_duty(hot, cold)
 
         shell_passes = int(self.specs.get("shell_passes", 1))
@@ -86,6 +100,9 @@ class ShellAndTubeHX(HeatExchanger):
         dtlm = self.lmtd(th_in, th_out, tc_in, tc_out)
 
         u_assumed = self._assume_u(hot, cold)
+        hot_type = getattr(self.hot_in.component, "hx_type", "generic")
+        cold_type = getattr(self.cold_in.component, "hx_type", "generic")
+        u_range = get_u_range("shell_and_tube", self.service_type, hot_type, cold_type)
 
         iterations = 0
         warnings: List[str] = []
@@ -94,11 +111,8 @@ class ShellAndTubeHX(HeatExchanger):
             iterations += 1
 
             # --- STEP 1: Thermal Area Requirement ---
-            # Ensure Q is in Watts * 1000.0
             q_watts = q_w * 1000
-            print(u_assumed,q_watts,dtlm)
             area_required = q_watts / max(u_assumed * dtlm, 1e-6)
-            print(area_required)
             # --- STEP 2: Tube-side velocity design ---
             v_target = float(self.specs.get("tube_velocity_target", 1.5))
             q_vol_hot = hot["m_dot"] / hot["density"]
@@ -156,9 +170,10 @@ class ShellAndTubeHX(HeatExchanger):
                 h_shell=h_s,
                 fouling_factor=float(self.specs.get("fouling_factor", 0.0))
             )
+            u_min, u_max = u_range if u_range else (100, 1000)
+            u_calculated = max(min(u_calculated, u_max), u_min)
 
             # --- Convergence check ---
-            print(u_calculated)
             if abs((u_calculated - u_assumed) / max(u_assumed, 1e-6)) < 0.30:
                 break
 

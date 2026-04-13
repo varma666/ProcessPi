@@ -3,6 +3,7 @@ from processpi.units import *
 
 class Vapor(Component):
     name = "Generic Vapor"
+    hx_type = "vapor"
     formula = "Gas"
     molecular_weight = 28.0
     _critical_temperature = Temperature(400, "K")

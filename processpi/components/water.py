@@ -4,6 +4,7 @@ from math import *
 
 class Water(Component):
     name = "Water"
+    hx_type = "water"
     formula = "H2O"
     molecular_weight = 18.015
     _critical_temperature = Temperature(647.096, "K")

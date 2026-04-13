@@ -3,6 +3,7 @@ from processpi.units import *
 
 class Oil(Component):
     name = "Generic Oil"
+    hx_type = "heavy_oil"
     formula = "Hydrocarbon Oil"
     molecular_weight = 150.0
     _critical_temperature = Temperature(650, "K")

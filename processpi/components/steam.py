@@ -5,6 +5,7 @@ from typing import Literal
 
 class Steam(Component):
     name = "Steam"
+    hx_type = "steam"
     formula = "H2O"
     molecular_weight = 18.015
 

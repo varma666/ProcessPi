@@ -3,6 +3,7 @@ from processpi.units import *
 
 class InorganicLiquid(Component):
     name = "Inorganic Liquid"
+    hx_type = "water"
     formula = "Inorganic"
     molecular_weight = 80.0
     _critical_temperature = Temperature(600, "K")

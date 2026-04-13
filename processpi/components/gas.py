@@ -4,6 +4,7 @@ from .constants import R_UNIVERSAL  # R = 8.314 J/mol·K
 
 class Gas(Component):
     name = "Generic Gas"
+    hx_type = "gas_low_pressure"
     formula = "Gas"
     molecular_weight = 28.0  # g/mol
 
