@@ -20,6 +20,7 @@ from .base import HeatExchanger
 class ShellAndTubeHX(HeatExchanger):
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("U") is not None:
+            print(self.specs)
             return float(self.specs["U"].to("W/m2K").value)
         phase_pair = {hot["phase"], cold["phase"]}
         if "vapor" in phase_pair:
