@@ -159,7 +159,7 @@ class ShellAndTubeHX(HeatExchanger):
 
             # --- Convergence check ---
             print(u_calculated)
-            if abs((u_calculated - u_assumed) / max(u_assumed, 1e-6)) > 0.30:
+            if abs((u_calculated - u_assumed) / max(u_assumed, 1e-6)) < 0.30:
                 break
 
             u_assumed = u_calculated
