@@ -93,8 +93,8 @@ class ShellAndTubeHX(HeatExchanger):
             iterations += 1
 
             # --- STEP 1: Thermal Area Requirement ---
-            # Ensure Q is in Watts
-            q_watts = q_w * 1000.0
+            # Ensure Q is in Watts * 1000.0
+            q_watts = q_w 
 
             area_required = q_watts / max(u_assumed * dtlm, 1e-6)
 
