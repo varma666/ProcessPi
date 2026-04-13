@@ -20,7 +20,7 @@ from .base import HeatExchanger
 class ShellAndTubeHX(HeatExchanger):
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("U") is not None:
-            print(self.specs)
+            #print(self.specs)
             return float(self.specs["U"].to("W/m2K").value)
         phase_pair = {hot["phase"], cold["phase"]}
         if "vapor" in phase_pair:
@@ -96,7 +96,7 @@ class ShellAndTubeHX(HeatExchanger):
             # --- STEP 1: Thermal Area Requirement ---
             # Ensure Q is in Watts * 1000.0
             q_watts = q_w 
-
+            print(u_assumed)
             area_required = q_watts / max(u_assumed * dtlm, 1e-6)
 
             # --- STEP 2: Tube-side velocity design ---
