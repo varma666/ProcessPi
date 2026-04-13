@@ -98,7 +98,7 @@ class ShellAndTubeHX(HeatExchanger):
             q_watts = q_w 
             print(u_assumed)
             area_required = q_watts / max(u_assumed * dtlm, 1e-6)
-
+            print(area_required)
             # --- STEP 2: Tube-side velocity design ---
             v_target = float(self.specs.get("tube_velocity_target", 1.5))
             q_vol_hot = hot["m_dot"] / hot["density"]
@@ -158,6 +158,7 @@ class ShellAndTubeHX(HeatExchanger):
             )
 
             # --- Convergence check ---
+            print(u_calculated)
             if abs((u_calculated - u_assumed) / max(u_assumed, 1e-6)) < 0.30:
                 break
 
