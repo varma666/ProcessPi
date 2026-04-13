@@ -46,6 +46,7 @@ class Component(ABC):
     ):
         self.temperature = temperature or Temperature(35, "C")
         self.pressure = pressure or Pressure(101325, "Pa")
+        self.hx_type = getattr(self, "hx_type", self._infer_hx_type())
 
         self._density = density
         self._specific_heat = specific_heat
@@ -53,6 +54,18 @@ class Component(ABC):
         self._thermal_conductivity = thermal_conductivity
         self._vapor_pressure = vapor_pressure
         self._enthalpy = enthalpy
+
+    def _infer_hx_type(self) -> str:
+        """Infer a default heat-exchanger fluid category for U standards lookup."""
+        name = getattr(self, "name", "").lower()
+        class_name = self.__class__.__name__.lower()
+        if "water" in name or "water" in class_name:
+            return "water"
+        if "air" in name or "steam" in name or "vapor" in class_name or "gas" in class_name:
+            return "gas_low_pressure"
+        if "oil" in name or "oil" in class_name:
+            return "heavy_oil"
+        return "organic"
 
     # ----------------------------------------------------------------------
     # Abstract Properties

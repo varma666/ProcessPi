@@ -35,6 +35,7 @@ class Air(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Air"
+    hx_type = "gas_low_pressure"
     formula = "Mixture"
     molecular_weight = 28.96
     

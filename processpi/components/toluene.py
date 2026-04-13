@@ -5,6 +5,7 @@ from processpi.units import *
 
 class Toluene(Component):
     name = "Toluene"
+    hx_type = "organic"
     formula = "C7H8"
     molecular_weight = 92.138
     _critical_temperature = Temperature(591.8, "K")

@@ -3,6 +3,7 @@ from processpi.units import *
 
 class OrganicLiquid(Component):
     name = "Organic Liquid"
+    hx_type = "organic"
     formula = "R-CH"
     molecular_weight = 100.0
     httype = "organicliquid"
