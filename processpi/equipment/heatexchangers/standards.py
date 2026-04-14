@@ -53,3 +53,38 @@ def get_u_range(hx_type: str, service_type: str, hot_type: str, cold_type: str) 
         return service[key_rev]
 
     return None
+
+# --- DIN 28184 STANDARD DATA ---
+DIN_SHELL_TUBE_STANDARD = [
+    {"DN": 150, "tube_passes": 2, "Da": 0.168, "n": 14, "AS": 1.1},
+    {"DN": 200, "tube_passes": 2, "Da": 0.219, "n": 26, "AS": 2.0},
+    {"DN": 250, "tube_passes": 2, "Da": 0.273, "n": 44, "AS": 3.5},
+    {"DN": 300, "tube_passes": 2, "Da": 0.324, "n": 66, "AS": 5.2},
+    {"DN": 350, "tube_passes": 2, "Da": 0.355, "n": 76, "AS": 6.0},
+    {"DN": 400, "tube_passes": 2, "Da": 0.406, "n": 106, "AS": 8.3},
+    {"DN": 500, "tube_passes": 2, "Da": 0.508, "n": 180, "AS": 14.1},
+    {"DN": 600, "tube_passes": 2, "Da": 0.600, "n": 258, "AS": 20.3},
+    {"DN": 700, "tube_passes": 2, "Da": 0.700, "n": 364, "AS": 28.6},
+    {"DN": 800, "tube_passes": 2, "Da": 0.800, "n": 484, "AS": 38.0},
+    {"DN": 900, "tube_passes": 2, "Da": 0.900, "n": 622, "AS": 48.9},
+    {"DN": 1000, "tube_passes": 2, "Da": 1.000, "n": 776, "AS": 61.0},
+]
+
+def select_standard_exchanger(area_required, tube_length, tube_passes=2):
+    """
+    Select nearest standard exchanger based on required area
+    """
+    best = None
+
+    for item in DIN_SHELL_TUBE_STANDARD:
+        if item["tube_passes"] != tube_passes:
+            continue
+
+        # Total area = AS * length
+        area_available = item["AS"] * tube_length
+
+        if area_available >= area_required:
+            best = item
+            break
+
+    return best
