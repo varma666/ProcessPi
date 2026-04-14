@@ -86,6 +86,10 @@ def select_standard_exchanger(area_required, tube_length, tube_passes,
         shell_diameter = item["Da"]
         area_available = item["AS"] * tube_length
 
+        # --- HARD FILTER: MUST satisfy area ---
+        if area_available < area_required:
+            continue
+
         # --- Tube velocity ---
         area_per_tube = math.pi * tube_id**2 / 4
         tube_flow_area = tube_count / tube_passes * area_per_tube
@@ -95,18 +99,15 @@ def select_standard_exchanger(area_required, tube_length, tube_passes,
         shell_area = math.pi * shell_diameter**2 / 4
         v_shell = (cold_mdot / cold_density) / max(shell_area, 1e-12)
 
-        # --- HARD FILTER (IMPORTANT) ---
-        if not (0.8 <= v_tube <= 3.0):
-            continue
-        if not (0.2 <= v_shell <= 2.0):
-            continue
-
-        # --- SOFT SCORING ---
-        score = (
+        # --- SCORING ---
+        velocity_penalty = (
             abs(v_tube - 1.5) * 3 +
-            abs(v_shell - 0.5) * 2 +
-            max(0, (area_available - area_required) / area_required)
+            abs(v_shell - 0.5) * 2
         )
+
+        oversize_penalty = (area_available - area_required) / area_required
+
+        score = velocity_penalty + oversize_penalty
 
         if score < best_score:
             best_score = score
