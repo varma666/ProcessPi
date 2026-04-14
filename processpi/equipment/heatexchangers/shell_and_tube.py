@@ -114,6 +114,7 @@ class ShellAndTubeHX(HeatExchanger):
             q_watts = q_w * 1000
             print(u_assumed)
             area_required = q_watts / max(u_assumed * dtlm, 1e-6)
+
             # --- STEP 2: Tube-side velocity design ---
             v_target = float(self.specs.get("tube_velocity_target", 1.5))
             q_vol_hot = hot["m_dot"] / hot["density"]
@@ -155,7 +156,8 @@ class ShellAndTubeHX(HeatExchanger):
                 tube_count = tube_count_calc
                 area = tube_count * math.pi * tube_od * tube_length
                 shell_diameter = math.sqrt(4 * required_shell_area / math.pi)
-
+            print("AREA REQUIRED:", area_required)
+            print("SELECTED:", selected)
             baffle_spacing = float(
                 self.specs.get(
                     "baffle_spacing",
