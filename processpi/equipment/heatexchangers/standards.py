@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Optional, Tuple
-from math import *
+import math
 
 HX_U_STANDARDS = {
     "shell_and_tube": {
