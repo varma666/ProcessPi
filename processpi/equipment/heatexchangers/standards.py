@@ -79,7 +79,7 @@ def select_standard_exchanger(area_required, tube_length, tube_passes,
     best_score = float("inf")
 
     for item in DIN_SHELL_TUBE_STANDARD:
-        if item["passes"] != tube_passes:
+        if item["tube_passes"] != tube_passes:
             continue
 
         # --- Area check ---
