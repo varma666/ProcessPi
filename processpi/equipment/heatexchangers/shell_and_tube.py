@@ -106,7 +106,7 @@ class ShellAndTubeHX(HeatExchanger):
 
         iterations = 0
         warnings: List[str] = []
-
+        selected_geometry = None
         while iterations < 25:
             iterations += 1
 
@@ -136,16 +136,20 @@ class ShellAndTubeHX(HeatExchanger):
             tube_count_calc = max(tube_count_velocity, tube_count_thermal, 10)
             
             # --- STEP 4: select standard exchanger ---
-            selected = select_standard_exchanger(
-                                                    area_required,
-                                                    tube_length,
-                                                    tube_passes,
-                                                    hot["m_dot"],
-                                                    hot["density"],
-                                                    cold["m_dot"],
-                                                    cold["density"],
-                                                    tube_id
-                                                )
+            # --- FIX: Freeze geometry after first selection ---
+            if selected_geometry is None:
+                selected_geometry = select_standard_exchanger(
+                    area_required,
+                    tube_length,
+                    tube_passes,
+                    hot["m_dot"],
+                    hot["density"],
+                    cold["m_dot"],
+                    cold["density"],
+                    tube_id
+                )
+            
+            selected = selected_geometry
             
             if selected:
                 tube_count = selected["n"]
