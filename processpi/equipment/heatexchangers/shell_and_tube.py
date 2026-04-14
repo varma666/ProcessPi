@@ -112,6 +112,7 @@ class ShellAndTubeHX(HeatExchanger):
 
             # --- STEP 1: Thermal Area Requirement ---
             q_watts = q_w * 1000
+            print(u_assumed)
             area_required = q_watts / max(u_assumed * dtlm, 1e-6)
             # --- STEP 2: Tube-side velocity design ---
             v_target = float(self.specs.get("tube_velocity_target", 1.5))
@@ -127,17 +128,23 @@ class ShellAndTubeHX(HeatExchanger):
             tube_count_thermal = math.ceil(area_required / max(area_per_tube_surface, 1e-12))
 
             # --- FINAL tube count ---
-            tube_count = max(tube_count_velocity, tube_count_thermal, 10)
-
-            # --- STEP 4: Area from geometry ---
-            area = tube_count * math.pi * tube_od * tube_length
-
-            # --- STEP 5: Shell-side velocity design ---
-            v_shell_target = float(self.specs.get("shell_velocity_target", 0.5))
-            q_vol_cold = cold["m_dot"] / cold["density"]
-
-            required_shell_area = q_vol_cold / max(v_shell_target, 1e-6)
-            shell_diameter = math.sqrt(4 * required_shell_area / math.pi)
+            from .standards import select_standard_exchanger
+            
+            # --- STEP 3: preliminary tube count ---
+            tube_count_calc = max(tube_count_velocity, tube_count_thermal, 10)
+            
+            # --- STEP 4: select standard exchanger ---
+            selected = select_standard_exchanger(area_required, tube_length, tube_passes)
+            
+            if selected:
+                tube_count = selected["n"]
+                shell_diameter = selected["Da"]
+                area = selected["AS"] * tube_length
+            else:
+                # fallback (rare)
+                tube_count = tube_count_calc
+                area = tube_count * math.pi * tube_od * tube_length
+                shell_diameter = math.sqrt(4 * required_shell_area / math.pi)
 
             baffle_spacing = float(
                 self.specs.get(
@@ -147,7 +154,7 @@ class ShellAndTubeHX(HeatExchanger):
             )
 
             # --- Velocities ---
-            tube_area_flow = tube_count / tube_passes * area_per_tube_flow
+            tube_area_flow = max(tube_count / tube_passes * area_per_tube_flow, 1e-12)
             v_tube = q_vol_hot / max(tube_area_flow, 1e-12)
 
             shell_area_flow = math.pi * shell_diameter**2 / 4.0
@@ -214,6 +221,9 @@ class ShellAndTubeHX(HeatExchanger):
         # --- Thermal safety ---
         if area < area_required:
             warnings.append("Heat transfer area insufficient")
+
+        if area < area_required:
+            warnings.append("Selected standard exchanger undersized → next size required")
 
         status = "OK" if (not warnings and iterations < 25) else "VIOLATION"
 
