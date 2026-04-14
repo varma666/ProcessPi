@@ -117,6 +117,7 @@ class ShellAndTubeHX(HeatExchanger):
             # --- STEP 2: Tube-side velocity design ---
             v_target = float(self.specs.get("tube_velocity_target", 1.5))
             q_vol_hot = hot["m_dot"] / hot["density"]
+            q_vol_cold = cold["m_dot"] / cold["density"]
 
             flow_area_required = q_vol_hot / max(v_target, 1e-6)
             area_per_tube_flow = math.pi * tube_id**2 / 4.0
