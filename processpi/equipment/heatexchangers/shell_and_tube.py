@@ -135,7 +135,16 @@ class ShellAndTubeHX(HeatExchanger):
             tube_count_calc = max(tube_count_velocity, tube_count_thermal, 10)
             
             # --- STEP 4: select standard exchanger ---
-            selected = select_standard_exchanger(area_required, tube_length, tube_passes)
+            selected = select_standard_exchanger(
+                                                    area_required,
+                                                    tube_length,
+                                                    tube_passes,
+                                                    hot["m_dot"],
+                                                    hot["density"],
+                                                    cold["m_dot"],
+                                                    cold["density"],
+                                                    tube_id
+                                                )
             
             if selected:
                 tube_count = selected["n"]
