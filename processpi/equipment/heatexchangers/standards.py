@@ -12,6 +12,8 @@ HX_U_STANDARDS = {
             ("heavy_oil", "heavy_oil"): (50, 300),
             ("gas_low_pressure", "gas_low_pressure"): (5, 35),
             ("gas_high_pressure", "gas_high_pressure"): (100, 300),
+            ("water","organic"): (250,800),
+            
         },
         "cooler": {
             ("organic", "water"): (250, 750),
@@ -28,6 +30,8 @@ HX_U_STANDARDS = {
         },
         "condenser": {
             ("vapor", "water"): (700, 1500),
+            ("water", "water"): (1000, 2000),
+            ("water", "organic"): (600,1000),
         },
         "vaporizer": {
             ("steam", "liquid"): (900, 1500),
