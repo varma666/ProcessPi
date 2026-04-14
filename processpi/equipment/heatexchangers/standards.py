@@ -70,21 +70,45 @@ DIN_SHELL_TUBE_STANDARD = [
     {"DN": 1000, "tube_passes": 2, "Da": 1.000, "n": 776, "AS": 61.0},
 ]
 
-def select_standard_exchanger(area_required, tube_length, tube_passes=2):
-    """
-    Select nearest standard exchanger based on required area
-    """
+def select_standard_exchanger(area_required, tube_length, tube_passes,
+                              hot_mdot, hot_density,
+                              cold_mdot, cold_density,
+                              tube_id):
+
     best = None
+    best_score = float("inf")
 
     for item in DIN_SHELL_TUBE_STANDARD:
-        if item["tube_passes"] != tube_passes:
+        if item["passes"] != tube_passes:
             continue
 
-        # Total area = AS * length
+        # --- Area check ---
         area_available = item["AS"] * tube_length
+        if area_available < area_required:
+            continue
 
-        if area_available >= area_required:
+        tube_count = item["n"]
+        shell_diameter = item["Da"]
+
+        # --- Tube velocity ---
+        area_per_tube = math.pi * tube_id**2 / 4
+        tube_flow_area = tube_count / tube_passes * area_per_tube
+        v_tube = (hot_mdot / hot_density) / max(tube_flow_area, 1e-12)
+
+        # --- Shell velocity ---
+        shell_area = math.pi * shell_diameter**2 / 4
+        v_shell = (cold_mdot / cold_density) / max(shell_area, 1e-12)
+
+        # --- Scoring ---
+        # Penalize deviation from target velocities
+        score = (
+            abs(v_tube - 1.5) * 2 +   # tube importance high
+            abs(v_shell - 0.5) * 1.5 +
+            (area_available - area_required) / area_required
+        )
+
+        if score < best_score:
+            best_score = score
             best = item
-            break
 
     return best
