@@ -70,10 +70,10 @@ DIN_SHELL_TUBE_STANDARD = [
     {"DN": 1000, "tube_passes": 2, "Da": 1.000, "n": 776, "AS": 61.0},
 ]
 
-def select_standard_exchanger(area_required, tube_length, tube_passes,
-                              hot_mdot, hot_density,
+def select_standard_exchanger(area_required, 
+                              hot_mdot , hot_density,
                               cold_mdot, cold_density,
-                              tube_id):
+                              tube_id = 25, tube_length = 3, tube_passes = 2 ):
 
     best = None
     best_score = float("inf")
@@ -85,10 +85,11 @@ def select_standard_exchanger(area_required, tube_length, tube_passes,
         tube_count = item["n"]
         shell_diameter = item["Da"]
         area_available = item["AS"] * tube_length
-
+        print("Area Avaliable :", area_available)
+        print("Area Required :", area_required)
         # --- HARD FILTER: MUST satisfy area ---
-        if area_available < area_required:
-            continue
+        if area_available > area_required:
+            break
 
         # --- Tube velocity ---
         area_per_tube = math.pi * tube_id**2 / 4
@@ -112,5 +113,5 @@ def select_standard_exchanger(area_required, tube_length, tube_passes,
         if score < best_score:
             best_score = score
             best = item
-
+        #print(best)
     return best
