@@ -159,7 +159,7 @@ class ShellAndTubeHX(HeatExchanger):
                 # fallback (rare)
                 tube_count = tube_count_calc
                 area = tube_count * math.pi * tube_od * tube_length
-                shell_diameter = math.sqrt(4 * required_shell_area / math.pi)
+                shell_diameter = math.sqrt(4 * area_required / math.pi)
             print("AREA REQUIRED:", area_required)
             print("SELECTED:", selected)
             baffle_spacing = float(
