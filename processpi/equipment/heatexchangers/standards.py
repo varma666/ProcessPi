@@ -88,42 +88,28 @@ def get_u_range(hx_type: str, service_type: str, hot_type: str, cold_type: str) 
 
     return None
 
-# --- DIN 28184 STANDARD DATA ---
-DIN_SHELL_TUBE_STANDARD = [
-    {"DN": 150, "tube_passes": 2, "Da": 0.168, "n": 14, "AS": 1.1},
-    {"DN": 200, "tube_passes": 2, "Da": 0.219, "n": 26, "AS": 2.0},
-    {"DN": 250, "tube_passes": 2, "Da": 0.273, "n": 44, "AS": 3.5},
-    {"DN": 300, "tube_passes": 2, "Da": 0.324, "n": 66, "AS": 5.2},
-    {"DN": 350, "tube_passes": 2, "Da": 0.355, "n": 76, "AS": 6.0},
-    {"DN": 400, "tube_passes": 2, "Da": 0.406, "n": 106, "AS": 8.3},
-    {"DN": 500, "tube_passes": 2, "Da": 0.508, "n": 180, "AS": 14.1},
-    {"DN": 600, "tube_passes": 2, "Da": 0.600, "n": 258, "AS": 20.3},
-    {"DN": 700, "tube_passes": 2, "Da": 0.700, "n": 364, "AS": 28.6},
-    {"DN": 800, "tube_passes": 2, "Da": 0.800, "n": 484, "AS": 38.0},
-    {"DN": 900, "tube_passes": 2, "Da": 0.900, "n": 622, "AS": 48.9},
-    {"DN": 1000, "tube_passes": 2, "Da": 1.000, "n": 776, "AS": 61.0},
-]
-
 TUBE_LENGTH_STANDARD = [
-    {"length": 0.5, "area_factor": 10},
-    {"length": 1.0, "area_factor": 20},
-    {"length": 2.5, "area_factor": 40},
-    {"length": 3.0, "area_factor": 60},
-    {"length": 4.0, "area_factor": 80},
-    {"length": 5.0, "area_factor": 100},
-    {"length": 6.0, "area_factor": 120},
+    {"length": 0.5, "area": 10},
+    {"length": 1.0, "area": 20},
+    {"length": 2.5, "area": 40},
+    {"length": 3.0, "area": 60},
+    {"length": 4.0, "area": 80},
+    {"length": 5.0, "area": 100},
+    {"length": 6.0, "area": 120},
 ]
 
-TUBE_STANDARD_SIZES = [
+TUBE_DIAMETER_STANDARD = [
+    {"od": 0.012, "thickness": 0.001},
+    {"od": 0.016, "thickness": 0.0012},
     {"od": 0.019, "thickness": 0.0015},
-    {"od": 0.0254, "thickness": 0.002},
-    {"od": 0.0318, "thickness": 0.0026},
+    {"od": 0.025, "thickness": 0.002},
+    {"od": 0.032, "thickness": 0.0026},
     {"od": 0.038, "thickness": 0.003},
 ]
 
 
 def select_tube_configuration(area_required, hot_mdot, hot_density):
-    for tube in TUBE_STANDARD_SIZES:
+    for tube in TUBE_DIAMETER_STANDARD:
         tube_od = tube["od"]
         tube_id = tube_od - 2 * tube["thickness"]
 
@@ -146,49 +132,3 @@ def select_tube_configuration(area_required, hot_mdot, hot_density):
                 }
 
     return None
-
-def select_standard_exchanger(area_required, 
-                              hot_mdot , hot_density,
-                              cold_mdot, cold_density,
-                              tube_id = 25, tube_length = 3, tube_passes = 2 ):
-
-    best = None
-    best_score = float("inf")
-
-    for item in DIN_SHELL_TUBE_STANDARD:
-        if item["tube_passes"] != tube_passes:
-            continue
-
-        tube_count = item["n"]
-        shell_diameter = item["Da"]
-        area_available = item["AS"] * tube_length
-        print("Area Avaliable :", area_available)
-        print("Area Required :", area_required)
-        # --- HARD FILTER: MUST satisfy area ---
-        if area_available > area_required:
-            break
-
-        # --- Tube velocity ---
-        area_per_tube = math.pi * tube_id**2 / 4
-        tube_flow_area = tube_count / tube_passes * area_per_tube
-        v_tube = (hot_mdot / hot_density) / max(tube_flow_area, 1e-12)
-
-        # --- Shell velocity ---
-        shell_area = math.pi * shell_diameter**2 / 4
-        v_shell = (cold_mdot / cold_density) / max(shell_area, 1e-12)
-
-        # --- SCORING ---
-        velocity_penalty = (
-            abs(v_tube - 1.5) * 3 +
-            abs(v_shell - 0.5) * 2
-        )
-
-        oversize_penalty = (area_available - area_required) / area_required
-
-        score = velocity_penalty + oversize_penalty
-
-        if score < best_score:
-            best_score = score
-            best = item
-        #print(best)
-    return best
