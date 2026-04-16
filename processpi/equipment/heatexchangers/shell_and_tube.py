@@ -108,6 +108,7 @@ class ShellAndTubeHX(HeatExchanger):
 
         q_watts = q_w * 1000
         area_required = q_watts / max(u_assumed * dtlm, 1e-6)
+        area_required_initial = area_required
 
         tube_selection_warning = False
         hot_v_min, hot_v_max = get_velocity_range(self.hot_in.component)
@@ -162,10 +163,6 @@ class ShellAndTubeHX(HeatExchanger):
 
         iterations = 0
         warnings: List[str] = []
-        if tube_selection_warning:
-            warnings.append(
-                f"Tube velocity slightly off recommended range ({hot_v_min}-{hot_v_max} m/s); selected best-scoring available geometry"
-            )
 
         while iterations < 25:
             iterations += 1
@@ -258,14 +255,16 @@ class ShellAndTubeHX(HeatExchanger):
         warnings.extend(self._velocity_warnings(v_tube, v_shell, hot, cold))
 
         # --- Thermal safety and auto-improvement ---
-        if 0.9 * area_required <= area < area_required:
+        if 0.9 * area_required_initial <= area < area_required_initial:
             tube_length = min(tube_length * 1.25, 6.0)
             area = tube_count * math.pi * tube_od * tube_length
 
-        if area < 0.9 * area_required:
+        if area < 0.85 * area_required_initial:
             warnings.append("Area significantly undersized — redesign required")
-        elif area < area_required:
+        elif area < area_required_initial:
             warnings.append("Area slightly undersized — acceptable with margin")
+
+        warnings = list(set(warnings))
 
         critical: List[str] = []
         advisory: List[str] = []
