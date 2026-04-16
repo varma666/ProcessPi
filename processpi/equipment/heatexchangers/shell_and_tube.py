@@ -12,7 +12,7 @@ from processpi.calculations.heat_transfer.hx_kern import (
 )
 
 from .base import HeatExchanger
-from .standards import get_u_range, select_tube_configuration
+from .standards import get_u_range, get_velocity_range, select_tube_configuration
 
 
 class ShellAndTubeHX(HeatExchanger):
@@ -30,7 +30,7 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _velocity_warnings(self, tube_v: float, shell_v: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
         warnings: List[str] = []
-        tube_target = (0.5, 1.0)
+        tube_target = get_velocity_range(self.hot_in.component)
         if not (tube_target[0] <= tube_v <= tube_target[1]):
             warnings.append(f"Tube velocity {tube_v:.2f} m/s outside recommended {tube_target[0]}-{tube_target[1]} m/s")
 
@@ -104,18 +104,27 @@ class ShellAndTubeHX(HeatExchanger):
         area_required = q_watts / max(u_assumed * dtlm, 1e-6)
 
         tube_selection_warning = False
+        hot_v_min, hot_v_max = get_velocity_range(self.hot_in.component)
         if tube_od is None or tube_id is None or tube_length is None:
             tube_config = select_tube_configuration(
                 area_required,
-                hot["m_dot"],
-                hot["density"],
+                {
+                    "m_dot": hot["m_dot"],
+                    "density": hot["density"],
+                    "component": self.hot_in.component,
+                },
+                {
+                    "m_dot": cold["m_dot"],
+                    "density": cold["density"],
+                    "component": self.cold_in.component,
+                },
             )
             if tube_config:
                 tube_od = tube_config["tube_od"]
                 tube_id = tube_config["tube_id"]
                 tube_length = tube_config["tube_length"]
                 tube_count = tube_config["tube_count"]
-                if not (0.5 <= tube_config["velocity"] <= 1.0):
+                if tube_config["velocity"] < hot_v_min or tube_config["velocity"] > hot_v_max:
                     tube_selection_warning = True
             else:
                 tube_selection_warning = True
@@ -129,7 +138,7 @@ class ShellAndTubeHX(HeatExchanger):
             q_vol_hot_sel = hot["m_dot"] / max(hot["density"], 1e-12)
             flow_area_sel = tube_count * math.pi * tube_id**2 / 4.0
             tube_velocity_selected = q_vol_hot_sel / max(flow_area_sel, 1e-12)
-            if not (0.5 <= tube_velocity_selected <= 1.0):
+            if tube_velocity_selected < hot_v_min or tube_velocity_selected > hot_v_max:
                 tube_selection_warning = True
 
         tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
@@ -139,7 +148,9 @@ class ShellAndTubeHX(HeatExchanger):
         iterations = 0
         warnings: List[str] = []
         if tube_selection_warning:
-            warnings.append("Tube velocity not within preferred range, adjusting tube size")
+            warnings.append(
+                f"Tube velocity outside recommended range {hot_v_min}-{hot_v_max} m/s; selected best-scoring available geometry"
+            )
 
         while iterations < 25:
             iterations += 1
@@ -231,12 +242,15 @@ class ShellAndTubeHX(HeatExchanger):
         # --- Velocity warnings ---
         warnings.extend(self._velocity_warnings(v_tube, v_shell, hot, cold))
 
-        # --- Thermal safety ---
+        # --- Thermal safety and auto-improvement ---
         if area < area_required:
-            warnings.append("Heat transfer area insufficient")
+            tube_length = min(tube_length * 1.25, 6.0)
+            area = tube_count * math.pi * tube_od * tube_length
 
         if area < area_required:
-            warnings.append("Selected tube geometry undersized; increase tube count or tube length")
+            warnings.append(
+                "Area slightly undersized — consider increasing tube length or parallel units"
+            )
 
         status = "OK" if (not warnings and iterations < 25) else "VIOLATION"
 

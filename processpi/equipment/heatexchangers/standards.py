@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Optional, Tuple
 import math
+from processpi.pipelines.standards import RECOMMENDED_VELOCITIES
 
 HX_U_STANDARDS = {
     "shell_and_tube": {
@@ -88,6 +89,19 @@ def get_u_range(hx_type: str, service_type: str, hot_type: str, cold_type: str) 
 
     return None
 
+
+def get_velocity_range(component):
+    hx_type = getattr(component, "hx_type", None)
+
+    if hx_type and hx_type in RECOMMENDED_VELOCITIES:
+        return RECOMMENDED_VELOCITIES[hx_type]
+
+    name = getattr(component, "name", "").lower()
+    if name in RECOMMENDED_VELOCITIES:
+        return RECOMMENDED_VELOCITIES[name]
+
+    return (0.8, 2.0)
+
 TUBE_LENGTH_STANDARD = [
     {"length": 0.5, "area": 10},
     {"length": 1.0, "area": 20},
@@ -108,7 +122,13 @@ TUBE_DIAMETER_STANDARD = [
 ]
 
 
-def select_tube_configuration(area_required, hot_mdot, hot_density):
+def select_tube_configuration(area_required, hot, cold):
+    best = None
+    best_score = float("inf")
+
+    hot_v_min, hot_v_max = get_velocity_range(hot["component"])
+    target_velocity = 0.5 * (hot_v_min + hot_v_max)
+
     for tube in TUBE_DIAMETER_STANDARD:
         tube_od = tube["od"]
         tube_id = tube_od - 2 * tube["thickness"]
@@ -120,15 +140,24 @@ def select_tube_configuration(area_required, hot_mdot, hot_density):
             tube_count = math.ceil(area_required / max(area_per_tube, 1e-12))
 
             flow_area = tube_count * (math.pi * tube_id**2 / 4)
-            v = (hot_mdot / hot_density) / max(flow_area, 1e-12)
+            velocity = (hot["m_dot"] / hot["density"]) / max(flow_area, 1e-12)
+            total_area = tube_count * area_per_tube
 
-            if 0.5 <= v <= 1.5:
-                return {
+            area_penalty = abs((total_area - area_required) / max(area_required, 1e-12))
+            velocity_penalty = abs(velocity - target_velocity)
+            score = area_penalty * 2 + velocity_penalty
+
+            if score < best_score:
+                best_score = score
+                best = {
                     "tube_od": tube_od,
                     "tube_id": tube_id,
                     "tube_length": tube_length,
                     "tube_count": tube_count,
-                    "velocity": v,
+                    "velocity": velocity,
+                    "area": total_area,
+                    "velocity_range": (hot_v_min, hot_v_max),
+                    "score": score,
                 }
 
-    return None
+    return best
