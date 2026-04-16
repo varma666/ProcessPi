@@ -3,19 +3,16 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List
 
-from processpi.calculations.fluids import FluidVelocity
 from processpi.calculations.heat_transfer.hx_kern import (
     ConvectiveH,
     DarcyDrop,
     DittusBoelter,
     KernShellNu,
     Reynolds,
-    ShellDiameterEstimate,
-    TubeCountFromArea,
 )
 
 from .base import HeatExchanger
-from .standards import get_u_range
+from .standards import get_u_range, get_velocity_range, select_tube_configuration
 
 
 class ShellAndTubeHX(HeatExchanger):
@@ -33,9 +30,15 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _velocity_warnings(self, tube_v: float, shell_v: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
         warnings: List[str] = []
-        tube_target = (1.5, 2.5) if (self.hot_in.component and getattr(self.hot_in.component, "name", "").lower() == "water") else (1.0, 2.0)
-        if not (tube_target[0] <= tube_v <= tube_target[1]):
-            warnings.append(f"Tube velocity {tube_v:.2f} m/s outside recommended {tube_target[0]}-{tube_target[1]} m/s")
+        v_min, v_max = get_velocity_range(self.hot_in.component)
+        if tube_v > v_max * 1.5:
+            warnings.append(f"High tube velocity {tube_v:.2f} m/s → erosion risk")
+        elif tube_v > v_max:
+            warnings.append(f"Tube velocity slightly high ({v_min}-{v_max} m/s recommended)")
+        elif tube_v < v_min * 0.5:
+            warnings.append(f"Low tube velocity {tube_v:.2f} m/s → fouling risk")
+        elif tube_v < v_min:
+            warnings.append(f"Tube velocity slightly low ({v_min}-{v_max} m/s recommended)")
 
         if cold["phase"] == "vapor":
             p = cold["p_bar"]
@@ -78,10 +81,9 @@ class ShellAndTubeHX(HeatExchanger):
 
         shell_passes = int(self.specs.get("shell_passes", 1))
         tube_passes = int(self.specs.get("tube_passes", 2))
-        tube_od = float(self.specs.get("tube_od", 0.019))
-        tube_id = float(self.specs.get("tube_id", 0.016))
-        tube_length = float(self.specs.get("tube_length", 5.0))
-        tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
+        tube_od = float(self.specs.get("tube_od")) if self.specs.get("tube_od") is not None else None
+        tube_id = float(self.specs.get("tube_id")) if self.specs.get("tube_id") is not None else None
+        tube_length = float(self.specs.get("tube_length")) if self.specs.get("tube_length") is not None else None
 
         # Temperatures
         th_in = hot["t_k"]
@@ -104,64 +106,73 @@ class ShellAndTubeHX(HeatExchanger):
         cold_type = getattr(self.cold_in.component, "hx_type", "generic")
         u_range = get_u_range("shell_and_tube", self.service_type, hot_type, cold_type)
 
+        q_watts = q_w * 1000
+        area_required = q_watts / max(u_assumed * dtlm, 1e-6)
+        area_required_initial = area_required
+
+        tube_selection_warning = False
+        hot_v_min, hot_v_max = get_velocity_range(self.hot_in.component)
+        if tube_od is None or tube_id is None or tube_length is None:
+            tube_config = select_tube_configuration(
+                area_required,
+                {
+                    "m_dot": hot["m_dot"],
+                    "density": hot["density"],
+                    "component": self.hot_in.component,
+                },
+                {
+                    "m_dot": cold["m_dot"],
+                    "density": cold["density"],
+                    "component": self.cold_in.component,
+                },
+            )
+            if tube_config:
+                tube_od = tube_config["tube_od"]
+                tube_id = tube_config["tube_id"]
+                tube_length = tube_config["tube_length"]
+                tube_count = tube_config["tube_count"]
+                tube_velocity_selected = tube_config["velocity"]
+                if tube_config["velocity"] < hot_v_min or tube_config["velocity"] > hot_v_max:
+                    tube_selection_warning = True
+            else:
+                tube_selection_warning = True
+                tube_od = 0.019
+                tube_id = 0.016
+                tube_length = 5.0
+                tube_count = 50
+                q_vol_hot_sel = hot["m_dot"] / max(hot["density"], 1e-12)
+                flow_area_sel = tube_count * math.pi * tube_id**2 / 4.0
+                tube_velocity_selected = q_vol_hot_sel / max(flow_area_sel, 1e-12)
+        else:
+            area_per_tube_surface = math.pi * tube_od * tube_length
+            tube_count = max(math.ceil(area_required / max(area_per_tube_surface, 1e-12)), 1)
+            q_vol_hot_sel = hot["m_dot"] / max(hot["density"], 1e-12)
+            flow_area_sel = tube_count * math.pi * tube_id**2 / 4.0
+            tube_velocity_selected = q_vol_hot_sel / max(flow_area_sel, 1e-12)
+            if tube_velocity_selected < hot_v_min or tube_velocity_selected > hot_v_max:
+                tube_selection_warning = True
+
+        tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
+        shell_diameter = (tube_count * tube_pitch**2 / 0.785) ** 0.5
+        area = tube_count * math.pi * tube_od * tube_length
+
+        if tube_velocity_selected > hot_v_max:
+            tube_count = int(max(tube_count * 1.1, tube_count + 1))
+            shell_diameter = (tube_count * tube_pitch**2 / 0.785) ** 0.5
+            area = tube_count * math.pi * tube_od * tube_length
+
         iterations = 0
         warnings: List[str] = []
-        selected_geometry = None
+
         while iterations < 25:
             iterations += 1
 
-            # --- STEP 1: Thermal Area Requirement ---
-            q_watts = q_w * 1000
-            print(u_assumed)
+            # --- STEP 1: Thermal Area Requirement (geometry frozen) ---
             area_required = q_watts / max(u_assumed * dtlm, 1e-6)
-
-            # --- STEP 2: Tube-side velocity design ---
-            v_target = float(self.specs.get("tube_velocity_target", 1.5))
             q_vol_hot = hot["m_dot"] / hot["density"]
             q_vol_cold = cold["m_dot"] / cold["density"]
 
-            flow_area_required = q_vol_hot / max(v_target, 1e-6)
             area_per_tube_flow = math.pi * tube_id**2 / 4.0
-
-            tube_count_velocity = int(flow_area_required / max(area_per_tube_flow, 1e-12) * tube_passes)
-
-            # --- STEP 3: Thermal tube requirement ---
-            area_per_tube_surface = math.pi * tube_od * tube_length
-            tube_count_thermal = math.ceil(area_required / max(area_per_tube_surface, 1e-12))
-
-            # --- FINAL tube count ---
-            from .standards import select_standard_exchanger
-            
-            # --- STEP 3: preliminary tube count ---
-            tube_count_calc = max(tube_count_velocity, tube_count_thermal, 10)
-            
-            # --- STEP 4: select standard exchanger ---
-            # --- FIX: Freeze geometry after first selection ---
-            if selected_geometry is None:
-                selected_geometry = select_standard_exchanger(
-                    area_required,
-                    tube_length,
-                    tube_passes,
-                    hot["m_dot"],
-                    hot["density"],
-                    cold["m_dot"],
-                    cold["density"],
-                    tube_id
-                )
-            
-            selected = selected_geometry
-            
-            if selected:
-                tube_count = selected["n"]
-                shell_diameter = selected["Da"]
-                area = selected["AS"] * tube_length
-            else:
-                # fallback (rare)
-                tube_count = tube_count_calc
-                area = tube_count * math.pi * tube_od * tube_length
-                shell_diameter = math.sqrt(4 * area_required / math.pi)
-            print("AREA REQUIRED:", area_required)
-            print("SELECTED:", selected)
             baffle_spacing = float(
                 self.specs.get(
                     "baffle_spacing",
@@ -223,8 +234,17 @@ class ShellAndTubeHX(HeatExchanger):
         ).calculate().to("Pa").value
 
         # --- Limits ---
-        tube_limit = float(self.specs.get("tube_dp", self._dp_limit(hot)).to("Pa").value)
-        shell_limit = float(self.specs.get("shell_dp", self._dp_limit(cold)).to("Pa").value)
+        tube_limit_val = self.specs.get("tube_dp", self._dp_limit(hot))
+        if hasattr(tube_limit_val, "to"):
+            tube_limit = float(tube_limit_val.to("Pa").value)
+        else:
+            tube_limit = float(tube_limit_val)
+
+        shell_limit_val = self.specs.get("shell_dp", self._dp_limit(cold))
+        if hasattr(shell_limit_val, "to"):
+            shell_limit = float(shell_limit_val.to("Pa").value)
+        else:
+            shell_limit = float(shell_limit_val)
 
         if tube_dp > tube_limit:
             warnings.append(f"Tube-side pressure drop {tube_dp:.1f} Pa exceeds limit {tube_limit:.1f} Pa")
@@ -234,14 +254,37 @@ class ShellAndTubeHX(HeatExchanger):
         # --- Velocity warnings ---
         warnings.extend(self._velocity_warnings(v_tube, v_shell, hot, cold))
 
-        # --- Thermal safety ---
-        if area < area_required:
-            warnings.append("Heat transfer area insufficient")
+        # --- Thermal safety and auto-improvement ---
+        if 0.9 * area_required_initial <= area < area_required_initial:
+            tube_length = min(tube_length * 1.25, 6.0)
+            area = tube_count * math.pi * tube_od * tube_length
 
-        if area < area_required:
-            warnings.append("Selected standard exchanger undersized → next size required")
+        if area < 0.85 * area_required_initial:
+            warnings.append("Area significantly undersized — redesign required")
+        elif area < area_required_initial:
+            warnings.append("Area slightly undersized — acceptable with margin")
 
-        status = "OK" if (not warnings and iterations < 25) else "VIOLATION"
+        warnings = list(set(warnings))
+
+        critical: List[str] = []
+        advisory: List[str] = []
+        for w in warnings:
+            wl = w.lower()
+            if "pressure drop" in wl:
+                critical.append(w)
+            elif "significantly undersized" in wl:
+                critical.append(w)
+            elif "erosion risk" in wl:
+                critical.append(w)
+            else:
+                advisory.append(w)
+
+        if critical:
+            status = "VIOLATION"
+        elif advisory:
+            status = "WARNING"
+        else:
+            status = "OK"
 
         return {
             "hx_type": "shell_and_tube",
