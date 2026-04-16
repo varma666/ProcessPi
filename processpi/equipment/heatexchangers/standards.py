@@ -100,7 +100,7 @@ def get_velocity_range(component):
     if name in RECOMMENDED_VELOCITIES:
         return RECOMMENDED_VELOCITIES[name]
 
-    return (0.8, 2.0)
+    return (0.8, 2.5)
 
 TUBE_LENGTH_STANDARD = [
     {"length": 0.5, "area": 10},

@@ -30,9 +30,15 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _velocity_warnings(self, tube_v: float, shell_v: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
         warnings: List[str] = []
-        tube_target = get_velocity_range(self.hot_in.component)
-        if not (tube_target[0] <= tube_v <= tube_target[1]):
-            warnings.append(f"Tube velocity {tube_v:.2f} m/s outside recommended {tube_target[0]}-{tube_target[1]} m/s")
+        v_min, v_max = get_velocity_range(self.hot_in.component)
+        if tube_v > v_max * 1.5:
+            warnings.append(f"High tube velocity {tube_v:.2f} m/s → erosion risk")
+        elif tube_v > v_max:
+            warnings.append(f"Tube velocity slightly high ({v_min}-{v_max} m/s recommended)")
+        elif tube_v < v_min * 0.5:
+            warnings.append(f"Low tube velocity {tube_v:.2f} m/s → fouling risk")
+        elif tube_v < v_min:
+            warnings.append(f"Tube velocity slightly low ({v_min}-{v_max} m/s recommended)")
 
         if cold["phase"] == "vapor":
             p = cold["p_bar"]
@@ -124,6 +130,7 @@ class ShellAndTubeHX(HeatExchanger):
                 tube_id = tube_config["tube_id"]
                 tube_length = tube_config["tube_length"]
                 tube_count = tube_config["tube_count"]
+                tube_velocity_selected = tube_config["velocity"]
                 if tube_config["velocity"] < hot_v_min or tube_config["velocity"] > hot_v_max:
                     tube_selection_warning = True
             else:
@@ -132,6 +139,9 @@ class ShellAndTubeHX(HeatExchanger):
                 tube_id = 0.016
                 tube_length = 5.0
                 tube_count = 50
+                q_vol_hot_sel = hot["m_dot"] / max(hot["density"], 1e-12)
+                flow_area_sel = tube_count * math.pi * tube_id**2 / 4.0
+                tube_velocity_selected = q_vol_hot_sel / max(flow_area_sel, 1e-12)
         else:
             area_per_tube_surface = math.pi * tube_od * tube_length
             tube_count = max(math.ceil(area_required / max(area_per_tube_surface, 1e-12)), 1)
@@ -145,11 +155,16 @@ class ShellAndTubeHX(HeatExchanger):
         shell_diameter = (tube_count * tube_pitch**2 / 0.785) ** 0.5
         area = tube_count * math.pi * tube_od * tube_length
 
+        if tube_velocity_selected > hot_v_max:
+            tube_count = int(max(tube_count * 1.1, tube_count + 1))
+            shell_diameter = (tube_count * tube_pitch**2 / 0.785) ** 0.5
+            area = tube_count * math.pi * tube_od * tube_length
+
         iterations = 0
         warnings: List[str] = []
         if tube_selection_warning:
             warnings.append(
-                f"Tube velocity outside recommended range {hot_v_min}-{hot_v_max} m/s; selected best-scoring available geometry"
+                f"Tube velocity slightly off recommended range ({hot_v_min}-{hot_v_max} m/s); selected best-scoring available geometry"
             )
 
         while iterations < 25:
@@ -243,16 +258,34 @@ class ShellAndTubeHX(HeatExchanger):
         warnings.extend(self._velocity_warnings(v_tube, v_shell, hot, cold))
 
         # --- Thermal safety and auto-improvement ---
-        if area < area_required:
+        if 0.9 * area_required <= area < area_required:
             tube_length = min(tube_length * 1.25, 6.0)
             area = tube_count * math.pi * tube_od * tube_length
 
-        if area < area_required:
-            warnings.append(
-                "Area slightly undersized — consider increasing tube length or parallel units"
-            )
+        if area < 0.9 * area_required:
+            warnings.append("Area significantly undersized — redesign required")
+        elif area < area_required:
+            warnings.append("Area slightly undersized — acceptable with margin")
 
-        status = "OK" if (not warnings and iterations < 25) else "VIOLATION"
+        critical: List[str] = []
+        advisory: List[str] = []
+        for w in warnings:
+            wl = w.lower()
+            if "pressure drop" in wl:
+                critical.append(w)
+            elif "significantly undersized" in wl:
+                critical.append(w)
+            elif "erosion risk" in wl:
+                critical.append(w)
+            else:
+                advisory.append(w)
+
+        if critical:
+            status = "VIOLATION"
+        elif advisory:
+            status = "WARNING"
+        else:
+            status = "OK"
 
         return {
             "hx_type": "shell_and_tube",
