@@ -15,7 +15,7 @@ from processpi.calculations.heat_transfer.hx_kern import (
 )
 
 from .base import HeatExchanger
-from .standards import get_u_range
+from .standards import get_u_range, select_standard_exchanger, select_tube_configuration
 
 
 class ShellAndTubeHX(HeatExchanger):
@@ -78,10 +78,10 @@ class ShellAndTubeHX(HeatExchanger):
 
         shell_passes = int(self.specs.get("shell_passes", 1))
         tube_passes = int(self.specs.get("tube_passes", 2))
-        tube_od = float(self.specs.get("tube_od", 0.019))
-        tube_id = float(self.specs.get("tube_id", 0.016))
-        tube_length = float(self.specs.get("tube_length", 5.0))
-        tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
+        tube_od = float(self.specs.get("tube_od")) if self.specs.get("tube_od") is not None else None
+        tube_id = float(self.specs.get("tube_id")) if self.specs.get("tube_id") is not None else None
+        tube_length = float(self.specs.get("tube_length")) if self.specs.get("tube_length") is not None else None
+        tube_pitch = None
 
         # Temperatures
         th_in = hot["t_k"]
@@ -115,6 +115,31 @@ class ShellAndTubeHX(HeatExchanger):
             print(u_assumed)
             area_required = q_watts / max(u_assumed * dtlm, 1e-6)
 
+            if tube_od is None or tube_id is None or tube_length is None:
+                tube_config = select_tube_configuration(
+                    area_required,
+                    hot["m_dot"],
+                    hot["density"],
+                )
+
+                if tube_config:
+                    tube_od = tube_config["tube_od"]
+                    tube_id = tube_config["tube_id"]
+                    tube_length = tube_config["tube_length"]
+                    tube_count_selected = tube_config["tube_count"]
+                    if not (0.5 <= tube_config["velocity"] <= 1.5):
+                        warnings.append("Tube velocity not within preferred range, adjusting tube size")
+                else:
+                    warnings.append("Tube velocity not within preferred range, adjusting tube size")
+                    tube_od = 0.019
+                    tube_id = 0.016
+                    tube_length = 5.0
+                    tube_count_selected = 10
+            else:
+                tube_count_selected = 10
+
+            tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
+
             # --- STEP 2: Tube-side velocity design ---
             v_target = float(self.specs.get("tube_velocity_target", 1.5))
             q_vol_hot = hot["m_dot"] / hot["density"]
@@ -130,23 +155,21 @@ class ShellAndTubeHX(HeatExchanger):
             tube_count_thermal = math.ceil(area_required / max(area_per_tube_surface, 1e-12))
 
             # --- FINAL tube count ---
-            from .standards import select_standard_exchanger
-            
             # --- STEP 3: preliminary tube count ---
-            tube_count_calc = max(tube_count_velocity, tube_count_thermal, 10)
+            tube_count_calc = max(tube_count_velocity, tube_count_thermal, tube_count_selected, 10)
             
             # --- STEP 4: select standard exchanger ---
             # --- FIX: Freeze geometry after first selection ---
             if selected_geometry is None:
                 selected_geometry = select_standard_exchanger(
-                    area_required,
-                    tube_length,
-                    tube_passes,
-                    hot["m_dot"],
-                    hot["density"],
-                    cold["m_dot"],
-                    cold["density"],
-                    tube_id
+                    area_required=area_required,
+                    hot_mdot=hot["m_dot"],
+                    hot_density=hot["density"],
+                    cold_mdot=cold["m_dot"],
+                    cold_density=cold["density"],
+                    tube_id=tube_id,
+                    tube_length=tube_length,
+                    tube_passes=tube_passes,
                 )
             
             selected = selected_geometry
