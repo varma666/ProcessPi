@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from processpi.calculations.heat_transfer.hx_kern import (
     ConvectiveH,
@@ -28,6 +28,275 @@ class ShellAndTubeHX(HeatExchanger):
             return 0.5 * (u_min + u_max)
         return 300.0
 
+    def _validate_inputs(self, hot: Dict[str, float], cold: Dict[str, float]) -> None:
+        required = ["cp", "density", "viscosity", "k", "m_dot", "t_k"]
+        missing: List[str] = []
+        for side_name, props in (("hot", hot), ("cold", cold)):
+            for key in required:
+                val = props.get(key)
+                if val is None or val <= 0:
+                    missing.append(f"{side_name}.{key}")
+        if missing:
+            raise ValueError(f"Missing or invalid stream properties for shell-and-tube design: {', '.join(missing)}")
+
+    def _calculate_heat_duty(self, hot: Dict[str, float], cold: Dict[str, float]) -> Tuple[float, float, float]:
+        q_kw = self.heat_duty(hot, cold)
+        th_in = hot["t_k"]
+        tc_in = cold["t_k"]
+
+        if self.hot_out and self.hot_out.temperature:
+            th_out = self.hot_out.temperature.to("K").value
+        else:
+            th_out = th_in - q_kw / max(hot["m_dot"] * hot["cp"], 1e-9)
+
+        if self.cold_out and self.cold_out.temperature:
+            tc_out = self.cold_out.temperature.to("K").value
+        else:
+            tc_out = tc_in + q_kw / max(cold["m_dot"] * cold["cp"], 1e-9)
+
+        return q_kw * 1000.0, th_out, tc_out
+
+    def _calculate_lmtd(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
+        return self.lmtd(hot["t_k"], th_out, cold["t_k"], tc_out)
+
+    def _calculate_ft(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float,
+                      shell_passes: int, tube_passes: int) -> float:
+        dt1 = max(hot["t_k"] - tc_out, 1e-9)
+        dt2 = max(th_out - cold["t_k"], 1e-9)
+        r = max((hot["t_k"] - th_out) / max(tc_out - cold["t_k"], 1e-9), 1e-9)
+        p = (tc_out - cold["t_k"]) / max(hot["t_k"] - cold["t_k"], 1e-9)
+
+        # practical deterministic approximation for 1-2 and multi-pass correction behavior
+        pass_factor = 1.0 / max((shell_passes * tube_passes) ** 0.08, 1.0)
+        shape_factor = max(0.70, min(1.0, 1.0 - 0.08 * abs(r - 1.0) - 0.12 * max(p - 0.7, 0.0)))
+        dt_ratio_factor = max(0.75, min(1.0, min(dt1, dt2) / max(dt1, dt2)))
+        return max(0.65, min(1.0, pass_factor * shape_factor * dt_ratio_factor))
+
+    def _adjust_passes(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> Tuple[int, int, float]:
+        candidates = [(1, 2), (1, 4), (2, 4), (2, 6)]
+        if self.specs.get("shell_passes") is not None or self.specs.get("tube_passes") is not None:
+            candidates = [(int(self.specs.get("shell_passes", 1)), int(self.specs.get("tube_passes", 2)))] + candidates
+
+        best = (1, 2, 0.0)
+        for shell_passes, tube_passes in candidates:
+            ft = self._calculate_ft(hot, cold, th_out, tc_out, shell_passes, tube_passes)
+            if ft > best[2]:
+                best = (shell_passes, tube_passes, ft)
+            if ft > 0.78:
+                return shell_passes, tube_passes, ft
+        return best
+
+    def _calculate_area(self, q_watts: float, u_assumed: float, cltd: float) -> float:
+        return q_watts / max(u_assumed * cltd, 1e-9)
+
+    def _round_tube_count_to_passes(self, tube_count: int, tube_passes: int) -> int:
+        return max(tube_passes, int(math.ceil(tube_count / max(tube_passes, 1)) * max(tube_passes, 1)))
+
+    def _select_tube_geometry(self, area_required: float, hot: Dict[str, float], cold: Dict[str, float],
+                              tube_passes: int) -> Dict[str, float]:
+        tube_od = float(self.specs.get("tube_od")) if self.specs.get("tube_od") is not None else None
+        tube_id = float(self.specs.get("tube_id")) if self.specs.get("tube_id") is not None else None
+        tube_length = float(self.specs.get("tube_length")) if self.specs.get("tube_length") is not None else None
+
+        if tube_od is None or tube_id is None or tube_length is None:
+            tube_config = select_tube_configuration(
+                area_required,
+                {"m_dot": hot["m_dot"], "density": hot["density"], "component": self.hot_in.component},
+                {"m_dot": cold["m_dot"], "density": cold["density"], "component": self.cold_in.component},
+            )
+            if tube_config:
+                tube_od = tube_config["tube_od"]
+                tube_id = tube_config["tube_id"]
+                tube_length = tube_config["tube_length"]
+                tube_count = tube_config["tube_count"]
+            else:
+                tube_od = 0.019
+                tube_id = 0.016
+                tube_length = 5.0
+                tube_count = 50
+        else:
+            area_per_tube = math.pi * tube_od * tube_length
+            tube_count = math.ceil(area_required / max(area_per_tube, 1e-12))
+
+        tube_count = self._round_tube_count_to_passes(tube_count, tube_passes)
+        tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
+        area = tube_count * math.pi * tube_od * tube_length
+        return {
+            "tube_od": tube_od,
+            "tube_id": tube_id,
+            "tube_length": tube_length,
+            "tube_count": tube_count,
+            "tube_pitch": tube_pitch,
+            "area": area,
+        }
+
+    def _calculate_bundle_diameter(self, tube_count: int) -> float:
+        k1 = float(self.specs.get("bundle_k1", 0.249))
+        n1 = float(self.specs.get("bundle_n1", 2.207))
+        return k1 * (max(tube_count, 1) ** (1.0 / max(n1, 1e-9)))
+
+    def _calculate_shell_diameter(self, bundle_diameter: float) -> float:
+        clearance = float(self.specs.get("bundle_clearance", max(0.02, 0.05 * bundle_diameter)))
+        return bundle_diameter + clearance
+
+    def _check_L_over_D(self, geometry: Dict[str, float], shell_diameter: float, tube_passes: int) -> Dict[str, float]:
+        ld = geometry["tube_length"] / max(shell_diameter, 1e-9)
+        if 5.0 <= ld <= 10.0:
+            return geometry
+
+        target_l = min(max(7.0 * shell_diameter, 0.5), 6.0)
+        if self.specs.get("tube_length") is None:
+            geometry["tube_length"] = target_l
+            area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
+            geometry["tube_count"] = self._round_tube_count_to_passes(
+                math.ceil(geometry["area"] / max(area_per_tube, 1e-12)),
+                tube_passes,
+            )
+            geometry["area"] = geometry["tube_count"] * area_per_tube
+        return geometry
+
+    def _check_velocities(self, geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float],
+                          tube_passes: int, shell_diameter: float) -> Tuple[float, float, int]:
+        q_vol_hot = hot["m_dot"] / max(hot["density"], 1e-12)
+        q_vol_cold = cold["m_dot"] / max(cold["density"], 1e-12)
+
+        area_per_tube_flow = math.pi * geometry["tube_id"] ** 2 / 4.0
+        tube_flow = max(geometry["tube_count"] / max(tube_passes, 1) * area_per_tube_flow, 1e-12)
+        v_tube = q_vol_hot / tube_flow
+
+        v_min, v_max = get_velocity_range(self.hot_in.component)
+        if v_tube > v_max:
+            geometry["tube_count"] = self._round_tube_count_to_passes(int(math.ceil(geometry["tube_count"] * 1.1)), tube_passes)
+            tube_flow = max(geometry["tube_count"] / max(tube_passes, 1) * area_per_tube_flow, 1e-12)
+            v_tube = q_vol_hot / tube_flow
+
+        shell_flow = math.pi * shell_diameter ** 2 / 4.0
+        v_shell = q_vol_cold / max(shell_flow, 1e-12)
+        return v_tube, v_shell, geometry["tube_count"]
+
+    def _calculate_dimensionless(self, geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float],
+                                 v_tube: float, v_shell: float) -> Dict[str, float]:
+        re_t = Reynolds(
+            density=hot["density"],
+            velocity=v_tube,
+            diameter=geometry["tube_id"],
+            viscosity=hot["viscosity"],
+        ).calculate()
+        pr_t = max(hot["cp"] * hot["viscosity"] / max(hot["k"], 1e-12), 1e-12)
+        nu_t = DittusBoelter(reynolds=max(re_t, 1.0), prandtl=pr_t, n=0.4).calculate()
+
+        de_shell = max(1.27 * (geometry["tube_pitch"] ** 2 - 0.785 * geometry["tube_od"] ** 2) / geometry["tube_od"], 1e-6)
+        re_s = Reynolds(
+            density=cold["density"],
+            velocity=v_shell,
+            diameter=de_shell,
+            viscosity=cold["viscosity"],
+        ).calculate()
+        pr_s = max(cold["cp"] * cold["viscosity"] / max(cold["k"], 1e-12), 1e-12)
+        nu_s = KernShellNu(reynolds=max(re_s, 1.0), prandtl=pr_s).calculate()
+
+        return {"re_t": re_t, "pr_t": pr_t, "nu_t": nu_t, "de_shell": de_shell, "re_s": re_s, "pr_s": pr_s, "nu_s": nu_s}
+
+    def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float]) -> Tuple[float, float]:
+        h_t = ConvectiveH(nusselt=dimless["nu_t"], k=hot["k"], diameter=geometry["tube_id"]).calculate().to("W/m2K").value
+        h_s = ConvectiveH(nusselt=dimless["nu_s"], k=cold["k"], diameter=dimless["de_shell"]).calculate().to("W/m2K").value
+        return h_t, h_s
+
+    def _calculate_overall_U(self, h_t: float, h_s: float, u_range: Tuple[float, float] | None) -> float:
+        u_calculated = self.overall_u(
+            h_tube=h_t,
+            h_shell=h_s,
+            fouling_factor=float(self.specs.get("fouling_factor", 0.0)),
+        )
+        u_min, u_max = u_range if u_range else (100.0, 1000.0)
+        return max(min(u_calculated, u_max), u_min)
+
+    def _iterate_U(self, q_watts: float, cltd: float, hot: Dict[str, float], cold: Dict[str, float],
+                   shell_passes: int, tube_passes: int, u_assumed: float,
+                   u_range: Tuple[float, float] | None) -> Dict[str, Any]:
+        state: Dict[str, Any] = {"iterations": 0, "u_assumed": u_assumed}
+        max_iter = 15
+
+        for i in range(1, max_iter + 1):
+            area_required = self._calculate_area(q_watts, state["u_assumed"], cltd)
+            geometry = self._select_tube_geometry(area_required, hot, cold, tube_passes)
+
+            bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"])
+            shell_diameter = self._calculate_shell_diameter(bundle_diameter)
+
+            geometry = self._check_L_over_D(geometry, shell_diameter, tube_passes)
+            bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"])
+            shell_diameter = self._calculate_shell_diameter(bundle_diameter)
+
+            v_tube, v_shell, tube_count = self._check_velocities(geometry, hot, cold, tube_passes, shell_diameter)
+            geometry["tube_count"] = tube_count
+            geometry["area"] = geometry["tube_count"] * math.pi * geometry["tube_od"] * geometry["tube_length"]
+
+            dimless = self._calculate_dimensionless(geometry, hot, cold, v_tube, v_shell)
+            h_t, h_s = self._calculate_htc(dimless, geometry, hot, cold)
+            u_calculated = self._calculate_overall_U(h_t, h_s, u_range)
+
+            state.update(
+                {
+                    "iterations": i,
+                    "area_required": area_required,
+                    "geometry": geometry,
+                    "bundle_diameter": bundle_diameter,
+                    "shell_diameter": shell_diameter,
+                    "v_tube": v_tube,
+                    "v_shell": v_shell,
+                    "dimless": dimless,
+                    "h_t": h_t,
+                    "h_s": h_s,
+                    "u_calculated": u_calculated,
+                }
+            )
+
+            if abs((u_calculated - state["u_assumed"]) / max(state["u_assumed"], 1e-9)) < 0.30:
+                break
+            state["u_assumed"] = u_calculated
+
+        return state
+
+    def _calculate_pressure_drop(self, hot: Dict[str, float], cold: Dict[str, float], shell_passes: int,
+                                 tube_passes: int, shell_diameter: float, tube_length: float,
+                                 tube_id: float, v_tube: float, v_shell: float) -> Tuple[float, float]:
+        f_tube = float(self.specs.get("f_tube", 0.005))
+        f_shell = float(self.specs.get("f_shell", 0.02))
+
+        tube_dp = DarcyDrop(
+            f=f_tube,
+            length=tube_length * tube_passes,
+            diameter=tube_id,
+            density=hot["density"],
+            velocity=v_tube,
+        ).calculate().to("Pa").value
+
+        shell_dp = DarcyDrop(
+            f=f_shell,
+            length=max(shell_passes, 1) * shell_diameter,
+            diameter=max(shell_diameter, 1e-6),
+            density=cold["density"],
+            velocity=v_shell,
+        ).calculate().to("Pa").value
+
+        return tube_dp, shell_dp
+
+    def _dp_limit(self, props: Dict[str, float]) -> float:
+        mu_cp = props["viscosity"] * 1000.0
+        if props["phase"] == "vapor":
+            p = props["p_bar"]
+            if p < 1:
+                return 800.0
+            if p <= 2:
+                return 0.5 * p * 1e5
+            return 0.1 * p * 1e5
+        if mu_cp < 1:
+            return 35_000.0
+        if mu_cp <= 10:
+            return 60_000.0
+        return 70_000.0
+
     def _velocity_warnings(self, tube_v: float, shell_v: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
         warnings: List[str] = []
         v_min, v_max = get_velocity_range(self.hot_in.component)
@@ -49,232 +318,13 @@ class ShellAndTubeHX(HeatExchanger):
             warnings.append(f"Shell velocity {shell_v:.2f} m/s outside recommended {target[0]}-{target[1]} m/s")
         return warnings
 
-    def _dp_limit(self, props: Dict[str, float]) -> float:
-        mu_cp = props["viscosity"] * 1000.0
-        if props["phase"] == "vapor":
-            p = props["p_bar"]
-            if p < 1:
-                return 800.0
-            if p <= 2:
-                return 0.5 * p * 1e5
-            return 0.1 * p * 1e5
-        if mu_cp < 1:
-            return 35_000.0
-        if mu_cp <= 10:
-            return 60_000.0
-        return 70_000.0
-
-    def design(self) -> Dict[str, Any]:
-        hot = self._stream_props(self.hot_in)
-        cold = self._stream_props(self.cold_in)
-
-        if hot["phase"] == "vapor":
-            self.service_type = "condenser"
-        elif cold["phase"] == "vapor":
-            self.service_type = "vaporizer"
-        elif hot["t_k"] > cold["t_k"]:
-            self.service_type = "cooler"
-        else:
-            self.service_type = "heater"
-
-        q_w = self.heat_duty(hot, cold)
-
-        shell_passes = int(self.specs.get("shell_passes", 1))
-        tube_passes = int(self.specs.get("tube_passes", 2))
-        tube_od = float(self.specs.get("tube_od")) if self.specs.get("tube_od") is not None else None
-        tube_id = float(self.specs.get("tube_id")) if self.specs.get("tube_id") is not None else None
-        tube_length = float(self.specs.get("tube_length")) if self.specs.get("tube_length") is not None else None
-
-        # Temperatures
-        th_in = hot["t_k"]
-        tc_in = cold["t_k"]
-
-        if self.hot_out and self.hot_out.temperature:
-            th_out = self.hot_out.temperature.to("K").value
-        else:
-            th_out = th_in - q_w / max(hot["m_dot"] * hot["cp"], 1e-9)
-
-        if self.cold_out and self.cold_out.temperature:
-            tc_out = self.cold_out.temperature.to("K").value
-        else:
-            tc_out = tc_in + q_w / max(cold["m_dot"] * cold["cp"], 1e-9)
-
-        dtlm = self.lmtd(th_in, th_out, tc_in, tc_out)
-
-        u_assumed = self._assume_u(hot, cold)
-        hot_type = getattr(self.hot_in.component, "hx_type", "generic")
-        cold_type = getattr(self.cold_in.component, "hx_type", "generic")
-        u_range = get_u_range("shell_and_tube", self.service_type, hot_type, cold_type)
-
-        q_watts = q_w * 1000
-        area_required = q_watts / max(u_assumed * dtlm, 1e-6)
-        area_required_initial = area_required
-
-        tube_selection_warning = False
-        hot_v_min, hot_v_max = get_velocity_range(self.hot_in.component)
-        if tube_od is None or tube_id is None or tube_length is None:
-            tube_config = select_tube_configuration(
-                area_required,
-                {
-                    "m_dot": hot["m_dot"],
-                    "density": hot["density"],
-                    "component": self.hot_in.component,
-                },
-                {
-                    "m_dot": cold["m_dot"],
-                    "density": cold["density"],
-                    "component": self.cold_in.component,
-                },
-            )
-            if tube_config:
-                tube_od = tube_config["tube_od"]
-                tube_id = tube_config["tube_id"]
-                tube_length = tube_config["tube_length"]
-                tube_count = tube_config["tube_count"]
-                tube_velocity_selected = tube_config["velocity"]
-                if tube_config["velocity"] < hot_v_min or tube_config["velocity"] > hot_v_max:
-                    tube_selection_warning = True
-            else:
-                tube_selection_warning = True
-                tube_od = 0.019
-                tube_id = 0.016
-                tube_length = 5.0
-                tube_count = 50
-                q_vol_hot_sel = hot["m_dot"] / max(hot["density"], 1e-12)
-                flow_area_sel = tube_count * math.pi * tube_id**2 / 4.0
-                tube_velocity_selected = q_vol_hot_sel / max(flow_area_sel, 1e-12)
-        else:
-            area_per_tube_surface = math.pi * tube_od * tube_length
-            tube_count = max(math.ceil(area_required / max(area_per_tube_surface, 1e-12)), 1)
-            q_vol_hot_sel = hot["m_dot"] / max(hot["density"], 1e-12)
-            flow_area_sel = tube_count * math.pi * tube_id**2 / 4.0
-            tube_velocity_selected = q_vol_hot_sel / max(flow_area_sel, 1e-12)
-            if tube_velocity_selected < hot_v_min or tube_velocity_selected > hot_v_max:
-                tube_selection_warning = True
-
-        tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
-        shell_diameter = (tube_count * tube_pitch**2 / 0.785) ** 0.5
-        area = tube_count * math.pi * tube_od * tube_length
-
-        if tube_velocity_selected > hot_v_max:
-            tube_count = int(max(tube_count * 1.1, tube_count + 1))
-            shell_diameter = (tube_count * tube_pitch**2 / 0.785) ** 0.5
-            area = tube_count * math.pi * tube_od * tube_length
-
-        iterations = 0
-        warnings: List[str] = []
-
-        while iterations < 25:
-            iterations += 1
-
-            # --- STEP 1: Thermal Area Requirement (geometry frozen) ---
-            area_required = q_watts / max(u_assumed * dtlm, 1e-6)
-            q_vol_hot = hot["m_dot"] / hot["density"]
-            q_vol_cold = cold["m_dot"] / cold["density"]
-
-            area_per_tube_flow = math.pi * tube_id**2 / 4.0
-            baffle_spacing = float(
-                self.specs.get(
-                    "baffle_spacing",
-                    max(0.3 * shell_diameter, min(0.5 * shell_diameter, 0.45 * shell_diameter))
-                )
-            )
-
-            # --- Velocities ---
-            tube_area_flow = max(tube_count / tube_passes * area_per_tube_flow, 1e-12)
-            v_tube = q_vol_hot / max(tube_area_flow, 1e-12)
-
-            shell_area_flow = math.pi * shell_diameter**2 / 4.0
-            v_shell = q_vol_cold / max(shell_area_flow, 1e-12)
-
-            # --- Heat transfer coefficients ---
-            re_t = Reynolds(density=hot["density"], velocity=v_tube, diameter=tube_id, viscosity=hot["viscosity"]).calculate()
-            pr_t = max(hot["cp"] * hot["viscosity"] / max(hot["k"], 1e-12), 1e-12)
-            nu_t = DittusBoelter(reynolds=max(re_t, 1.0), prandtl=pr_t, n=0.4).calculate()
-            h_t = ConvectiveH(nusselt=nu_t, k=hot["k"], diameter=tube_id).calculate().to("W/m2K").value
-
-            de_shell = max(1.27 * (tube_pitch**2 - 0.785 * tube_od**2) / tube_od, 1e-6)
-            re_s = Reynolds(density=cold["density"], velocity=v_shell, diameter=de_shell, viscosity=cold["viscosity"]).calculate()
-            pr_s = max(cold["cp"] * cold["viscosity"] / max(cold["k"], 1e-12), 1e-12)
-            nu_s = KernShellNu(reynolds=max(re_s, 1.0), prandtl=pr_s).calculate()
-            h_s = ConvectiveH(nusselt=nu_s, k=cold["k"], diameter=de_shell).calculate().to("W/m2K").value
-
-            u_calculated = self.overall_u(
-                h_tube=h_t,
-                h_shell=h_s,
-                fouling_factor=float(self.specs.get("fouling_factor", 0.0))
-            )
-            u_min, u_max = u_range if u_range else (100, 1000)
-            u_calculated = max(min(u_calculated, u_max), u_min)
-
-            # --- Convergence check ---
-            if abs((u_calculated - u_assumed) / max(u_assumed, 1e-6)) < 0.30:
-                break
-
-            u_assumed = u_calculated
-
-        # --- Pressure drop ---
-        f_tube = float(self.specs.get("f_tube", 0.005))
-        f_shell = float(self.specs.get("f_shell", 0.02))
-
-        tube_dp = DarcyDrop(
-            f=f_tube,
-            length=tube_length * tube_passes,
-            diameter=tube_id,
-            density=hot["density"],
-            velocity=v_tube
-        ).calculate().to("Pa").value
-
-        shell_dp = DarcyDrop(
-            f=f_shell,
-            length=max(shell_passes, 1) * shell_diameter,
-            diameter=max(shell_diameter, 1e-6),
-            density=cold["density"],
-            velocity=v_shell
-        ).calculate().to("Pa").value
-
-        # --- Limits ---
-        tube_limit_val = self.specs.get("tube_dp", self._dp_limit(hot))
-        if hasattr(tube_limit_val, "to"):
-            tube_limit = float(tube_limit_val.to("Pa").value)
-        else:
-            tube_limit = float(tube_limit_val)
-
-        shell_limit_val = self.specs.get("shell_dp", self._dp_limit(cold))
-        if hasattr(shell_limit_val, "to"):
-            shell_limit = float(shell_limit_val.to("Pa").value)
-        else:
-            shell_limit = float(shell_limit_val)
-
-        if tube_dp > tube_limit:
-            warnings.append(f"Tube-side pressure drop {tube_dp:.1f} Pa exceeds limit {tube_limit:.1f} Pa")
-        if shell_dp > shell_limit:
-            warnings.append(f"Shell-side pressure drop {shell_dp:.1f} Pa exceeds limit {shell_limit:.1f} Pa")
-
-        # --- Velocity warnings ---
-        warnings.extend(self._velocity_warnings(v_tube, v_shell, hot, cold))
-
-        # --- Thermal safety and auto-improvement ---
-        if 0.9 * area_required_initial <= area < area_required_initial:
-            tube_length = min(tube_length * 1.25, 6.0)
-            area = tube_count * math.pi * tube_od * tube_length
-
-        if area < 0.85 * area_required_initial:
-            warnings.append("Area significantly undersized — redesign required")
-        elif area < area_required_initial:
-            warnings.append("Area slightly undersized — acceptable with margin")
-
-        warnings = list(set(warnings))
-
+    def _finalize_results(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        warnings = list(dict.fromkeys(payload["warnings"]))
         critical: List[str] = []
         advisory: List[str] = []
         for w in warnings:
             wl = w.lower()
-            if "pressure drop" in wl:
-                critical.append(w)
-            elif "significantly undersized" in wl:
-                critical.append(w)
-            elif "erosion risk" in wl:
+            if "pressure drop" in wl or "significantly undersized" in wl or "erosion risk" in wl:
                 critical.append(w)
             else:
                 advisory.append(w)
@@ -288,18 +338,90 @@ class ShellAndTubeHX(HeatExchanger):
 
         return {
             "hx_type": "shell_and_tube",
-            "Q": q_w,
-            "Area": area,
-            "U_assumed": u_assumed,
-            "U_calculated": u_calculated,
-            "LMTD": dtlm,
-            "tube_count": tube_count,
-            "shell_diameter": shell_diameter,
-            "tube_velocity": v_tube,
-            "shell_velocity": v_shell,
-            "tube_dp": tube_dp,
-            "shell_dp": shell_dp,
-            "iterations": iterations,
+            "Q": payload["q_watts"] / 1000.0,
+            "Area": payload["area"],
+            "U_assumed": payload["u_assumed"],
+            "U_calculated": payload["u_calculated"],
+            "LMTD": payload["lmtd"],
+            "tube_count": payload["geometry"]["tube_count"],
+            "shell_diameter": payload["shell_diameter"],
+            "tube_velocity": payload["v_tube"],
+            "shell_velocity": payload["v_shell"],
+            "tube_dp": payload["tube_dp"],
+            "shell_dp": payload["shell_dp"],
+            "iterations": payload["iterations"],
             "status": status,
             "warnings": warnings,
         }
+
+    def design(self) -> Dict[str, Any]:
+        hot = self._stream_props(self.hot_in)
+        cold = self._stream_props(self.cold_in)
+        self._validate_inputs(hot, cold)
+
+        if hot["phase"] == "vapor":
+            self.service_type = "condenser"
+        elif cold["phase"] == "vapor":
+            self.service_type = "vaporizer"
+        elif hot["t_k"] > cold["t_k"]:
+            self.service_type = "cooler"
+        else:
+            self.service_type = "heater"
+
+        q_watts, th_out, tc_out = self._calculate_heat_duty(hot, cold)
+        lmtd = self._calculate_lmtd(hot, cold, th_out, tc_out)
+
+        shell_passes, tube_passes, ft = self._adjust_passes(hot, cold, th_out, tc_out)
+        cltd = max(ft * lmtd, 1e-9)
+
+        u_assumed = self._assume_u(hot, cold)
+        hot_type = getattr(self.hot_in.component, "hx_type", "generic")
+        cold_type = getattr(self.cold_in.component, "hx_type", "generic")
+        u_range = get_u_range("shell_and_tube", self.service_type, hot_type, cold_type)
+
+        state = self._iterate_U(q_watts, cltd, hot, cold, shell_passes, tube_passes, u_assumed, u_range)
+
+        tube_dp, shell_dp = self._calculate_pressure_drop(
+            hot=hot,
+            cold=cold,
+            shell_passes=shell_passes,
+            tube_passes=tube_passes,
+            shell_diameter=state["shell_diameter"],
+            tube_length=state["geometry"]["tube_length"],
+            tube_id=state["geometry"]["tube_id"],
+            v_tube=state["v_tube"],
+            v_shell=state["v_shell"],
+        )
+
+        warnings: List[str] = []
+        tube_limit_val = self.specs.get("tube_dp", self._dp_limit(hot))
+        shell_limit_val = self.specs.get("shell_dp", self._dp_limit(cold))
+        tube_limit = float(tube_limit_val.to("Pa").value) if hasattr(tube_limit_val, "to") else float(tube_limit_val)
+        shell_limit = float(shell_limit_val.to("Pa").value) if hasattr(shell_limit_val, "to") else float(shell_limit_val)
+
+        if tube_dp > tube_limit:
+            warnings.append(f"Tube-side pressure drop {tube_dp:.1f} Pa exceeds limit {tube_limit:.1f} Pa")
+        if shell_dp > shell_limit:
+            warnings.append(f"Shell-side pressure drop {shell_dp:.1f} Pa exceeds limit {shell_limit:.1f} Pa")
+
+        warnings.extend(self._velocity_warnings(state["v_tube"], state["v_shell"], hot, cold))
+
+        if state["geometry"]["area"] < 0.85 * state["area_required"]:
+            warnings.append("Area significantly undersized — redesign required")
+        elif state["geometry"]["area"] < state["area_required"]:
+            warnings.append("Area slightly undersized — acceptable with margin")
+
+        payload = {
+            **state,
+            "warnings": warnings,
+            "q_watts": q_watts,
+            "lmtd": lmtd,
+            "cltd": cltd,
+            "ft": ft,
+            "tube_dp": tube_dp,
+            "shell_dp": shell_dp,
+            "area": state["geometry"]["area"],
+            "u_assumed": state["u_assumed"],
+            "u_calculated": state["u_calculated"],
+        }
+        return self._finalize_results(payload)
