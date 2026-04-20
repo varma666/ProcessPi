@@ -78,7 +78,7 @@ hx.fit(
     hot_out=hot_out,
     cold_in=cold_in,
     cold_out=cold_out,
-    U=HeatTransferCoefficient(300, "W/m2K"),
+    #U=HeatTransferCoefficient(300, "W/m2K"),
     shell_dp=Pressure(1, "bar"),
     tube_dp=Pressure(1, "bar"),
 )

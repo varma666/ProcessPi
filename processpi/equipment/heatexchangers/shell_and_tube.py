@@ -22,9 +22,11 @@ class ShellAndTubeHX(HeatExchanger):
         hot_type = getattr(self.hot_in.component, "hx_type", "generic")
         cold_type = getattr(self.cold_in.component, "hx_type", "generic")
         service_type = getattr(self, "service_type", "heat_exchanger")
+        #print(hot_type, cold_type, service_type)
         u_range = get_u_range("shell_and_tube", service_type, hot_type, cold_type)
         if u_range:
             u_min, u_max = u_range
+            #print(f"Assuming overall heat transfer coefficient U = {u_min}-{u_max} W/m2K based on service and fluids")
             return 0.5 * (u_min + u_max)
         return 300.0
 
@@ -80,6 +82,7 @@ class ShellAndTubeHX(HeatExchanger):
         best = (1, 2, 0.0)
         for shell_passes, tube_passes in candidates:
             ft = self._calculate_ft(hot, cold, th_out, tc_out, shell_passes, tube_passes)
+            print(f"Passes (shell={shell_passes}, tube={tube_passes}) → Ft = {ft:.4f}") 
             if ft > best[2]:
                 best = (shell_passes, tube_passes, ft)
             if ft > 0.78:
@@ -369,12 +372,17 @@ class ShellAndTubeHX(HeatExchanger):
             self.service_type = "heater"
 
         q_watts, th_out, tc_out = self._calculate_heat_duty(hot, cold)
+        print(q_watts)
         lmtd = self._calculate_lmtd(hot, cold, th_out, tc_out)
+        print(lmtd)
 
         shell_passes, tube_passes, ft = self._adjust_passes(hot, cold, th_out, tc_out)
+        print(ft, shell_passes, tube_passes)
         cltd = max(ft * lmtd, 1e-9)
+        print(cltd)
 
         u_assumed = self._assume_u(hot, cold)
+        print(u_assumed)
         hot_type = getattr(self.hot_in.component, "hx_type", "generic")
         cold_type = getattr(self.cold_in.component, "hx_type", "generic")
         u_range = get_u_range("shell_and_tube", self.service_type, hot_type, cold_type)
