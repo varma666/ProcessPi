@@ -215,7 +215,7 @@ class ShellAndTubeHX(HeatExchanger):
         return geometry
 
     def _check_velocities(self, geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float],
-                          tube_passes: int, shell_diameter: float) -> Tuple[float, float, int]:
+                          tube_passes: int, shell_passes: int, shell_diameter: float) -> Tuple[float, float, int]:
         q_vol_hot = hot["m_dot"] / max(hot["density"], 1e-12)
         q_vol_cold = cold["m_dot"] / max(cold["density"], 1e-12)
 
@@ -228,9 +228,17 @@ class ShellAndTubeHX(HeatExchanger):
             geometry["tube_count"] = self._round_tube_count_to_passes(int(math.ceil(geometry["tube_count"] * 1.1)), tube_passes)
             tube_flow = max(geometry["tube_count"] / max(tube_passes, 1) * area_per_tube_flow, 1e-12)
             v_tube = q_vol_hot / tube_flow
+        elif v_tube < v_min:
+            reduced_tubes = max(tube_passes, int(math.floor(geometry["tube_count"] * 0.8)))
+            geometry["tube_count"] = self._round_tube_count_to_passes(reduced_tubes, tube_passes)
+            tube_flow = max(geometry["tube_count"] / max(tube_passes, 1) * area_per_tube_flow, 1e-12)
+            v_tube = q_vol_hot / tube_flow
 
-        shell_flow = math.pi * shell_diameter ** 2 / 4.0
-        v_shell = q_vol_cold / max(shell_flow, 1e-12)
+        pitch = max(geometry.get("tube_pitch", 1.25 * geometry["tube_od"]), geometry["tube_od"] * 1.01)
+        baffle_spacing = max(float(self.specs.get("baffle_spacing", 0.4 * shell_diameter)), 1e-6)
+        shell_flow_area = shell_diameter * baffle_spacing * (pitch - geometry["tube_od"]) / pitch
+        v_shell = q_vol_cold / max(shell_flow_area, 1e-12)
+        v_shell *= max(shell_passes, 1)
         return v_tube, v_shell, geometry["tube_count"]
 
     def _calculate_dimensionless(self, geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float],
@@ -287,7 +295,14 @@ class ShellAndTubeHX(HeatExchanger):
             bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"])
             shell_diameter = self._calculate_shell_diameter(bundle_diameter)
 
-            v_tube, v_shell, tube_count = self._check_velocities(geometry, hot, cold, tube_passes, shell_diameter)
+            v_tube, v_shell, tube_count = self._check_velocities(
+                geometry,
+                hot,
+                cold,
+                tube_passes,
+                shell_passes,
+                shell_diameter,
+            )
             geometry["tube_count"] = tube_count
             geometry["area"] = geometry["tube_count"] * math.pi * geometry["tube_od"] * geometry["tube_length"]
 
@@ -438,11 +453,10 @@ class ShellAndTubeHX(HeatExchanger):
         warnings: List[str] = list(getattr(self, "_warnings", []))
 
         n_units = 1
+        effective_q_watts = q_watts
         if ft < 0.78:
             n_units = int(math.ceil(0.78 / max(ft, 1e-6)))
-            hot["m_dot"] /= n_units
-            cold["m_dot"] /= n_units
-            q_watts /= n_units
+            effective_q_watts = q_watts / n_units
             warnings.append(f"Using {n_units} exchangers in series to satisfy Ft requirement")
 
         cltd = max(ft * lmtd, 1e-9)
@@ -454,7 +468,10 @@ class ShellAndTubeHX(HeatExchanger):
         cold_type = getattr(self.cold_in.component, "hx_type", "generic")
         u_range = get_u_range("shell_and_tube", self.service_type, hot_type, cold_type)
 
-        state = self._iterate_U(q_watts, cltd, hot, cold, shell_passes, tube_passes, u_assumed, u_range)
+        state = self._iterate_U(effective_q_watts, cltd, hot, cold, shell_passes, tube_passes, u_assumed, u_range)
+
+        if state["shell_diameter"] > 1.5:
+            warnings.append("Shell diameter too large → consider multi-shell exchanger")
 
         tube_dp, shell_dp = self._calculate_pressure_drop(
             hot=hot,
@@ -488,7 +505,7 @@ class ShellAndTubeHX(HeatExchanger):
         payload = {
             **state,
             "warnings": warnings,
-            "q_watts": q_watts,
+            "q_watts": effective_q_watts,
             "lmtd": lmtd,
             "cltd": cltd,
             "ft": ft,
