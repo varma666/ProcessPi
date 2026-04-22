@@ -16,6 +16,12 @@ from .standards import get_u_range, get_velocity_range, select_tube_configuratio
 
 
 class ShellAndTubeHX(HeatExchanger):
+    def __init__(self, *args: Any, method: str = "kern", **kwargs: Any):
+        self.method = method.lower()
+        if self.method not in {"kern", "bell_delaware"}:
+            raise ValueError("method must be 'kern' or 'bell_delaware'")
+        super().__init__(*args, **kwargs)
+
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("U") is not None:
             return float(self.specs["U"].to("W/m2K").value)
@@ -429,23 +435,29 @@ class ShellAndTubeHX(HeatExchanger):
 
         return {
             "hx_type": "shell_and_tube",
+            "method": payload.get("method", self.method),
             "Q": payload["q_watts_original"] / 1000.0,
             "Area": payload["area"],
             "U_assumed": payload["u_assumed"],
             "U_calculated": payload["u_calculated"],
             "LMTD": payload["lmtd"],
             "tube_count": payload["geometry"]["tube_count"],
+            "tube_od": payload["geometry"]["tube_od"],
+            "tube_id": payload["geometry"]["tube_id"],
+            "baffle_spacing": max(0.4 * payload["shell_diameter"], 1e-6),
             "shell_diameter": payload["shell_diameter"],
             "tube_velocity": payload["v_tube"],
             "shell_velocity": payload["v_shell"],
             "tube_dp": payload["tube_dp"],
             "shell_dp": payload["shell_dp"],
             "iterations": payload["iterations"],
+            "h_tube": payload.get("h_t"),
+            "h_shell": payload.get("h_s"),
             "status": status,
             "warnings": warnings,
         }
 
-    def design(self) -> Dict[str, Any]:
+    def _design_kern(self) -> Dict[str, Any]:
         hot = self._stream_props(self.hot_in)
         cold = self._stream_props(self.cold_in)
         self._warnings = []
@@ -528,6 +540,7 @@ class ShellAndTubeHX(HeatExchanger):
             "cltd": cltd,
             "ft": ft,
             "n_units": n_units,
+            "method": "kern",
             "tube_dp": tube_dp,
             "shell_dp": shell_dp,
             "area": state["geometry"]["area"],
@@ -535,3 +548,57 @@ class ShellAndTubeHX(HeatExchanger):
             "u_calculated": state["u_calculated"],
         }
         return self._finalize_results(payload)
+
+    def _calculate_ideal_shell_htc(self, kern_results: Dict[str, Any]) -> float:
+        base_htc = float(kern_results.get("h_shell") or 0.0)
+        return max(base_htc, 1e-9)
+
+    def _calc_baffle_cut_factor(self) -> float:
+        return 0.8
+
+    def _calc_leakage_factor(self) -> float:
+        return 0.7
+
+    def _calc_bypass_factor(self) -> float:
+        return 0.75
+
+    def _calc_laminar_factor(self) -> float:
+        return 1.0
+
+    def _calc_spacing_factor(self) -> float:
+        return 0.9
+
+    def _update_overall_u(self, h_tube: float, h_shell: float) -> float:
+        return self.overall_u(
+            h_tube=max(h_tube, 1e-9),
+            h_shell=max(h_shell, 1e-9),
+            fouling_factor=float(self.specs.get("fouling_factor", 0.0)),
+        )
+
+    def _design_bell_delaware(self) -> Dict[str, Any]:
+        results = self._design_kern()
+        h_ideal = self._calculate_ideal_shell_htc(results)
+
+        j_c = self._calc_baffle_cut_factor()
+        j_l = self._calc_leakage_factor()
+        j_b = self._calc_bypass_factor()
+        j_r = self._calc_laminar_factor()
+        j_s = self._calc_spacing_factor()
+
+        h_shell = h_ideal * j_c * j_l * j_b * j_r * j_s
+        h_tube = float(results.get("h_tube") or 0.0)
+        u_new = self._update_overall_u(h_tube, h_shell)
+
+        updated = dict(results)
+        updated["h_shell_ideal"] = h_ideal
+        updated["h_shell"] = h_shell
+        updated["U_calculated"] = u_new
+        updated["method"] = "bell_delaware"
+        return updated
+
+    def design(self) -> Dict[str, Any]:
+        if self.method == "kern":
+            return self._design_kern()
+        if self.method == "bell_delaware":
+            return self._design_bell_delaware()
+        raise ValueError("method must be 'kern' or 'bell_delaware'")
