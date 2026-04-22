@@ -6,7 +6,6 @@ from typing import Any, Dict, Optional, Type
 from processpi.streams.material import MaterialStream
 
 from .base import HeatExchanger
-from .bell_delaware import BellDelawareHX
 from .condenser import CondenserHX
 from .double_pipe import DoublePipeHX
 from .evaporator import EvaporatorHX
@@ -41,10 +40,14 @@ class HeatExchangerEngine:
         "condenser": CondenserHX,
         "reboiler": ReboilerHX,
         "evaporator": EvaporatorHX,
-        "bell_delaware": BellDelawareHX,
+        "bell_delaware": ShellAndTubeHX,
     }
 
-    def __init__(self, **kwargs: Any):
+    def __init__(self, name: Optional[str] = None, method: str = "kern", **kwargs: Any):
+        self.name = name
+        self.method = method.lower()
+        if self.method not in {"kern", "bell_delaware"}:
+            raise ValueError("method must be 'kern' or 'bell_delaware'")
         self.data: Dict[str, Any] = {}
         self._results: Optional[HeatExchangerResults] = None
         if kwargs:
@@ -84,12 +87,15 @@ class HeatExchangerEngine:
 
     def run(self) -> HeatExchangerResults:
         hx_type = self._select_hx_type()
+        if hx_type == "shell_and_tube" and self.method == "bell_delaware":
+            hx_type = "bell_delaware"
         cls = self._map[hx_type]
         hx = cls(
             hot_in=self.data["hot_in"],
             cold_in=self.data["cold_in"],
             hot_out=self.data.get("hot_out"),
             cold_out=self.data.get("cold_out"),
+            method=self.method if issubclass(cls, ShellAndTubeHX) else "kern",
             **self.data.get("specs", {}),
         )
         self._results = HeatExchangerResults(hx.design())
@@ -105,4 +111,3 @@ class HeatExchangerEngine:
         if not hasattr(self, "_results"):
             raise RuntimeError("Run the model first using hx.run()")
         return self._results
-
