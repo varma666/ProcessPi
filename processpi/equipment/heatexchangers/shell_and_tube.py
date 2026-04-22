@@ -61,33 +61,89 @@ class ShellAndTubeHX(HeatExchanger):
     def _calculate_lmtd(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
         return self.lmtd(hot["t_k"], th_out, cold["t_k"], tc_out)
 
+    def _safe_log_ratio(self, numerator: float, denominator: float) -> float:
+        if numerator <= 0.0 or denominator <= 0.0:
+            raise ValueError("Log ratio arguments must be positive")
+        return math.log(numerator / denominator)
+
+    def _ft_1shell(self, r: float, s: float) -> float:
+        try:
+            sqrt_term = math.sqrt(r**2 + 1.0)
+
+            numerator = sqrt_term * self._safe_log_ratio(1.0 - s, 1.0 - r * s)
+
+            den_a = 2.0 - s * (r + 1.0 - sqrt_term)
+            den_b = 2.0 - s * (r + 1.0 + sqrt_term)
+            denominator = (r - 1.0) * self._safe_log_ratio(den_a, den_b)
+            if abs(denominator) < 1e-12:
+                return 0.0
+
+            ft = numerator / denominator
+            return max(min(ft, 1.0), 0.0)
+        except Exception:
+            return 0.0
+
+    def _ft_2shell(self, r: float, s: float) -> float:
+        try:
+            if s <= 0.0:
+                return 0.0
+            sqrt_term = math.sqrt(r**2 + 1.0)
+
+            a_term = (2.0 / s) * math.sqrt((1.0 - s) * (1.0 - r * s))
+            numerator = self._safe_log_ratio(1.0 - s, 1.0 - r * s)
+
+            den_a = a_term + sqrt_term - 1.0 - r
+            den_b = a_term - sqrt_term - 1.0 - r
+            denominator = self._safe_log_ratio(den_a, den_b)
+            if abs(denominator) < 1e-12:
+                return 0.0
+
+            ft = numerator / denominator
+            return max(min(ft, 1.0), 0.0)
+        except Exception:
+            return 0.0
+
     def _calculate_ft(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float,
                       shell_passes: int, tube_passes: int) -> float:
-        dt1 = max(hot["t_k"] - tc_out, 1e-9)
-        dt2 = max(th_out - cold["t_k"], 1e-9)
-        r = max((hot["t_k"] - th_out) / max(tc_out - cold["t_k"], 1e-9), 1e-9)
-        p = (tc_out - cold["t_k"]) / max(hot["t_k"] - cold["t_k"], 1e-9)
+        th_in = hot["t_k"]
+        tc_in = cold["t_k"]
 
-        # practical deterministic approximation for 1-2 and multi-pass correction behavior
-        pass_factor = 1.0 / max((shell_passes * tube_passes) ** 0.08, 1.0)
-        shape_factor = max(0.70, min(1.0, 1.0 - 0.08 * abs(r - 1.0) - 0.12 * max(p - 0.7, 0.0)))
-        dt_ratio_factor = max(0.75, min(1.0, min(dt1, dt2) / max(dt1, dt2)))
-        return max(0.65, min(1.0, pass_factor * shape_factor * dt_ratio_factor))
+        r = (th_in - th_out) / max(tc_out - tc_in, 1e-12)
+        s = (tc_out - tc_in) / max(th_in - tc_in, 1e-12)
+
+        if shell_passes == 1:
+            return self._ft_1shell(r, s)
+        if shell_passes == 2:
+            return self._ft_2shell(r, s)
+        return 0.0
 
     def _adjust_passes(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> Tuple[int, int, float]:
-        candidates = [(1, 2), (1, 4), (2, 4), (2, 6)]
-        if self.specs.get("shell_passes") is not None or self.specs.get("tube_passes") is not None:
-            candidates = [(int(self.specs.get("shell_passes", 1)), int(self.specs.get("tube_passes", 2)))] + candidates
+        candidates = [
+            (1, 2), (1, 4), (1, 6), (1, 8),
+            (2, 4), (2, 6), (2, 8),
+        ]
+        if self.specs.get("shell_passes") is not None and self.specs.get("tube_passes") is not None:
+            specified = (int(self.specs["shell_passes"]), int(self.specs["tube_passes"]))
+            candidates = [specified] + [c for c in candidates if c != specified]
 
-        best = (1, 2, 0.0)
+        best: Tuple[int, int, float] | None = None
+        best_ft = 0.0
         for shell_passes, tube_passes in candidates:
             ft = self._calculate_ft(hot, cold, th_out, tc_out, shell_passes, tube_passes)
-            print(f"Passes (shell={shell_passes}, tube={tube_passes}) → Ft = {ft:.4f}") 
-            if ft > best[2]:
+            print(f"Passes (shell={shell_passes}, tube={tube_passes}) → Ft = {ft:.4f}")
+
+            if ft > best_ft:
+                best_ft = ft
                 best = (shell_passes, tube_passes, ft)
-            if ft > 0.78:
+
+            if ft >= 0.78:
                 return shell_passes, tube_passes, ft
-        return best
+
+        warnings = getattr(self, "_warnings", [])
+        warnings.append("No pass configuration satisfies Ft ≥ 0.78 → using multiple exchangers in series")
+        self._warnings = warnings
+
+        return best if best is not None else (1, 2, 0.0)
 
     def _calculate_area(self, q_watts: float, u_assumed: float, cltd: float) -> float:
         return q_watts / max(u_assumed * cltd, 1e-9)
@@ -360,6 +416,7 @@ class ShellAndTubeHX(HeatExchanger):
     def design(self) -> Dict[str, Any]:
         hot = self._stream_props(self.hot_in)
         cold = self._stream_props(self.cold_in)
+        self._warnings = []
         self._validate_inputs(hot, cold)
 
         if hot["phase"] == "vapor":
@@ -378,6 +435,16 @@ class ShellAndTubeHX(HeatExchanger):
 
         shell_passes, tube_passes, ft = self._adjust_passes(hot, cold, th_out, tc_out)
         print(ft, shell_passes, tube_passes)
+        warnings: List[str] = list(getattr(self, "_warnings", []))
+
+        n_units = 1
+        if ft < 0.78:
+            n_units = int(math.ceil(0.78 / max(ft, 1e-6)))
+            hot["m_dot"] /= n_units
+            cold["m_dot"] /= n_units
+            q_watts /= n_units
+            warnings.append(f"Using {n_units} exchangers in series to satisfy Ft requirement")
+
         cltd = max(ft * lmtd, 1e-9)
         print(cltd)
 
@@ -401,7 +468,6 @@ class ShellAndTubeHX(HeatExchanger):
             v_shell=state["v_shell"],
         )
 
-        warnings: List[str] = []
         tube_limit_val = self.specs.get("tube_dp", self._dp_limit(hot))
         shell_limit_val = self.specs.get("shell_dp", self._dp_limit(cold))
         tube_limit = float(tube_limit_val.to("Pa").value) if hasattr(tube_limit_val, "to") else float(tube_limit_val)
@@ -426,6 +492,7 @@ class ShellAndTubeHX(HeatExchanger):
             "lmtd": lmtd,
             "cltd": cltd,
             "ft": ft,
+            "n_units": n_units,
             "tube_dp": tube_dp,
             "shell_dp": shell_dp,
             "area": state["geometry"]["area"],
