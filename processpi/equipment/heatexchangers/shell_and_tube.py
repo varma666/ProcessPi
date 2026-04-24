@@ -55,13 +55,13 @@ class ShellAndTubeHX(HeatExchanger):
         if self.hot_out and self.hot_out.temperature:
             th_out = self.hot_out.temperature.to("K").value
         else:
-            th_out = th_in - q_kw / max(hot["m_dot"] * hot["cp"], 1e-9)
+            th_out = th_in - (q_kw / max(hot["m_dot"] * hot["cp"], 1e-9))
 
         if self.cold_out and self.cold_out.temperature:
             tc_out = self.cold_out.temperature.to("K").value
         else:
-            tc_out = tc_in + q_kw / max(cold["m_dot"] * cold["cp"], 1e-9)
-
+            tc_out = tc_in + (q_kw / max(cold["m_dot"] * cold["cp"], 1e-9))
+        print(tc_out.to("C"))
         return q_kw * 1000.0, th_out, tc_out
 
     def _calculate_lmtd(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
