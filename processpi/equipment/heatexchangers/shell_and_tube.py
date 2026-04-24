@@ -116,7 +116,7 @@ class ShellAndTubeHX(HeatExchanger):
 
         r = (th_in - th_out) / max(tc_out - tc_in, 1e-12)
         s = (tc_out - tc_in) / max(th_in - tc_in, 1e-12)
-
+        print(f"R: {r} S: {s}")
         if shell_passes == 1:
             return self._ft_1shell(r, s)
         if shell_passes == 2:
