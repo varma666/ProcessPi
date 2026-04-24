@@ -44,7 +44,7 @@ class Component(ABC):
         vapor_pressure: Pressure = None,
         enthalpy: HeatOfVaporization = None,
     ):
-        self.temperature = temperature or Temperature(35, "C")
+        self.temperature = temperature or Temperature(25, "C")
         self.pressure = pressure or Pressure(101325, "Pa")
         self.hx_type = getattr(self, "hx_type", self._infer_hx_type())
 
