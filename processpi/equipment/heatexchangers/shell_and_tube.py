@@ -51,7 +51,7 @@ class ShellAndTubeHX(HeatExchanger):
         q_kw = self.heat_duty(hot, cold)
         th_in = hot["t_k"]
         tc_in = cold["t_k"]
-
+        print(f"Hot Cp: {hot["cp"]} Cold Cp {cold["cp"]}")
         if self.hot_out and self.hot_out.temperature:
             th_out = self.hot_out.temperature.to("K").value
         else:
