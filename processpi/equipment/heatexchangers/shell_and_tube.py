@@ -52,12 +52,12 @@ class ShellAndTubeHX(HeatExchanger):
         th_in = hot["t_k"]
         tc_in = cold["t_k"]
         print(f"Hot Cp: {hot["cp"]} Cold Cp {cold["cp"]}")
-        if self.hot_out and self.hot_out.temperature and self.hot_out.temperature.to("C").value is not 25 :
+        if self.hot_out and self.hot_out.temperature and self.hot_out.temperature.to("C").value == 25 :
             th_out = self.hot_out.temperature.to("K").value
         else:
             th_out = th_in - (q_kw / max(hot["m_dot"] * hot["cp"], 1e-9))
 
-        if self.cold_out and self.cold_out.temperature and self.cold_out.temperature.to("C").value is not 25:
+        if self.cold_out and self.cold_out.temperature and self.cold_out.temperature.to("C").value == 25:
             print("Hello World")
             tc_out = self.cold_out.temperature.to("K").value
         else:
