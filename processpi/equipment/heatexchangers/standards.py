@@ -147,7 +147,7 @@ def select_tube_configuration(area_required, hot, cold):
             area_penalty = abs((total_area - area_required) / max(area_required, 1e-12))
             velocity_penalty = abs(velocity - target_velocity)
             score = area_penalty * 2 + velocity_penalty
-            print("Score :"score,tube_od,tube_length)
+            print("Score :",score,tube_od,tube_length)
             if score < best_score:
                 best_score = score
                 best = {
