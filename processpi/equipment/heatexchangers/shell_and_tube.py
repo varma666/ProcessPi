@@ -61,6 +61,8 @@ class ShellAndTubeHX(HeatExchanger):
             tc_out = self.cold_out.temperature.to("K").value
         else:
             tc_out = tc_in + (q_kw / max(cold["m_dot"] * cold["cp"], 1e-9))
+            print(f"tc_out = {tc_in} + ({q_kw}/({cold["m_dot"]}*{cold["cp"]})")
+            print(f"cold_rate: {max(cold["m_dot"] * cold["cp"], 1e-9)}")
         print(tc_out)
         return q_kw * 1000.0, th_out, tc_out
 
