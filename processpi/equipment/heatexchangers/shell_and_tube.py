@@ -65,6 +65,7 @@ class ShellAndTubeHX(HeatExchanger):
         return q_kw * 1000.0, th_out, tc_out
 
     def _calculate_lmtd(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
+        print(f"Hot in: {hot["t_k"]} Hot out: {th_out} cold in: {cold["t_k"]} cold out: { tc_out}")
         return self.lmtd(hot["t_k"], th_out, cold["t_k"], tc_out)
 
     def _safe_log_ratio(self, numerator: float, denominator: float) -> float:
