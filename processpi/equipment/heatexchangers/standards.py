@@ -137,9 +137,9 @@ def select_tube_configuration(area_required, hot, cold):
             tube_length = length_data["length"]
 
             area_per_tube = math.pi * tube_od * tube_length
-            print(f"Area Per Tube:{area_per_tube}")
+            #print(f"Area Per Tube:{area_per_tube}")
             tube_count = math.ceil(area_required / max(area_per_tube, 1e-12))
-            print(f"Tube Count:{tube_count}")
+            #print(f"Tube Count:{tube_count}")
             flow_area = tube_count * (math.pi * tube_id**2 / 4)
             velocity = (hot["m_dot"] / hot["density"]) / max(flow_area, 1e-12)
             total_area = tube_count * area_per_tube
@@ -160,5 +160,5 @@ def select_tube_configuration(area_required, hot, cold):
                     "velocity_range": (hot_v_min, hot_v_max),
                     "score": score,
                 }
-
+        print(best)
     return best
