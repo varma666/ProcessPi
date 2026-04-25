@@ -122,6 +122,8 @@ TUBE_DIAMETER_STANDARD = [
 ]
 
 
+import math
+
 def select_tube_configuration(area_required, hot, cold):
     best = None
     best_score = float("inf")
@@ -129,36 +131,91 @@ def select_tube_configuration(area_required, hot, cold):
     hot_v_min, hot_v_max = get_velocity_range(hot["component"])
     target_velocity = 0.5 * (hot_v_min + hot_v_max)
 
+    # ---- FIXED INITIAL SELECTION ----
+    preferred_od = 0.019   # 19 mm
+    preferred_length = 3.0 # 3 m
+
     for tube in TUBE_DIAMETER_STANDARD:
         tube_od = tube["od"]
+
+        # prioritize 19 mm but still allow fallback
+        if abs(tube_od - preferred_od) > 1e-6:
+            continue
+
         tube_id = tube_od - 2 * tube["thickness"]
 
         for length_data in TUBE_LENGTH_STANDARD:
             tube_length = length_data["length"]
 
-            area_per_tube = math.pi * tube_od * tube_length
-            #print(f"Area Per Tube:{area_per_tube}")
-            tube_count = math.ceil(area_required / max(area_per_tube, 1e-12))
-            #print(f"Tube Count:{tube_count}")
-            flow_area = tube_count * (math.pi * tube_id**2 / 4)
-            velocity = (hot["m_dot"] / hot["density"]) / max(flow_area, 1e-12)
-            total_area = tube_count * area_per_tube
+            # prioritize 3 m but still allow fallback
+            if abs(tube_length - preferred_length) > 1e-6:
+                continue
 
-            area_penalty = abs((total_area - area_required) / max(area_required, 1e-12))
-            velocity_penalty = abs(velocity - target_velocity)
-            score = area_penalty * 2 + velocity_penalty
-            print("Score :",score,"-",tube_od,"-",tube_length,"-",area_penalty,"-",velocity_penalty)
-            if score < best_score:
-                best_score = score
-                best = {
-                    "tube_od": tube_od,
-                    "tube_id": tube_id,
-                    "tube_length": tube_length,
-                    "tube_count": tube_count,
-                    "velocity": velocity,
-                    "area": total_area,
-                    "velocity_range": (hot_v_min, hot_v_max),
-                    "score": score,
-                }
-        print(best)
+            area_per_tube = math.pi * tube_od * tube_length
+
+            # ---- BINARY SEARCH ON TUBE COUNT ----
+            Nt_min = max(1, int(area_required / area_per_tube * 0.5))
+            Nt_max = int(area_required / area_per_tube * 2) + 10
+
+            while Nt_min <= Nt_max:
+                tube_count = (Nt_min + Nt_max) // 2
+
+                total_area = tube_count * area_per_tube
+
+                # ---- ESTIMATE SHELL DIAMETER (simplified Kern relation) ----
+                pitch = 1.25 * tube_od
+                bundle_dia = tube_od * (tube_count / 0.785) ** 0.5  # rough triangular layout
+                shell_dia = bundle_dia + 0.05  # clearance ~50 mm
+
+                L_D_ratio = tube_length / max(shell_dia, 1e-6)
+
+                # ---- L/D CONSTRAINT ----
+                if L_D_ratio < 5:
+                    Nt_max = tube_count - 1
+                    continue
+                elif L_D_ratio > 10:
+                    Nt_min = tube_count + 1
+                    continue
+
+                # ---- VELOCITY CALCULATION ----
+                passes = 2  # initial assumption
+
+                flow_area = (tube_count / passes) * (math.pi * tube_id**2 / 4)
+                velocity = (hot["m_dot"] / hot["density"]) / max(flow_area, 1e-12)
+
+                # ---- VELOCITY CHECK ----
+                if velocity < hot_v_min:
+                    passes = max(1, passes - 1)
+                    Nt_max = tube_count - 1
+                    continue
+
+                elif velocity > hot_v_max:
+                    passes += 1
+                    Nt_min = tube_count + 1
+                    continue
+
+                # ---- SCORING ----
+                area_penalty = abs((total_area - area_required) / max(area_required, 1e-12))
+                velocity_penalty = abs(velocity - target_velocity)
+
+                score = area_penalty * 2 + velocity_penalty
+
+                if score < best_score:
+                    best_score = score
+                    best = {
+                        "tube_od": tube_od,
+                        "tube_id": tube_id,
+                        "tube_length": tube_length,
+                        "tube_count": tube_count,
+                        "passes": passes,
+                        "velocity": velocity,
+                        "area": total_area,
+                        "shell_diameter": shell_dia,
+                        "L/D": L_D_ratio,
+                        "velocity_range": (hot_v_min, hot_v_max),
+                        "score": score,
+                    }
+
+                break  # valid solution found, exit binary search
+
     return best
