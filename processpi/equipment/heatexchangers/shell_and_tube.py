@@ -239,8 +239,11 @@ class ShellAndTubeHX(HeatExchanger):
         q_vol_cold = cold["m_dot"] / max(cold["density"], 1e-12)
 
         area_per_tube_flow = math.pi * geometry["tube_id"] ** 2 / 4.0
+        print("CS Area of Tube:", area_per_tube_flow)
         tube_flow = max(geometry["tube_count"] / max(tube_passes, 1) * area_per_tube_flow, 1e-12)
+        print("Tube Flow:", tube_flow)
         v_tube = q_vol_hot / tube_flow
+        print("Tube Velocity:", v_tube)
 
         v_min, v_max = get_velocity_range(self.hot_in.component)
         if v_tube > v_max:
