@@ -204,10 +204,11 @@ class ShellAndTubeHX(HeatExchanger):
             "area": area,
         }
 
-    def _calculate_bundle_diameter(self, tube_count: int) -> float:
+    def _calculate_bundle_diameter(self, tube_count: int , tube_od: float) -> float:
         k1 = float(self.specs.get("bundle_k1", 0.249))
         n1 = float(self.specs.get("bundle_n1", 2.207))
-        return k1 * (max(tube_count, 1) ** (1.0 / max(n1, 1e-9)))
+        Db = tube_od * math.pow((tube_count/k1),(1/n1))
+        return Db
 
     def _calculate_shell_diameter(self, bundle_diameter: float) -> float:
         clearance = float(self.specs.get("bundle_clearance", max(0.02, 0.05 * bundle_diameter)))
@@ -323,12 +324,12 @@ class ShellAndTubeHX(HeatExchanger):
             area_required = self._calculate_area(q_watts, state["u_assumed"], cltd)
             geometry = self._select_tube_geometry(area_required, hot, cold, tube_passes)
 
-            bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"])
+            bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"],geometry["tube_od"])
             print("Bundle Dia: ",bundle_diameter)
             shell_diameter = self._calculate_shell_diameter(bundle_diameter)
             print("Shell Dia: ",shell_diameter)
             geometry = self._check_L_over_D(geometry, shell_diameter, tube_passes)
-            bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"])
+            bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"],geometry["tube_od"])
             print("Bundle Dia: ",bundle_diameter)
             shell_diameter = self._calculate_shell_diameter(bundle_diameter)
             print("Shell Dia: ",shell_diameter)
