@@ -130,6 +130,7 @@ def select_tube_configuration(area_required, hot, cold):
 
     hot_v_min, hot_v_max = get_velocity_range(hot["component"])
     target_velocity = 0.5 * (hot_v_min + hot_v_max)
+    shell_v_min, shell_v_max = 0.3, 1.0
 
     # ---- FIXED INITIAL SELECTION ----
     preferred_od = 0.019   # 19 mm
@@ -162,9 +163,9 @@ def select_tube_configuration(area_required, hot, cold):
 
                 total_area = tube_count * area_per_tube
 
-                # ---- ESTIMATE SHELL DIAMETER (simplified Kern relation) ----
+                # ---- ESTIMATE SHELL DIAMETER (pitch-based bundle relation) ----
                 pitch = 1.25 * tube_od
-                bundle_dia = tube_od * (tube_count / 0.785) ** 0.5  # rough triangular layout
+                bundle_dia = pitch * math.sqrt(max(tube_count, 1))
                 shell_dia = bundle_dia + 0.05  # clearance ~50 mm
 
                 L_D_ratio = tube_length / max(shell_dia, 1e-6)
@@ -177,21 +178,47 @@ def select_tube_configuration(area_required, hot, cold):
                     Nt_min = tube_count + 1
                     continue
 
-                # ---- VELOCITY CALCULATION ----
-                passes = 2  # initial assumption
+                # ---- SHELL-SIDE VELOCITY CONSTRAINT ----
+                shell_flow_area = (math.pi / 4) * max(shell_dia**2 - bundle_dia**2, 1e-12)
+                shell_velocity = (cold["m_dot"] / max(cold["density"], 1e-12)) / max(shell_flow_area, 1e-12)
 
-                flow_area = (tube_count / passes) * (math.pi * tube_id**2 / 4)
-                velocity = (hot["m_dot"] / hot["density"]) / max(flow_area, 1e-12)
-
-                # ---- VELOCITY CHECK ----
-                if velocity < hot_v_min:
-                    passes = max(1, passes - 1)
+                if shell_velocity < shell_v_min:
                     Nt_max = tube_count - 1
                     continue
-
-                elif velocity > hot_v_max:
-                    passes += 1
+                elif shell_velocity > shell_v_max:
                     Nt_min = tube_count + 1
+                    continue
+
+                # ---- VELOCITY CALCULATION ----
+                flow_per_density = (hot["m_dot"] / max(hot["density"], 1e-12))
+                base_tube_area = math.pi * tube_id**2 / 4
+                min_passes, max_passes = 1, 8
+                passes = 2  # initial assumption
+                velocity = None
+
+                while True:
+                    flow_area = (tube_count / max(passes, 1)) * base_tube_area
+                    trial_velocity = flow_per_density / max(flow_area, 1e-12)
+
+                    if hot_v_min <= trial_velocity <= hot_v_max:
+                        velocity = trial_velocity
+                        break
+
+                    if trial_velocity < hot_v_min:
+                        if passes < max_passes:
+                            passes += 1
+                            continue
+                        Nt_max = tube_count - 1
+                        break
+
+                    if trial_velocity > hot_v_max:
+                        if passes > min_passes:
+                            passes -= 1
+                            continue
+                        Nt_min = tube_count + 1
+                        break
+
+                if velocity is None:
                     continue
 
                 # ---- SCORING ----
@@ -212,10 +239,14 @@ def select_tube_configuration(area_required, hot, cold):
                         "area": total_area,
                         "shell_diameter": shell_dia,
                         "L/D": L_D_ratio,
+                        "shell_velocity": shell_velocity,
                         "velocity_range": (hot_v_min, hot_v_max),
                         "score": score,
                     }
 
-                break  # valid solution found, exit binary search
+                if total_area < area_required:
+                    Nt_min = tube_count + 1
+                else:
+                    Nt_max = tube_count - 1
 
     return best
