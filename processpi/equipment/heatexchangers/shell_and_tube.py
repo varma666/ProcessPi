@@ -159,7 +159,7 @@ class ShellAndTubeHX(HeatExchanger):
         return q_watts / max(u_assumed * cltd, 1e-9)
 
     def _round_tube_count_to_passes(self, tube_count: int, tube_passes: int) -> int:
-        return max(tube_passes, int(math.ceil(tube_count / max(tube_passes, 1)) * max(tube_passes, 1)))
+        return max(tube_passes, int(math.ceil(tube_count / max(tube_passes, 1)) """* max(tube_passes, 1)"""))
 
     def _select_tube_geometry(self, area_required: float, hot: Dict[str, float], cold: Dict[str, float],
                               tube_passes: int) -> Dict[str, float]:
