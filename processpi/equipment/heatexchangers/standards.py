@@ -250,3 +250,16 @@ def select_tube_configuration(area_required, hot, cold):
                     Nt_max = tube_count - 1
 
     return best
+
+def tube_length_select(tube_length,ld):
+    len = tube_length
+    if ld > 10:
+        for i in TUBE_LENGTH_STANDARD:
+            if len < i["length"]:
+                tube_lenght = i["length"]
+                return tube_length
+    if ld < 5:
+        for i in TUBE_LENGTH_STANDARD:
+            if len < i["length"]:
+                tube_lenght = i["length"]
+                return tube_length
