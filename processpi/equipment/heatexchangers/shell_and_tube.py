@@ -12,7 +12,7 @@ from processpi.calculations.heat_transfer.hx_kern import (
 )
 
 from .base import HeatExchanger
-from .standards import get_u_range, get_velocity_range, select_tube_configuration
+from .standards import get_u_range, get_velocity_range, select_tube_configuration, tube_length_select
 
 
 class ShellAndTubeHX(HeatExchanger):
@@ -185,11 +185,16 @@ class ShellAndTubeHX(HeatExchanger):
                 tube_count = 50
         else:
             area_per_tube = math.pi * tube_od * tube_length
+            print("Area Per Tube: ",area_per_tube)
             tube_count = math.ceil(area_required / max(area_per_tube, 1e-12))
+            print("Tube Count: ",tube_count)
 
         tube_count = self._round_tube_count_to_passes(tube_count, tube_passes)
+        print("Tube Count Round: ",tube_count)
         tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
+        print("Tube Pitch: ",tube_pitch)
         area = tube_count * math.pi * tube_od * tube_length
+        print("Tubes Surface Area: ",area)
         return {
             "tube_od": tube_od,
             "tube_id": tube_id,
@@ -210,18 +215,21 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _check_L_over_D(self, geometry: Dict[str, float], shell_diameter: float, tube_passes: int) -> Dict[str, float]:
         ld = geometry["tube_length"] / max(shell_diameter, 1e-9)
+        print("L/D: ",ld)
         if 5.0 <= ld <= 10.0:
             return geometry
-
-        target_l = min(max(7.0 * shell_diameter, 0.5), 6.0)
+        if ld > 10.0 or ld < 5.0:
+            geometry["tube_length"] = tube_length_select(geometry["tube_length"],ld)
+        #target_l = min(max(7.0 * shell_diameter, 0.5), 6.0)
         if self.specs.get("tube_length") is None:
-            geometry["tube_length"] = target_l
+            #geometry["tube_length"] = target_l
             area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
             geometry["tube_count"] = self._round_tube_count_to_passes(
                 math.ceil(geometry["area"] / max(area_per_tube, 1e-12)),
                 tube_passes,
             )
             geometry["area"] = geometry["tube_count"] * area_per_tube
+            print("Geometry :",geometry)
         return geometry
 
     def _check_velocities(self, geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float],
@@ -316,11 +324,14 @@ class ShellAndTubeHX(HeatExchanger):
             geometry = self._select_tube_geometry(area_required, hot, cold, tube_passes)
 
             bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"])
+            print("Bundle Dia: ",bundle_diameter)
             shell_diameter = self._calculate_shell_diameter(bundle_diameter)
-
+            print("Shell Dia: ",shell_diameter)
             geometry = self._check_L_over_D(geometry, shell_diameter, tube_passes)
             bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"])
+            print("Bundle Dia: ",bundle_diameter)
             shell_diameter = self._calculate_shell_diameter(bundle_diameter)
+            print("Shell Dia: ",shell_diameter)
 
             v_tube, v_shell, tube_count, shell_diameter = self._check_velocities(
                 geometry,
