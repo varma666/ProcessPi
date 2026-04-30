@@ -258,6 +258,7 @@ def tube_length_select(tube_length,ld):
         for i in TUBE_LENGTH_STANDARD:
             if len < i["length"]:
                 tube_lenght = i["length"]
+                print(f"Old tube length: {len}")
                 print(f"Update tube length: {tube_length}")
                 return tube_length
     if ld < 5:
@@ -265,5 +266,6 @@ def tube_length_select(tube_length,ld):
             print(f"Length to dia : {ld}")
             if len < i["length"]:
                 tube_lenght = i["length"]
+                print(f"Old tube length: {len}")
                 print(f"Update tube length: {tube_length}")
                 return tube_length
