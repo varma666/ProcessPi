@@ -223,6 +223,7 @@ class ShellAndTubeHX(HeatExchanger):
         if ld > 10.0 or ld < 5.0:
             print("L/D is not between 5 to 10")
             geometry["tube_length"] = tube_length_select(geometry["tube_length"],ld)
+            print(f"geometry:{geometry}")
         #target_l = min(max(7.0 * shell_diameter, 0.5), 6.0)
         if self.specs.get("tube_length") is None:
             #geometry["tube_length"] = target_l
