@@ -251,24 +251,39 @@ def select_tube_configuration(area_required, hot, cold):
 
     return best
 
-def tube_length_select(tube_length,ld):
-    len = tube_length
+def tube_length_select(tube_length, ld):
+    current_length = tube_length
+    
+    # Extract and sort standard lengths
+    std_lengths = sorted([i["length"] for i in TUBE_LENGTH_STANDARD])
+    
+    print(f"Current Length: {current_length}, L/D: {ld}")
+    
+    # Case 1: L/D > 10 → select nearest LOWER standard length
     if ld > 10:
-       
-        for i in TUBE_LENGTH_STANDARD:
-            print(f"Length to dia : {ld}")
-            print(f"i for L/D greater than 10:{i["length"]}")
-            if len > i["length"]:
-                tube_lenght = i["length"]
-                print(f"Old tube length: {len}")
-                print(f"Update tube length: {tube_length}")
-                return tube_length
-    if ld < 5:
-        for i in TUBE_LENGTH_STANDARD:
-            print(f"i for L/D less than 5:{i["length"]}")
-            print(f"Length to dia : {ld}")
-            if len < i["length"]:
-                tube_lenght = i["length"]
-                print(f"Old tube length: {len}")
-                print(f"Update tube length: {tube_length}")
-                return tube_length
+        lower_lengths = [l for l in std_lengths if l <= current_length]
+        
+        if lower_lengths:
+            selected_length = max(lower_lengths)
+        else:
+            selected_length = min(std_lengths)  # fallback
+        
+        print(f"[L/D > 10] Selected lower standard length: {selected_length}")
+        return selected_length
+
+    # Case 2: L/D < 5 → select nearest HIGHER standard length
+    elif ld < 5:
+        higher_lengths = [l for l in std_lengths if l >= current_length]
+        
+        if higher_lengths:
+            selected_length = min(higher_lengths)
+        else:
+            selected_length = max(std_lengths)  # fallback
+        
+        print(f"[L/D < 5] Selected higher standard length: {selected_length}")
+        return selected_length
+
+    # Case 3: Acceptable range → no change
+    else:
+        print("[5 <= L/D <= 10] Length is acceptable. No change.")
+        return current_length
