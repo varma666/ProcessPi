@@ -466,6 +466,7 @@ class ShellAndTubeHX(HeatExchanger):
             "tube_count": payload["geometry"]["tube_count"],
             "tube_od": payload["geometry"]["tube_od"],
             "tube_id": payload["geometry"]["tube_id"],
+            "tube_length": payload["geometry"]["tube_length"],
             "baffle_spacing": max(0.4 * payload["shell_diameter"], 1e-6),
             "shell_diameter": payload["shell_diameter"],
             "tube_velocity": payload["v_tube"],
