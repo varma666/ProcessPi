@@ -254,8 +254,10 @@ def select_tube_configuration(area_required, hot, cold):
 def tube_length_select(tube_length,ld):
     len = tube_length
     if ld > 10:
-        print(f"Length to dia : {ld}")
+       
         for i in TUBE_LENGTH_STANDARD:
+            print(f"Length to dia : {ld}")
+            print(f"i for L/D greater than 10:{i}")
             if len < i["length"]:
                 tube_lenght = i["length"]
                 print(f"Old tube length: {len}")
@@ -263,6 +265,7 @@ def tube_length_select(tube_length,ld):
                 return tube_length
     if ld < 5:
         for i in TUBE_LENGTH_STANDARD:
+            print(f"i for L/D less than 5:{i}")
             print(f"Length to dia : {ld}")
             if len < i["length"]:
                 tube_lenght = i["length"]
