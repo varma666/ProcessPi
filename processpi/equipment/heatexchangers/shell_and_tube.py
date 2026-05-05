@@ -249,27 +249,42 @@ class ShellAndTubeHX(HeatExchanger):
         print("Tube Velocity:", v_tube)
 
         v_min, v_max = get_velocity_range(self.hot_in.component)
-        while v_tube > v_max and v_tube < v_min:
+        max_iter = 20
+        iteration = 0
+        
+        while (v_tube > v_max or v_tube < v_min) and iteration < max_iter:
+            print(f"\nIteration: {iteration}")
+            print(f"Current velocity: {v_tube}")
+        
             if v_tube > v_max:
-                #geometry["tube_count"] = self._round_tube_count_to_passes(int(math.ceil(geometry["tube_count"] * 1.1)), tube_passes)
-                print(f"Tube Passes : {tube_passes}")
-                tube_passes = (0.5 * tube_passes)
-                print(f"Update tube Passes : {tube_passes}")
-                #geometry["tube_count"] = self._round_tube_count_to_passes(reduced_tubes, tube_passes)
-                tube_flow = max(geometry["tube_count"] / max(tube_passes, 1) * area_per_tube_flow, 1e-12)
-                print(f"Update tube flow : {tube_flow}")
-                v_tube = q_vol_hot / tube_flow
-                print(f"Update tube velocity : {v_tube}")
+                print("Velocity too HIGH → increasing passes")
+        
+                tube_passes = min(int(tube_passes * 2), 8)  # cap at 8
+                if tube_passes < 1:
+                    tube_passes = 1
+        
             elif v_tube < v_min:
-                #reduced_tubes = max(tube_passes, int(math.floor(geometry["tube_count"] * 0.85)))
-                print(f"Tube Passes : {tube_passes}")
-                tube_passes = (2 * tube_passes)
-                print(f"Update tube Passes : {tube_passes}")
-                #geometry["tube_count"] = self._round_tube_count_to_passes(reduced_tubes, tube_passes)
-                tube_flow = max(geometry["tube_count"] / max(tube_passes, 1) * area_per_tube_flow, 1e-12)
-                print(f"Update tube flow : {tube_flow}")
-                v_tube = q_vol_hot / tube_flow
-                print(f"Update tube velocity : {v_tube}")
+                print("Velocity too LOW → decreasing passes")
+        
+                tube_passes = max(int(tube_passes / 2), 1)
+        
+            print(f"Updated tube passes: {tube_passes}")
+        
+            tube_flow = max(
+                geometry["tube_count"] / tube_passes * area_per_tube_flow,
+                1e-12
+            )
+        
+            v_tube = q_vol_hot / tube_flow
+        
+            print(f"Updated tube flow: {tube_flow}")
+            print(f"Updated velocity: {v_tube}")
+        
+            iteration += 1
+        
+        # Final safety
+        if iteration == max_iter:
+            print("⚠️ Warning: Velocity did not converge")
 
         pitch = 1.25 * geometry["tube_od"]
         porosity = 0.6
