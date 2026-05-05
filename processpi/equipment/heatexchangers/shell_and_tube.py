@@ -257,16 +257,18 @@ class ShellAndTubeHX(HeatExchanger):
             print(f"Current velocity: {v_tube}")
         
             if v_tube > v_max:
+                print("Velocity too LOW → decreasing passes")
+        
+                tube_passes = max(int(tube_passes / 2), 1)
+                
+        
+            elif v_tube < v_min:
                 print("Velocity too HIGH → increasing passes")
         
                 tube_passes = min(int(tube_passes * 2), 8)  # cap at 8
                 if tube_passes < 1:
                     tube_passes = 1
-        
-            elif v_tube < v_min:
-                print("Velocity too LOW → decreasing passes")
-        
-                tube_passes = max(int(tube_passes / 2), 1)
+                
         
             print(f"Updated tube passes: {tube_passes}")
         
