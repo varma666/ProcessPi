@@ -239,6 +239,28 @@ class ShellAndTubeHX(HeatExchanger):
             return series[idx-1] * 0.0254
         return tube_od_m
 
+    def _get_velocity_limits(self, props: Dict[str, float]) -> Tuple[float, float]:
+        phase = props.get("phase", "liquid")
+        name = str(getattr(getattr(self.hot_in, "component", None), "name", "")).lower()
+        mu = props.get("viscosity", 0.0)
+        if phase == "vapor":
+            return (6.0, 20.0)
+        if "water" in name:
+            return (0.9, 2.5)
+        if mu > 0.003 or "oil" in name:
+            return (0.6, 1.5)
+        if "hydrocarbon" in name or "benzene" in name:
+            return (0.8, 1.8)
+        return (0.9, 2.5)
+
+    def _regenerate_geometry(self, geometry: Dict[str, float], tube_passes: int) -> Dict[str, float]:
+        area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
+        geometry["tube_count"] = self._round_tube_count_to_passes(geometry["tube_count"], tube_passes)
+        geometry["area"] = geometry["tube_count"] * area_per_tube
+        geometry["tube_pitch"] = float(self.specs.get("tube_pitch", 1.25 * geometry["tube_od"]))
+        self._debug("Geometry regenerated after change")
+        return geometry
+
     def _get_fouling_factor(self, fluid_name: str, velocity: float | None = None, temperature_k: float | None = None) -> float:
         key = (fluid_name or "").lower()
         best = None
@@ -393,7 +415,7 @@ class ShellAndTubeHX(HeatExchanger):
         return geometry
 
     def _check_velocities(self, geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float],
-                          tube_passes: int, shell_passes: int, shell_diameter: float) -> Tuple[float, float, int, float]:
+                          tube_passes: int, shell_passes: int, shell_diameter: float) -> Tuple[float, float, int, float, int]:
         q_vol_hot = hot["m_dot"] / max(hot["density"], 1e-12)
         q_vol_cold = cold["m_dot"] / max(cold["density"], 1e-12)
 
@@ -404,7 +426,8 @@ class ShellAndTubeHX(HeatExchanger):
         v_tube = q_vol_hot / tube_flow
         print("Tube Velocity:", v_tube)
 
-        v_min, v_max = get_velocity_range(self.hot_in.component)
+        v_min, v_max = self._get_velocity_limits(hot)
+        self._debug(f"Velocity target range = ({v_min}, {v_max})")
         max_iter = 20
         iteration = 0
         
@@ -415,13 +438,17 @@ class ShellAndTubeHX(HeatExchanger):
             if v_tube > v_max:
                 self._debug("Velocity too HIGH -> decreasing passes")
                 lower = [p for p in valid_passes if p < tube_passes]
-                tube_passes = max(lower) if lower else 1
+                new_passes = max(lower) if lower else 1
                 
         
             elif v_tube < v_min:
                 self._debug("Velocity too LOW -> increasing passes")
                 higher = [p for p in valid_passes if p > tube_passes]
-                tube_passes = min(higher) if higher else 8
+                new_passes = min(higher) if higher else 8
+            if new_passes == tube_passes:
+                self._debug("Pass optimization saturated")
+                break
+            tube_passes = new_passes
                 
         
             self._debug(f"Updated tube passes={tube_passes}")
@@ -438,7 +465,7 @@ class ShellAndTubeHX(HeatExchanger):
         
             iteration += 1
         
-        if iteration == max_iter:
+        if (v_tube > v_max or v_tube < v_min) and iteration == max_iter:
             self._debug("Tube velocity did not converge with pass-only optimization")
             direction = "larger" if v_tube > v_max else "smaller"
             next_od = self._select_next_tube_size(geometry["tube_od"], direction)
@@ -475,7 +502,7 @@ class ShellAndTubeHX(HeatExchanger):
             else:
                 break
 
-        return v_tube, v_shell, geometry["tube_count"], shell_diameter
+        return v_tube, v_shell, geometry["tube_count"], shell_diameter, tube_passes
 
     def _calculate_dimensionless(self, geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float],
                                  v_tube: float, v_shell: float) -> Dict[str, float]:
@@ -538,11 +565,15 @@ class ShellAndTubeHX(HeatExchanger):
                    u_range: Tuple[float, float] | None) -> Dict[str, Any]:
         state: Dict[str, Any] = {"iterations": 0, "u_assumed": u_assumed}
         max_iter = 15
+        max_redesign_iterations = 10
+        base_required_area: float | None = None
 
         for i in range(1, max_iter + 1):
             self._debug(f"Iteration = {i}")
-            area_required = self._calculate_required_area(q_watts, state["u_assumed"], cltd)
-            self._debug(f"Required area = {area_required:.4f} m2")
+            if base_required_area is None:
+                base_required_area = self._calculate_required_area(q_watts, state["u_assumed"], cltd)
+            area_required = base_required_area
+            self._debug(f"Base required area = {area_required:.4f} m2")
             geometry = self._select_tube_geometry(area_required, hot, cold, tube_passes)
 
             bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"],geometry["tube_od"])
@@ -555,7 +586,7 @@ class ShellAndTubeHX(HeatExchanger):
             shell_diameter = self._calculate_shell_diameter(bundle_diameter)
             print("Shell Dia: ",shell_diameter)
 
-            v_tube, v_shell, tube_count, shell_diameter = self._check_velocities(
+            v_tube, v_shell, tube_count, shell_diameter, tube_passes = self._check_velocities(
                 geometry,
                 hot,
                 cold,
@@ -564,7 +595,7 @@ class ShellAndTubeHX(HeatExchanger):
                 shell_diameter,
             )
             geometry["tube_count"] = tube_count
-            geometry["area"] = geometry["tube_count"] * math.pi * geometry["tube_od"] * geometry["tube_length"]
+            geometry = self._regenerate_geometry(geometry, tube_passes)
 
             dimless = self._calculate_dimensionless(geometry, hot, cold, v_tube, v_shell)
             h_t, h_s = self._calculate_htc(dimless, geometry, hot, cold)
@@ -593,13 +624,20 @@ class ShellAndTubeHX(HeatExchanger):
             self._debug(f"Shell velocity = {v_shell:.4f} m/s")
             self._debug(f"Tube dp = {tube_dp_i:.2f} Pa")
             self._debug(f"Shell dp = {shell_dp_i:.2f} Pa")
-            self._debug(f"Area margin = {(geometry['area']-area_required):.4f} m2")
+            self._debug(f"Actual provided area = {geometry['area']:.4f} m2")
+            self._debug(f"Area margin = {(geometry['area'] - area_required):.4f} m2")
             self._debug(f"Constraint violations = {violations}")
 
             if not violations and abs((u_calculated - state["u_assumed"]) / max(state["u_assumed"], 1e-9)) < 0.30:
                 break
+            if i >= max_redesign_iterations:
+                self._debug("Redesign iterations exceeded; returning best feasible geometry")
+                state["status_override"] = "PARTIAL"
+                break
             if "area" in violations:
+                self._debug("Redesign reason = insufficient area; increasing tube count")
                 geometry["tube_count"] = self._round_tube_count_to_passes(int(geometry["tube_count"] * 1.1), tube_passes)
+                geometry = self._regenerate_geometry(geometry, tube_passes)
             state["u_assumed"] = u_calculated
 
         return state
@@ -675,7 +713,9 @@ class ShellAndTubeHX(HeatExchanger):
             else:
                 advisory.append(w)
 
-        if "Area significantly undersized — redesign required" in warnings:
+        if payload.get("status_override") == "PARTIAL":
+            status = "PARTIAL"
+        elif "Area significantly undersized — redesign required" in warnings:
             status = "FAILED"
         elif critical:
             status = "VIOLATION"
