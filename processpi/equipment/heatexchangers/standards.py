@@ -287,3 +287,73 @@ def tube_length_select(tube_length, ld):
     else:
         print("[5 <= L/D <= 10] Length is acceptable. No change.")
         return current_length
+
+
+# -------------------------------
+# Industrial standards databases
+# -------------------------------
+STANDARD_TUBE_COUNT_TABLES = {
+    "triangular": {
+        0.75: {"0.9375_pitch": {8: {1: 37, 2: 30, 4: 24, 6: 20, 8: 18}, 10: {1: 61, 2: 50, 4: 40, 6: 34, 8: 30}, 12: {1: 91, 2: 76, 4: 62, 6: 52, 8: 46}}},
+        1.0: {"1.25_pitch": {10: {1: 37, 2: 30, 4: 24, 6: 20, 8: 18}, 12: {1: 55, 2: 44, 4: 36, 6: 30, 8: 26}, 16: {1: 97, 2: 80, 4: 64, 6: 54, 8: 46}}},
+        1.25: {"1.5625_pitch": {14: {1: 37, 2: 30, 4: 24, 6: 20, 8: 18}, 18: {1: 61, 2: 50, 4: 40, 6: 34, 8: 30}, 24: {1: 127, 2: 104, 4: 84, 6: 70, 8: 60}}},
+        1.5: {"1.875_pitch": {18: {1: 37, 2: 30, 4: 24, 6: 20, 8: 18}, 24: {1: 73, 2: 58, 4: 46, 6: 40, 8: 34}, 30: {1: 127, 2: 102, 4: 82, 6: 70, 8: 60}}},
+    },
+    "square": {
+        0.75: {"1.0_pitch": {8: {1: 31, 2: 24, 4: 20, 6: 18, 8: 16}, 10: {1: 49, 2: 40, 4: 32, 6: 28, 8: 24}, 12: {1: 71, 2: 58, 4: 48, 6: 40, 8: 34}}},
+        1.0: {"1.25_pitch": {10: {1: 31, 2: 24, 4: 20, 6: 18, 8: 16}, 12: {1: 45, 2: 36, 4: 30, 6: 26, 8: 22}, 16: {1: 79, 2: 64, 4: 52, 6: 44, 8: 38}}},
+        1.25: {"1.5625_pitch": {14: {1: 31, 2: 24, 4: 20, 6: 18, 8: 16}, 18: {1: 49, 2: 40, 4: 32, 6: 28, 8: 24}, 24: {1: 105, 2: 84, 4: 68, 6: 58, 8: 50}}},
+        1.5: {"1.875_pitch": {18: {1: 31, 2: 24, 4: 20, 6: 18, 8: 16}, 24: {1: 59, 2: 46, 4: 38, 6: 32, 8: 28}, 30: {1: 105, 2: 84, 4: 68, 6: 58, 8: 50}}},
+    },
+}
+
+STANDARD_EXCHANGER_TUBES = {
+    0.5: {20: {"wall_in": 0.035, "id_in": 0.43}, 18: {"wall_in": 0.049, "id_in": 0.402}, 16: {"wall_in": 0.065, "id_in": 0.37}, 14: {"wall_in": 0.083, "id_in": 0.334}, 12: {"wall_in": 0.109, "id_in": 0.282}},
+    0.75: {20: {"wall_in": 0.035, "id_in": 0.68}, 18: {"wall_in": 0.049, "id_in": 0.652}, 16: {"wall_in": 0.065, "id_in": 0.62}, 14: {"wall_in": 0.083, "id_in": 0.584}, 12: {"wall_in": 0.109, "id_in": 0.532}},
+    1.0: {20: {"wall_in": 0.035, "id_in": 0.93}, 18: {"wall_in": 0.049, "id_in": 0.902}, 16: {"wall_in": 0.065, "id_in": 0.87}, 14: {"wall_in": 0.083, "id_in": 0.834}, 12: {"wall_in": 0.109, "id_in": 0.782}},
+    1.25: {20: {"wall_in": 0.035, "id_in": 1.18}, 18: {"wall_in": 0.049, "id_in": 1.152}, 16: {"wall_in": 0.065, "id_in": 1.12}, 14: {"wall_in": 0.083, "id_in": 1.084}, 12: {"wall_in": 0.109, "id_in": 1.032}},
+    1.5: {20: {"wall_in": 0.035, "id_in": 1.43}, 18: {"wall_in": 0.049, "id_in": 1.402}, 16: {"wall_in": 0.065, "id_in": 1.37}, 14: {"wall_in": 0.083, "id_in": 1.334}, 12: {"wall_in": 0.109, "id_in": 1.282}},
+}
+
+STANDARD_PIPE_TABLES = {
+    0.125: {40: {"od_in": 0.405, "id_in": 0.269}, 80: {"od_in": 0.405, "id_in": 0.215}},
+    0.5: {20: {"od_in": 0.84, "id_in": 0.622}, 40: {"od_in": 0.84, "id_in": 0.622}, 80: {"od_in": 0.84, "id_in": 0.546}},
+    1.0: {20: {"od_in": 1.315, "id_in": 1.049}, 40: {"od_in": 1.315, "id_in": 1.049}, 80: {"od_in": 1.315, "id_in": 0.957}},
+    2.0: {20: {"od_in": 2.375, "id_in": 2.067}, 40: {"od_in": 2.375, "id_in": 2.067}, 80: {"od_in": 2.375, "id_in": 1.939}},
+    4.0: {20: {"od_in": 4.5, "id_in": 4.154}, 40: {"od_in": 4.5, "id_in": 4.026}, 80: {"od_in": 4.5, "id_in": 3.826}},
+    6.0: {20: {"od_in": 6.625, "id_in": 6.357}, 40: {"od_in": 6.625, "id_in": 6.065}, 80: {"od_in": 6.625, "id_in": 5.761}},
+    8.0: {20: {"od_in": 8.625, "id_in": 8.329}, 40: {"od_in": 8.625, "id_in": 7.981}, 80: {"od_in": 8.625, "id_in": 7.625}},
+    10.0: {20: {"od_in": 10.75, "id_in": 10.42}, 40: {"od_in": 10.75, "id_in": 10.02}, 80: {"od_in": 10.75, "id_in": 9.564}},
+    12.0: {20: {"od_in": 12.75, "id_in": 12.39}, 40: {"od_in": 12.75, "id_in": 11.938}, 80: {"od_in": 12.75, "id_in": 11.376}},
+    16.0: {20: {"od_in": 16.0, "id_in": 15.25}, 40: {"od_in": 16.0, "id_in": 15.0}, 80: {"od_in": 16.0, "id_in": 14.5}},
+    24.0: {20: {"od_in": 24.0, "id_in": 23.25}, 40: {"od_in": 24.0, "id_in": 23.0}, 80: {"od_in": 24.0, "id_in": 22.5}},
+}
+
+FOULING_FACTOR_DATABASE = {
+    "seawater": {"base": 0.00035, "velocity_sensitive": True},
+    "brackish water": {"base": 0.00030, "velocity_sensitive": True},
+    "cooling tower water": {"base": 0.00025, "velocity_sensitive": True},
+    "distilled water": {"base": 0.00009, "velocity_sensitive": False},
+    "treated water": {"base": 0.00018, "velocity_sensitive": True},
+    "river water": {"base": 0.00035, "velocity_sensitive": True},
+    "hydrocarbons": {"base": 0.00020, "velocity_sensitive": True},
+    "crude": {"base": 0.00050, "velocity_sensitive": True, "temperature_sensitive": True},
+    "steam": {"base": 0.00009, "velocity_sensitive": False},
+    "vapors": {"base": 0.00012, "velocity_sensitive": False},
+    "reboiler": {"base": 0.00035, "velocity_sensitive": True, "temperature_sensitive": True},
+    "condenser": {"base": 0.00018, "velocity_sensitive": False},
+    "refinery": {"base": 0.00040, "velocity_sensitive": True},
+    "oil": {"base": 0.00030, "velocity_sensitive": True, "temperature_sensitive": True},
+}
+
+CORROSION_SEVERITY_DATABASE = {
+    "seawater": "high",
+    "brackish": "high",
+    "acid": "high",
+    "hydrocarbon": "low-medium",
+    "steam condensate": "low",
+    "refinery": "medium-high",
+    "treated water": "medium",
+    "crude": "medium-high",
+    "amine": "high",
+}

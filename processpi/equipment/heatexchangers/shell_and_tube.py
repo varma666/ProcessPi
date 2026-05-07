@@ -12,7 +12,15 @@ from processpi.calculations.heat_transfer.hx_kern import (
 )
 
 from .base import HeatExchanger
-from .standards import get_u_range, get_velocity_range, select_tube_configuration, tube_length_select
+from .standards import (
+    CORROSION_SEVERITY_DATABASE,
+    FOULING_FACTOR_DATABASE,
+    STANDARD_TUBE_COUNT_TABLES,
+    get_u_range,
+    get_velocity_range,
+    select_tube_configuration,
+    tube_length_select,
+)
 
 
 class ShellAndTubeHX(HeatExchanger):
@@ -21,6 +29,7 @@ class ShellAndTubeHX(HeatExchanger):
         if self.method not in {"kern", "bell_delaware"}:
             raise ValueError("method must be 'kern' or 'bell_delaware'")
         super().__init__(*args, **kwargs)
+        self._load_standard_tables()
 
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("U") is not None:
@@ -161,6 +170,118 @@ class ShellAndTubeHX(HeatExchanger):
     def _round_tube_count_to_passes(self, tube_count: int, tube_passes: int) -> int:
         return max(tube_passes, int(math.ceil(tube_count / max(tube_passes, 1)) * max(tube_passes, 1)))
 
+    def _debug(self, message: str) -> None:
+        print(f"[DEBUG] {message}")
+
+    def _load_standard_tables(self) -> None:
+        self._tube_count_tables = STANDARD_TUBE_COUNT_TABLES
+        self._fouling_db = FOULING_FACTOR_DATABASE
+        self._corrosion_db = CORROSION_SEVERITY_DATABASE
+
+    def _get_standard_layout(self) -> str:
+        return str(self.specs.get("tube_layout", "triangular")).lower()
+
+    def _get_nearest_shell_id(self, shell_id_in: float, shell_ids: List[float]) -> float:
+        nearest = min(shell_ids, key=lambda x: abs(x - shell_id_in))
+        if abs(nearest - shell_id_in) > 1e-9:
+            self._debug(f"Exact shell ID unavailable. Using nearest standard shell ID = {nearest} in")
+        return nearest
+
+    def _select_standard_tube_count(self, shell_id_m: float, tube_od_m: float, tube_passes: int) -> int | None:
+        layout = self._get_standard_layout()
+        od_in = round(tube_od_m / 0.0254, 2)
+        shell_in = shell_id_m / 0.0254
+        table = self._tube_count_tables.get(layout, {}).get(od_in)
+        if not table:
+            return None
+        pitch_key = next(iter(table.keys()))
+        shell_ids = list(table[pitch_key].keys())
+        nearest_shell = self._get_nearest_shell_id(shell_in, shell_ids)
+        return table[pitch_key][nearest_shell].get(tube_passes)
+
+    def _select_next_tube_size(self, tube_od_m: float, direction: str) -> float:
+        series = [0.5, 0.75, 1.0, 1.25, 1.5]
+        cur = round(tube_od_m / 0.0254, 2)
+        if cur not in series:
+            cur = min(series, key=lambda x: abs(x-cur))
+        idx = series.index(cur)
+        if direction == "larger" and idx < len(series)-1:
+            return series[idx+1] * 0.0254
+        if direction == "smaller" and idx > 0:
+            return series[idx-1] * 0.0254
+        return tube_od_m
+
+    def _get_fouling_factor(self, fluid_name: str, velocity: float | None = None, temperature_k: float | None = None) -> float:
+        key = (fluid_name or "").lower()
+        best = None
+        for k,v in self._fouling_db.items():
+            if k in key or key in k:
+                best = v
+                break
+        if best is None:
+            best = {"base": float(self.specs.get("fouling_factor", 0.0002))}
+        ff = best["base"]
+        if best.get("velocity_sensitive") and velocity:
+            ff *= 1.15 if velocity < 1.0 else 0.9
+        if best.get("temperature_sensitive") and temperature_k:
+            ff *= 1.1 if temperature_k > 370 else 1.0
+        return ff
+
+    def _get_corrosion_severity(self, fluid_name: str) -> str:
+        key = (fluid_name or "").lower()
+        for k,v in self._corrosion_db.items():
+            if k in key or key in k:
+                return v
+        return "medium"
+
+    def _calculate_tube_side_score(self, props: Dict[str, float], meta: Dict[str, Any]) -> float:
+        score = 0.0
+        score += 4.0 if props.get("p_bar", 0) > 10 else 0.0
+        score += 3.0 if meta.get("hazardous") else 0.0
+        score += 2.0 if meta.get("fouling", 0.0) >= 0.0003 else 0.0
+        score += 2.0 if meta.get("corrosion") in {"high", "medium-high"} else 0.0
+        return score
+
+    def _calculate_shell_side_score(self, props: Dict[str, float], meta: Dict[str, Any]) -> float:
+        score = 0.0
+        score += 3.0 if props.get("viscosity", 0) > 0.003 else 0.0
+        score += 4.0 if meta.get("phase") in {"condensing", "boiling", "two_phase"} else 0.0
+        score += 2.0 if props.get("density", 2000) < 15 else 0.0
+        score += 1.0 if props.get("t_k", 0) > 500 else 0.0
+        return score
+
+    def _assign_fluids_to_sides(self, hot: Dict[str, float], cold: Dict[str, float]) -> Dict[str, Any]:
+        hot_name = getattr(self.hot_in.component, "name", "hot")
+        cold_name = getattr(self.cold_in.component, "name", "cold")
+        hot_meta = {
+            "hazardous": bool(self.specs.get("hot_hazardous", False)),
+            "fouling": float(self.specs.get("hot_fouling_factor", self._get_fouling_factor(hot_name, temperature_k=hot["t_k"]))),
+            "corrosion": str(self.specs.get("hot_corrosion_level", self._get_corrosion_severity(hot_name))),
+            "phase": str(self.specs.get("hot_phase", hot.get("phase", "liquid"))),
+        }
+        cold_meta = {
+            "hazardous": bool(self.specs.get("cold_hazardous", False)),
+            "fouling": float(self.specs.get("cold_fouling_factor", self._get_fouling_factor(cold_name, temperature_k=cold["t_k"]))),
+            "corrosion": str(self.specs.get("cold_corrosion_level", self._get_corrosion_severity(cold_name))),
+            "phase": str(self.specs.get("cold_phase", cold.get("phase", "liquid"))),
+        }
+        hot_tube = self._calculate_tube_side_score(hot, hot_meta) - self._calculate_shell_side_score(hot, hot_meta)
+        cold_tube = self._calculate_tube_side_score(cold, cold_meta) - self._calculate_shell_side_score(cold, cold_meta)
+        if self.specs.get("force_hot_in_tubes"):
+            tube, shell = hot_name, cold_name
+            reason=["Forced by user: hot in tubes"]
+        elif self.specs.get("force_cold_in_tubes"):
+            tube, shell = cold_name, hot_name
+            reason=["Forced by user: cold in tubes"]
+        elif hot_tube >= cold_tube:
+            tube, shell = hot_name, cold_name
+            reason=[f"Hot fluid tube-side score {hot_tube:.2f} >= cold score {cold_tube:.2f}"]
+        else:
+            tube, shell = cold_name, hot_name
+            reason=[f"Cold fluid tube-side score {cold_tube:.2f} > hot score {hot_tube:.2f}"]
+        self._debug(f"Fluid assignment: tube={tube}, shell={shell}, reason={reason}")
+        return {"tube_side_fluid": tube, "shell_side_fluid": shell, "assignment_reason": reason}
+
     def _select_tube_geometry(self, area_required: float, hot: Dict[str, float], cold: Dict[str, float],
                               tube_passes: int) -> Dict[str, float]:
         tube_od = float(self.specs.get("tube_od")) if self.specs.get("tube_od") is not None else None
@@ -189,6 +310,10 @@ class ShellAndTubeHX(HeatExchanger):
             tube_count = math.ceil(area_required / max(area_per_tube, 1e-12))
             print("Tube Count: ",tube_count)
 
+        std_tube_count = self._select_standard_tube_count(self.specs.get("shell_diameter", 0.5), tube_od, tube_passes)
+        if std_tube_count:
+            self._debug(f"Using standard tube count lookup = {std_tube_count}")
+            tube_count = std_tube_count
         tube_count = self._round_tube_count_to_passes(tube_count, tube_passes)
         print("Tube Count Round: ",tube_count)
         tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
@@ -284,9 +409,20 @@ class ShellAndTubeHX(HeatExchanger):
         
             iteration += 1
         
-        # Final safety
         if iteration == max_iter:
-            print("⚠️ Warning: Velocity did not converge")
+            self._debug("Tube velocity did not converge with pass-only optimization")
+            direction = "larger" if v_tube > v_max else "smaller"
+            next_od = self._select_next_tube_size(geometry["tube_od"], direction)
+            if abs(next_od - geometry["tube_od"]) > 1e-12:
+                self._debug(f"Tube velocity out of range. Current tube OD = {geometry['tube_od']/0.0254:.2f} in")
+                self._debug(f"Selecting {direction} tube OD = {next_od/0.0254:.2f} in and restarting sizing")
+                geometry["tube_od"] = next_od
+                geometry["tube_id"] = max(0.8 * next_od, 1e-6)
+                area_per_tube_flow = math.pi * geometry["tube_id"] ** 2 / 4.0
+                tube_flow = max(geometry["tube_count"] / max(tube_passes, 1) * area_per_tube_flow, 1e-12)
+                v_tube = q_vol_hot / tube_flow
+            else:
+                self._debug("No further tube OD resizing possible; retaining current geometry")
 
         pitch = 1.25 * geometry["tube_od"]
         porosity = 0.6
@@ -507,6 +643,10 @@ class ShellAndTubeHX(HeatExchanger):
             "h_shell": payload.get("h_s"),
             "status": status,
             "warnings": warnings,
+            "tube_side_fluid": payload.get("assignment", {}).get("tube_side_fluid"),
+            "shell_side_fluid": payload.get("assignment", {}).get("shell_side_fluid"),
+            "assignment_reason": payload.get("assignment", {}).get("assignment_reason", []),
+            "assignment": payload.get("assignment", {}),
         }
 
     def _design_kern(self) -> Dict[str, Any]:
@@ -514,6 +654,7 @@ class ShellAndTubeHX(HeatExchanger):
         cold = self._stream_props(self.cold_in)
         self._warnings = []
         self._validate_inputs(hot, cold)
+        assignment = self._assign_fluids_to_sides(hot, cold)
 
         if hot["phase"] == "vapor":
             self.service_type = "condenser"
@@ -586,6 +727,10 @@ class ShellAndTubeHX(HeatExchanger):
         payload = {
             **state,
             "warnings": warnings,
+            "tube_side_fluid": assignment.get("tube_side_fluid"),
+            "shell_side_fluid": assignment.get("shell_side_fluid"),
+            "assignment_reason": assignment.get("assignment_reason", []),
+            "assignment": assignment,
             "q_watts_original": q_watts,
             "q_watts_effective": effective_q_watts,
             "lmtd": lmtd,
