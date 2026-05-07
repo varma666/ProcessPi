@@ -12,7 +12,15 @@ from processpi.calculations.heat_transfer.hx_kern import (
 )
 
 from .base import HeatExchanger
-from .standards import get_u_range, get_velocity_range, select_tube_configuration, tube_length_select
+from .standards import (
+    CORROSION_SEVERITY_DATABASE,
+    FOULING_FACTOR_DATABASE,
+    STANDARD_TUBE_COUNT_TABLES,
+    get_u_range,
+    get_velocity_range,
+    select_tube_configuration,
+    tube_length_select,
+)
 
 
 class ShellAndTubeHX(HeatExchanger):
@@ -21,6 +29,7 @@ class ShellAndTubeHX(HeatExchanger):
         if self.method not in {"kern", "bell_delaware"}:
             raise ValueError("method must be 'kern' or 'bell_delaware'")
         super().__init__(*args, **kwargs)
+        self._load_standard_tables()
 
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("U") is not None:
@@ -161,6 +170,170 @@ class ShellAndTubeHX(HeatExchanger):
     def _round_tube_count_to_passes(self, tube_count: int, tube_passes: int) -> int:
         return max(tube_passes, int(math.ceil(tube_count / max(tube_passes, 1)) * max(tube_passes, 1)))
 
+    def _debug(self, message: str) -> None:
+        print(f"[DEBUG] {message}")
+
+    def _load_standard_tables(self) -> None:
+        self._tube_count_tables = STANDARD_TUBE_COUNT_TABLES
+        self._fouling_db = FOULING_FACTOR_DATABASE
+        self._corrosion_db = CORROSION_SEVERITY_DATABASE
+
+    def _get_standard_layout(self) -> str:
+        return str(self.specs.get("tube_layout", "triangular")).lower()
+
+    def _get_nearest_shell_id(self, shell_id_in: float, shell_ids: List[float]) -> float:
+        nearest = min(shell_ids, key=lambda x: abs(x - shell_id_in))
+        if abs(nearest - shell_id_in) > 1e-9:
+            self._debug(f"Exact shell ID unavailable. Using nearest standard shell ID = {nearest} in")
+        return nearest
+
+    def _select_standard_tube_count(self, shell_id_m: float, tube_od_m: float, tube_passes: int) -> int | None:
+        layout = self._get_standard_layout()
+        od_in = round(tube_od_m / 0.0254, 2)
+        shell_in = shell_id_m / 0.0254
+        table = self._tube_count_tables.get(layout, {}).get(od_in)
+        if not table:
+            return None
+        pitch_key = next(iter(table.keys()))
+        shell_ids = list(table[pitch_key].keys())
+        nearest_shell = self._get_nearest_shell_id(shell_in, shell_ids)
+        return table[pitch_key][nearest_shell].get(tube_passes)
+
+    def _calculate_required_area(self, q_watts: float, u_assumed: float, cltd: float) -> float:
+        return self._calculate_area(q_watts, u_assumed, cltd)
+
+    def _estimate_required_tube_count(self, area_required: float, tube_od: float, tube_length: float, tube_passes: int) -> int:
+        area_per_tube = math.pi * tube_od * tube_length
+        min_count = math.ceil(area_required / max(area_per_tube, 1e-12))
+        return self._round_tube_count_to_passes(min_count, tube_passes)
+
+    def _select_best_standard_geometry(self, area_required: float, tube_od: float, tube_length: float, tube_passes: int) -> Dict[str, float]:
+        required_count = self._estimate_required_tube_count(area_required, tube_od, tube_length, tube_passes)
+        layout = self._get_standard_layout()
+        od_in = round(tube_od / 0.0254, 2)
+        table = self._tube_count_tables.get(layout, {}).get(od_in, {})
+        if not table:
+            return {"tube_count": required_count}
+        pitch_key = next(iter(table.keys()))
+        candidates: List[Tuple[int, int]] = []
+        for shell_id, pass_map in table[pitch_key].items():
+            count = pass_map.get(tube_passes)
+            if count is not None and count >= required_count:
+                candidates.append((shell_id, count))
+        if not candidates:
+            return {"tube_count": required_count}
+        candidates.sort(key=lambda x: (x[1] - required_count, x[0]))
+        shell_id, count = candidates[0]
+        self._debug(f"Standard geometry selected: shell ID={shell_id} in, tube_count={count}, required={required_count}")
+        return {"tube_count": count, "shell_id_in": shell_id}
+
+    def _select_next_tube_size(self, tube_od_m: float, direction: str) -> float:
+        series = [0.5, 0.75, 1.0, 1.25, 1.5]
+        cur = round(tube_od_m / 0.0254, 2)
+        if cur not in series:
+            cur = min(series, key=lambda x: abs(x-cur))
+        idx = series.index(cur)
+        if direction == "larger" and idx < len(series)-1:
+            return series[idx+1] * 0.0254
+        if direction == "smaller" and idx > 0:
+            return series[idx-1] * 0.0254
+        return tube_od_m
+
+    def _get_velocity_limits(self, props: Dict[str, float]) -> Tuple[float, float]:
+        phase = props.get("phase", "liquid")
+        name = str(getattr(getattr(self.hot_in, "component", None), "name", "")).lower()
+        mu = props.get("viscosity", 0.0)
+        if phase == "vapor":
+            return (6.0, 20.0)
+        if "water" in name:
+            return (0.9, 2.5)
+        if mu > 0.003 or "oil" in name:
+            return (0.6, 1.5)
+        if "hydrocarbon" in name or "benzene" in name:
+            return (0.8, 1.8)
+        return (0.9, 2.5)
+
+    def _regenerate_geometry(self, geometry: Dict[str, float], tube_passes: int) -> Dict[str, float]:
+        area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
+        geometry["tube_count"] = self._round_tube_count_to_passes(geometry["tube_count"], tube_passes)
+        geometry["area"] = geometry["tube_count"] * area_per_tube
+        geometry["tube_pitch"] = float(self.specs.get("tube_pitch", 1.25 * geometry["tube_od"]))
+        self._debug("Geometry regenerated after change")
+        return geometry
+
+    def _get_fouling_factor(self, fluid_name: str, velocity: float | None = None, temperature_k: float | None = None) -> float:
+        key = (fluid_name or "").lower()
+        best = None
+        for k,v in self._fouling_db.items():
+            if k in key or key in k:
+                best = v
+                break
+        if best is None:
+            best = {"base": float(self.specs.get("fouling_factor", 0.0002))}
+        ff = best["base"]
+        if best.get("velocity_sensitive") and velocity:
+            ff *= 1.15 if velocity < 1.0 else 0.9
+        if best.get("temperature_sensitive") and temperature_k:
+            ff *= 1.1 if temperature_k > 370 else 1.0
+        return ff
+
+    def _get_corrosion_severity(self, fluid_name: str) -> str:
+        key = (fluid_name or "").lower()
+        for k,v in self._corrosion_db.items():
+            if k in key or key in k:
+                return v
+        return "medium"
+
+    def _calculate_tube_side_score(self, props: Dict[str, float], meta: Dict[str, Any]) -> float:
+        score = 0.0
+        score += 5.0 if props.get("p_bar", 0) > 10 else 0.0
+        score += 5.0 if meta.get("hazardous") else 0.0
+        score += 4.0 if meta.get("fouling", 0.0) >= 0.0003 else 0.0
+        score += 4.0 if meta.get("corrosion") in {"high", "medium-high"} else 0.0
+        return score
+
+    def _calculate_shell_side_score(self, props: Dict[str, float], meta: Dict[str, Any]) -> float:
+        score = 0.0
+        score += 4.0 if props.get("viscosity", 0) > 0.003 else 0.0
+        score += 5.0 if meta.get("phase") in {"condensing", "boiling", "two_phase"} else 0.0
+        score += 3.0 if props.get("density", 2000) < 15 else 0.0
+        score += 2.0 if props.get("t_k", 0) > 500 else 0.0
+        return score
+
+    def _assign_fluids_to_sides(self, hot: Dict[str, float], cold: Dict[str, float]) -> Dict[str, Any]:
+        hot_name = getattr(self.hot_in.component, "name", "hot")
+        cold_name = getattr(self.cold_in.component, "name", "cold")
+        hot_meta = {
+            "hazardous": bool(self.specs.get("hot_hazardous", False)),
+            "fouling": float(self.specs.get("hot_fouling_factor", self._get_fouling_factor(hot_name, temperature_k=hot["t_k"]))),
+            "corrosion": str(self.specs.get("hot_corrosion_level", self._get_corrosion_severity(hot_name))),
+            "phase": str(self.specs.get("hot_phase", hot.get("phase", "liquid"))),
+        }
+        cold_meta = {
+            "hazardous": bool(self.specs.get("cold_hazardous", False)),
+            "fouling": float(self.specs.get("cold_fouling_factor", self._get_fouling_factor(cold_name, temperature_k=cold["t_k"]))),
+            "corrosion": str(self.specs.get("cold_corrosion_level", self._get_corrosion_severity(cold_name))),
+            "phase": str(self.specs.get("cold_phase", cold.get("phase", "liquid"))),
+        }
+        hot_tube = self._calculate_tube_side_score(hot, hot_meta) - self._calculate_shell_side_score(hot, hot_meta)
+        cold_tube = self._calculate_tube_side_score(cold, cold_meta) - self._calculate_shell_side_score(cold, cold_meta)
+        self._debug(f"Hot fluid scoring: tube={self._calculate_tube_side_score(hot, hot_meta):.2f}, shell={self._calculate_shell_side_score(hot, hot_meta):.2f}")
+        self._debug(f"Cold fluid scoring: tube={self._calculate_tube_side_score(cold, cold_meta):.2f}, shell={self._calculate_shell_side_score(cold, cold_meta):.2f}")
+        if self.specs.get("force_hot_in_tubes"):
+            tube, shell = hot_name, cold_name
+            reason=["Forced by user: hot in tubes"]
+        elif self.specs.get("force_cold_in_tubes"):
+            tube, shell = cold_name, hot_name
+            reason=["Forced by user: cold in tubes"]
+        elif hot_tube >= cold_tube:
+            tube, shell = hot_name, cold_name
+            reason=[f"Hot fluid tube-side score {hot_tube:.2f} >= cold score {cold_tube:.2f}"]
+        else:
+            tube, shell = cold_name, hot_name
+            reason=[f"Cold fluid tube-side score {cold_tube:.2f} > hot score {hot_tube:.2f}"]
+        self._debug(f"Fluid assignment: tube={tube}, shell={shell}, reason={reason}")
+        return {"tube_side_fluid": tube, "shell_side_fluid": shell, "assignment_reason": reason}
+
     def _select_tube_geometry(self, area_required: float, hot: Dict[str, float], cold: Dict[str, float],
                               tube_passes: int) -> Dict[str, float]:
         tube_od = float(self.specs.get("tube_od")) if self.specs.get("tube_od") is not None else None
@@ -189,6 +362,11 @@ class ShellAndTubeHX(HeatExchanger):
             tube_count = math.ceil(area_required / max(area_per_tube, 1e-12))
             print("Tube Count: ",tube_count)
 
+        standard_geom = self._select_best_standard_geometry(area_required, tube_od, tube_length, tube_passes)
+        std_tube_count = standard_geom.get("tube_count")
+        if std_tube_count and std_tube_count >= tube_count:
+            self._debug(f"Using standard tube count lookup >= required: {std_tube_count}")
+            tube_count = std_tube_count
         tube_count = self._round_tube_count_to_passes(tube_count, tube_passes)
         print("Tube Count Round: ",tube_count)
         tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
@@ -237,7 +415,7 @@ class ShellAndTubeHX(HeatExchanger):
         return geometry
 
     def _check_velocities(self, geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float],
-                          tube_passes: int, shell_passes: int, shell_diameter: float) -> Tuple[float, float, int, float]:
+                          tube_passes: int, shell_passes: int, shell_diameter: float) -> Tuple[float, float, int, float, int]:
         q_vol_hot = hot["m_dot"] / max(hot["density"], 1e-12)
         q_vol_cold = cold["m_dot"] / max(cold["density"], 1e-12)
 
@@ -248,29 +426,32 @@ class ShellAndTubeHX(HeatExchanger):
         v_tube = q_vol_hot / tube_flow
         print("Tube Velocity:", v_tube)
 
-        v_min, v_max = get_velocity_range(self.hot_in.component)
+        v_min, v_max = self._get_velocity_limits(hot)
+        self._debug(f"Velocity target range = ({v_min}, {v_max})")
         max_iter = 20
         iteration = 0
         
+        valid_passes = [1, 2, 4, 6, 8]
         while (v_tube > v_max or v_tube < v_min) and iteration < max_iter:
-            print(f"\nIteration: {iteration}")
-            print(f"Current velocity: {v_tube}")
+            self._debug(f"Velocity correction iteration={iteration}, current tube velocity={v_tube:.4f} m/s")
         
             if v_tube > v_max:
-                print("Velocity too LOW → decreasing passes")
-        
-                tube_passes = max(int(tube_passes / 2), 1)
+                self._debug("Velocity too HIGH -> decreasing passes")
+                lower = [p for p in valid_passes if p < tube_passes]
+                new_passes = max(lower) if lower else 1
                 
         
             elif v_tube < v_min:
-                print("Velocity too HIGH → increasing passes")
-        
-                tube_passes = min(int(tube_passes * 2), 8)  # cap at 8
-                if tube_passes < 1:
-                    tube_passes = 1
+                self._debug("Velocity too LOW -> increasing passes")
+                higher = [p for p in valid_passes if p > tube_passes]
+                new_passes = min(higher) if higher else 8
+            if new_passes == tube_passes:
+                self._debug("Pass optimization saturated")
+                break
+            tube_passes = new_passes
                 
         
-            print(f"Updated tube passes: {tube_passes}")
+            self._debug(f"Updated tube passes={tube_passes}")
         
             tube_flow = max(
                 geometry["tube_count"] / tube_passes * area_per_tube_flow,
@@ -279,14 +460,25 @@ class ShellAndTubeHX(HeatExchanger):
         
             v_tube = q_vol_hot / tube_flow
         
-            print(f"Updated tube flow: {tube_flow}")
-            print(f"Updated velocity: {v_tube}")
+            self._debug(f"Updated tube flow={tube_flow:.6f} m2")
+            self._debug(f"Updated velocity={v_tube:.6f} m/s")
         
             iteration += 1
         
-        # Final safety
-        if iteration == max_iter:
-            print("⚠️ Warning: Velocity did not converge")
+        if (v_tube > v_max or v_tube < v_min) and iteration == max_iter:
+            self._debug("Tube velocity did not converge with pass-only optimization")
+            direction = "larger" if v_tube > v_max else "smaller"
+            next_od = self._select_next_tube_size(geometry["tube_od"], direction)
+            if abs(next_od - geometry["tube_od"]) > 1e-12:
+                self._debug(f"Tube velocity out of range. Current tube OD = {geometry['tube_od']/0.0254:.2f} in")
+                self._debug(f"Selecting {direction} tube OD = {next_od/0.0254:.2f} in and restarting sizing")
+                geometry["tube_od"] = next_od
+                geometry["tube_id"] = max(0.8 * next_od, 1e-6)
+                area_per_tube_flow = math.pi * geometry["tube_id"] ** 2 / 4.0
+                tube_flow = max(geometry["tube_count"] / max(tube_passes, 1) * area_per_tube_flow, 1e-12)
+                v_tube = q_vol_hot / tube_flow
+            else:
+                self._debug("No further tube OD resizing possible; retaining current geometry")
 
         pitch = 1.25 * geometry["tube_od"]
         porosity = 0.6
@@ -310,7 +502,7 @@ class ShellAndTubeHX(HeatExchanger):
             else:
                 break
 
-        return v_tube, v_shell, geometry["tube_count"], shell_diameter
+        return v_tube, v_shell, geometry["tube_count"], shell_diameter, tube_passes
 
     def _calculate_dimensionless(self, geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float],
                                  v_tube: float, v_shell: float) -> Dict[str, float]:
@@ -349,14 +541,39 @@ class ShellAndTubeHX(HeatExchanger):
         u_min, u_max = u_range if u_range else (100.0, 1000.0)
         return max(min(u_calculated, u_max), u_min)
 
+    def _validate_geometry(self, state: Dict[str, Any], tube_dp: float, shell_dp: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
+        violations: List[str] = []
+        if state["geometry"]["area"] < state["area_required"]:
+            violations.append("area")
+        vmin, vmax = get_velocity_range(self.hot_in.component)
+        if not (vmin <= state["v_tube"] <= vmax):
+            violations.append("tube_velocity")
+        shell_v_target = (0.3, 1.0) if cold["phase"] != "vapor" else (5.0, 30.0)
+        if not (shell_v_target[0] <= state["v_shell"] <= shell_v_target[1]):
+            violations.append("shell_velocity")
+        if tube_dp > self._dp_limit(hot):
+            violations.append("tube_dp")
+        if shell_dp > self._dp_limit(cold):
+            violations.append("shell_dp")
+        ld = state["geometry"]["tube_length"] / max(state["shell_diameter"], 1e-9)
+        if not (5.0 <= ld <= 10.0):
+            violations.append("ld_ratio")
+        return violations
+
     def _iterate_U(self, q_watts: float, cltd: float, hot: Dict[str, float], cold: Dict[str, float],
                    shell_passes: int, tube_passes: int, u_assumed: float,
                    u_range: Tuple[float, float] | None) -> Dict[str, Any]:
         state: Dict[str, Any] = {"iterations": 0, "u_assumed": u_assumed}
         max_iter = 15
+        max_redesign_iterations = 10
+        base_required_area: float | None = None
 
         for i in range(1, max_iter + 1):
-            area_required = self._calculate_area(q_watts, state["u_assumed"], cltd)
+            self._debug(f"Iteration = {i}")
+            if base_required_area is None:
+                base_required_area = self._calculate_required_area(q_watts, state["u_assumed"], cltd)
+            area_required = base_required_area
+            self._debug(f"Base required area = {area_required:.4f} m2")
             geometry = self._select_tube_geometry(area_required, hot, cold, tube_passes)
 
             bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"],geometry["tube_od"])
@@ -369,7 +586,7 @@ class ShellAndTubeHX(HeatExchanger):
             shell_diameter = self._calculate_shell_diameter(bundle_diameter)
             print("Shell Dia: ",shell_diameter)
 
-            v_tube, v_shell, tube_count, shell_diameter = self._check_velocities(
+            v_tube, v_shell, tube_count, shell_diameter, tube_passes = self._check_velocities(
                 geometry,
                 hot,
                 cold,
@@ -378,7 +595,7 @@ class ShellAndTubeHX(HeatExchanger):
                 shell_diameter,
             )
             geometry["tube_count"] = tube_count
-            geometry["area"] = geometry["tube_count"] * math.pi * geometry["tube_od"] * geometry["tube_length"]
+            geometry = self._regenerate_geometry(geometry, tube_passes)
 
             dimless = self._calculate_dimensionless(geometry, hot, cold, v_tube, v_shell)
             h_t, h_s = self._calculate_htc(dimless, geometry, hot, cold)
@@ -399,9 +616,28 @@ class ShellAndTubeHX(HeatExchanger):
                     "u_calculated": u_calculated,
                 }
             )
+            tube_dp_i, shell_dp_i = self._calculate_pressure_drop(hot, cold, shell_passes, tube_passes, shell_diameter, geometry["tube_length"], geometry["tube_id"], v_tube, v_shell)
+            violations = self._validate_geometry(state, tube_dp_i, shell_dp_i, hot, cold)
+            self._debug(f"Selected tube count = {geometry['tube_count']}")
+            self._debug(f"Selected shell ID ~= {shell_diameter/0.0254:.2f} in")
+            self._debug(f"Tube velocity = {v_tube:.4f} m/s")
+            self._debug(f"Shell velocity = {v_shell:.4f} m/s")
+            self._debug(f"Tube dp = {tube_dp_i:.2f} Pa")
+            self._debug(f"Shell dp = {shell_dp_i:.2f} Pa")
+            self._debug(f"Actual provided area = {geometry['area']:.4f} m2")
+            self._debug(f"Area margin = {(geometry['area'] - area_required):.4f} m2")
+            self._debug(f"Constraint violations = {violations}")
 
-            if abs((u_calculated - state["u_assumed"]) / max(state["u_assumed"], 1e-9)) < 0.30:
+            if not violations and abs((u_calculated - state["u_assumed"]) / max(state["u_assumed"], 1e-9)) < 0.30:
                 break
+            if i >= max_redesign_iterations:
+                self._debug("Redesign iterations exceeded; returning best feasible geometry")
+                state["status_override"] = "PARTIAL"
+                break
+            if "area" in violations:
+                self._debug("Redesign reason = insufficient area; increasing tube count")
+                geometry["tube_count"] = self._round_tube_count_to_passes(int(geometry["tube_count"] * 1.1), tube_passes)
+                geometry = self._regenerate_geometry(geometry, tube_passes)
             state["u_assumed"] = u_calculated
 
         return state
@@ -477,7 +713,11 @@ class ShellAndTubeHX(HeatExchanger):
             else:
                 advisory.append(w)
 
-        if critical:
+        if payload.get("status_override") == "PARTIAL":
+            status = "PARTIAL"
+        elif "Area significantly undersized — redesign required" in warnings:
+            status = "FAILED"
+        elif critical:
             status = "VIOLATION"
         elif advisory:
             status = "WARNING"
@@ -507,6 +747,10 @@ class ShellAndTubeHX(HeatExchanger):
             "h_shell": payload.get("h_s"),
             "status": status,
             "warnings": warnings,
+            "tube_side_fluid": payload.get("assignment", {}).get("tube_side_fluid"),
+            "shell_side_fluid": payload.get("assignment", {}).get("shell_side_fluid"),
+            "assignment_reason": payload.get("assignment", {}).get("assignment_reason", []),
+            "assignment": payload.get("assignment", {}),
         }
 
     def _design_kern(self) -> Dict[str, Any]:
@@ -514,6 +758,7 @@ class ShellAndTubeHX(HeatExchanger):
         cold = self._stream_props(self.cold_in)
         self._warnings = []
         self._validate_inputs(hot, cold)
+        assignment = self._assign_fluids_to_sides(hot, cold)
 
         if hot["phase"] == "vapor":
             self.service_type = "condenser"
@@ -586,6 +831,10 @@ class ShellAndTubeHX(HeatExchanger):
         payload = {
             **state,
             "warnings": warnings,
+            "tube_side_fluid": assignment.get("tube_side_fluid"),
+            "shell_side_fluid": assignment.get("shell_side_fluid"),
+            "assignment_reason": assignment.get("assignment_reason", []),
+            "assignment": assignment,
             "q_watts_original": q_watts,
             "q_watts_effective": effective_q_watts,
             "lmtd": lmtd,
