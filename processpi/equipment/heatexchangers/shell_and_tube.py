@@ -261,6 +261,13 @@ class ShellAndTubeHX(HeatExchanger):
         self._debug("Geometry regenerated after change")
         return geometry
 
+    def _recalculate_required_tubes(self, base_required_area: float, geometry: Dict[str, float], tube_passes: int) -> int:
+        area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
+        required_tubes = math.ceil(base_required_area / max(area_per_tube, 1e-12))
+        required_tubes = self._round_tube_count_to_passes(required_tubes, tube_passes)
+        self._debug(f"Recalculated required tubes={required_tubes} for base area={base_required_area:.4f}")
+        return required_tubes
+
     def _get_fouling_factor(self, fluid_name: str, velocity: float | None = None, temperature_k: float | None = None) -> float:
         key = (fluid_name or "").lower()
         best = None
@@ -392,7 +399,7 @@ class ShellAndTubeHX(HeatExchanger):
         clearance = float(self.specs.get("bundle_clearance", max(0.02, 0.05 * bundle_diameter)))
         return bundle_diameter + clearance
 
-    def _check_L_over_D(self, geometry: Dict[str, float], shell_diameter: float, tube_passes: int) -> Dict[str, float]:
+    def _check_L_over_D(self, geometry: Dict[str, float], shell_diameter: float, tube_passes: int, base_required_area: float | None = None) -> Dict[str, float]:
         ld = geometry["tube_length"] / max(shell_diameter, 1e-9)
         print("L/D: ",ld)
         if 5.0 <= ld <= 10.0:
@@ -404,13 +411,9 @@ class ShellAndTubeHX(HeatExchanger):
             print(f"geometry:{geometry}")
         #target_l = min(max(7.0 * shell_diameter, 0.5), 6.0)
         if self.specs.get("tube_length") is None:
-            #geometry["tube_length"] = target_l
-            area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
-            geometry["tube_count"] = self._round_tube_count_to_passes(
-                math.ceil(geometry["area"] / max(area_per_tube, 1e-12)),
-                tube_passes,
-            )
-            geometry["area"] = geometry["tube_count"] * area_per_tube
+            if base_required_area is not None:
+                geometry["tube_count"] = self._recalculate_required_tubes(base_required_area, geometry, tube_passes)
+            geometry = self._regenerate_geometry(geometry, tube_passes)
             print("Geometry :",geometry)
         return geometry
 
@@ -545,7 +548,7 @@ class ShellAndTubeHX(HeatExchanger):
         violations: List[str] = []
         if state["geometry"]["area"] < state["area_required"]:
             violations.append("area")
-        vmin, vmax = get_velocity_range(self.hot_in.component)
+        vmin, vmax = self._get_velocity_limits(hot)
         if not (vmin <= state["v_tube"] <= vmax):
             violations.append("tube_velocity")
         shell_v_target = (0.3, 1.0) if cold["phase"] != "vapor" else (5.0, 30.0)
@@ -575,12 +578,14 @@ class ShellAndTubeHX(HeatExchanger):
             area_required = base_required_area
             self._debug(f"Base required area = {area_required:.4f} m2")
             geometry = self._select_tube_geometry(area_required, hot, cold, tube_passes)
+            geometry["tube_count"] = self._recalculate_required_tubes(area_required, geometry, tube_passes)
+            geometry = self._regenerate_geometry(geometry, tube_passes)
 
             bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"],geometry["tube_od"])
             print("Bundle Dia: ",bundle_diameter)
             shell_diameter = self._calculate_shell_diameter(bundle_diameter)
             print("Shell Dia: ",shell_diameter)
-            geometry = self._check_L_over_D(geometry, shell_diameter, tube_passes)
+            geometry = self._check_L_over_D(geometry, shell_diameter, tube_passes, area_required)
             bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"],geometry["tube_od"])
             print("Bundle Dia: ",bundle_diameter)
             shell_diameter = self._calculate_shell_diameter(bundle_diameter)
@@ -636,7 +641,10 @@ class ShellAndTubeHX(HeatExchanger):
                 break
             if "area" in violations:
                 self._debug("Redesign reason = insufficient area; increasing tube count")
-                geometry["tube_count"] = self._round_tube_count_to_passes(int(geometry["tube_count"] * 1.1), tube_passes)
+                area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
+                required_extra_area = area_required - geometry["area"]
+                additional_tubes = math.ceil(required_extra_area / max(area_per_tube, 1e-12))
+                geometry["tube_count"] = self._round_tube_count_to_passes(geometry["tube_count"] + max(additional_tubes, 1), tube_passes)
                 geometry = self._regenerate_geometry(geometry, tube_passes)
             state["u_assumed"] = u_calculated
 
