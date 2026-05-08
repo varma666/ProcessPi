@@ -587,6 +587,31 @@ class ShellAndTubeHX(HeatExchanger):
             violations.append("ld_ratio")
         return violations
 
+    def _validate_geometry(self, state: Dict[str, Any], tube_dp: float, shell_dp: float, hot: Dict[str, float], cold: Dict[str, float]) -> Tuple[List[str], List[str]]:
+        hard: List[str] = []
+        soft: List[str] = []
+        if state["geometry"]["area"] < state["area_required"]:
+            hard.append("area")
+        vmin, vmax = self._get_velocity_limits(self.hot_in.component, hot)
+        if state["v_tube"] < 0.8 * vmin or state["v_tube"] > 1.2 * vmax:
+            hard.append("tube_velocity")
+        elif not (vmin <= state["v_tube"] <= vmax):
+            soft.append("Tube velocity slightly outside preferred range")
+        shell_v_target = self._get_velocity_limits(self.cold_in.component, cold)
+        smin, smax = shell_v_target
+        if state["v_shell"] < 0.8 * smin or state["v_shell"] > 1.2 * smax:
+            hard.append("shell_velocity")
+        elif not (smin <= state["v_shell"] <= smax):
+            soft.append("Shell velocity slightly outside preferred range")
+        if tube_dp > self._dp_limit(hot):
+            hard.append("tube_dp")
+        if shell_dp > self._dp_limit(cold):
+            hard.append("shell_dp")
+        ld = state["geometry"]["tube_length"] / max(state["shell_diameter"], 1e-9)
+        if not (5.0 <= ld <= 10.0):
+            soft.append("L/D ratio slightly outside ideal range")
+        return hard, soft
+
     def _iterate_U(self, q_watts: float, cltd: float, hot: Dict[str, float], cold: Dict[str, float],
                    shell_passes: int, tube_passes: int, u_assumed: float,
                    u_range: Tuple[float, float] | None) -> Dict[str, Any]:
@@ -597,6 +622,7 @@ class ShellAndTubeHX(HeatExchanger):
 
         for i in range(1, max_iter + 1):
             self._debug(f"Iteration = {i}")
+            self._debug(f"U iteration = {i}")
             if base_required_area is None:
                 base_required_area = self._calculate_required_area(q_watts, state["u_assumed"], cltd)
             area_required = base_required_area
@@ -651,7 +677,7 @@ class ShellAndTubeHX(HeatExchanger):
                 }
             )
             tube_dp_i, shell_dp_i = self._calculate_pressure_drop(hot, cold, shell_passes, tube_passes, shell_diameter, geometry["tube_length"], geometry["tube_id"], v_tube, v_shell)
-            violations = self._validate_geometry(state, tube_dp_i, shell_dp_i, hot, cold)
+            hard_violations, soft_warnings = self._validate_geometry(state, tube_dp_i, shell_dp_i, hot, cold)
             self._debug(f"Selected tube count = {geometry['tube_count']}")
             self._debug(f"Selected shell ID ~= {shell_diameter/0.0254:.2f} in")
             self._debug(f"Tube velocity = {v_tube:.4f} m/s")
@@ -660,22 +686,41 @@ class ShellAndTubeHX(HeatExchanger):
             self._debug(f"Shell dp = {shell_dp_i:.2f} Pa")
             self._debug(f"Actual provided area = {geometry['area']:.4f} m2")
             self._debug(f"Area margin = {(geometry['area'] - area_required):.4f} m2")
-            self._debug(f"Constraint violations = {violations}")
+            self._debug(f"Hard violations = {hard_violations}")
+            self._debug(f"Soft warnings = {soft_warnings}")
 
-            if not violations and abs((u_calculated - state["u_assumed"]) / max(state["u_assumed"], 1e-9)) < 0.30:
+            prev_geom = state.get("prev_geometry")
+            current_geometry = {
+                "tube_count": geometry["tube_count"],
+                "tube_length": geometry["tube_length"],
+                "tube_passes": tube_passes,
+                "shell_diameter": shell_diameter,
+                "tube_od": geometry["tube_od"],
+            }
+            if prev_geom and current_geometry == prev_geom:
+                self._debug("Geometry converged")
+                if not hard_violations:
+                    break
+            state["prev_geometry"] = dict(current_geometry)
+            relaxation_factor = 0.7
+            u_new = relaxation_factor * state["u_assumed"] + (1.0 - relaxation_factor) * u_calculated
+            self._debug(f"U convergence error = {abs(u_new - state['u_assumed']) / max(state['u_assumed'], 1e-9):.4f}")
+            if not hard_violations and abs(u_new - state["u_assumed"]) / max(state["u_assumed"], 1e-9) < 0.05:
                 break
             if i >= max_redesign_iterations:
                 self._debug("Redesign iterations exceeded; returning best feasible geometry")
                 state["status_override"] = "PARTIAL"
                 break
-            if "area" in violations:
+            if "area" in hard_violations:
                 self._debug("Redesign reason = insufficient area; increasing tube count")
                 area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
                 required_extra_area = area_required - geometry["area"]
                 additional_tubes = math.ceil(required_extra_area / max(area_per_tube, 1e-12))
                 geometry["tube_count"] = self._round_tube_count_to_passes(geometry["tube_count"] + max(additional_tubes, 1), tube_passes)
                 geometry = self._regenerate_geometry(geometry, tube_passes, hot)
-            state["u_assumed"] = u_calculated
+            if not hard_violations:
+                break
+            state["u_assumed"] = u_new
 
         return state
 
