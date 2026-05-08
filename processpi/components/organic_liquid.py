@@ -6,7 +6,7 @@ class OrganicLiquid(Component):
     hx_type = "organic"
     formula = "R-CH"
     molecular_weight = 100.0
-    httype = "organicliquid"
+    httype = "organic"
     p_h = "liquid"
     _critical_temperature = Temperature(550, "K")
     _critical_pressure = Pressure(4.5, "MPa")
@@ -20,11 +20,17 @@ class OrganicLiquid(Component):
     _vapor_pressure_constants = [70, -6000, -7.0, 0.000006, 2]
     _enthalpy_constants = [4.2E-7, 0.3, 180, 3.5, 0]
     
+    def hx_data(self):
+        p = self.pressure.to("Pa").value
+        pvap = self.vapor_pressure().to("Pa").value
+        phase = "vapor" if p < pvap else "liquid"
+        return {"family": "organic", "phase": phase, "velocity_key": "organic_liquid", "u_key": "organic", "fouling_key": "hydrocarbons", "corrosion_key": "hydrocarbon"}
+
     def httype(self):
         P = self.pressure.to("Pa").value
         Pvap = self.vapor_pressure().to("Pa").value
         if P < Pvap:
-            httype = "organicvapour"
+            httype = "vapor"
         else:
-            httype = "organicliquid"
+            httype = "organic"
         return httype

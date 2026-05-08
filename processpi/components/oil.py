@@ -18,12 +18,18 @@ class Oil(Component):
     _vapor_pressure_constants = [75, -7000, -7.2, 0.000007, 2]
     _enthalpy_constants = [4.5E-7, 0.34, 200, 3.6, 0]
 
+    def hx_data(self):
+        p = self.pressure.to("Pa").value
+        pvap = self.vapor_pressure().to("Pa").value
+        phase = "vapor" if p < pvap else "liquid"
+        return {"family": "oil", "phase": phase, "velocity_key": "oil", "u_key": "heavy_oil" if phase == "liquid" else "gas_low_pressure", "fouling_key": "oil", "corrosion_key": "hydrocarbon"}
+
     def httype(self):
         P = self.pressure.to("Pa").value
         Pvap = self.vapor_pressure().to("Pa").value
         if P < Pvap:
-            httype = "heavyoil"
+            httype = "oil"
         else:
-            httype = "lightoil"
+            httype = "oil"
         return httype
     
