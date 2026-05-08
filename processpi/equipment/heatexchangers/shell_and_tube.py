@@ -13,6 +13,8 @@ from processpi.calculations.heat_transfer.hx_kern import (
 
 from .base import HeatExchanger
 from .standards import (
+    DEFAULT_VELOCITY_RANGE,
+    RECOMMENDED_VELOCITIES,
     CORROSION_SEVERITY_DATABASE,
     FOULING_FACTOR_DATABASE,
     STANDARD_TUBE_COUNT_TABLES,
@@ -239,19 +241,12 @@ class ShellAndTubeHX(HeatExchanger):
             return series[idx-1] * 0.0254
         return tube_od_m
 
-    def _get_velocity_limits(self, props: Dict[str, float]) -> Tuple[float, float]:
-        phase = props.get("phase", "liquid")
-        name = str(getattr(getattr(self.hot_in, "component", None), "name", "")).lower()
-        mu = props.get("viscosity", 0.0)
-        if phase == "vapor":
-            return (6.0, 20.0)
-        if "water" in name:
-            return (0.9, 2.5)
-        if mu > 0.003 or "oil" in name:
-            return (0.6, 1.5)
-        if "hydrocarbon" in name or "benzene" in name:
-            return (0.8, 1.8)
-        return (0.9, 2.5)
+    def _get_velocity_limits(self, component: Any, props: Dict[str, float]) -> Tuple[float, float]:
+        hx_data = component.hx_data() if hasattr(component, "hx_data") else {}
+        key = hx_data.get("velocity_key", "water" if props.get("phase") != "vapor" else "vapor")
+        limits = RECOMMENDED_VELOCITIES.get(key, DEFAULT_VELOCITY_RANGE)
+        self._debug(f"Velocity lookup key = {key}, limits={limits}")
+        return limits
 
     def _regenerate_geometry(self, geometry: Dict[str, float], tube_passes: int, hot: Dict[str, float] | None = None) -> Dict[str, float]:
         area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
@@ -437,7 +432,7 @@ class ShellAndTubeHX(HeatExchanger):
         v_tube = q_vol_hot / tube_flow
         print("Tube Velocity:", v_tube)
 
-        v_min, v_max = self._get_velocity_limits(hot)
+        v_min, v_max = self._get_velocity_limits(self.hot_in.component, hot)
         self._debug(f"Velocity target range = ({v_min}, {v_max})")
         max_iter = 20
         iteration = 0
@@ -573,6 +568,25 @@ class ShellAndTubeHX(HeatExchanger):
             violations.append("ld_ratio")
         return violations
 
+    def _validate_geometry(self, state: Dict[str, Any], tube_dp: float, shell_dp: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
+        violations: List[str] = []
+        if state["geometry"]["area"] < state["area_required"]:
+            violations.append("area")
+        vmin, vmax = self._get_velocity_limits(self.hot_in.component, hot)
+        if not (vmin <= state["v_tube"] <= vmax):
+            violations.append("tube_velocity")
+        shell_v_target = self._get_velocity_limits(self.cold_in.component, cold)
+        if not (shell_v_target[0] <= state["v_shell"] <= shell_v_target[1]):
+            violations.append("shell_velocity")
+        if tube_dp > self._dp_limit(hot):
+            violations.append("tube_dp")
+        if shell_dp > self._dp_limit(cold):
+            violations.append("shell_dp")
+        ld = state["geometry"]["tube_length"] / max(state["shell_diameter"], 1e-9)
+        if not (5.0 <= ld <= 10.0):
+            violations.append("ld_ratio")
+        return violations
+
     def _iterate_U(self, q_watts: float, cltd: float, hot: Dict[str, float], cold: Dict[str, float],
                    shell_passes: int, tube_passes: int, u_assumed: float,
                    u_range: Tuple[float, float] | None) -> Dict[str, Any]:
@@ -638,15 +652,15 @@ class ShellAndTubeHX(HeatExchanger):
             )
             tube_dp_i, shell_dp_i = self._calculate_pressure_drop(hot, cold, shell_passes, tube_passes, shell_diameter, geometry["tube_length"], geometry["tube_id"], v_tube, v_shell)
             violations = self._validate_geometry(state, tube_dp_i, shell_dp_i, hot, cold)
-            #self._debug(f"Selected tube count = {geometry['tube_count']}")
-            #self._debug(f"Selected shell ID ~= {shell_diameter/0.0254:.2f} in")
-            #self._debug(f"Tube velocity = {v_tube:.4f} m/s")
-            #self._debug(f"Shell velocity = {v_shell:.4f} m/s")
-            #self._debug(f"Tube dp = {tube_dp_i:.2f} Pa")
-            #self._debug(f"Shell dp = {shell_dp_i:.2f} Pa")
-            #self._debug(f"Actual provided area = {geometry['area']:.4f} m2")
-            #self._debug(f"Area margin = {(geometry['area'] - area_required):.4f} m2")
-            #self._debug(f"Constraint violations = {violations}")
+            self._debug(f"Selected tube count = {geometry['tube_count']}")
+            self._debug(f"Selected shell ID ~= {shell_diameter/0.0254:.2f} in")
+            self._debug(f"Tube velocity = {v_tube:.4f} m/s")
+            self._debug(f"Shell velocity = {v_shell:.4f} m/s")
+            self._debug(f"Tube dp = {tube_dp_i:.2f} Pa")
+            self._debug(f"Shell dp = {shell_dp_i:.2f} Pa")
+            self._debug(f"Actual provided area = {geometry['area']:.4f} m2")
+            self._debug(f"Area margin = {(geometry['area'] - area_required):.4f} m2")
+            self._debug(f"Constraint violations = {violations}")
 
             if not violations and abs((u_calculated - state["u_assumed"]) / max(state["u_assumed"], 1e-9)) < 0.30:
                 break
@@ -706,7 +720,7 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _velocity_warnings(self, tube_v: float, shell_v: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
         warnings: List[str] = []
-        v_min, v_max = get_velocity_range(self.hot_in.component)
+        v_min, v_max = self._get_velocity_limits(self.hot_in.component, hot)
         if tube_v > v_max * 1.5:
             warnings.append(f"High tube velocity {tube_v:.2f} m/s → erosion risk")
         elif tube_v > v_max:
@@ -716,11 +730,7 @@ class ShellAndTubeHX(HeatExchanger):
         elif tube_v < v_min:
             warnings.append(f"Tube velocity slightly low ({v_min}-{v_max} m/s recommended)")
 
-        if cold["phase"] == "vapor":
-            p = cold["p_bar"]
-            target = (50, 70) if p < 1 else ((10, 30) if p <= 2 else (5, 10))
-        else:
-            target = (0.3, 1.0)
+        target = self._get_velocity_limits(self.cold_in.component, cold)
         if not (target[0] <= shell_v <= target[1]):
             warnings.append(f"Shell velocity {shell_v:.2f} m/s outside recommended {target[0]}-{target[1]} m/s")
         return warnings
@@ -813,9 +823,11 @@ class ShellAndTubeHX(HeatExchanger):
 
         u_assumed = self._assume_u(hot, cold)
         print(u_assumed)
-        hot_type = getattr(self.hot_in.component, "hx_type", "generic")
-        cold_type = getattr(self.cold_in.component, "hx_type", "generic")
-        u_range = get_u_range("shell_and_tube", self.service_type, hot_type, cold_type)
+        hot_hx = self.hot_in.component.hx_data() if hasattr(self.hot_in.component, "hx_data") else {"u_key": getattr(self.hot_in.component, "hx_type", "generic")}
+        cold_hx = self.cold_in.component.hx_data() if hasattr(self.cold_in.component, "hx_data") else {"u_key": getattr(self.cold_in.component, "hx_type", "generic")}
+        self._debug(f"Hot hx_data = {hot_hx}")
+        self._debug(f"Cold hx_data = {cold_hx}")
+        u_range = get_u_range("shell_and_tube", self.service_type, hot_hx.get("u_key", "generic"), cold_hx.get("u_key", "generic"))
 
         state = self._iterate_U(effective_q_watts, cltd, hot, cold, shell_passes, tube_passes, u_assumed, u_range)
 

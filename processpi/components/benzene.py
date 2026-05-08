@@ -68,11 +68,17 @@ class Benzene(Component):
         
         return SpecificHeat(cp_kg, "J/kgK")
 
+    def hx_data(self):
+        p = self.pressure.to("Pa").value
+        pvap = self.vapor_pressure().to("Pa").value
+        phase = "vapor" if p < pvap else "liquid"
+        return {"family": "organic", "phase": phase, "velocity_key": "benzene", "u_key": "organic", "fouling_key": "hydrocarbons", "corrosion_key": "hydrocarbon"}
+
     def httype(self):
         P = self.pressure.to("Pa").value
         Pvap = self.vapor_pressure().to("Pa").value
         if P < Pvap:
-            httype = "organicvapour"
+            httype = "vapor"
         else:
-            httype = "organicliquid"
+            httype = "organic"
         return httype

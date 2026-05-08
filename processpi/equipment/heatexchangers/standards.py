@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Optional, Tuple
 import math
-from processpi.pipelines.standards import RECOMMENDED_VELOCITIES
 
 HX_U_STANDARDS = {
     "shell_and_tube": {
@@ -100,7 +99,7 @@ def get_velocity_range(component):
     if name in RECOMMENDED_VELOCITIES:
         return RECOMMENDED_VELOCITIES[name]
 
-    return (0.8, 2.5)
+    return DEFAULT_VELOCITY_RANGE
 
 TUBE_LENGTH_STANDARD = [
     {"length": 0.5, "area": 10},
@@ -331,15 +330,15 @@ STANDARD_PIPE_TABLES = {
 
 FOULING_FACTOR_DATABASE = {
     "seawater": {"base": 0.00035, "velocity_sensitive": True},
-    "brackish water": {"base": 0.00030, "velocity_sensitive": True},
-    "cooling tower water": {"base": 0.00025, "velocity_sensitive": True},
-    "distilled water": {"base": 0.00009, "velocity_sensitive": False},
-    "treated water": {"base": 0.00018, "velocity_sensitive": True},
-    "river water": {"base": 0.00035, "velocity_sensitive": True},
+    "brackish_water": {"base": 0.00030, "velocity_sensitive": True},
+    "cooling_tower_water": {"base": 0.00025, "velocity_sensitive": True},
+    "distilled_water": {"base": 0.00009, "velocity_sensitive": False},
+    "treated_water": {"base": 0.00018, "velocity_sensitive": True},
+    "river_water": {"base": 0.00035, "velocity_sensitive": True},
     "hydrocarbons": {"base": 0.00020, "velocity_sensitive": True},
     "crude": {"base": 0.00050, "velocity_sensitive": True, "temperature_sensitive": True},
     "steam": {"base": 0.00009, "velocity_sensitive": False},
-    "vapors": {"base": 0.00012, "velocity_sensitive": False},
+    "vapor": {"base": 0.00012, "velocity_sensitive": False},
     "reboiler": {"base": 0.00035, "velocity_sensitive": True, "temperature_sensitive": True},
     "condenser": {"base": 0.00018, "velocity_sensitive": False},
     "refinery": {"base": 0.00040, "velocity_sensitive": True},
@@ -348,12 +347,16 @@ FOULING_FACTOR_DATABASE = {
 
 CORROSION_SEVERITY_DATABASE = {
     "seawater": "high",
-    "brackish": "high",
+    "brackish_water": "high",
     "acid": "high",
     "hydrocarbon": "low-medium",
-    "steam condensate": "low",
+    "steam_condensate": "low",
     "refinery": "medium-high",
-    "treated water": "medium",
+    "treated_water": "medium",
     "crude": "medium-high",
     "amine": "high",
 }
+
+
+DEFAULT_VELOCITY_RANGE = (0.8, 2.5)
+RECOMMENDED_VELOCITIES = {"organic_liquid": (1.8, 2.0),"inorganic_liquid": (1.2, 1.8),"oil": (1.8, 2.0),"gas": (15.0, 30.0),"vapor": (15.0, 30.0),"water": (1.0, 2.5),"acetic_acid": (1.0, 2.0),"acetone": (1.0, 2.0),"acrylic_acid": (1.0, 2.0),"air": (10.0, 20.0),"ammonia": (8.0, 15.0),"benzene": (1.0, 2.0),"benzoic_acid": (1.0, 2.0),"bromine": (0.8, 1.5),"butane": (10.0, 18.0),"carbon_dioxide": (8.0, 15.0),"carbon_monoxide": (8.0, 15.0),"carbon_tetrachloride": (0.8, 1.5),"chlorine": (5.0, 10.0),"chlorobenzene": (1.0, 2.0),"chloroform": (0.8, 1.5),"chloromethane": (8.0, 15.0),"cyanogen": (8.0, 15.0),"cyclohexane": (1.0, 2.0),"ethane": (10.0, 20.0),"ethanol": (1.0, 2.0),"ethyl_acetate": (1.0, 2.0),"ethylene": (10.0, 20.0),"fluorine": (5.0, 10.0),"fluorobenzene": (1.0, 2.0),"formic_acid": (1.0, 2.0),"helium_4": (20.0, 40.0),"hydrogen_chloride": (8.0, 15.0),"hydrogen_cyanide": (8.0, 15.0),"hydrogen_sulfide": (8.0, 15.0),"methane": (10.0, 20.0),"methanol": (1.0, 2.0),"neon": (15.0, 30.0),"nitrogen": (10.0, 20.0),"nitrous_oxide": (8.0, 15.0),"nitric_oxide": (8.0, 15.0),"oxygen": (10.0, 20.0),"ozone": (8.0, 15.0),"phenol": (1.0, 2.0),"propane": (10.0, 18.0),"propionic_acid": (1.0, 2.0),"styrene": (1.0, 2.0),"sulfur_dioxide": (8.0, 15.0),"toluene": (1.0, 2.0)}
