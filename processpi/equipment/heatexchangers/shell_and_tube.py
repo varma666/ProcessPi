@@ -522,7 +522,7 @@ class ShellAndTubeHX(HeatExchanger):
         ).calculate()
         pr_t = max(hot["cp"] * hot["viscosity"] / max(hot["k"], 1e-12), 1e-12)
         nu_t = DittusBoelter(reynolds=max(re_t, 1.0), prandtl=pr_t, n=0.4).calculate()
-
+        print(f"Tube Side Rey:{re_t}, Pra:{pr_t}, Nuss:{nu_t}")
         de_shell = max(1.27 * (geometry["tube_pitch"] ** 2 - 0.785 * geometry["tube_od"] ** 2) / geometry["tube_od"], 1e-6)
         re_s = Reynolds(
             density=cold["density"],
@@ -532,7 +532,7 @@ class ShellAndTubeHX(HeatExchanger):
         ).calculate()
         pr_s = max(cold["cp"] * cold["viscosity"] / max(cold["k"], 1e-12), 1e-12)
         nu_s = KernShellNu(reynolds=max(re_s, 1.0), prandtl=pr_s).calculate()
-
+        print(f"Shell Side Rey:{re_s}, Pra:{pr_s}, Nuss:{nu_s}")
         return {"re_t": re_t, "pr_t": pr_t, "nu_t": nu_t, "de_shell": de_shell, "re_s": re_s, "pr_s": pr_s, "nu_s": nu_s}
 
     def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float]) -> Tuple[float, float]:
