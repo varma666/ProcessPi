@@ -549,8 +549,10 @@ class ShellAndTubeHX(HeatExchanger):
             h_shell=h_s,
             fouling_factor=float(self.specs.get("fouling_factor", 0.0)),
         )
-        u_min, u_max = u_range if u_range else (100.0, 1000.0)
-        return max(min(u_calculated, u_max), u_min)
+        #u_min, u_max = u_range if u_range else (100.0, 1000.0)
+        #return max(min(u_calculated, u_max), u_min)
+        print(f"U Calcaulated: {u_calculated}")
+        return u_calcaulated
 
     def _validate_geometry(self, state: Dict[str, Any], tube_dp: float, shell_dp: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
         violations: List[str] = []
