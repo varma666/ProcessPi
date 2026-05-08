@@ -24,6 +24,14 @@ class Water(Component):
         den = den * self.molecular_weight
         return Density(den, "kg/m3")
 
+    def hx_data(self):
+        p = 101325 if self.pressure is None else self.pressure.to("Pa").value
+        pvap = self.vapor_pressure().to("Pa").value
+        phase = "vapor" if p < pvap else "liquid"
+        velocity_key = "vapor" if phase == "vapor" else "water"
+        u_key = "steam" if phase == "vapor" else "water"
+        return {"family": "inorganic", "phase": phase, "velocity_key": velocity_key, "u_key": u_key, "fouling_key": "treated_water", "corrosion_key": "treated_water"}
+
     def httype(self):
         if self.pressure is None:
             # assume atmospheric if not provided
