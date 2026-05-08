@@ -53,7 +53,9 @@ class ShellAndTubeHX(HeatExchanger):
         for side_name, props in (("hot", hot), ("cold", cold)):
             for key in required:
                 val = props.get(key)
+                print(f"Side name {side_name}, {key} : {val}")
                 if val is None or val <= 0:
+                    
                     missing.append(f"{side_name}.{key}")
         if missing:
             raise ValueError(f"Missing or invalid stream properties for shell-and-tube design: {', '.join(missing)}")
