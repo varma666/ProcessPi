@@ -544,8 +544,29 @@ class ShellAndTubeHX(HeatExchanger):
             h_shell=h_s,
             fouling_factor=float(self.specs.get("fouling_factor", 0.0)),
         )
-        u_min, u_max = u_range if u_range else (100.0, 1000.0)
-        return max(min(u_calculated, u_max), u_min)
+        #u_min, u_max = u_range if u_range else (100.0, 1000.0)
+        #return max(min(u_calculated, u_max), u_min)
+        print(f"U Calcaulated: {u_calculated}")
+        return u_calculated
+
+    def _validate_geometry(self, state: Dict[str, Any], tube_dp: float, shell_dp: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
+        violations: List[str] = []
+        if state["geometry"]["area"] < state["area_required"]:
+            violations.append("area")
+        vmin, vmax = self._get_velocity_limits(hot)
+        if not (vmin <= state["v_tube"] <= vmax):
+            violations.append("tube_velocity")
+        shell_v_target = (0.3, 1.0) if cold["phase"] != "vapor" else (5.0, 30.0)
+        if not (shell_v_target[0] <= state["v_shell"] <= shell_v_target[1]):
+            violations.append("shell_velocity")
+        if tube_dp > self._dp_limit(hot):
+            violations.append("tube_dp")
+        if shell_dp > self._dp_limit(cold):
+            violations.append("shell_dp")
+        ld = state["geometry"]["tube_length"] / max(state["shell_diameter"], 1e-9)
+        if not (5.0 <= ld <= 10.0):
+            violations.append("ld_ratio")
+        return violations
 
     def _validate_geometry(self, state: Dict[str, Any], tube_dp: float, shell_dp: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
         violations: List[str] = []
