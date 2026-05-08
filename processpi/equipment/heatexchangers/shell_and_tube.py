@@ -552,7 +552,7 @@ class ShellAndTubeHX(HeatExchanger):
         #u_min, u_max = u_range if u_range else (100.0, 1000.0)
         #return max(min(u_calculated, u_max), u_min)
         print(f"U Calcaulated: {u_calculated}")
-        return u_calcaulated
+        return u_calculated
 
     def _validate_geometry(self, state: Dict[str, Any], tube_dp: float, shell_dp: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
         violations: List[str] = []
@@ -638,15 +638,15 @@ class ShellAndTubeHX(HeatExchanger):
             )
             tube_dp_i, shell_dp_i = self._calculate_pressure_drop(hot, cold, shell_passes, tube_passes, shell_diameter, geometry["tube_length"], geometry["tube_id"], v_tube, v_shell)
             violations = self._validate_geometry(state, tube_dp_i, shell_dp_i, hot, cold)
-            self._debug(f"Selected tube count = {geometry['tube_count']}")
-            self._debug(f"Selected shell ID ~= {shell_diameter/0.0254:.2f} in")
-            self._debug(f"Tube velocity = {v_tube:.4f} m/s")
-            self._debug(f"Shell velocity = {v_shell:.4f} m/s")
-            self._debug(f"Tube dp = {tube_dp_i:.2f} Pa")
-            self._debug(f"Shell dp = {shell_dp_i:.2f} Pa")
-            self._debug(f"Actual provided area = {geometry['area']:.4f} m2")
-            self._debug(f"Area margin = {(geometry['area'] - area_required):.4f} m2")
-            self._debug(f"Constraint violations = {violations}")
+            #self._debug(f"Selected tube count = {geometry['tube_count']}")
+            #self._debug(f"Selected shell ID ~= {shell_diameter/0.0254:.2f} in")
+            #self._debug(f"Tube velocity = {v_tube:.4f} m/s")
+            #self._debug(f"Shell velocity = {v_shell:.4f} m/s")
+            #self._debug(f"Tube dp = {tube_dp_i:.2f} Pa")
+            #self._debug(f"Shell dp = {shell_dp_i:.2f} Pa")
+            #self._debug(f"Actual provided area = {geometry['area']:.4f} m2")
+            #self._debug(f"Area margin = {(geometry['area'] - area_required):.4f} m2")
+            #self._debug(f"Constraint violations = {violations}")
 
             if not violations and abs((u_calculated - state["u_assumed"]) / max(state["u_assumed"], 1e-9)) < 0.30:
                 break
