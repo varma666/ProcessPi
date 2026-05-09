@@ -86,19 +86,106 @@ class HeatExchangerEngine:
         return "shell_and_tube"
 
     def run(self) -> HeatExchangerResults:
+    
+        # ======================================================
+        # HX TYPE SELECTION
+        # ======================================================
+    
         hx_type = self._select_hx_type()
-        if hx_type == "shell_and_tube" and self.method == "bell_delaware":
+    
+        if (
+            hx_type == "shell_and_tube"
+            and self.method == "bell_delaware"
+        ):
             hx_type = "bell_delaware"
+    
         cls = self._map[hx_type]
+    
+        # ======================================================
+        # CREATE HX OBJECT
+        # ======================================================
+    
         hx = cls(
             hot_in=self.data["hot_in"],
             cold_in=self.data["cold_in"],
             hot_out=self.data.get("hot_out"),
             cold_out=self.data.get("cold_out"),
-            method=self.method if issubclass(cls, ShellAndTubeHX) else "kern",
+            method=(
+                self.method
+                if issubclass(cls, ShellAndTubeHX)
+                else "kern"
+            ),
             **self.data.get("specs", {}),
         )
-        self._results = HeatExchangerResults(hx.design())
+    
+        # ======================================================
+        # MODE SELECTION
+        # ======================================================
+    
+        mode = (
+            self.data
+            .get("specs", {})
+            .get("mode", "design")
+            .lower()
+        )
+    
+        print("\n" + "=" * 60)
+        print(f"[DEBUG] Heat Exchanger Mode : {mode.upper()}")
+        print(f"[DEBUG] Heat Exchanger Type : {hx_type}")
+        print(f"[DEBUG] Design Method       : {self.method}")
+        print("=" * 60)
+    
+        # ======================================================
+        # DESIGN MODE
+        # ======================================================
+    
+        if mode == "design":
+    
+            results = hx.design()
+    
+        # ======================================================
+        # RATE MODE
+        # ======================================================
+    
+        elif mode == "rate":
+    
+            required_geometry = [
+                "tube_od",
+                "tube_id",
+                "tube_length",
+            ]
+    
+            missing = [
+                key
+                for key in required_geometry
+                if key not in self.data.get("specs", {})
+            ]
+    
+            if missing:
+    
+                raise ValueError(
+                    "Rate mode requires fixed geometry. "
+                    f"Missing: {missing}"
+                )
+    
+            results = hx.rate()
+    
+        # ======================================================
+        # INVALID MODE
+        # ======================================================
+    
+        else:
+    
+            raise ValueError(
+                f"Unsupported exchanger mode: {mode}"
+            )
+    
+        # ======================================================
+        # STORE RESULTS
+        # ======================================================
+    
+        self._results = HeatExchangerResults(results)
+    
         return self._results
 
     def summary(self):
