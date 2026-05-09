@@ -245,57 +245,49 @@ class ShellAndTubeHX(HeatExchanger):
         return tube_od_m
 
     def _get_velocity_limits(self, side, component):
-            """
-            Returns velocity limits based on fluid phase, operating pressure, and exchanger side.
-            
-            Args:
-                side (str): 'tube' or 'shell'
-                component (Component): Component object with access to hx_data()
-                
-            Returns:
-                tuple: (min_velocity, max_velocity) in m/s
-            """
+        """
+        Returns velocity limits based on fluid phase, operating pressure, and exchanger side.
+        """
+        # Handle case where component is a dictionary or a Component object
+        if isinstance(component, dict):
+            data = component
+        elif hasattr(component, "hx_data"):
             data = component.hx_data()
-            phase = data.get('phase', 'liquid').lower()
-            family = data.get('family', 'default').lower()
-            pressure = data.get('pressure', 1.0)  # assumed in bar or atm based on context
-            
-            velocity_limits = (0.0, 0.0)
-            pressure_regime = "N/A"
-    
-            if phase == 'liquid':
-                if side == 'tube':
-                    if family == 'water':
-                        velocity_limits = (1.5, 2.5)
-                    else:
-                        velocity_limits = (1.0, 2.0)
-                else:  # shell side
-                    velocity_limits = (0.3, 1.0)
-            
-            else:  # vapor/gas
-                # Determine pressure regime (1 atm approx 1.01325 bar)
-                if pressure < 1.0:
-                    pressure_regime = "vacuum"
-                    if side == 'tube':
-                        velocity_limits = (50, 70)
-                    else:
-                        velocity_limits = (20, 40)
-                elif 1.0 <= pressure <= 3.0:
-                    pressure_regime = "atmospheric"
-                    if side == 'tube':
-                        velocity_limits = (10, 30)
-                    else:
-                        velocity_limits = (10, 25)
-                else:  # pressure > 3 bar
-                    pressure_regime = "high pressure"
-                    if side == 'tube':
-                        velocity_limits = (5, 10)
-                    else:
-                        velocity_limits = (5, 10)
-    
-            print(f"DEBUG: Pressure Regime: {pressure_regime} | Side: {side} | Velocity Limits: {velocity_limits}")
-            
-            return velocity_limits
+        else:
+            # Fallback for safety
+            data = getattr(component, "data", {})
+
+        phase = data.get('phase', 'liquid').lower()
+        family = data.get('family', 'default').lower()
+        # Ensure pressure is pulled from the data dict (defaulting to 1.0 atm/bar)
+        pressure = data.get('pressure', 1.0)
+        
+        velocity_limits = (0.0, 0.0)
+        pressure_regime = "N/A"
+
+        if phase == 'liquid':
+            if side == 'tube':
+                if family == 'water':
+                    velocity_limits = (1.5, 2.5)
+                else:
+                    velocity_limits = (1.0, 2.0)
+            else:  # shell side
+                velocity_limits = (0.3, 1.0)
+        
+        else:  # vapor/gas
+            if pressure < 1.0:
+                pressure_regime = "vacuum"
+                velocity_limits = (50, 70) if side == 'tube' else (20, 40)
+            elif 1.0 <= pressure <= 3.0:
+                pressure_regime = "atmospheric"
+                velocity_limits = (10, 30) if side == 'tube' else (10, 25)
+            else:  # pressure > 3 bar
+                pressure_regime = "high pressure"
+                velocity_limits = (5, 10) if side == 'tube' else (5, 10)
+
+        print(f"DEBUG: Pressure Regime: {pressure_regime} | Side: {side} | Velocity Limits: {velocity_limits}")
+        
+        return velocity_limits
 
     def _regenerate_geometry(self, geometry: Dict[str, float], tube_passes: int, hot: Dict[str, float] | None = None) -> Dict[str, float]:
         area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
