@@ -710,7 +710,7 @@ class ShellAndTubeHX(HeatExchanger):
 
         if h_t <= 0 or h_s <= 0:
             raise ValueError("Invalid heat transfer coefficients (must be > 0).")
-
+        h_t = h_t * tube_id / tube_od
         R_tube = 1 / h_t
         R_shell = 1 / h_s
 
@@ -1033,13 +1033,21 @@ class ShellAndTubeHX(HeatExchanger):
             # UNDER RELAXATION
             # ======================================================
     
+            # ======================================================
+            # U CONVERGENCE
+            # ======================================================
+    
             u_old = state["u_assumed"]
     
+            # Kern iteration update
             u_new = u_dirty
     
-            convergence = abs(
-                (u_new - u_old)
-                / max(u_old, 1e-12)
+            # Percentage convergence error
+            convergence_error = abs(
+                (
+                    (u_dirty - u_old)
+                    / max(u_old, 1e-12)
+                ) * 100.0
             )
     
             print("\n" + "=" * 60)
@@ -1053,22 +1061,26 @@ class ShellAndTubeHX(HeatExchanger):
             print(f"Shell Velocity     : {v_shell:.4f} m/s")
             print(f"Tube DP            : {tube_dp_i:.2f} Pa")
             print(f"Shell DP           : {shell_dp_i:.2f} Pa")
-            print(f"Convergence Error  : {convergence:.5f}")
+            print(f"U Error            : {convergence_error:.2f} %")
             print("=" * 60)
     
+            # Update assumed U
             state["u_assumed"] = u_new
     
             # ======================================================
-            # CONVERGENCE
+            # CONVERGENCE CHECK
             # ======================================================
     
             if (
-                convergence < 0.05
+                convergence_error < 30.0
                 and not hard_violations
             ):
+    
                 self._debug(
-                    "U iteration converged successfully."
+                    f"U iteration converged "
+                    f"(error={convergence_error:.2f}%)"
                 )
+    
                 break
     
         return state
