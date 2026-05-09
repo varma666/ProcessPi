@@ -1372,3 +1372,354 @@ class ShellAndTubeHX(HeatExchanger):
         if self.method == "bell_delaware":
             return self._design_bell_delaware()
         raise ValueError("method must be 'kern' or 'bell_delaware'")
+
+    def rate(self) -> Dict[str, Any]:
+    
+        # ==========================================================
+        # STREAM PROPERTIES
+        # ==========================================================
+    
+        hot = self._stream_props(self.hot_in)
+        cold = self._stream_props(self.cold_in)
+    
+        self._warnings = []
+    
+        self._validate_inputs(hot, cold)
+    
+        assignment = self._assign_fluids_to_sides(
+            hot,
+            cold,
+        )
+    
+        # ==========================================================
+        # SERVICE TYPE
+        # ==========================================================
+    
+        if hot["phase"] == "vapor":
+    
+            self.service_type = "condenser"
+    
+        elif cold["phase"] == "vapor":
+    
+            self.service_type = "vaporizer"
+    
+        elif hot["t_k"] > cold["t_k"]:
+    
+            self.service_type = "cooler"
+    
+        else:
+    
+            self.service_type = "heater"
+    
+        # ==========================================================
+        # FIXED GEOMETRY
+        # ==========================================================
+    
+        required_geometry = [
+            "tube_od",
+            "tube_id",
+            "tube_length",
+        ]
+    
+        missing = [
+            key
+            for key in required_geometry
+            if self.specs.get(key) is None
+        ]
+    
+        if missing:
+    
+            raise ValueError(
+                f"Rate mode requires fixed geometry. "
+                f"Missing: {missing}"
+            )
+    
+        geometry = {
+            "tube_od": float(self.specs["tube_od"]),
+            "tube_id": float(self.specs["tube_id"]),
+            "tube_length": float(self.specs["tube_length"]),
+            "tube_count": int(self.specs.get("tube_count", 100)),
+            "tube_pitch": float(
+                self.specs.get(
+                    "tube_pitch",
+                    1.25 * float(self.specs["tube_od"])
+                )
+            ),
+        }
+    
+        shell_passes = int(
+            self.specs.get("shell_passes", 1)
+        )
+    
+        tube_passes = int(
+            self.specs.get("tube_passes", 2)
+        )
+    
+        geometry = self._regenerate_geometry(
+            geometry,
+            tube_passes,
+            hot,
+        )
+    
+        # ==========================================================
+        # SHELL DIAMETER
+        # ==========================================================
+    
+        bundle_diameter = self._calculate_bundle_diameter(
+            geometry["tube_count"],
+            geometry["tube_od"],
+        )
+    
+        shell_diameter = float(
+            self.specs.get(
+                "shell_diameter",
+                self._calculate_shell_diameter(
+                    bundle_diameter
+                ),
+            )
+        )
+    
+        # ==========================================================
+        # VELOCITIES
+        # ==========================================================
+    
+        (
+            v_tube,
+            v_shell,
+            tube_count,
+            shell_diameter,
+            tube_passes,
+        ) = self._check_velocities(
+            geometry,
+            hot,
+            cold,
+            tube_passes,
+            shell_passes,
+            shell_diameter,
+        )
+    
+        geometry["tube_count"] = tube_count
+    
+        geometry = self._regenerate_geometry(
+            geometry,
+            tube_passes,
+            hot,
+        )
+    
+        # ==========================================================
+        # DIMENSIONLESS NUMBERS
+        # ==========================================================
+    
+        dimless = self._calculate_dimensionless(
+            geometry,
+            hot,
+            cold,
+            v_tube,
+            v_shell,
+        )
+    
+        # ==========================================================
+        # HEAT TRANSFER COEFFICIENTS
+        # ==========================================================
+    
+        h_t, h_s = self._calculate_htc(
+            dimless,
+            geometry,
+            hot,
+            cold,
+        )
+    
+        # ==========================================================
+        # U RANGE
+        # ==========================================================
+    
+        hot_hx = (
+            self.hot_in.component.hx_data()
+            if hasattr(self.hot_in.component, "hx_data")
+            else {"u_key": "generic"}
+        )
+    
+        cold_hx = (
+            self.cold_in.component.hx_data()
+            if hasattr(self.cold_in.component, "hx_data")
+            else {"u_key": "generic"}
+        )
+    
+        u_range = get_u_range(
+            "shell_and_tube",
+            self.service_type,
+            hot_hx.get("u_key", "generic"),
+            cold_hx.get("u_key", "generic"),
+        )
+    
+        # ==========================================================
+        # OVERALL U
+        # ==========================================================
+    
+        u_results = self._calculate_overall_U(
+            h_t=h_t,
+            h_s=h_s,
+            geometry=geometry,
+            u_range=u_range,
+        )
+    
+        u_dirty = u_results["U_dirty"]
+    
+        u_clean = u_results["U_clean"]
+    
+        # ==========================================================
+        # LMTD
+        # ==========================================================
+    
+        q_watts, th_out_guess, tc_out_guess = (
+            self._calculate_heat_duty(
+                hot,
+                cold,
+            )
+        )
+    
+        lmtd = self._calculate_lmtd(
+            hot,
+            cold,
+            th_out_guess,
+            tc_out_guess,
+        )
+    
+        shell_passes, tube_passes, ft = (
+            self._adjust_passes(
+                hot,
+                cold,
+                th_out_guess,
+                tc_out_guess,
+            )
+        )
+    
+        cltd = max(
+            ft * lmtd,
+            1e-9,
+        )
+    
+        # ==========================================================
+        # ACTUAL DUTY
+        # ==========================================================
+    
+        actual_area = geometry["area"]
+    
+        q_actual = (
+            u_dirty
+            * actual_area
+            * cltd
+        )
+    
+        # ==========================================================
+        # OUTLET TEMPERATURES
+        # ==========================================================
+    
+        hot_cp_flow = (
+            hot["m_dot"]
+            * hot["cp"]
+        )
+    
+        cold_cp_flow = (
+            cold["m_dot"]
+            * cold["cp"]
+        )
+    
+        th_out = (
+            hot["t_k"]
+            - q_actual
+            / max(hot_cp_flow, 1e-12)
+        )
+    
+        tc_out = (
+            cold["t_k"]
+            + q_actual
+            / max(cold_cp_flow, 1e-12)
+        )
+    
+        # ==========================================================
+        # PRESSURE DROP
+        # ==========================================================
+    
+        tube_dp, shell_dp = (
+            self._calculate_pressure_drop(
+                hot=hot,
+                cold=cold,
+                shell_passes=shell_passes,
+                tube_passes=tube_passes,
+                shell_diameter=shell_diameter,
+                tube_length=geometry["tube_length"],
+                tube_id=geometry["tube_id"],
+                v_tube=v_tube,
+                v_shell=v_shell,
+            )
+        )
+    
+        # ==========================================================
+        # WARNINGS
+        # ==========================================================
+    
+        warnings = []
+    
+        warnings.extend(
+            self._velocity_warnings(
+                v_tube,
+                v_shell,
+                hot,
+                cold,
+            )
+        )
+    
+        # ==========================================================
+        # DEBUG SUMMARY
+        # ==========================================================
+    
+        print("\n" + "=" * 60)
+        print("RATE MODE SUMMARY")
+        print("=" * 60)
+        print(f"Actual Duty        : {q_actual/1000:.4f} kW")
+        print(f"U Dirty            : {u_dirty:.4f} W/m2.K")
+        print(f"U Clean            : {u_clean:.4f} W/m2.K")
+        print(f"Area               : {actual_area:.4f} m2")
+        print(f"Tube Velocity      : {v_tube:.4f} m/s")
+        print(f"Shell Velocity     : {v_shell:.4f} m/s")
+        print(f"Tube DP            : {tube_dp:.2f} Pa")
+        print(f"Shell DP           : {shell_dp:.2f} Pa")
+        print(f"Hot Outlet Temp    : {th_out:.2f} K")
+        print(f"Cold Outlet Temp   : {tc_out:.2f} K")
+        print("=" * 60)
+    
+        # ==========================================================
+        # PAYLOAD
+        # ==========================================================
+    
+        payload = {
+            "iterations": 1,
+            "geometry": geometry,
+            "bundle_diameter": bundle_diameter,
+            "shell_diameter": shell_diameter,
+            "v_tube": v_tube,
+            "v_shell": v_shell,
+            "dimless": dimless,
+            "h_t": h_t,
+            "h_s": h_s,
+            "u_assumed": u_dirty,
+            "u_calculated": u_dirty,
+            "u_clean": u_clean,
+            "tube_dp": tube_dp,
+            "shell_dp": shell_dp,
+            "warnings": warnings,
+            "assignment": assignment,
+            "q_watts_original": q_actual,
+            "q_watts_effective": q_actual,
+            "lmtd": lmtd,
+            "cltd": cltd,
+            "ft": ft,
+            "n_units": 1,
+            "method": self.method,
+            "area": actual_area,
+        }
+    
+        return self._finalize_results(payload)
+
+
