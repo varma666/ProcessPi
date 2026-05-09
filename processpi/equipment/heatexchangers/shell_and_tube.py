@@ -924,7 +924,12 @@ class ShellAndTubeHX(HeatExchanger):
 
             dimless = self._calculate_dimensionless(geometry, hot, cold, v_tube, v_shell)
             h_t, h_s = self._calculate_htc(dimless, geometry, hot, cold)
-            u_calculated = self._calculate_overall_U(h_t, h_s, u_range, geometry)
+            u_calculated = self._calculate_overall_U(
+                                                        h_t=h_t,
+                                                        h_s=h_s,
+                                                        geometry=geometry,
+                                                        u_range=u_range,
+                                                    )
 
             state.update(
                 {
