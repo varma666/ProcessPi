@@ -1374,7 +1374,7 @@ class ShellAndTubeHX(HeatExchanger):
         raise ValueError("method must be 'kern' or 'bell_delaware'")
 
     def rate(self) -> Dict[str, Any]:
-    
+
         # ==========================================================
         # STREAM PROPERTIES
         # ==========================================================
@@ -1568,73 +1568,112 @@ class ShellAndTubeHX(HeatExchanger):
         u_clean = u_results["U_clean"]
     
         # ==========================================================
-        # LMTD
+        # ACTUAL AREA
         # ==========================================================
     
-        q_watts, th_out_guess, tc_out_guess = (
-            self._calculate_heat_duty(
-                hot,
-                cold,
+        actual_area = geometry["area"]
+    
+        # ==========================================================
+        # UA
+        # ==========================================================
+    
+        UA = (
+            u_dirty
+            * actual_area
+        )
+    
+        # ==========================================================
+        # HEAT CAPACITY RATES
+        # ==========================================================
+    
+        Ch = (
+            hot["m_dot"]
+            * hot["cp"]
+            * 1000.0
+        )
+    
+        Cc = (
+            cold["m_dot"]
+            * cold["cp"]
+            * 1000.0
+        )
+    
+        Cmin = min(Ch, Cc)
+    
+        Cmax = max(Ch, Cc)
+    
+        Cr = (
+            Cmin
+            / max(Cmax, 1e-12)
+        )
+    
+        # ==========================================================
+        # NTU
+        # ==========================================================
+    
+        NTU = (
+            UA
+            / max(Cmin, 1e-12)
+        )
+    
+        # ==========================================================
+        # EFFECTIVENESS
+        # ==========================================================
+    
+        if abs(1.0 - Cr) < 1e-9:
+    
+            effectiveness = (
+                NTU
+                / (1.0 + NTU)
             )
-        )
     
-        lmtd = self._calculate_lmtd(
-            hot,
-            cold,
-            th_out_guess,
-            tc_out_guess,
-        )
+        else:
     
-        shell_passes, tube_passes, ft = (
-            self._adjust_passes(
-                hot,
-                cold,
-                th_out_guess,
-                tc_out_guess,
+            effectiveness = (
+                1.0
+                - math.exp(
+                    -NTU * (1.0 - Cr)
+                )
+            ) / (
+                1.0
+                - Cr * math.exp(
+                    -NTU * (1.0 - Cr)
+                )
             )
-        )
     
-        cltd = max(
-            ft * lmtd,
-            1e-9,
+        # ==========================================================
+        # MAXIMUM DUTY
+        # ==========================================================
+    
+        q_max = (
+            Cmin
+            * (
+                hot["t_k"]
+                - cold["t_k"]
+            )
         )
     
         # ==========================================================
         # ACTUAL DUTY
         # ==========================================================
     
-        actual_area = geometry["area"]
-    
         q_actual = (
-            u_dirty
-            * actual_area
-            * cltd
+            effectiveness
+            * q_max
         )
     
         # ==========================================================
         # OUTLET TEMPERATURES
         # ==========================================================
     
-        hot_cp_flow = (
-            hot["m_dot"]
-            * hot["cp"] * 1000
-        )
-    
-        cold_cp_flow = (
-            cold["m_dot"]
-            * cold["cp"] * 1000
-        )
-    
         th_out = (
             hot["t_k"]
-            - q_actual
-            / max(hot_cp_flow, 1e-12)
+            - q_actual / Ch
         )
     
         tc_out = (
             cold["t_k"]
-            + q_actual
-            / max(cold_cp_flow, 1e-12)
+            + q_actual / Cc
         )
     
         # ==========================================================
@@ -1677,16 +1716,33 @@ class ShellAndTubeHX(HeatExchanger):
         print("\n" + "=" * 60)
         print("RATE MODE SUMMARY")
         print("=" * 60)
+    
+        print(f"UA                 : {UA:.4f}")
+        print(f"NTU                : {NTU:.4f}")
+        print(f"Effectiveness      : {effectiveness:.4f}")
+    
+        print("-" * 60)
+    
         print(f"Actual Duty        : {q_actual/1000:.4f} kW")
         print(f"U Dirty            : {u_dirty:.4f} W/m2.K")
         print(f"U Clean            : {u_clean:.4f} W/m2.K")
         print(f"Area               : {actual_area:.4f} m2")
+    
+        print("-" * 60)
+    
         print(f"Tube Velocity      : {v_tube:.4f} m/s")
         print(f"Shell Velocity     : {v_shell:.4f} m/s")
+    
+        print("-" * 60)
+    
         print(f"Tube DP            : {tube_dp:.2f} Pa")
         print(f"Shell DP           : {shell_dp:.2f} Pa")
+    
+        print("-" * 60)
+    
         print(f"Hot Outlet Temp    : {th_out:.2f} K")
         print(f"Cold Outlet Temp   : {tc_out:.2f} K")
+    
         print("=" * 60)
     
         # ==========================================================
@@ -1712,14 +1768,11 @@ class ShellAndTubeHX(HeatExchanger):
             "assignment": assignment,
             "q_watts_original": q_actual,
             "q_watts_effective": q_actual,
-            "lmtd": lmtd,
-            "cltd": cltd,
-            "ft": ft,
-            "n_units": 1,
+            "ntu": NTU,
+            "effectiveness": effectiveness,
             "method": self.method,
             "area": actual_area,
         }
     
         return self._finalize_results(payload)
-
 
