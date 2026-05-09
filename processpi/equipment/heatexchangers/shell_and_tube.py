@@ -587,7 +587,7 @@ class ShellAndTubeHX(HeatExchanger):
         h_s = ConvectiveH(nusselt=dimless["nu_s"], k=cold["k"], diameter=dimless["de_shell"]).calculate().to("W/m2K").value
         return h_t, h_s
 
-   def _calculate_overall_U(
+    def _calculate_overall_U(
         self,
         h_t: float,
         h_s: float,
@@ -803,7 +803,7 @@ class ShellAndTubeHX(HeatExchanger):
             soft.append("L/D ratio slightly outside ideal range")
         return hard, soft
 
-def _iterate_U(self, q_watts: float, cltd: float, hot: Dict[str, float], cold: Dict[str, float],
+    def _iterate_U(self, q_watts: float, cltd: float, hot: Dict[str, float], cold: Dict[str, float],
                    shell_passes: int, tube_passes: int, u_assumed: float,
                    u_range: Tuple[float, float] | None) -> Dict[str, Any]:
         state: Dict[str, Any] = {"iterations": 0, "u_assumed": u_assumed}
