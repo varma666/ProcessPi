@@ -22,6 +22,7 @@ from .standards import (
     get_velocity_range,
     select_tube_configuration,
     tube_length_select,
+    get_fouling_factor,
 )
 
 
