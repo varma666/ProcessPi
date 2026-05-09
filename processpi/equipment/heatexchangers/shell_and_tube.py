@@ -540,15 +540,277 @@ class ShellAndTubeHX(HeatExchanger):
         h_s = ConvectiveH(nusselt=dimless["nu_s"], k=cold["k"], diameter=dimless["de_shell"]).calculate().to("W/m2K").value
         return h_t, h_s
 
-    def _calculate_overall_U(self, h_t: float, h_s: float, u_range: Tuple[float, float] | None) -> float:
-        u_calculated = self.overall_u(
-            h_tube=h_t,
-            h_shell=h_s,
-            fouling_factor=float(self.specs.get("fouling_factor", 0.0)),
+    def _calculate_overall_U(
+        self,
+        h_t: float,
+        h_s: float,
+        u_range: tuple[float, float] | None = None,
+    ) -> float:
+    
+        """
+        Calculate overall heat transfer coefficient.
+    
+        Overall resistance equation:
+    
+        U = 1 / (
+            (1 / h_tube)
+            + (1 / h_shell)
+            + (tube_wall_thickness / tube_material_k)
+            + Rf_tube
+            + Rf_shell
         )
-        #u_min, u_max = u_range if u_range else (100.0, 1000.0)
-        #return max(min(u_calculated, u_max), u_min)
-        print(f"U Calcaulated: {u_calculated}")
+    
+        Parameters
+        ----------
+        h_t : float
+            Tube-side heat transfer coefficient [W/m2.K]
+    
+        h_s : float
+            Shell-side heat transfer coefficient [W/m2.K]
+    
+        u_range : tuple, optional
+            Recommended U range from standards database.
+    
+        Returns
+        -------
+        float
+            Overall heat transfer coefficient [W/m2.K]
+        """
+    
+        # ======================================================
+        # VALIDATE GEOMETRY
+        # ======================================================
+    
+        if not hasattr(self, "geometry"):
+            raise ValueError(
+                "Heat exchanger geometry not initialized."
+            )
+    
+        tube_od = self.geometry.get("tube_od")
+        tube_id = self.geometry.get("tube_id")
+    
+        if tube_od is None or tube_id is None:
+            raise ValueError(
+                "Missing tube geometry required for "
+                "overall U calculation."
+            )
+    
+        # ======================================================
+        # TUBE WALL RESISTANCE
+        # ======================================================
+    
+        tube_wall_thickness = (tube_od - tube_id) / 2
+    
+        tube_material_k = self.specs.get(
+            "tube_thermal_conductivity"
+        )
+    
+        if tube_material_k is None:
+            raise ValueError(
+                "Missing tube thermal conductivity "
+                "in exchanger specifications."
+            )
+    
+        R_wall = tube_wall_thickness / tube_material_k
+    
+        # ======================================================
+        # COMPONENT VALIDATION
+        # ======================================================
+    
+        hot_component = getattr(self.hot_in, "component", None)
+        cold_component = getattr(self.cold_in, "component", None)
+    
+        if hot_component is None:
+            raise ValueError(
+                "Hot-side component not defined."
+            )
+    
+        if cold_component is None:
+            raise ValueError(
+                "Cold-side component not defined."
+            )
+    
+        # ======================================================
+        # HX METADATA
+        # ======================================================
+    
+        if not hasattr(hot_component, "hx_data"):
+            raise ValueError(
+                f"{type(hot_component).__name__} "
+                "does not implement hx_data()."
+            )
+    
+        if not hasattr(cold_component, "hx_data"):
+            raise ValueError(
+                f"{type(cold_component).__name__} "
+                "does not implement hx_data()."
+            )
+    
+        hot_hx_data = hot_component.hx_data()
+        cold_hx_data = cold_component.hx_data()
+    
+        print(f"[DEBUG] Hot hx_data = {hot_hx_data}")
+        print(f"[DEBUG] Cold hx_data = {cold_hx_data}")
+    
+        # ======================================================
+        # FOULING KEYS
+        # ======================================================
+    
+        shell_key = hot_hx_data.get("fouling_key")
+        tube_key = cold_hx_data.get("fouling_key")
+    
+        if shell_key is None:
+            raise ValueError(
+                f"Missing 'fouling_key' in hx_data() "
+                f"for hot component "
+                f"{type(hot_component).__name__}"
+            )
+    
+        if tube_key is None:
+            raise ValueError(
+                f"Missing 'fouling_key' in hx_data() "
+                f"for cold component "
+                f"{type(cold_component).__name__}"
+            )
+    
+        # ======================================================
+        # VELOCITIES
+        # ======================================================
+    
+        shell_velocity = getattr(
+            self,
+            "shell_velocity",
+            None
+        )
+    
+        tube_velocity = getattr(
+            self,
+            "tube_velocity",
+            None
+        )
+    
+        # ======================================================
+        # TEMPERATURES
+        # ======================================================
+    
+        shell_temperature = (
+            self.hot_in.temperature.to("C").value
+        )
+    
+        tube_temperature = (
+            self.cold_in.temperature.to("C").value
+        )
+    
+        # ======================================================
+        # FOULING FACTORS
+        # ======================================================
+    
+        shell_fouling = get_fouling_factor(
+            fluid_key=shell_key,
+            velocity=shell_velocity,
+            temperature=shell_temperature,
+            debug=True,
+        )
+    
+        tube_fouling = get_fouling_factor(
+            fluid_key=tube_key,
+            velocity=tube_velocity,
+            temperature=tube_temperature,
+            debug=True,
+        )
+    
+        # ======================================================
+        # INDIVIDUAL RESISTANCES
+        # ======================================================
+    
+        if h_t <= 0:
+            raise ValueError(
+                "Invalid tube-side heat transfer coefficient."
+            )
+    
+        if h_s <= 0:
+            raise ValueError(
+                "Invalid shell-side heat transfer coefficient."
+            )
+    
+        R_tube = 1 / h_t
+        R_shell = 1 / h_s
+    
+        # ======================================================
+        # TOTAL THERMAL RESISTANCE
+        # ======================================================
+    
+        R_total = (
+            R_tube
+            + R_shell
+            + R_wall
+            + shell_fouling
+            + tube_fouling
+        )
+    
+        if R_total <= 0:
+            raise ValueError(
+                "Invalid total thermal resistance "
+                "during overall U calculation."
+            )
+    
+        # ======================================================
+        # CALCULATE U
+        # ======================================================
+    
+        u_calculated = 1 / R_total
+    
+        # ======================================================
+        # DEBUGGING
+        # ======================================================
+    
+        print("\n[DEBUG] OVERALL U CALCULATION")
+        print(f"[DEBUG] h_tube               = {h_t:.6f} W/m2.K")
+        print(f"[DEBUG] h_shell              = {h_s:.6f} W/m2.K")
+        print(f"[DEBUG] Tube wall thickness  = {tube_wall_thickness:.8f} m")
+        print(f"[DEBUG] Tube thermal k       = {tube_material_k:.6f} W/m.K")
+        print(f"[DEBUG] Tube fouling factor  = {tube_fouling:.8f} m2.K/W")
+        print(f"[DEBUG] Shell fouling factor = {shell_fouling:.8f} m2.K/W")
+        print(f"[DEBUG] R_tube               = {R_tube:.8f}")
+        print(f"[DEBUG] R_shell              = {R_shell:.8f}")
+        print(f"[DEBUG] R_wall               = {R_wall:.8f}")
+        print(f"[DEBUG] R_total              = {R_total:.8f}")
+        print(f"[DEBUG] U_calculated         = {u_calculated:.6f} W/m2.K")
+    
+        # ======================================================
+        # STANDARD RANGE CHECK
+        # ======================================================
+    
+        if u_range:
+    
+            u_min, u_max = u_range
+    
+            print(
+                f"[DEBUG] Recommended U range "
+                f"= ({u_min}, {u_max})"
+            )
+    
+            if u_calculated < u_min:
+    
+                print(
+                    f"[DEBUG] Calculated U below "
+                    f"recommended range."
+                )
+    
+            elif u_calculated > u_max:
+    
+                print(
+                    f"[DEBUG] Calculated U above "
+                    f"recommended range."
+                )
+    
+            else:
+    
+                print(
+                    f"[DEBUG] Calculated U within "
+                    f"recommended range."
+                )
+    
         return u_calculated
 
     def _validate_geometry(self, state: Dict[str, Any], tube_dp: float, shell_dp: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
