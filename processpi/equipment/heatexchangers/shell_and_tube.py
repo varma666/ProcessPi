@@ -1617,12 +1617,12 @@ class ShellAndTubeHX(HeatExchanger):
     
         hot_cp_flow = (
             hot["m_dot"]
-            * hot["cp"]
+            * hot["cp"] * 1000
         )
     
         cold_cp_flow = (
             cold["m_dot"]
-            * cold["cp"]
+            * cold["cp"] * 1000
         )
     
         th_out = (
