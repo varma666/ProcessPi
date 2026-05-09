@@ -544,8 +544,8 @@ class ShellAndTubeHX(HeatExchanger):
         self,
         h_t: float,
         h_s: float,
+        geometry: dict,
         u_range: tuple[float, float] | None = None,
-        geometry,
     ) -> float:
     
         """
