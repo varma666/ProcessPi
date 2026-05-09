@@ -1034,10 +1034,7 @@ class ShellAndTubeHX(HeatExchanger):
     
             u_old = state["u_assumed"]
     
-            u_new = (
-                0.7 * u_old
-                + 0.3 * u_dirty
-            )
+            u_new = u_dirty
     
             convergence = abs(
                 (u_new - u_old)
