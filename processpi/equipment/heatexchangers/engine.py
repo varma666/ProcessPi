@@ -104,7 +104,11 @@ class HeatExchangerEngine:
         # ======================================================
         # CREATE HX OBJECT
         # ======================================================
-    
+        specs = dict(self.data.get("specs", {}))
+        
+        # Prevent duplicate keyword issue
+        specs.pop("method", None)
+        
         hx = cls(
             hot_in=self.data["hot_in"],
             cold_in=self.data["cold_in"],
@@ -115,7 +119,7 @@ class HeatExchangerEngine:
                 if issubclass(cls, ShellAndTubeHX)
                 else "kern"
             ),
-            **self.data.get("specs", {}),
+            **specs,
         )
     
         # ======================================================
