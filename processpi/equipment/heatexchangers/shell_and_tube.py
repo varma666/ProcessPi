@@ -244,12 +244,58 @@ class ShellAndTubeHX(HeatExchanger):
             return series[idx-1] * 0.0254
         return tube_od_m
 
-    def _get_velocity_limits(self, component: Any, props: Dict[str, float]) -> Tuple[float, float]:
-        hx_data = component.hx_data() if hasattr(component, "hx_data") else {}
-        key = hx_data.get("velocity_key", "water" if props.get("phase") != "vapor" else "vapor")
-        limits = RECOMMENDED_VELOCITIES.get(key, DEFAULT_VELOCITY_RANGE)
-        self._debug(f"Velocity lookup key = {key}, limits={limits}")
-        return limits
+    def _get_velocity_limits(self, side, component):
+            """
+            Returns velocity limits based on fluid phase, operating pressure, and exchanger side.
+            
+            Args:
+                side (str): 'tube' or 'shell'
+                component (Component): Component object with access to hx_data()
+                
+            Returns:
+                tuple: (min_velocity, max_velocity) in m/s
+            """
+            data = component.hx_data()
+            phase = data.get('phase', 'liquid').lower()
+            family = data.get('family', 'default').lower()
+            pressure = data.get('pressure', 1.0)  # assumed in bar or atm based on context
+            
+            velocity_limits = (0.0, 0.0)
+            pressure_regime = "N/A"
+    
+            if phase == 'liquid':
+                if side == 'tube':
+                    if family == 'water':
+                        velocity_limits = (1.5, 2.5)
+                    else:
+                        velocity_limits = (1.0, 2.0)
+                else:  # shell side
+                    velocity_limits = (0.3, 1.0)
+            
+            else:  # vapor/gas
+                # Determine pressure regime (1 atm approx 1.01325 bar)
+                if pressure < 1.0:
+                    pressure_regime = "vacuum"
+                    if side == 'tube':
+                        velocity_limits = (50, 70)
+                    else:
+                        velocity_limits = (20, 40)
+                elif 1.0 <= pressure <= 3.0:
+                    pressure_regime = "atmospheric"
+                    if side == 'tube':
+                        velocity_limits = (10, 30)
+                    else:
+                        velocity_limits = (10, 25)
+                else:  # pressure > 3 bar
+                    pressure_regime = "high pressure"
+                    if side == 'tube':
+                        velocity_limits = (5, 10)
+                    else:
+                        velocity_limits = (5, 10)
+    
+            print(f"DEBUG: Pressure Regime: {pressure_regime} | Side: {side} | Velocity Limits: {velocity_limits}")
+            
+            return velocity_limits
 
     def _regenerate_geometry(self, geometry: Dict[str, float], tube_passes: int, hot: Dict[str, float] | None = None) -> Dict[str, float]:
         area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
@@ -541,242 +587,158 @@ class ShellAndTubeHX(HeatExchanger):
         h_s = ConvectiveH(nusselt=dimless["nu_s"], k=cold["k"], diameter=dimless["de_shell"]).calculate().to("W/m2K").value
         return h_t, h_s
 
-    def _calculate_overall_U(
+   def _calculate_overall_U(
         self,
         h_t: float,
         h_s: float,
         geometry: dict,
         u_range: tuple[float, float] | None = None,
-    ) -> float:
+    ) -> dict:
+        """
+        Calculates clean and dirty overall heat transfer coefficients and resistances.
+        
+        Returns:
+            dict: {U_clean, U_dirty, Rf_tube, Rf_shell, R_total_clean, R_total_dirty}
+        """
 
-    
         tube_od = geometry.get("tube_od")
         tube_id = geometry.get("tube_id")
-    
+
         if tube_od is None or tube_id is None:
             raise ValueError(
                 "Missing tube geometry required for "
                 "overall U calculation."
             )
-    
+
         # ======================================================
         # TUBE WALL RESISTANCE
         # ======================================================
-    
+
         tube_wall_thickness = (tube_od - tube_id) / 2
-    
+
         tube_material_k = self.specs.get(
             "tube_thermal_conductivity"
         )
-    
+
         if tube_material_k is None:
             tube_material_k = 45
-            '''raise ValueError(
-                "Missing tube thermal conductivity "
-                "in exchanger specifications."
-            )'''
         
         R_wall = tube_wall_thickness / tube_material_k
-    
+
         # ======================================================
         # COMPONENT VALIDATION
         # ======================================================
-    
+
         hot_component = getattr(self.hot_in, "component", None)
         cold_component = getattr(self.cold_in, "component", None)
-    
+
         if hot_component is None:
-            raise ValueError(
-                "Hot-side component not defined."
-            )
-    
+            raise ValueError("Hot-side component not defined.")
+
         if cold_component is None:
-            raise ValueError(
-                "Cold-side component not defined."
-            )
-    
+            raise ValueError("Cold-side component not defined.")
+
         # ======================================================
         # HX METADATA
         # ======================================================
-    
+
         if not hasattr(hot_component, "hx_data"):
-            raise ValueError(
-                f"{type(hot_component).__name__} "
-                "does not implement hx_data()."
-            )
-    
+            raise ValueError(f"{type(hot_component).__name__} does not implement hx_data().")
+
         if not hasattr(cold_component, "hx_data"):
-            raise ValueError(
-                f"{type(cold_component).__name__} "
-                "does not implement hx_data()."
-            )
-    
+            raise ValueError(f"{type(cold_component).__name__} does not implement hx_data().")
+
         hot_hx_data = hot_component.hx_data()
         cold_hx_data = cold_component.hx_data()
-    
-        print(f"[DEBUG] Hot hx_data = {hot_hx_data}")
-        print(f"[DEBUG] Cold hx_data = {cold_hx_data}")
-    
+
         # ======================================================
-        # FOULING KEYS
+        # FOULING KEYS & PARAMETERS
         # ======================================================
-    
+
         shell_key = hot_hx_data.get("fouling_key")
         tube_key = cold_hx_data.get("fouling_key")
-    
-        if shell_key is None:
-            raise ValueError(
-                f"Missing 'fouling_key' in hx_data() "
-                f"for hot component "
-                f"{type(hot_component).__name__}"
-            )
-    
-        if tube_key is None:
-            raise ValueError(
-                f"Missing 'fouling_key' in hx_data() "
-                f"for cold component "
-                f"{type(cold_component).__name__}"
-            )
-    
+
+        if shell_key is None or tube_key is None:
+            raise ValueError("Missing 'fouling_key' in component hx_data().")
+
+        shell_velocity = getattr(self, "shell_velocity", None)
+        tube_velocity = getattr(self, "tube_velocity", None)
+
+        shell_temperature = self.hot_in.temperature.to("C").value
+        tube_temperature = self.cold_in.temperature.to("C").value
+
         # ======================================================
-        # VELOCITIES
+        # FOULING FACTORS (Rf)
         # ======================================================
-    
-        shell_velocity = getattr(
-            self,
-            "shell_velocity",
-            None
-        )
-    
-        tube_velocity = getattr(
-            self,
-            "tube_velocity",
-            None
-        )
-    
-        # ======================================================
-        # TEMPERATURES
-        # ======================================================
-    
-        shell_temperature = (
-            self.hot_in.temperature.to("C").value
-        )
-    
-        tube_temperature = (
-            self.cold_in.temperature.to("C").value
-        )
-    
-        # ======================================================
-        # FOULING FACTORS
-        # ======================================================
-    
-        shell_fouling = get_fouling_factor(
+
+        Rf_shell = get_fouling_factor(
             fluid_key=shell_key,
             velocity=shell_velocity,
             temperature=shell_temperature,
             debug=True,
         )
-    
-        tube_fouling = get_fouling_factor(
+
+        Rf_tube = get_fouling_factor(
             fluid_key=tube_key,
             velocity=tube_velocity,
             temperature=tube_temperature,
             debug=True,
         )
-    
+
         # ======================================================
-        # INDIVIDUAL RESISTANCES
+        # INDIVIDUAL CONVECTIVE RESISTANCES
         # ======================================================
-    
-        if h_t <= 0:
-            raise ValueError(
-                "Invalid tube-side heat transfer coefficient."
-            )
-    
-        if h_s <= 0:
-            raise ValueError(
-                "Invalid shell-side heat transfer coefficient."
-            )
-    
+
+        if h_t <= 0 or h_s <= 0:
+            raise ValueError("Invalid heat transfer coefficients (must be > 0).")
+
         R_tube = 1 / h_t
         R_shell = 1 / h_s
-    
+
         # ======================================================
-        # TOTAL THERMAL RESISTANCE
+        # TOTAL THERMAL RESISTANCES
         # ======================================================
-    
-        R_total = (
-            R_tube
-            + R_shell
-            + R_wall
-            + shell_fouling
-            + tube_fouling
-        )
-    
-        if R_total <= 0:
-            raise ValueError(
-                "Invalid total thermal resistance "
-                "during overall U calculation."
-            )
-    
+
+        R_total_clean = R_tube + R_shell + R_wall
+        R_total_dirty = R_tube + R_shell + R_wall + Rf_tube + Rf_shell
+
+        if R_total_clean <= 0 or R_total_dirty <= 0:
+            raise ValueError("Invalid total thermal resistance calculated.")
+
         # ======================================================
-        # CALCULATE U
+        # OVERALL U CALCULATION
         # ======================================================
-    
-        u_calculated = 1 / R_total
-    
+
+        U_clean = 1 / R_total_clean
+        U_dirty = 1 / R_total_dirty
+
         # ======================================================
         # DEBUGGING
         # ======================================================
-    
-        print("\n[DEBUG] OVERALL U CALCULATION")
-        print(f"[DEBUG] h_tube               = {h_t:.6f} W/m2.K")
-        print(f"[DEBUG] h_shell              = {h_s:.6f} W/m2.K")
-        print(f"[DEBUG] Tube wall thickness  = {tube_wall_thickness:.8f} m")
-        print(f"[DEBUG] Tube thermal k       = {tube_material_k:.6f} W/m.K")
-        print(f"[DEBUG] Tube fouling factor  = {tube_fouling:.8f} m2.K/W")
-        print(f"[DEBUG] Shell fouling factor = {shell_fouling:.8f} m2.K/W")
-        print(f"[DEBUG] R_tube               = {R_tube:.8f}")
-        print(f"[DEBUG] R_shell              = {R_shell:.8f}")
-        print(f"[DEBUG] R_wall               = {R_wall:.8f}")
-        print(f"[DEBUG] R_total              = {R_total:.8f}")
-        print(f"[DEBUG] U_calculated         = {u_calculated:.6f} W/m2.K")
-    
-        # ======================================================
-        # STANDARD RANGE CHECK
-        # ======================================================
-    
+
+        print("\n" + "="*40)
+        print("[DEBUG] OVERALL U CALCULATION SUMMARY")
+        print(f"[DEBUG] Convective -> R_tube: {R_tube:.8f}, R_shell: {R_shell:.8f}")
+        print(f"[DEBUG] Wall       -> R_wall: {R_wall:.8f}")
+        print(f"[DEBUG] Fouling    -> Rf_tube: {Rf_tube:.8f}, Rf_shell: {Rf_shell:.8f}")
+        print("-" * 40)
+        print(f"[DEBUG] R_total_clean: {R_total_clean:.8f} -> U_clean: {U_clean:.4f} W/m2.K")
+        print(f"[DEBUG] R_total_dirty: {R_total_dirty:.8f} -> U_dirty: {U_dirty:.4f} W/m2.K")
+        
         if u_range:
-    
             u_min, u_max = u_range
-    
-            print(
-                f"[DEBUG] Recommended U range "
-                f"= ({u_min}, {u_max})"
-            )
-    
-            if u_calculated < u_min:
-    
-                print(
-                    f"[DEBUG] Calculated U below "
-                    f"recommended range."
-                )
-    
-            elif u_calculated > u_max:
-    
-                print(
-                    f"[DEBUG] Calculated U above "
-                    f"recommended range."
-                )
-    
-            else:
-    
-                print(
-                    f"[DEBUG] Calculated U within "
-                    f"recommended range."
-                )
-    
-        return u_calculated
+            status = "WITHIN" if u_min <= U_dirty <= u_max else "OUTSIDE"
+            print(f"[DEBUG] Range Check: {U_dirty:.2f} is {status} limits ({u_min}, {u_max})")
+        print("="*40 + "\n")
+
+        return {
+            "U_clean": U_clean,
+            "U_dirty": U_dirty,
+            "Rf_tube": Rf_tube,
+            "Rf_shell": Rf_shell,
+            "R_total_clean": R_total_clean,
+            "R_total_dirty": R_total_dirty,
+        }
 
     def _validate_geometry(self, state: Dict[str, Any], tube_dp: float, shell_dp: float, hot: Dict[str, float], cold: Dict[str, float]) -> List[str]:
         violations: List[str] = []
@@ -841,7 +803,7 @@ class ShellAndTubeHX(HeatExchanger):
             soft.append("L/D ratio slightly outside ideal range")
         return hard, soft
 
-    def _iterate_U(self, q_watts: float, cltd: float, hot: Dict[str, float], cold: Dict[str, float],
+def _iterate_U(self, q_watts: float, cltd: float, hot: Dict[str, float], cold: Dict[str, float],
                    shell_passes: int, tube_passes: int, u_assumed: float,
                    u_range: Tuple[float, float] | None) -> Dict[str, Any]:
         state: Dict[str, Any] = {"iterations": 0, "u_assumed": u_assumed}
@@ -852,28 +814,28 @@ class ShellAndTubeHX(HeatExchanger):
         for i in range(1, max_iter + 1):
             self._debug(f"Iteration = {i}")
             self._debug(f"U iteration = {i}")
-            if base_required_area is None:
-                base_required_area = self._calculate_required_area(q_watts, state["u_assumed"], cltd)
-            area_required = base_required_area
+            
+            # Use current u_assumed for the required area calculation
+            area_required = self._calculate_required_area(q_watts, state["u_assumed"], cltd)
+            
             self._debug(f"Base required area = {area_required:.4f} m2")
             geometry = self._select_tube_geometry(area_required, hot, cold, tube_passes)
             geometry["tube_count"] = self._recalculate_required_tubes(area_required, geometry, tube_passes)
             geometry = self._regenerate_geometry(geometry, tube_passes, hot)
 
-            bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"],geometry["tube_od"])
-            print("Bundle Dia: ",bundle_diameter)
+            bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"], geometry["tube_od"])
             shell_diameter = self._calculate_shell_diameter(bundle_diameter)
-            print("Shell Dia: ",shell_diameter)
+            
             geometry = self._check_L_over_D(geometry, shell_diameter, tube_passes, area_required, hot)
             geometry["tube_count"] = self._recalculate_required_tubes(area_required, geometry, tube_passes)
+            
             standard_geom = self._select_best_standard_geometry(area_required, geometry["tube_od"], geometry["tube_length"], tube_passes)
             if standard_geom.get("tube_count", 0) >= geometry["tube_count"]:
                 geometry["tube_count"] = standard_geom["tube_count"]
+            
             geometry = self._regenerate_geometry(geometry, tube_passes, hot)
-            bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"],geometry["tube_od"])
-            print("Bundle Dia: ",bundle_diameter)
+            bundle_diameter = self._calculate_bundle_diameter(geometry["tube_count"], geometry["tube_od"])
             shell_diameter = self._calculate_shell_diameter(bundle_diameter)
-            print("Shell Dia: ",shell_diameter)
 
             v_tube, v_shell, tube_count, shell_diameter, tube_passes = self._check_velocities(
                 geometry,
@@ -888,76 +850,98 @@ class ShellAndTubeHX(HeatExchanger):
 
             dimless = self._calculate_dimensionless(geometry, hot, cold, v_tube, v_shell)
             h_t, h_s = self._calculate_htc(dimless, geometry, hot, cold)
-            u_calculated = self._calculate_overall_U(
-                                                        h_t=h_t,
-                                                        h_s=h_s,
-                                                        geometry=geometry,
-                                                        u_range=u_range,
-                                                    )
-
-            state.update(
-                {
-                    "iterations": i,
-                    "area_required": area_required,
-                    "geometry": geometry,
-                    "bundle_diameter": bundle_diameter,
-                    "shell_diameter": shell_diameter,
-                    "v_tube": v_tube,
-                    "v_shell": v_shell,
-                    "dimless": dimless,
-                    "h_t": h_t,
-                    "h_s": h_s,
-                    "u_calculated": u_calculated,
-                }
+            
+            # ======================================================
+            # OVERALL U & FOULING MARGIN CALCULATION
+            # ======================================================
+            u_results = self._calculate_overall_U(
+                h_t=h_t,
+                h_s=h_s,
+                geometry=geometry,
+                u_range=u_range,
             )
-            tube_dp_i, shell_dp_i = self._calculate_pressure_drop(hot, cold, shell_passes, tube_passes, shell_diameter, geometry["tube_length"], geometry["tube_id"], v_tube, v_shell)
-            hard_violations, soft_warnings = self._validate_geometry(state, tube_dp_i, shell_dp_i, hot, cold)
-            self._debug(f"Selected tube count = {geometry['tube_count']}")
-            self._debug(f"Selected shell ID ~= {shell_diameter/0.0254:.2f} in")
-            self._debug(f"Tube velocity = {v_tube:.4f} m/s")
-            self._debug(f"Shell velocity = {v_shell:.4f} m/s")
-            self._debug(f"Tube dp = {tube_dp_i:.2f} Pa")
-            self._debug(f"Shell dp = {shell_dp_i:.2f} Pa")
-            self._debug(f"Actual provided area = {geometry['area']:.4f} m2")
-            self._debug(f"Area margin = {(geometry['area'] - area_required):.4f} m2")
-            self._debug(f"Hard violations = {hard_violations}")
-            self._debug(f"Soft warnings = {soft_warnings}")
+            
+            u_clean = u_results["U_clean"]
+            u_dirty = u_results["U_dirty"]
+            
+            # A = Q / (U * LMTD)
+            # Note: cltd represents corrected LMTD
+            a_clean = q_watts / (u_clean * cltd) if u_clean > 0 else 0
+            a_dirty = q_watts / (u_dirty * cltd) if u_dirty > 0 else 0
+            
+            # fouling_margin = ((A_dirty - A_clean) / A_clean) * 100
+            fouling_margin = ((a_dirty - a_clean) / a_clean * 100) if a_clean > 0 else 0
 
-            prev_geom = state.get("prev_geometry")
-            current_geometry = {
-                "tube_count": geometry["tube_count"],
-                "tube_length": geometry["tube_length"],
-                "tube_passes": tube_passes,
+            state.update({
+                "iterations": i,
+                "area_required": area_required,
+                "geometry": geometry,
+                "bundle_diameter": bundle_diameter,
                 "shell_diameter": shell_diameter,
-                "tube_od": geometry["tube_od"],
-            }
-            if prev_geom and current_geometry == prev_geom:
-                self._debug("Geometry converged")
-                if not hard_violations:
-                    break
-            state["prev_geometry"] = dict(current_geometry)
-            relaxation_factor = 0.7
-            u_new = relaxation_factor * state["u_assumed"] + (1.0 - relaxation_factor) * u_calculated
-            self._debug(f"U convergence error = {abs(u_new - state['u_assumed']) / max(state['u_assumed'], 1e-9):.4f}")
-            if not hard_violations and abs(u_new - state["u_assumed"]) / max(state["u_assumed"], 1e-9) < 0.05:
+                "v_tube": v_tube,
+                "v_shell": v_shell,
+                "dimless": dimless,
+                "h_t": h_t,
+                "h_s": h_s,
+                "u_calculated": u_dirty,
+                "u_clean": u_clean,
+                "fouling_margin": fouling_margin
+            })
+
+            tube_dp_i, shell_dp_i = self._calculate_pressure_drop(
+                hot, cold, shell_passes, tube_passes, shell_diameter, 
+                geometry["tube_length"], geometry["tube_id"], v_tube, v_shell
+            )
+            
+            hard_violations, soft_warnings = self._validate_geometry(state, tube_dp_i, shell_dp_i, hot, cold)
+
+            # ======================================================
+            # DEBUG PRINTS
+            # ======================================================
+            print(f"\n--- [DEBUG] U-Iteration {i} ---")
+            print(f"U_old (assumed): {state['u_assumed']:.4f} W/m2.K")
+            print(f"U_dirty (calc):  {u_dirty:.4f} W/m2.K")
+            print(f"A_clean (req):   {a_clean:.4f} m2")
+            print(f"A_dirty (req):   {a_dirty:.4f} m2")
+            print(f"Fouling Margin:  {fouling_margin:.2f} %")
+
+            # ======================================================
+            # CONVERGENCE AND UNDER-RELAXATION
+            # ======================================================
+            u_old = state["u_assumed"]
+            # Under-relaxation: U_new = 0.7 * U_old + 0.3 * U_dirty
+            u_new = 0.7 * u_old + 0.3 * u_dirty
+            print(f"U_new (relaxed): {u_new:.4f} W/m2.K")
+
+            # Check convergence conditions
+            u_converged = abs(u_new - u_old) / max(u_old, 1e-9) < 0.05
+            margin_acceptable = 20 <= fouling_margin <= 40
+            
+            if not hard_violations and u_converged and margin_acceptable:
+                self._debug("Convergence reached: Geometry feasible, U converged, and Margin acceptable.")
+                state["u_assumed"] = u_new
                 break
+
             if i >= max_redesign_iterations:
-                self._debug("Redesign iterations exceeded; returning best feasible geometry")
+                self._debug("Redesign iterations exceeded.")
                 state["status_override"] = "PARTIAL"
                 break
-            if "area" in hard_violations:
-                self._debug("Redesign reason = insufficient area; increasing tube count")
+
+            # Area violation handling
+            if "area" in hard_violations or fouling_margin < 20:
+                self._debug("Increasing area due to violation or low fouling margin.")
                 area_per_tube = math.pi * geometry["tube_od"] * geometry["tube_length"]
-                required_extra_area = area_required - geometry["area"]
+                # If margin is too low, we artificially increase area_required for the next pass
+                adj_area_req = a_dirty if fouling_margin < 20 else area_required
+                required_extra_area = adj_area_req - geometry["area"]
                 additional_tubes = math.ceil(required_extra_area / max(area_per_tube, 1e-12))
                 geometry["tube_count"] = self._round_tube_count_to_passes(geometry["tube_count"] + max(additional_tubes, 1), tube_passes)
                 geometry = self._regenerate_geometry(geometry, tube_passes, hot)
-            if not hard_violations:
-                break
+
             state["u_assumed"] = u_new
 
         return state
-
+                       
     def _calculate_pressure_drop(self, hot: Dict[str, float], cold: Dict[str, float], shell_passes: int,
                                  tube_passes: int, shell_diameter: float, tube_length: float,
                                  tube_id: float, v_tube: float, v_shell: float) -> Tuple[float, float]:
