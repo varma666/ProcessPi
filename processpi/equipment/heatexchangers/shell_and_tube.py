@@ -545,6 +545,7 @@ class ShellAndTubeHX(HeatExchanger):
         h_t: float,
         h_s: float,
         u_range: tuple[float, float] | None = None,
+        geometry,
     ) -> float:
     
         """
@@ -923,7 +924,7 @@ class ShellAndTubeHX(HeatExchanger):
 
             dimless = self._calculate_dimensionless(geometry, hot, cold, v_tube, v_shell)
             h_t, h_s = self._calculate_htc(dimless, geometry, hot, cold)
-            u_calculated = self._calculate_overall_U(h_t, h_s, u_range)
+            u_calculated = self._calculate_overall_U(h_t, h_s, u_range, geometry)
 
             state.update(
                 {
