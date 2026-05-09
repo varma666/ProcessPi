@@ -547,48 +547,10 @@ class ShellAndTubeHX(HeatExchanger):
         geometry: dict,
         u_range: tuple[float, float] | None = None,
     ) -> float:
+
     
-        """
-        Calculate overall heat transfer coefficient.
-    
-        Overall resistance equation:
-    
-        U = 1 / (
-            (1 / h_tube)
-            + (1 / h_shell)
-            + (tube_wall_thickness / tube_material_k)
-            + Rf_tube
-            + Rf_shell
-        )
-    
-        Parameters
-        ----------
-        h_t : float
-            Tube-side heat transfer coefficient [W/m2.K]
-    
-        h_s : float
-            Shell-side heat transfer coefficient [W/m2.K]
-    
-        u_range : tuple, optional
-            Recommended U range from standards database.
-    
-        Returns
-        -------
-        float
-            Overall heat transfer coefficient [W/m2.K]
-        """
-    
-        # ======================================================
-        # VALIDATE GEOMETRY
-        # ======================================================
-    
-        if not hasattr(self, "geometry"):
-            raise ValueError(
-                "Heat exchanger geometry not initialized."
-            )
-    
-        tube_od = self.geometry.get("tube_od")
-        tube_id = self.geometry.get("tube_id")
+        tube_od = geometry.get("tube_od")
+        tube_id = geometry.get("tube_id")
     
         if tube_od is None or tube_id is None:
             raise ValueError(
