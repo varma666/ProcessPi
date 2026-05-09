@@ -569,11 +569,12 @@ class ShellAndTubeHX(HeatExchanger):
         )
     
         if tube_material_k is None:
-            raise ValueError(
+            tube_material_k = 45
+            '''raise ValueError(
                 "Missing tube thermal conductivity "
                 "in exchanger specifications."
-            )
-    
+            )'''
+        
         R_wall = tube_wall_thickness / tube_material_k
     
         # ======================================================
