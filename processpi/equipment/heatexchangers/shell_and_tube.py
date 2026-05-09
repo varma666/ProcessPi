@@ -1683,10 +1683,10 @@ class ShellAndTubeHX(HeatExchanger):
         warnings: List[str] = list(getattr(self, "_warnings", []))
 
         n_units = 1
-        effective_q_watts = q_watts
+        effective_q_watts = q_actual
         if ft < 0.78:
             n_units = int(math.ceil(0.78 / max(ft, 1e-6)))
-            effective_q_watts = q_watts / n_units
+            effective_q_watts = q_actual / n_units
             warnings.append(f"Using {n_units} exchangers in series to satisfy Ft requirement")
 
         cltd = max(ft * lmtd, 1e-9)
