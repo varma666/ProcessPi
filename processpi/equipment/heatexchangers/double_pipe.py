@@ -83,7 +83,7 @@ class DoublePipeHX(HeatExchanger):
         # ======================================================
 
         area_required = self.area(
-            q,
+            q * 1000.0,
             u_assumed,
             lmtd,
         )
@@ -186,7 +186,7 @@ class DoublePipeHX(HeatExchanger):
         print("DOUBLE PIPE HX — DESIGN MODE")
         print("=" * 60)
 
-        print(f"Heat Duty          : {q/1000:.4f} kW")
+        print(f"Heat Duty          : {q:.4f} kW")
         print(f"LMTD               : {lmtd:.4f} K")
         print(f"U Assumed          : {u_assumed:.4f} W/m2.K")
         print(f"Required Area      : {area_required:.4f} m2")
