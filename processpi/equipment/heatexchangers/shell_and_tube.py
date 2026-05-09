@@ -620,8 +620,9 @@ class ShellAndTubeHX(HeatExchanger):
         """
 
         tube_od = geometry.get("tube_od")
+        print(f"Tube_od:{tube_od}")
         tube_id = geometry.get("tube_id")
-
+        print(f"Tube_id:{tube_id}")
         if tube_od is None or tube_id is None:
             raise ValueError(
                 "Missing tube geometry required for "
