@@ -360,3 +360,188 @@ CORROSION_SEVERITY_DATABASE = {
 
 DEFAULT_VELOCITY_RANGE = (0.8, 2.5)
 RECOMMENDED_VELOCITIES = {"organic_liquid": (1.8, 2.0),"inorganic_liquid": (1.2, 1.8),"oil": (1.8, 2.0),"gas": (15.0, 30.0),"vapor": (15.0, 30.0),"water": (1.0, 2.5),"acetic_acid": (1.0, 2.0),"acetone": (1.0, 2.0),"acrylic_acid": (1.0, 2.0),"air": (10.0, 20.0),"ammonia": (8.0, 15.0),"benzene": (1.0, 2.0),"benzoic_acid": (1.0, 2.0),"bromine": (0.8, 1.5),"butane": (10.0, 18.0),"carbon_dioxide": (8.0, 15.0),"carbon_monoxide": (8.0, 15.0),"carbon_tetrachloride": (0.8, 1.5),"chlorine": (5.0, 10.0),"chlorobenzene": (1.0, 2.0),"chloroform": (0.8, 1.5),"chloromethane": (8.0, 15.0),"cyanogen": (8.0, 15.0),"cyclohexane": (1.0, 2.0),"ethane": (10.0, 20.0),"ethanol": (1.0, 2.0),"ethyl_acetate": (1.0, 2.0),"ethylene": (10.0, 20.0),"fluorine": (5.0, 10.0),"fluorobenzene": (1.0, 2.0),"formic_acid": (1.0, 2.0),"helium_4": (20.0, 40.0),"hydrogen_chloride": (8.0, 15.0),"hydrogen_cyanide": (8.0, 15.0),"hydrogen_sulfide": (8.0, 15.0),"methane": (10.0, 20.0),"methanol": (1.0, 2.0),"neon": (15.0, 30.0),"nitrogen": (10.0, 20.0),"nitrous_oxide": (8.0, 15.0),"nitric_oxide": (8.0, 15.0),"oxygen": (10.0, 20.0),"ozone": (8.0, 15.0),"phenol": (1.0, 2.0),"propane": (10.0, 18.0),"propionic_acid": (1.0, 2.0),"styrene": (1.0, 2.0),"sulfur_dioxide": (8.0, 15.0),"toluene": (1.0, 2.0)}
+from difflib import get_close_matches
+
+def get_fouling_factor(
+    fluid_key: str,
+    velocity: float | None = None,
+    temperature: float | None = None,
+    database: dict | None = None,
+    debug: bool = True,
+) -> float:
+    """
+    Returns fouling factor based on ProcessPI fouling standards.
+
+    Parameters
+    ----------
+    fluid_key : str
+        Fluid/service lookup key.
+        Example:
+            "water"
+            "treated_water"
+            "hydrocarbons"
+            "crude"
+
+    velocity : float, optional
+        Fluid velocity in m/s.
+
+    temperature : float, optional
+        Fluid temperature in °C.
+
+    database : dict, optional
+        Fouling factor database.
+
+    debug : bool
+        Print debug messages.
+
+    Returns
+    -------
+    float
+        Fouling factor in m2.K/W
+    """
+
+    if database is None:
+        database = FOULING_FACTOR_DATABASE
+
+    DEFAULT_FOULING = 0.00018
+
+    # ======================================================
+    # NORMALIZE KEY
+    # ======================================================
+
+    key = (
+        fluid_key.lower()
+        .strip()
+        .replace(" ", "_")
+    )
+
+    # ======================================================
+    # DIRECT MATCH
+    # ======================================================
+
+    if key in database:
+        entry = database[key]
+
+    else:
+
+        # ==================================================
+        # FUZZY MATCH
+        # ==================================================
+
+        matches = get_close_matches(
+            key,
+            database.keys(),
+            n=1,
+            cutoff=0.6
+        )
+
+        if matches:
+            matched_key = matches[0]
+            entry = database[matched_key]
+
+            if debug:
+                print(
+                    f"[DEBUG] Fouling key '{key}' "
+                    f"not found. Using closest match "
+                    f"'{matched_key}'"
+                )
+
+        else:
+
+            # ==============================================
+            # SAFE DEFAULT
+            # ==============================================
+
+            if debug:
+                print(
+                    f"[DEBUG] Fouling key '{key}' "
+                    f"not found. Using default fouling "
+                    f"factor = {DEFAULT_FOULING}"
+                )
+
+            return DEFAULT_FOULING
+
+    # ======================================================
+    # BASE FOULING
+    # ======================================================
+
+    fouling = entry["base"]
+
+    if debug:
+        print(f"[DEBUG] Base fouling factor = {fouling}")
+
+    # ======================================================
+    # VELOCITY CORRECTION
+    # ======================================================
+
+    if entry.get("velocity_sensitive", False):
+
+        if velocity is not None:
+
+            # ----------------------------------------------
+            # LOWER VELOCITY → HIGHER FOULING
+            # HIGHER VELOCITY → LOWER FOULING
+            # ----------------------------------------------
+
+            if velocity < 1.0:
+                fouling *= 1.30
+
+                if debug:
+                    print(
+                        f"[DEBUG] Low velocity correction "
+                        f"applied (v={velocity:.3f} m/s)"
+                    )
+
+            elif velocity > 2.5:
+                fouling *= 0.85
+
+                if debug:
+                    print(
+                        f"[DEBUG] High velocity correction "
+                        f"applied (v={velocity:.3f} m/s)"
+                    )
+
+    # ======================================================
+    # TEMPERATURE CORRECTION
+    # ======================================================
+
+    if entry.get("temperature_sensitive", False):
+
+        if temperature is not None:
+
+            # ----------------------------------------------
+            # Higher temperature generally increases
+            # fouling tendency for oils/crudes
+            # ----------------------------------------------
+
+            if temperature > 150:
+                fouling *= 1.25
+
+                if debug:
+                    print(
+                        f"[DEBUG] High temperature "
+                        f"correction applied "
+                        f"(T={temperature:.2f} °C)"
+                    )
+
+            elif temperature < 50:
+                fouling *= 0.95
+
+                if debug:
+                    print(
+                        f"[DEBUG] Low temperature "
+                        f"correction applied "
+                        f"(T={temperature:.2f} °C)"
+                    )
+
+    # ======================================================
+    # FINAL DEBUG
+    # ======================================================
+
+    if debug:
+        print(
+            f"[DEBUG] Final fouling factor "
+            f"for '{key}' = {fouling}"
+        )
+
+    return fouling
