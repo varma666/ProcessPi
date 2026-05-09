@@ -1675,7 +1675,21 @@ class ShellAndTubeHX(HeatExchanger):
             cold["t_k"]
             + q_actual / Cc
         )
-    
+        lmtd = self._calculate_lmtd(hot, cold, th_out, tc_out)
+        #print(lmtd)
+
+        shell_passes, tube_passes, ft = self._adjust_passes(hot, cold, th_out, tc_out)
+        #print(ft, shell_passes, tube_passes)
+        warnings: List[str] = list(getattr(self, "_warnings", []))
+
+        n_units = 1
+        effective_q_watts = q_watts
+        if ft < 0.78:
+            n_units = int(math.ceil(0.78 / max(ft, 1e-6)))
+            effective_q_watts = q_watts / n_units
+            warnings.append(f"Using {n_units} exchangers in series to satisfy Ft requirement")
+
+        cltd = max(ft * lmtd, 1e-9)
         # ==========================================================
         # PRESSURE DROP
         # ==========================================================
@@ -1772,6 +1786,10 @@ class ShellAndTubeHX(HeatExchanger):
             "effectiveness": effectiveness,
             "method": self.method,
             "area": actual_area,
+            "lmtd": lmtd,
+            "cltd": cltd,
+            "ft": ft,
+            "n_units": n_units,
         }
     
         return self._finalize_results(payload)
