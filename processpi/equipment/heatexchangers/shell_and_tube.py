@@ -65,24 +65,24 @@ class ShellAndTubeHX(HeatExchanger):
         q_kw = self.heat_duty(hot, cold)
         th_in = hot["t_k"]
         tc_in = cold["t_k"]
-        print(f"Hot Cp: {hot["cp"]} Cold Cp {cold["cp"]}")
+        #print(f"Hot Cp: {hot["cp"]} Cold Cp {cold["cp"]}")
         if self.hot_out and self.hot_out.temperature and self.hot_out.temperature.to("C").value == 25 :
             th_out = self.hot_out.temperature.to("K").value
         else:
             th_out = th_in - (q_kw / max(hot["m_dot"] * hot["cp"], 1e-9))
 
         if self.cold_out and self.cold_out.temperature and self.cold_out.temperature.to("C").value == 25:
-            print("Hello World")
+            #print("Hello World")
             tc_out = self.cold_out.temperature.to("K").value
         else:
             tc_out = tc_in + (q_kw / max(cold["m_dot"] * cold["cp"], 1e-9))
-            print(f"tc_out = {tc_in} + ({q_kw}/({cold["m_dot"]}*{cold["cp"]})")
-            print(f"cold_rate: {max(cold["m_dot"] * cold["cp"], 1e-9)}")
-        print(tc_out)
+            #print(f"tc_out = {tc_in} + ({q_kw}/({cold["m_dot"]}*{cold["cp"]})")
+            #print(f"cold_rate: {max(cold["m_dot"] * cold["cp"], 1e-9)}")
+        #print(tc_out)
         return q_kw * 1000.0, th_out, tc_out
 
     def _calculate_lmtd(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
-        print(f"Hot in: {hot["t_k"]} Hot out: {th_out} cold in: {cold["t_k"]} cold out: { tc_out}")
+        #print(f"Hot in: {hot["t_k"]} Hot out: {th_out} cold in: {cold["t_k"]} cold out: { tc_out}")
         return self.lmtd(hot["t_k"], th_out, cold["t_k"], tc_out)
 
     def _safe_log_ratio(self, numerator: float, denominator: float) -> float:
