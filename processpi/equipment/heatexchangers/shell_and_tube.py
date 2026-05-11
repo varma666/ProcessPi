@@ -1717,14 +1717,14 @@ class ShellAndTubeHX(HeatExchanger):
         )
     
         atb = (
-            0.0008
+            0.00025
             * math.pi
             * tube_od
             * geometry["tube_count"]
         )
-    
+        
         asb = (
-            0.003
+            0.0015
             * shell_id
         )
     
