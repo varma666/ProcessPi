@@ -1005,17 +1005,18 @@ class ShellAndTubeHX(HeatExchanger):
             # PRESSURE DROP
             # ======================================================
     
-            tube_dp_i, shell_dp_i = (
+            tube_dp, shell_dp = (
                 self._calculate_pressure_drop(
-                    hot,
-                    cold,
-                    shell_passes,
-                    tube_passes,
-                    shell_diameter,
-                    geometry["tube_length"],
-                    geometry["tube_id"],
-                    v_tube,
-                    v_shell,
+                    hot=hot,
+                    cold=cold,
+                    shell_passes=shell_passes,
+                    tube_passes=tube_passes,
+                    shell_diameter=state["shell_diameter"],
+                    tube_length=state["geometry"]["tube_length"],
+                    tube_id=state["geometry"]["tube_id"],
+                    v_tube=state["v_tube"],
+                    v_shell=state["v_shell"],
+                    geometry=state["geometry"],
                 )
             )
     
@@ -1446,18 +1447,18 @@ class ShellAndTubeHX(HeatExchanger):
         if state["shell_diameter"] > 1.5:
             warnings.append("Shell diameter too large → consider multi-shell exchanger")
 
-        tube_dp_i, shell_dp_i = (
+        tube_dp, shell_dp = (
             self._calculate_pressure_drop(
-                hot,
-                cold,
-                shell_passes,
-                tube_passes,
-                shell_diameter,
-                geometry["tube_length"],
-                geometry["tube_id"],
-                v_tube,
-                v_shell,
-                geometry,
+                hot=hot,
+                cold=cold,
+                shell_passes=shell_passes,
+                tube_passes=tube_passes,
+                shell_diameter=state["shell_diameter"],
+                tube_length=state["geometry"]["tube_length"],
+                tube_id=state["geometry"]["tube_id"],
+                v_tube=state["v_tube"],
+                v_shell=state["v_shell"],
+                geometry=state["geometry"],
             )
         )
 
