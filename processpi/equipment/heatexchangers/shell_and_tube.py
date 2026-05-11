@@ -1084,28 +1084,206 @@ class ShellAndTubeHX(HeatExchanger):
                 break
     
         return state
-    def _calculate_pressure_drop(self, hot: Dict[str, float], cold: Dict[str, float], shell_passes: int,
-                                 tube_passes: int, shell_diameter: float, tube_length: float,
-                                 tube_id: float, v_tube: float, v_shell: float) -> Tuple[float, float]:
-        f_tube = float(self.specs.get("f_tube", 0.005))
-        f_shell = float(self.specs.get("f_shell", 0.02))
-
-        tube_dp = DarcyDrop(
-            f=f_tube,
-            length=tube_length * tube_passes,
-            diameter=tube_id,
+    def _calculate_pressure_drop(
+        self,
+        hot: Dict[str, float],
+        cold: Dict[str, float],
+        shell_passes: int,
+        tube_passes: int,
+        shell_diameter: float,
+        tube_length: float,
+        tube_id: float,
+        v_tube: float,
+        v_shell: float,
+        geometry: Dict[str, Any] | None = None,
+    ) -> Tuple[float, float]:
+    
+        # ==========================================================
+        # TUBE SIDE DP
+        # ==========================================================
+    
+        re_tube = Reynolds(
             density=hot["density"],
             velocity=v_tube,
-        ).calculate().to("Pa").value
-
-        shell_dp = DarcyDrop(
-            f=f_shell,
-            length=max(shell_passes, 1) * shell_diameter,
-            diameter=max(shell_diameter, 1e-6),
+            diameter=tube_id,
+            viscosity=hot["viscosity"],
+        ).calculate()
+    
+        if re_tube < 2100:
+            f_tube = 16.0 / max(re_tube, 1e-9)
+        else:
+            f_tube = 0.079 / (re_tube ** 0.25)
+    
+        tube_dp = (
+            4.0
+            * f_tube
+            * (
+                (tube_length * tube_passes)
+                / max(tube_id, 1e-9)
+            )
+            * (
+                hot["density"]
+                * v_tube**2
+                / 2.0
+            )
+        )
+    
+        # ==========================================================
+        # SHELL SIDE DP
+        # ==========================================================
+    
+        if geometry is None:
+    
+            geometry = {}
+    
+        tube_od = geometry.get("tube_od", 0.019)
+    
+        tube_pitch = geometry.get(
+            "tube_pitch",
+            1.25 * tube_od,
+        )
+    
+        baffle_spacing = geometry.get(
+            "baffle_spacing",
+            max(0.4 * shell_diameter, 1e-6),
+        )
+    
+        # Crossflow area
+        as_cross = (
+            shell_diameter
+            * baffle_spacing
+            * (
+                (tube_pitch - tube_od)
+                / max(tube_pitch, 1e-9)
+            )
+        )
+    
+        # Equivalent diameter
+        de_shell = (
+            1.27
+            * (
+                tube_pitch**2
+                - 0.785 * tube_od**2
+            )
+            / max(tube_od, 1e-9)
+        )
+    
+        # Shell Reynolds
+        re_shell = Reynolds(
             density=cold["density"],
             velocity=v_shell,
-        ).calculate().to("Pa").value
-
+            diameter=de_shell,
+            viscosity=cold["viscosity"],
+        ).calculate()
+    
+        # ==========================================================
+        # IDEAL CROSSFLOW DP
+        # ==========================================================
+    
+        if re_shell < 100:
+            j_f = 0.25
+        else:
+            j_f = 0.0045 + 0.395 / (re_shell ** 0.15)
+    
+        ncv = max(
+            shell_diameter / tube_pitch,
+            1.0,
+        )
+    
+        dp_ideal = (
+            8.0
+            * j_f
+            * ncv
+            * (
+                cold["density"]
+                * v_shell**2
+                / 2.0
+            )
+        )
+    
+        # ==========================================================
+        # BELL CORRECTION FACTORS
+        # ==========================================================
+    
+        ab = (
+            baffle_spacing
+            * max(
+                shell_diameter
+                - 0.95 * shell_diameter,
+                1e-6,
+            )
+        )
+    
+        atb = (
+            0.0008
+            * math.pi
+            * tube_od
+            * geometry.get("tube_count", 100)
+        )
+    
+        asb = (
+            0.003
+            * shell_diameter
+        )
+    
+        al = atb + asb
+    
+        # Bypass factor
+        alpha = 5.0 if re_shell < 100 else 4.0
+    
+        fb = math.exp(
+            -alpha
+            * (ab / max(as_cross, 1e-9))
+        )
+    
+        # Leakage factor
+        if al > 0:
+    
+            fl = 1.0 - (
+                0.44
+                * (
+                    (atb + 2.0 * asb)
+                    / al
+                )
+            )
+    
+        else:
+    
+            fl = 1.0
+    
+        fl = max(0.4, min(fl, 1.0))
+    
+        # ==========================================================
+        # WINDOW DP
+        # ==========================================================
+    
+        dp_window = (
+            0.5
+            * cold["density"]
+            * v_shell**2
+        )
+    
+        # ==========================================================
+        # TOTAL SHELL DP
+        # ==========================================================
+    
+        nbaffles = max(
+            int(
+                tube_length / baffle_spacing
+            ) - 1,
+            1,
+        )
+    
+        shell_dp = (
+            dp_ideal
+            * fb
+            * fl
+            * nbaffles
+        ) + (
+            nbaffles
+            * dp_window
+        )
+    
         return tube_dp, shell_dp
 
     def _dp_limit(self, props: Dict[str, float]) -> float:
@@ -1268,16 +1446,19 @@ class ShellAndTubeHX(HeatExchanger):
         if state["shell_diameter"] > 1.5:
             warnings.append("Shell diameter too large → consider multi-shell exchanger")
 
-        tube_dp, shell_dp = self._calculate_pressure_drop(
-            hot=hot,
-            cold=cold,
-            shell_passes=shell_passes,
-            tube_passes=tube_passes,
-            shell_diameter=state["shell_diameter"],
-            tube_length=state["geometry"]["tube_length"],
-            tube_id=state["geometry"]["tube_id"],
-            v_tube=state["v_tube"],
-            v_shell=state["v_shell"],
+        tube_dp_i, shell_dp_i = (
+            self._calculate_pressure_drop(
+                hot,
+                cold,
+                shell_passes,
+                tube_passes,
+                shell_diameter,
+                geometry["tube_length"],
+                geometry["tube_id"],
+                v_tube,
+                v_shell,
+                geometry,
+            )
         )
 
         tube_limit_val = self.specs.get("tube_dp", self._dp_limit(hot))
@@ -1319,24 +1500,138 @@ class ShellAndTubeHX(HeatExchanger):
         }
         return self._finalize_results(payload)
 
-    def _calculate_ideal_shell_htc(self, kern_results: Dict[str, Any]) -> float:
-        base_htc = float(kern_results.get("h_shell") or 0.0)
+    def _calculate_ideal_shell_htc(
+        self,
+        kern_results: Dict[str, Any],
+    ) -> float:
+        """
+        Ideal shell-side HTC from Kern crossflow result.
+        """
+    
+        base_htc = float(
+            kern_results.get("h_shell") or 0.0
+        )
+    
         return max(base_htc, 1e-9)
-
-    def _calc_baffle_cut_factor(self) -> float:
-        return 0.8
-
-    def _calc_leakage_factor(self) -> float:
-        return 0.7
-
-    def _calc_bypass_factor(self) -> float:
-        return 0.75
-
-    def _calc_laminar_factor(self) -> float:
-        return 1.0
-
-    def _calc_spacing_factor(self) -> float:
-        return 0.9
+    
+    
+    def _calc_tube_row_factor(
+        self,
+        re_shell: float,
+        ncv: float,
+    ) -> float:
+        """
+        Bell tube row correction factor (Fn)
+        """
+    
+        if re_shell >= 100:
+            return 1.0
+    
+        ncv = max(ncv, 1.0)
+    
+        return ncv ** (-0.18)
+    
+    
+    def _calc_window_factor(
+        self,
+        rw: float,
+    ) -> float:
+        """
+        Window correction factor (Fw)
+    
+        rw = fraction of tubes in window zone
+        """
+    
+        rw = max(0.0, min(rw, 0.5))
+    
+        fw = 1.0 - 0.72 * rw
+    
+        return max(0.5, min(fw, 1.0))
+    
+    
+    def _calc_bypass_factor(
+        self,
+        re_shell: float,
+        ab: float,
+        as_cross: float,
+        ns: int,
+        ncv: float,
+    ) -> float:
+        """
+        Bell bypass correction factor
+        """
+    
+        if as_cross <= 0:
+            return 1.0
+    
+        alpha = 1.5 if re_shell < 100 else 1.35
+    
+        sealing_term = (
+            1.0
+            - (
+                (2.0 * ns)
+                / max(ncv, 1.0)
+            ) ** (1.0 / 3.0)
+        )
+    
+        sealing_term = max(sealing_term, 0.0)
+    
+        fb = math.exp(
+            -alpha
+            * (ab / as_cross)
+            * sealing_term
+        )
+    
+        return max(0.5, min(fb, 1.0))
+    
+    
+    def _calc_leakage_factor(
+        self,
+        atb: float,
+        asb: float,
+        beta_l: float = 0.44,
+    ) -> float:
+        """
+        Bell leakage correction factor
+        """
+    
+        al = atb + asb
+    
+        if al <= 0:
+            return 1.0
+    
+        fl = 1.0 - (
+            beta_l
+            * (
+                (atb + 2.0 * asb)
+                / al
+            )
+        )
+    
+        return max(0.4, min(fl, 1.0))
+    
+    
+    def _calc_spacing_factor(
+        self,
+        baffle_spacing: float,
+        shell_id: float,
+    ) -> float:
+        """
+        Baffle spacing correction factor
+        """
+    
+        ratio = (
+            baffle_spacing
+            / max(shell_id, 1e-9)
+        )
+    
+        if ratio <= 0.3:
+            return 1.0
+    
+        if ratio >= 1.0:
+            return 0.6
+    
+        return 1.0 - 0.57 * (ratio - 0.3)
 
     def _update_overall_u(self, h_tube: float, h_shell: float) -> float:
         return self.overall_u(
@@ -1346,26 +1641,148 @@ class ShellAndTubeHX(HeatExchanger):
         )
 
     def _design_bell_delaware(self) -> Dict[str, Any]:
+    
         results = self._design_kern()
-        h_ideal = self._calculate_ideal_shell_htc(results)
-
-        j_c = self._calc_baffle_cut_factor()
-        j_l = self._calc_leakage_factor()
-        j_b = self._calc_bypass_factor()
-        j_r = self._calc_laminar_factor()
-        j_s = self._calc_spacing_factor()
-
-        h_shell = h_ideal * j_c * j_l * j_b * j_r * j_s
-        h_tube = float(results.get("h_tube") or 0.0)
-        u_new = self._update_overall_u(h_tube, h_shell)
-
+    
+        geometry = results
+    
+        h_ideal = self._calculate_ideal_shell_htc(
+            results
+        )
+    
+        shell_id = results["shell_diameter"]
+    
+        tube_pitch = (
+            results["tube_od"] * 1.25
+        )
+    
+        tube_od = results["tube_od"]
+    
+        baffle_spacing = results["baffle_spacing"]
+    
+        # ==========================================================
+        # APPROXIMATE BELL GEOMETRY
+        # ==========================================================
+    
+        as_cross = (
+            shell_id
+            * baffle_spacing
+            * (
+                (tube_pitch - tube_od)
+                / max(tube_pitch, 1e-9)
+            )
+        )
+    
+        ab = (
+            baffle_spacing
+            * max(
+                shell_id
+                - 0.95 * shell_id,
+                1e-6,
+            )
+        )
+    
+        atb = (
+            0.0008
+            * math.pi
+            * tube_od
+            * results["tube_count"]
+        )
+    
+        asb = (
+            0.003
+            * shell_id
+        )
+    
+        rw = 0.20
+    
+        ncv = max(
+            shell_id / tube_pitch,
+            1.0,
+        )
+    
+        re_shell = (
+            geometry.get("re_shell")
+            or 10000
+        )
+    
+        # ==========================================================
+        # BELL FACTORS
+        # ==========================================================
+    
+        fn = self._calc_tube_row_factor(
+            re_shell=re_shell,
+            ncv=ncv,
+        )
+    
+        fw = self._calc_window_factor(
+            rw=rw,
+        )
+    
+        fb = self._calc_bypass_factor(
+            re_shell=re_shell,
+            ab=ab,
+            as_cross=as_cross,
+            ns=0,
+            ncv=ncv,
+        )
+    
+        fl = self._calc_leakage_factor(
+            atb=atb,
+            asb=asb,
+        )
+    
+        fs = self._calc_spacing_factor(
+            baffle_spacing=baffle_spacing,
+            shell_id=shell_id,
+        )
+    
+        # ==========================================================
+        # CORRECTED SHELL HTC
+        # ==========================================================
+    
+        h_shell = (
+            h_ideal
+            * fn
+            * fw
+            * fb
+            * fl
+            * fs
+        )
+    
+        h_tube = float(
+            results.get("h_tube") or 0.0
+        )
+    
+        u_results = self._calculate_overall_U(
+            h_t=h_tube,
+            h_s=h_shell,
+            geometry={
+                "tube_od": results["tube_od"],
+                "tube_id": results["tube_id"],
+            },
+        )
+    
         updated = dict(results)
+    
         updated["h_shell_ideal"] = h_ideal
         updated["h_shell"] = h_shell
-        updated["U_calculated"] = u_new
+    
+        updated["bell_factors"] = {
+            "Fn": fn,
+            "Fw": fw,
+            "Fb": fb,
+            "Fl": fl,
+            "Fs": fs,
+        }
+    
+        updated["U_calculated"] = (
+            u_results["U_dirty"]
+        )
+    
         updated["method"] = "bell_delaware"
+    
         return updated
-
     def design(self) -> Dict[str, Any]:
         if self.method == "kern":
             return self._design_kern()
