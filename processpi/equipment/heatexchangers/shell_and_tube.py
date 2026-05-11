@@ -997,7 +997,7 @@ class ShellAndTubeHX(HeatExchanger):
                 "h_s": h_s,
                 "u_calculated": u_dirty,
                 "u_clean": u_clean,
-                "re_shell": dimless["shell"]["re"],
+                "re_shell": dimless["re_shell"],
             })
     
             # ======================================================
@@ -1519,7 +1519,7 @@ class ShellAndTubeHX(HeatExchanger):
             "area": state["geometry"]["area"],
             "u_assumed": state["u_assumed"],
             "u_calculated": state["u_calculated"],
-            "re_shell": dimless["shell"]["re"],
+            "re_shell": dimless["re_shell"],
         }
         return self._finalize_results(payload)
 
