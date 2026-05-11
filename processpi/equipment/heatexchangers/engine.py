@@ -53,9 +53,49 @@ class HeatExchangerEngine:
         if kwargs:
             self.fit(**kwargs)
 
-    def fit(self, hot_in: MaterialStream, cold_in: MaterialStream, hot_out: Optional[MaterialStream] = None, cold_out: Optional[MaterialStream] = None, hx_type: Optional[str] = None, **kwargs: Any):
-        if not isinstance(hot_in, MaterialStream) or not isinstance(cold_in, MaterialStream):
-            raise TypeError("hot_in and cold_in must be MaterialStream objects")
+    def fit(
+        self,
+        hot_in: MaterialStream,
+        cold_in: MaterialStream,
+        hot_out: Optional[MaterialStream] = None,
+        cold_out: Optional[MaterialStream] = None,
+        hx_type: Optional[str] = None,
+        **kwargs: Any,
+    ):
+    
+        if (
+            not isinstance(hot_in, MaterialStream)
+            or not isinstance(cold_in, MaterialStream)
+        ):
+            raise TypeError(
+                "hot_in and cold_in must "
+                "be MaterialStream objects"
+            )
+    
+        # ======================================================
+        # UPDATE METHOD IF PROVIDED
+        # ======================================================
+    
+        method = kwargs.get("method")
+    
+        if method is not None:
+    
+            self.method = method.lower()
+    
+            if self.method not in {
+                "kern",
+                "bell_delaware",
+            }:
+    
+                raise ValueError(
+                    "method must be "
+                    "'kern' or 'bell_delaware'"
+                )
+    
+        # ======================================================
+        # STORE DATA
+        # ======================================================
+    
         self.data = {
             "hot_in": hot_in,
             "cold_in": cold_in,
@@ -64,6 +104,7 @@ class HeatExchangerEngine:
             "hx_type": hx_type,
             "specs": kwargs,
         }
+    
         return self
 
     def _select_hx_type(self) -> str:
