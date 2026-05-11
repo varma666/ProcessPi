@@ -1669,7 +1669,7 @@ class ShellAndTubeHX(HeatExchanger):
     
         kern_results = self._design_kern()
     
-        data = dict(kern_results.data)
+        data = dict(kern_results)
     
         geometry = {
             "tube_od": data["tube_od"],
@@ -1854,7 +1854,7 @@ class ShellAndTubeHX(HeatExchanger):
     
         data["shell_dp"] *= 1.15
     
-        return HeatExchangerResults(data)
+        return data
     def design(self) -> Dict[str, Any]:
         if self.method == "kern":
             return self._design_kern()
