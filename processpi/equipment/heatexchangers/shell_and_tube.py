@@ -1412,6 +1412,7 @@ class ShellAndTubeHX(HeatExchanger):
             "iterations": payload["iterations"],
             "h_tube": payload.get("h_t"),
             "h_shell": payload.get("h_s"),
+            "re_shell": payload.get("re_shell"),
             "status": status,
             "warnings": warnings,
             "tube_side_fluid": payload.get("assignment", {}).get("tube_side_fluid"),
