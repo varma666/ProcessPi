@@ -843,8 +843,7 @@ class ShellAndTubeHX(HeatExchanger):
             )
     
         return hard, soft
-
-       def _iterate_U(
+    def _iterate_U(
         self,
         q_watts: float,
         cltd: float,
@@ -862,7 +861,6 @@ class ShellAndTubeHX(HeatExchanger):
         }
     
         max_iter = 15
-    
         for i in range(1, max_iter + 1):
     
             self._debug(f"U Iteration = {i}")
@@ -1105,6 +1103,8 @@ class ShellAndTubeHX(HeatExchanger):
                 break
     
         return state
+
+      
     def _calculate_pressure_drop(
         self,
         hot: Dict[str, float],
