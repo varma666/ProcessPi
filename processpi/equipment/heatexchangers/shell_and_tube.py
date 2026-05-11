@@ -844,7 +844,7 @@ class ShellAndTubeHX(HeatExchanger):
     
         return hard, soft
 
-    def _iterate_U(
+       def _iterate_U(
         self,
         q_watts: float,
         cltd: float,
@@ -983,7 +983,7 @@ class ShellAndTubeHX(HeatExchanger):
             )
     
             # ======================================================
-            # UPDATE STATE
+            # TEMPORARY STATE
             # ======================================================
     
             state.update({
@@ -1011,28 +1011,35 @@ class ShellAndTubeHX(HeatExchanger):
                     cold=cold,
                     shell_passes=shell_passes,
                     tube_passes=tube_passes,
-                    shell_diameter=state["shell_diameter"],
-                    tube_length=state["geometry"]["tube_length"],
-                    tube_id=state["geometry"]["tube_id"],
-                    v_tube=state["v_tube"],
-                    v_shell=state["v_shell"],
-                    geometry=state["geometry"],
+                    shell_diameter=shell_diameter,
+                    tube_length=geometry["tube_length"],
+                    tube_id=geometry["tube_id"],
+                    v_tube=v_tube,
+                    v_shell=v_shell,
+                    geometry=geometry,
                 )
             )
+    
+            # ======================================================
+            # SAVE DP TO STATE
+            # ======================================================
+    
+            state["tube_dp"] = tube_dp
+            state["shell_dp"] = shell_dp
+    
+            # ======================================================
+            # VALIDATION
+            # ======================================================
     
             hard_violations, soft_warnings = (
                 self._validate_geometry(
                     state,
-                    tube_dp_i,
-                    shell_dp_i,
+                    tube_dp,
+                    shell_dp,
                     hot,
                     cold,
                 )
             )
-    
-            # ======================================================
-            # UNDER RELAXATION
-            # ======================================================
     
             # ======================================================
             # U CONVERGENCE
@@ -1040,10 +1047,8 @@ class ShellAndTubeHX(HeatExchanger):
     
             u_old = state["u_assumed"]
     
-            # Kern iteration update
             u_new = u_dirty
     
-            # Percentage convergence error
             convergence_error = abs(
                 (
                     (u_dirty - u_old)
@@ -1060,13 +1065,28 @@ class ShellAndTubeHX(HeatExchanger):
             print(f"Actual Area        : {actual_area:.4f} m2")
             print(f"Tube Velocity      : {v_tube:.4f} m/s")
             print(f"Shell Velocity     : {v_shell:.4f} m/s")
-            print(f"Tube DP            : {tube_dp_i:.2f} Pa")
-            print(f"Shell DP           : {shell_dp_i:.2f} Pa")
+            print(f"Tube DP            : {tube_dp:.2f} Pa")
+            print(f"Shell DP           : {shell_dp:.2f} Pa")
             print(f"U Error            : {convergence_error:.2f} %")
             print("=" * 60)
     
-            # Update assumed U
+            # ======================================================
+            # UPDATE ASSUMED U
+            # ======================================================
+    
             state["u_assumed"] = u_new
+    
+            # ======================================================
+            # STORE WARNINGS
+            # ======================================================
+    
+            if soft_warnings:
+    
+                existing = state.get("warnings", [])
+    
+                existing.extend(soft_warnings)
+    
+                state["warnings"] = list(dict.fromkeys(existing))
     
             # ======================================================
             # CONVERGENCE CHECK
