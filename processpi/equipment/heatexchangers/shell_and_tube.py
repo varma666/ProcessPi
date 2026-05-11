@@ -1663,27 +1663,40 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _design_bell_delaware(self) -> Dict[str, Any]:
     
-        results = self._design_kern()
+        # ======================================================
+        # START FROM KERN DESIGN
+        # ======================================================
     
-        geometry = results
+        kern_results = self._design_kern()
     
-        h_ideal = self._calculate_ideal_shell_htc(
-            results
-        )
+        data = dict(kern_results.data)
     
-        shell_id = results["shell_diameter"]
+        geometry = {
+            "tube_od": data["tube_od"],
+            "tube_id": data["tube_id"],
+            "tube_count": data["tube_count"],
+            "tube_length": data["tube_length"],
+            "shell_diameter": data["shell_diameter"],
+            "baffle_spacing": data["baffle_spacing"],
+        }
     
-        tube_pitch = (
-            results["tube_od"] * 1.25
-        )
+        # ======================================================
+        # IDEAL SHELL HTC
+        # ======================================================
     
-        tube_od = results["tube_od"]
+        h_ideal = float(data["h_shell"])
     
-        baffle_spacing = results["baffle_spacing"]
+        shell_id = geometry["shell_diameter"]
     
-        # ==========================================================
+        tube_od = geometry["tube_od"]
+    
+        tube_pitch = tube_od * 1.25
+    
+        baffle_spacing = geometry["baffle_spacing"]
+    
+        # ======================================================
         # APPROXIMATE BELL GEOMETRY
-        # ==========================================================
+        # ======================================================
     
         as_cross = (
             shell_id
@@ -1695,19 +1708,16 @@ class ShellAndTubeHX(HeatExchanger):
         )
     
         ab = (
-            baffle_spacing
-            * max(
-                shell_id
-                - 0.95 * shell_id,
-                1e-6,
-            )
+            0.05
+            * shell_id
+            * baffle_spacing
         )
     
         atb = (
             0.0008
             * math.pi
             * tube_od
-            * results["tube_count"]
+            * geometry["tube_count"]
         )
     
         asb = (
@@ -1722,14 +1732,39 @@ class ShellAndTubeHX(HeatExchanger):
             1.0,
         )
     
-        re_shell = (
-            geometry.get("re_shell")
-            or 10000
+        # ======================================================
+        # ESTIMATE SHELL RE
+        # ======================================================
+    
+        shell_velocity = data["shell_velocity"]
+    
+        density_shell = (
+            self.shell_side["density"]
         )
     
-        # ==========================================================
+        viscosity_shell = (
+            self.shell_side["viscosity"]
+        )
+    
+        de_shell = (
+            1.27
+            * (
+                tube_pitch**2
+                - 0.785 * tube_od**2
+            )
+            / max(tube_od, 1e-9)
+        )
+    
+        re_shell = Reynolds(
+            density=density_shell,
+            velocity=shell_velocity,
+            diameter=de_shell,
+            viscosity=viscosity_shell,
+        ).calculate()
+    
+        # ======================================================
         # BELL FACTORS
-        # ==========================================================
+        # ======================================================
     
         fn = self._calc_tube_row_factor(
             re_shell=re_shell,
@@ -1758,11 +1793,11 @@ class ShellAndTubeHX(HeatExchanger):
             shell_id=shell_id,
         )
     
-        # ==========================================================
+        # ======================================================
         # CORRECTED SHELL HTC
-        # ==========================================================
+        # ======================================================
     
-        h_shell = (
+        h_shell_corrected = (
             h_ideal
             * fn
             * fw
@@ -1771,25 +1806,40 @@ class ShellAndTubeHX(HeatExchanger):
             * fs
         )
     
-        h_tube = float(
-            results.get("h_tube") or 0.0
+        # ======================================================
+        # RECALCULATE OVERALL U
+        # ======================================================
+    
+        u_results = (
+            self._calculate_overall_U(
+                h_t=data["h_tube"],
+                h_s=h_shell_corrected,
+                geometry={
+                    "tube_od": tube_od,
+                    "tube_id": geometry["tube_id"],
+                },
+            )
         )
     
-        u_results = self._calculate_overall_U(
-            h_t=h_tube,
-            h_s=h_shell,
-            geometry={
-                "tube_od": results["tube_od"],
-                "tube_id": results["tube_id"],
-            },
+        # ======================================================
+        # UPDATE RESULTS
+        # ======================================================
+    
+        data["method"] = "bell_delaware"
+    
+        data["h_shell_ideal"] = h_ideal
+    
+        data["h_shell"] = h_shell_corrected
+    
+        data["U_calculated"] = (
+            u_results["U_dirty"]
         )
     
-        updated = dict(results)
+        data["U_clean"] = (
+            u_results["U_clean"]
+        )
     
-        updated["h_shell_ideal"] = h_ideal
-        updated["h_shell"] = h_shell
-    
-        updated["bell_factors"] = {
+        data["bell_factors"] = {
             "Fn": fn,
             "Fw": fw,
             "Fb": fb,
@@ -1797,13 +1847,14 @@ class ShellAndTubeHX(HeatExchanger):
             "Fs": fs,
         }
     
-        updated["U_calculated"] = (
-            u_results["U_dirty"]
-        )
+        # ======================================================
+        # OPTIONAL:
+        # Increase shell DP slightly for Bell realism
+        # ======================================================
     
-        updated["method"] = "bell_delaware"
+        data["shell_dp"] *= 1.15
     
-        return updated
+        return HeatExchangerResults(data)
     def design(self) -> Dict[str, Any]:
         if self.method == "kern":
             return self._design_kern()
