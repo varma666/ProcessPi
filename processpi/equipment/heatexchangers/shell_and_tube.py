@@ -1613,27 +1613,26 @@ class ShellAndTubeHX(HeatExchanger):
         self,
         atb: float,
         asb: float,
-        beta_l: float = 0.44,
+        as_cross: float,
     ) -> float:
         """
-        Bell leakage correction factor
+        Bell-Delaware leakage correction factor.
+    
+        Uses a smooth exponential approximation
+        instead of overly aggressive linear penalty.
         """
     
-        al = atb + asb
-    
-        if al <= 0:
-            return 1.0
-    
-        fl = 1.0 - (
-            beta_l
-            * (
-                (atb + 2.0 * asb)
-                / al
-            )
+        leakage_ratio = (
+            (atb + asb)
+            / max(as_cross, 1e-9)
         )
     
-        return max(0.4, min(fl, 1.0))
+        fl = math.exp(
+            -1.25 * leakage_ratio
+        )
     
+        return max(0.65, min(fl, 1.0))
+        
     
     def _calc_spacing_factor(
         self,
@@ -1765,6 +1764,7 @@ class ShellAndTubeHX(HeatExchanger):
         fl = self._calc_leakage_factor(
             atb=atb,
             asb=asb,
+            as_cross=as_cross,
         )
     
         fs = self._calc_spacing_factor(
