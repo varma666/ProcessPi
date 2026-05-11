@@ -997,6 +997,7 @@ class ShellAndTubeHX(HeatExchanger):
                 "h_s": h_s,
                 "u_calculated": u_dirty,
                 "u_clean": u_clean,
+                "re_shell": dimless["shell"]["re"],
             })
     
             # ======================================================
@@ -1518,6 +1519,7 @@ class ShellAndTubeHX(HeatExchanger):
             "area": state["geometry"]["area"],
             "u_assumed": state["u_assumed"],
             "u_calculated": state["u_calculated"],
+            "re_shell": dimless["shell"]["re"],
         }
         return self._finalize_results(payload)
 
@@ -1736,31 +1738,7 @@ class ShellAndTubeHX(HeatExchanger):
         # ESTIMATE SHELL RE
         # ======================================================
     
-        shell_velocity = data["shell_velocity"]
-    
-        density_shell = (
-            self.shell_side["density"]
-        )
-    
-        viscosity_shell = (
-            self.shell_side["viscosity"]
-        )
-    
-        de_shell = (
-            1.27
-            * (
-                tube_pitch**2
-                - 0.785 * tube_od**2
-            )
-            / max(tube_od, 1e-9)
-        )
-    
-        re_shell = Reynolds(
-            density=density_shell,
-            velocity=shell_velocity,
-            diameter=de_shell,
-            viscosity=viscosity_shell,
-        ).calculate()
+        re_shell = data["re_shell"]
     
         # ======================================================
         # BELL FACTORS
