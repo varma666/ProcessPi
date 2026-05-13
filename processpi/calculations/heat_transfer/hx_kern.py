@@ -121,3 +121,91 @@ class DarcyDrop(CalculationBase):
         rho = self._get_value(self.inputs["density"], "density")
         v = self._get_value(self.inputs["velocity"], "velocity")
         return Pressure(f * (l / d) * rho * v * v / 2.0, "Pa")
+
+
+class CondensationHTC(CalculationBase):
+    """
+    Nusselt film condensation correlation
+    for vertical tube condensation.
+
+    Preliminary engineering approximation.
+    """
+
+    def validate_inputs(self):
+
+        required = (
+            "rho_l",
+            "rho_v",
+            "mu_l",
+            "k_l",
+            "h_fg",
+            "delta_t",
+            "length",
+        )
+
+        for key in required:
+
+            if key not in self.inputs:
+
+                raise ValueError(
+                    f"Missing required input: {key}"
+                )
+
+    def calculate(self):
+
+        rho_l = self._get_value(
+            self.inputs["rho_l"],
+            "rho_l",
+        )
+
+        rho_v = self._get_value(
+            self.inputs["rho_v"],
+            "rho_v",
+        )
+
+        mu_l = self._get_value(
+            self.inputs["mu_l"],
+            "mu_l",
+        )
+
+        k_l = self._get_value(
+            self.inputs["k_l"],
+            "k_l",
+        )
+
+        h_fg = self._get_value(
+            self.inputs["h_fg"],
+            "h_fg",
+        )
+
+        delta_t = self._get_value(
+            self.inputs["delta_t"],
+            "delta_t",
+        )
+
+        length = self._get_value(
+            self.inputs["length"],
+            "length",
+        )
+
+        g = 9.81
+
+        h = 0.943 * (
+            (
+                rho_l
+                * (rho_l - rho_v)
+                * g
+                * h_fg
+                * (k_l ** 3)
+            )
+            / (
+                mu_l
+                * length
+                * delta_t
+            )
+        ) ** 0.25
+
+        return HeatTransferCoefficient(
+            h,
+            "W/m2K",
+        )
