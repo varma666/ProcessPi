@@ -209,3 +209,58 @@ class CondensationHTC(CalculationBase):
             h,
             "W/m2K",
         )
+
+class BoilingHTC(CalculationBase):
+    """
+    Simplified boiling heat-transfer coefficient.
+
+    Preliminary engineering approximation.
+    """
+
+    def validate_inputs(self):
+
+        required = (
+            "heat_flux",
+            "pressure",
+        )
+
+        for key in required:
+
+            if key not in self.inputs:
+
+                raise ValueError(
+                    f"Missing required input: {key}"
+                )
+
+    def calculate(self):
+
+        q_flux = self._get_value(
+            self.inputs["heat_flux"],
+            "heat_flux",
+        )
+
+        pressure = self._get_value(
+            self.inputs["pressure"],
+            "pressure",
+        )
+
+        # ======================================================
+        # SIMPLE ENGINEERING APPROXIMATION
+        # ======================================================
+
+        h = (
+            55.0
+            * (q_flux ** 0.67)
+            * (pressure ** 0.12)
+        )
+
+        # prevent unrealistic values
+        h = max(
+            1500.0,
+            min(h, 15000.0),
+        )
+
+        return HeatTransferCoefficient(
+            h,
+            "W/m2K",
+        )
