@@ -72,6 +72,23 @@ class EvaporatorHX(ShellAndTubeHX):
             .value
         )
 
+        q_max = (
+            hot["m_dot"]
+            * hot["cp"]
+            * 1000.0
+            * (
+                hot["t_k"]
+                - cold["t_k"]
+            )
+        )
+        
+        if q_watts > q_max:
+        
+            raise ValueError(
+                "Evaporator duty exceeds "
+                "available hot-side sensible heat."
+            )
+
         # ======================================================
         # HOT SIDE COOLING
         # ======================================================
