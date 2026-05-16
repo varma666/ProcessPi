@@ -40,11 +40,11 @@ class ShellAndTubeHX(HeatExchanger):
         hot_type = getattr(self.hot_in.component, "hx_type", "generic")
         cold_type = getattr(self.cold_in.component, "hx_type", "generic")
         service_type = getattr(self, "service_type", "heat_exchanger")
-        #print(hot_type, cold_type, service_type)
+        #self._debug(hot_type, cold_type, service_type)
         u_range = get_u_range("shell_and_tube", service_type, hot_type, cold_type)
         if u_range:
             u_min, u_max = u_range
-            #print(f"Assuming overall heat transfer coefficient U = {u_min}-{u_max} W/m2K based on service and fluids")
+            #self._debug(f"Assuming overall heat transfer coefficient U = {u_min}-{u_max} W/m2K based on service and fluids")
             return 0.5 * (u_min + u_max)
         return 300.0
 
@@ -54,7 +54,7 @@ class ShellAndTubeHX(HeatExchanger):
         for side_name, props in (("hot", hot), ("cold", cold)):
             for key in required:
                 val = props.get(key)
-                print(f"Side name {side_name}, {key} : {val}")
+                self._debug(f"Side name {side_name}, {key} : {val}")
                 if val is None or val <= 0:
                     
                     missing.append(f"{side_name}.{key}")
@@ -65,24 +65,24 @@ class ShellAndTubeHX(HeatExchanger):
         q_kw = self.heat_duty(hot, cold)
         th_in = hot["t_k"]
         tc_in = cold["t_k"]
-        #print(f"Hot Cp: {hot["cp"]} Cold Cp {cold["cp"]}")
+        #self._debug(f"Hot Cp: {hot["cp"]} Cold Cp {cold["cp"]}")
         if self.hot_out and self.hot_out.temperature and self.hot_out.temperature.to("C").value == 25 :
             th_out = self.hot_out.temperature.to("K").value
         else:
             th_out = th_in - (q_kw / max(hot["m_dot"] * hot["cp"], 1e-9))
 
         if self.cold_out and self.cold_out.temperature and self.cold_out.temperature.to("C").value == 25:
-            #print("Hello World")
+            #self._debug("Hello World")
             tc_out = self.cold_out.temperature.to("K").value
         else:
             tc_out = tc_in + (q_kw / max(cold["m_dot"] * cold["cp"], 1e-9))
-            #print(f"tc_out = {tc_in} + ({q_kw}/({cold["m_dot"]}*{cold["cp"]})")
-            #print(f"cold_rate: {max(cold["m_dot"] * cold["cp"], 1e-9)}")
-        #print(tc_out)
+            #self._debug(f"tc_out = {tc_in} + ({q_kw}/({cold["m_dot"]}*{cold["cp"]})")
+            #self._debug(f"cold_rate: {max(cold["m_dot"] * cold["cp"], 1e-9)}")
+        #self._debug(tc_out)
         return q_kw * 1000.0, th_out, tc_out
 
     def _calculate_lmtd(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
-        #print(f"Hot in: {hot["t_k"]} Hot out: {th_out} cold in: {cold["t_k"]} cold out: { tc_out}")
+        #self._debug(f"Hot in: {hot["t_k"]} Hot out: {th_out} cold in: {cold["t_k"]} cold out: { tc_out}")
         return self.lmtd(hot["t_k"], th_out, cold["t_k"], tc_out)
 
     def _safe_log_ratio(self, numerator: float, denominator: float) -> float:
@@ -134,7 +134,7 @@ class ShellAndTubeHX(HeatExchanger):
 
         r = (th_in - th_out) / max(tc_out - tc_in, 1e-12)
         s = (tc_out - tc_in) / max(th_in - tc_in, 1e-12)
-        print(f"R: {r} S: {s}")
+        self._debug(f"R: {r} S: {s}")
         if shell_passes == 1:
             return self._ft_1shell(r, s)
         if shell_passes == 2:
@@ -154,7 +154,7 @@ class ShellAndTubeHX(HeatExchanger):
         best_ft = 0.0
         for shell_passes, tube_passes in candidates:
             ft = self._calculate_ft(hot, cold, th_out, tc_out, shell_passes, tube_passes)
-            print(f"Passes (shell={shell_passes}, tube={tube_passes}) → Ft = {ft:.4f}")
+            self._debug(f"Passes (shell={shell_passes}, tube={tube_passes}) → Ft = {ft:.4f}")
 
             if ft > best_ft:
                 best_ft = ft
@@ -174,9 +174,6 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _round_tube_count_to_passes(self, tube_count: int, tube_passes: int) -> int:
         return max(tube_passes, int(math.ceil(tube_count / max(tube_passes, 1)) * max(tube_passes, 1)))
-
-    def _debug(self, message: str) -> None:
-        print(f"[DEBUG] {message}")
 
     def _load_standard_tables(self) -> None:
         self._tube_count_tables = STANDARD_TUBE_COUNT_TABLES
@@ -415,9 +412,9 @@ class ShellAndTubeHX(HeatExchanger):
                 tube_count = 50
         else:
             area_per_tube = math.pi * tube_od * tube_length
-            print("Area Per Tube: ",area_per_tube)
+            self._debug("Area Per Tube: ",area_per_tube)
             tube_count = math.ceil(area_required / max(area_per_tube, 1e-12))
-            print("Tube Count: ",tube_count)
+            self._debug("Tube Count: ",tube_count)
 
         standard_geom = self._select_best_standard_geometry(area_required, tube_od, tube_length, tube_passes)
         std_tube_count = standard_geom.get("tube_count")
@@ -425,11 +422,11 @@ class ShellAndTubeHX(HeatExchanger):
             self._debug(f"Using standard tube count lookup >= required: {std_tube_count}")
             tube_count = std_tube_count
         tube_count = self._round_tube_count_to_passes(tube_count, tube_passes)
-        print("Tube Count Round: ",tube_count)
+        self._debug("Tube Count Round: ",tube_count)
         tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
-        print("Tube Pitch: ",tube_pitch)
+        self._debug("Tube Pitch: ",tube_pitch)
         area = tube_count * math.pi * tube_od * tube_length
-        print("Tubes Surface Area: ",area)
+        self._debug("Tubes Surface Area: ",area)
         return {
             "tube_od": tube_od,
             "tube_id": tube_id,
@@ -451,20 +448,20 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _check_L_over_D(self, geometry: Dict[str, float], shell_diameter: float, tube_passes: int, base_required_area: float | None = None, hot: Dict[str, float] | None = None) -> Dict[str, float]:
         ld = geometry["tube_length"] / max(shell_diameter, 1e-9)
-        print("L/D: ",ld)
+        self._debug("L/D: ",ld)
         if 5.0 <= ld <= 10.0:
-            print("L/D is between 5 to 10")
+            self._debug("L/D is between 5 to 10")
             return geometry
         if ld > 10.0 or ld < 5.0:
-            print("L/D is not between 5 to 10")
+            self._debug("L/D is not between 5 to 10")
             geometry["tube_length"] = tube_length_select(geometry["tube_length"],ld)
-            print(f"geometry:{geometry}")
+            self._debug(f"geometry:{geometry}")
         #target_l = min(max(7.0 * shell_diameter, 0.5), 6.0)
         if self.specs.get("tube_length") is None:
             if base_required_area is not None:
                 geometry["tube_count"] = self._recalculate_required_tubes(base_required_area, geometry, tube_passes)
             geometry = self._regenerate_geometry(geometry, tube_passes, hot)
-            print("Geometry :",geometry)
+            self._debug("Geometry :",geometry)
         return geometry
 
     def _check_velocities(
@@ -587,7 +584,7 @@ class ShellAndTubeHX(HeatExchanger):
         ).calculate()
         pr_t = max(hot["cp"] * 1000 * hot["viscosity"] / max(hot["k"], 1e-12), 1e-12)
         nu_t = DittusBoelter(reynolds=max(re_t, 1.0), prandtl=pr_t, n=0.4).calculate()
-        print(f"Tube Side Rey:{re_t}, Pra:{pr_t}, Nuss:{nu_t}")
+        self._debug(f"Tube Side Rey:{re_t}, Pra:{pr_t}, Nuss:{nu_t}")
         de_shell = max(1.27 * (geometry["tube_pitch"] ** 2 - 0.785 * geometry["tube_od"] ** 2) / geometry["tube_od"], 1e-6)
         re_s = Reynolds(
             density=cold["density"],
@@ -597,7 +594,7 @@ class ShellAndTubeHX(HeatExchanger):
         ).calculate()
         pr_s = max(cold["cp"] * 1000 * cold["viscosity"] / max(cold["k"], 1e-12), 1e-12)
         nu_s = KernShellNu(reynolds=max(re_s, 1.0), prandtl=pr_s).calculate()
-        print(f"Shell Side Rey:{re_s}, Pra:{pr_s}, Nuss:{nu_s}")
+        self._debug(f"Shell Side Rey:{re_s}, Pra:{pr_s}, Nuss:{nu_s}")
         return {"re_t": re_t, "pr_t": pr_t, "nu_t": nu_t, "de_shell": de_shell, "re_s": re_s, "pr_s": pr_s, "nu_s": nu_s}
 
     def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float]) -> Tuple[float, float]:
@@ -620,9 +617,9 @@ class ShellAndTubeHX(HeatExchanger):
         """
 
         tube_od = geometry.get("tube_od")
-        print(f"Tube_od:{tube_od}")
+        self._debug(f"Tube_od:{tube_od}")
         tube_id = geometry.get("tube_id")
-        print(f"Tube_id:{tube_id}")
+        self._debug(f"Tube_id:{tube_id}")
         if tube_od is None or tube_id is None:
             raise ValueError(
                 "Missing tube geometry required for "
@@ -735,20 +732,20 @@ class ShellAndTubeHX(HeatExchanger):
         # DEBUGGING
         # ======================================================
 
-        print("\n" + "="*40)
-        print("[DEBUG] OVERALL U CALCULATION SUMMARY")
-        print(f"[DEBUG] Convective -> R_tube: {R_tube:.8f}, R_shell: {R_shell:.8f}")
-        print(f"[DEBUG] Wall       -> R_wall: {R_wall:.8f}")
-        print(f"[DEBUG] Fouling    -> Rf_tube: {Rf_tube:.8f}, Rf_shell: {Rf_shell:.8f}")
-        print("-" * 40)
-        print(f"[DEBUG] R_total_clean: {R_total_clean:.8f} -> U_clean: {U_clean:.4f} W/m2.K")
-        print(f"[DEBUG] R_total_dirty: {R_total_dirty:.8f} -> U_dirty: {U_dirty:.4f} W/m2.K")
+        self._debug("\n" + "="*40)
+        self._debug("[DEBUG] OVERALL U CALCULATION SUMMARY")
+        self._debug(f"[DEBUG] Convective -> R_tube: {R_tube:.8f}, R_shell: {R_shell:.8f}")
+        self._debug(f"[DEBUG] Wall       -> R_wall: {R_wall:.8f}")
+        self._debug(f"[DEBUG] Fouling    -> Rf_tube: {Rf_tube:.8f}, Rf_shell: {Rf_shell:.8f}")
+        self._debug("-" * 40)
+        self._debug(f"[DEBUG] R_total_clean: {R_total_clean:.8f} -> U_clean: {U_clean:.4f} W/m2.K")
+        self._debug(f"[DEBUG] R_total_dirty: {R_total_dirty:.8f} -> U_dirty: {U_dirty:.4f} W/m2.K")
         
         if u_range:
             u_min, u_max = u_range
             status = "WITHIN" if u_min <= U_dirty <= u_max else "OUTSIDE"
-            print(f"[DEBUG] Range Check: {U_dirty:.2f} is {status} limits ({u_min}, {u_max})")
-        print("="*40 + "\n")
+            self._debug(f"[DEBUG] Range Check: {U_dirty:.2f} is {status} limits ({u_min}, {u_max})")
+        self._debug("="*40 + "\n")
 
         return {
             "U_clean": U_clean,
@@ -1055,19 +1052,19 @@ class ShellAndTubeHX(HeatExchanger):
                 ) * 100.0
             )
     
-            print("\n" + "=" * 60)
-            print(f"Iteration          : {i}")
-            print(f"U_assumed          : {u_old:.4f}")
-            print(f"U_dirty            : {u_dirty:.4f}")
-            print(f"U_clean            : {u_clean:.4f}")
-            print(f"Required Area      : {required_dirty_area:.4f} m2")
-            print(f"Actual Area        : {actual_area:.4f} m2")
-            print(f"Tube Velocity      : {v_tube:.4f} m/s")
-            print(f"Shell Velocity     : {v_shell:.4f} m/s")
-            print(f"Tube DP            : {tube_dp:.2f} Pa")
-            print(f"Shell DP           : {shell_dp:.2f} Pa")
-            print(f"U Error            : {convergence_error:.2f} %")
-            print("=" * 60)
+            self._debug("\n" + "=" * 60)
+            self._debug(f"Iteration          : {i}")
+            self._debug(f"U_assumed          : {u_old:.4f}")
+            self._debug(f"U_dirty            : {u_dirty:.4f}")
+            self._debug(f"U_clean            : {u_clean:.4f}")
+            self._debug(f"Required Area      : {required_dirty_area:.4f} m2")
+            self._debug(f"Actual Area        : {actual_area:.4f} m2")
+            self._debug(f"Tube Velocity      : {v_tube:.4f} m/s")
+            self._debug(f"Shell Velocity     : {v_shell:.4f} m/s")
+            self._debug(f"Tube DP            : {tube_dp:.2f} Pa")
+            self._debug(f"Shell DP           : {shell_dp:.2f} Pa")
+            self._debug(f"U Error            : {convergence_error:.2f} %")
+            self._debug("=" * 60)
     
             # ======================================================
             # UPDATE ASSUMED U
@@ -1108,17 +1105,23 @@ class ShellAndTubeHX(HeatExchanger):
       
     def _calculate_pressure_drop(
         self,
+        geometry: Dict[str, Any] | None,
         hot: Dict[str, float],
         cold: Dict[str, float],
-        shell_passes: int,
-        tube_passes: int,
-        shell_diameter: float,
-        tube_length: float,
-        tube_id: float,
-        v_tube: float,
-        v_shell: float,
-        geometry: Dict[str, Any] | None = None,
+        shell_velocity: float | None = None,
+        tube_velocity: float | None = None,
+        **kwargs: Any,
     ) -> Tuple[float, float]:
+        shell_velocity = shell_velocity if shell_velocity is not None else float(kwargs.get("shell_velocity", kwargs.get("v_shell", 0.0)))
+        tube_velocity = tube_velocity if tube_velocity is not None else float(kwargs.get("tube_velocity", kwargs.get("v_tube", 0.0)))
+        shell_passes = int(kwargs.get("shell_passes", 1))
+        tube_passes = int(kwargs.get("tube_passes", 1))
+        shell_diameter = float(kwargs.get("shell_diameter", 0.0) or 0.0)
+        orientation = str(kwargs.get("orientation", "horizontal")).lower()
+        tube_length = float(kwargs.get("tube_length", (geometry or {}).get("tube_length", 1.0)))
+        tube_id = float(kwargs.get("tube_id", (geometry or {}).get("tube_id", 0.016)))
+        v_tube = tube_velocity
+        v_shell = shell_velocity
     
         # ==========================================================
         # TUBE SIDE DP
@@ -1438,12 +1441,12 @@ class ShellAndTubeHX(HeatExchanger):
             self.service_type = "heater"
 
         q_watts, th_out, tc_out = self._calculate_heat_duty(hot, cold)
-        print(q_watts)
+        self._debug(q_watts)
         lmtd = self._calculate_lmtd(hot, cold, th_out, tc_out)
-        print(lmtd)
+        self._debug(lmtd)
 
         shell_passes, tube_passes, ft = self._adjust_passes(hot, cold, th_out, tc_out)
-        print(ft, shell_passes, tube_passes)
+        self._debug(ft, shell_passes, tube_passes)
         warnings: List[str] = list(getattr(self, "_warnings", []))
 
         n_units = 1
@@ -1454,10 +1457,10 @@ class ShellAndTubeHX(HeatExchanger):
             warnings.append(f"Using {n_units} exchangers in series to satisfy Ft requirement")
 
         cltd = max(ft * lmtd, 1e-9)
-        print(cltd)
+        self._debug(cltd)
 
         u_assumed = self._assume_u(hot, cold)
-        print(u_assumed)
+        self._debug(u_assumed)
         hot_hx = self.hot_in.component.hx_data() if hasattr(self.hot_in.component, "hx_data") else {"u_key": getattr(self.hot_in.component, "hx_type", "generic")}
         cold_hx = self.cold_in.component.hx_data() if hasattr(self.cold_in.component, "hx_data") else {"u_key": getattr(self.cold_in.component, "hx_type", "generic")}
         self._debug(f"Hot hx_data = {hot_hx}")
@@ -2144,10 +2147,10 @@ class ShellAndTubeHX(HeatExchanger):
             + q_actual / Cc
         )
         lmtd = self._calculate_lmtd(hot, cold, th_out, tc_out)
-        #print(lmtd)
+        #self._debug(lmtd)
 
         shell_passes, tube_passes, ft = self._adjust_passes(hot, cold, th_out, tc_out)
-        #print(ft, shell_passes, tube_passes)
+        #self._debug(ft, shell_passes, tube_passes)
         warnings: List[str] = list(getattr(self, "_warnings", []))
 
         n_units = 1
@@ -2195,37 +2198,37 @@ class ShellAndTubeHX(HeatExchanger):
         # DEBUG SUMMARY
         # ==========================================================
     
-        print("\n" + "=" * 60)
-        print("RATE MODE SUMMARY")
-        print("=" * 60)
+        self._debug("\n" + "=" * 60)
+        self._debug("RATE MODE SUMMARY")
+        self._debug("=" * 60)
     
-        print(f"UA                 : {UA:.4f}")
-        print(f"NTU                : {NTU:.4f}")
-        print(f"Effectiveness      : {effectiveness:.4f}")
+        self._debug(f"UA                 : {UA:.4f}")
+        self._debug(f"NTU                : {NTU:.4f}")
+        self._debug(f"Effectiveness      : {effectiveness:.4f}")
     
-        print("-" * 60)
+        self._debug("-" * 60)
     
-        print(f"Actual Duty        : {q_actual/1000:.4f} kW")
-        print(f"U Dirty            : {u_dirty:.4f} W/m2.K")
-        print(f"U Clean            : {u_clean:.4f} W/m2.K")
-        print(f"Area               : {actual_area:.4f} m2")
+        self._debug(f"Actual Duty        : {q_actual/1000:.4f} kW")
+        self._debug(f"U Dirty            : {u_dirty:.4f} W/m2.K")
+        self._debug(f"U Clean            : {u_clean:.4f} W/m2.K")
+        self._debug(f"Area               : {actual_area:.4f} m2")
     
-        print("-" * 60)
+        self._debug("-" * 60)
     
-        print(f"Tube Velocity      : {v_tube:.4f} m/s")
-        print(f"Shell Velocity     : {v_shell:.4f} m/s")
+        self._debug(f"Tube Velocity      : {v_tube:.4f} m/s")
+        self._debug(f"Shell Velocity     : {v_shell:.4f} m/s")
     
-        print("-" * 60)
+        self._debug("-" * 60)
     
-        print(f"Tube DP            : {tube_dp:.2f} Pa")
-        print(f"Shell DP           : {shell_dp:.2f} Pa")
+        self._debug(f"Tube DP            : {tube_dp:.2f} Pa")
+        self._debug(f"Shell DP           : {shell_dp:.2f} Pa")
     
-        print("-" * 60)
+        self._debug("-" * 60)
     
-        print(f"Hot Outlet Temp    : {th_out:.2f} K")
-        print(f"Cold Outlet Temp   : {tc_out:.2f} K")
+        self._debug(f"Hot Outlet Temp    : {th_out:.2f} K")
+        self._debug(f"Cold Outlet Temp   : {tc_out:.2f} K")
     
-        print("=" * 60)
+        self._debug("=" * 60)
     
         # ==========================================================
         # PAYLOAD

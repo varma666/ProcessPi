@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+import logging
 from typing import Any, Dict, Optional
 
 from processpi.calculations.heat_transfer import HeatExchangerArea, LMTD, OverallHeatTransferCoefficient
@@ -8,13 +9,34 @@ from processpi.calculations.heat_transfer.hx_kern import LatentDuty, SensibleDut
 from processpi.streams.material import MaterialStream
 
 
-class HeatExchanger(ABC):
+class HeatExchangerBaseMixin:
+    def _init_runtime(self) -> None:
+        self.verbose = bool(self.specs.get("verbose", False))
+        self.logger = self.specs.get("logger") or logging.getLogger(f"processpi.hx.{self.__class__.__name__.lower()}")
+        self._warnings: list[str] = []
+
+    def _debug(self, *args: object) -> None:
+        if self.verbose:
+            self.logger.debug(" ".join(str(a) for a in args))
+
+    def _warn(self, message: str) -> None:
+        self._warnings.append(message)
+        self.logger.warning(message)
+
+    def _warn_with_category(self, category: str, message: str) -> None:
+        tagged = f"[{category}] {message}"
+        self._warnings.append(tagged)
+        self.logger.warning(tagged)
+
+
+class HeatExchanger(HeatExchangerBaseMixin, ABC):
     def __init__(self, hot_in: MaterialStream, cold_in: MaterialStream, hot_out: Optional[MaterialStream] = None, cold_out: Optional[MaterialStream] = None, **specs: Any):
         self.hot_in = hot_in
         self.cold_in = cold_in
         self.hot_out = hot_out
         self.cold_out = cold_out
         self.specs = specs
+        self._init_runtime()
 
     def _stream_props(self, s: MaterialStream) -> Dict[str, float]:
         return {
