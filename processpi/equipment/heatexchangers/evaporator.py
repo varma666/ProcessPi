@@ -19,6 +19,8 @@ class EvaporatorHX(ShellAndTubeHX):
             "min_tube_velocity": float(self.specs.get("min_tube_velocity", 0.3)),
             "max_tube_velocity": float(self.specs.get("max_tube_velocity", 2.5)),
             "min_shell_velocity": float(self.specs.get("min_shell_velocity", 0.2)),
+            "target_tube_velocity": float(self.specs.get("target_tube_velocity", 1.0)),
+            "target_shell_velocity": float(self.specs.get("target_shell_velocity", 0.5)),
             "max_area": float(self.specs.get("max_area", 1000.0)),
         }
 
@@ -30,7 +32,7 @@ class EvaporatorHX(ShellAndTubeHX):
 
         q_max = hot["m_dot"] * hot["cp"] * 1000.0 * max(hot["t_k"] - cold["t_k"], 0.5)
         if q_watts > 0.98 * q_max:
-            self._warn("Requested evaporator duty exceeds hot-side available sensible heat; clipping to feasible duty")
+            self._warn_with_category("FEASIBILITY_WARNING", "Requested evaporator duty exceeds hot-side available sensible heat; clipping to feasible duty")
             q_watts = 0.98 * q_max
 
         th_out = hot["t_k"] - q_watts / max(hot["m_dot"] * hot["cp"] * 1000.0, 1e-12)
@@ -53,24 +55,30 @@ class EvaporatorHX(ShellAndTubeHX):
 
         if self.boiling_side == "tube":
             h_tube = h_boil
+            h_shell = max(h_shell, 220.0)
         else:
             h_shell = h_boil
+            h_tube = max(h_tube, 250.0)
         return h_tube, h_shell
 
     def _validate_design_constraints(self, results: Dict[str, Any]) -> None:
         limits = self.design_limits
         if results.get("Area", 0.0) > limits["max_area"]:
-            self._warn("Area exceeds configured evaporator design limit")
+            self._warn_with_category("GEOMETRY_WARNING", "Area exceeds configured evaporator design limit")
         if results.get("tube_count", 0) > limits["max_tube_count"]:
-            self._warn("Tube count exceeds configured evaporator design limit")
+            self._warn_with_category("GEOMETRY_WARNING", "Tube count exceeds configured evaporator design limit")
         if results.get("shell_diameter", 0.0) > limits["max_shell_diameter"]:
-            self._warn("Shell diameter exceeds configured evaporator design limit")
+            self._warn_with_category("GEOMETRY_WARNING", "Shell diameter exceeds configured evaporator design limit")
         if results.get("tube_velocity", 0.0) < limits["min_tube_velocity"]:
-            self._warn("Tube velocity below recommended minimum; hydraulic collapse risk")
+            self._warn_with_category("HYDRAULIC_WARNING", "Tube velocity below recommended minimum; hydraulic collapse risk")
         if results.get("tube_velocity", 0.0) > limits["max_tube_velocity"]:
-            self._warn("Tube velocity above recommended maximum")
+            self._warn_with_category("HYDRAULIC_WARNING", "Tube velocity above recommended maximum")
         if results.get("shell_velocity", 0.0) < limits["min_shell_velocity"]:
-            self._warn("Shell velocity below recommended minimum")
+            self._warn_with_category("HYDRAULIC_WARNING", "Shell velocity below recommended minimum")
+        if results.get("tube_velocity", 0.0) < limits["target_tube_velocity"]:
+            self._warn_with_category("HYDRAULIC_WARNING", "Tube velocity below target tube velocity")
+        if results.get("shell_velocity", 0.0) < limits["target_shell_velocity"]:
+            self._warn_with_category("HYDRAULIC_WARNING", "Shell velocity below target shell velocity")
 
     def _calculate_pressure_drop(
         self,
@@ -125,6 +133,7 @@ class EvaporatorHX(ShellAndTubeHX):
             "boiling_side": self.boiling_side,
             "convergence_status": results.get("status", "OK"),
             "warnings": list(dict.fromkeys([*results.get("warnings", []), *self._warnings])),
+            "warning_details": [{"category": (w.split("]",1)[0][1:] if w.startswith("[") and "]" in w else "GENERAL_WARNING"), "message": (w.split("]",1)[1].strip() if w.startswith("[") and "]" in w else w)} for w in list(dict.fromkeys([*results.get("warnings", []), *self._warnings]))],
         })
         return results
 

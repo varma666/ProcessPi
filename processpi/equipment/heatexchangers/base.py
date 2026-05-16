@@ -23,6 +23,11 @@ class HeatExchangerBaseMixin:
         self._warnings.append(message)
         self.logger.warning(message)
 
+    def _warn_with_category(self, category: str, message: str) -> None:
+        tagged = f"[{category}] {message}"
+        self._warnings.append(tagged)
+        self.logger.warning(tagged)
+
 
 class HeatExchanger(HeatExchangerBaseMixin, ABC):
     def __init__(self, hot_in: MaterialStream, cold_in: MaterialStream, hot_out: Optional[MaterialStream] = None, cold_out: Optional[MaterialStream] = None, **specs: Any):
