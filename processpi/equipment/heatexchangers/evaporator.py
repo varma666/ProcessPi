@@ -72,8 +72,25 @@ class EvaporatorHX(ShellAndTubeHX):
         if results.get("shell_velocity", 0.0) < limits["min_shell_velocity"]:
             self._warn("Shell velocity below recommended minimum")
 
-    def _calculate_pressure_drop(self, hot: Dict[str, float], cold: Dict[str, float], geometry: Dict[str, float], tube_passes: int, tube_count: int):
-        tube_dp, shell_dp = super()._calculate_pressure_drop(hot, cold, geometry, tube_passes, tube_count)
+    def _calculate_pressure_drop(
+        self,
+        geometry: Dict[str, float],
+        hot: Dict[str, float],
+        cold: Dict[str, float],
+        shell_velocity: float,
+        tube_velocity: float,
+        shell_passes: int = 1,
+        tube_passes: int = 1,
+    ):
+        tube_dp, shell_dp = super()._calculate_pressure_drop(
+            geometry=geometry,
+            hot=hot,
+            cold=cold,
+            shell_velocity=shell_velocity,
+            tube_velocity=tube_velocity,
+            shell_passes=shell_passes,
+            tube_passes=tube_passes,
+        )
         if self.orientation == "vertical":
             rho = cold.get("density", 900.0) if self.boiling_side == "tube" else hot.get("density", 900.0)
             static_head = rho * 9.81 * max(float(geometry.get("tube_length", 6.0)), 0.0)

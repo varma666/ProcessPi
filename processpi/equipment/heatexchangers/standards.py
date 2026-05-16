@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from typing import Optional, Tuple
+import logging
 import math
+
+logger = logging.getLogger("processpi.hx.standards")
 
 HX_U_STANDARDS = {
     "shell_and_tube": {
@@ -122,6 +125,8 @@ TUBE_DIAMETER_STANDARD = [
 
 
 import math
+
+logger = logging.getLogger("processpi.hx.standards")
 
 def select_tube_configuration(area_required, hot, cold):
     best = None
@@ -256,7 +261,7 @@ def tube_length_select(tube_length, ld):
     # Extract and sort standard lengths
     std_lengths = sorted([i["length"] for i in TUBE_LENGTH_STANDARD])
     
-    print(f"Current Length: {current_length}, L/D: {ld}")
+    logger.debug(f"Current Length: {current_length}, L/D: {ld}")
     
     # Case 1: L/D > 10 → select nearest LOWER standard length
     if ld > 10:
@@ -267,7 +272,7 @@ def tube_length_select(tube_length, ld):
         else:
             selected_length = min(std_lengths)  # fallback
         
-        print(f"[L/D > 10] Selected lower standard length: {selected_length}")
+        logger.debug(f"[L/D > 10] Selected lower standard length: {selected_length}")
         return selected_length
 
     # Case 2: L/D < 5 → select nearest HIGHER standard length
@@ -279,12 +284,12 @@ def tube_length_select(tube_length, ld):
         else:
             selected_length = max(std_lengths)  # fallback
         
-        print(f"[L/D < 5] Selected higher standard length: {selected_length}")
+        logger.debug(f"[L/D < 5] Selected higher standard length: {selected_length}")
         return selected_length
 
     # Case 3: Acceptable range → no change
     else:
-        print("[5 <= L/D <= 10] Length is acceptable. No change.")
+        logger.debug("[5 <= L/D <= 10] Length is acceptable. No change.")
         return current_length
 
 
@@ -440,7 +445,7 @@ def get_fouling_factor(
             entry = database[matched_key]
 
             if debug:
-                print(
+                logger.debug(
                     f"[DEBUG] Fouling key '{key}' "
                     f"not found. Using closest match "
                     f"'{matched_key}'"
@@ -453,7 +458,7 @@ def get_fouling_factor(
             # ==============================================
 
             if debug:
-                print(
+                logger.debug(
                     f"[DEBUG] Fouling key '{key}' "
                     f"not found. Using default fouling "
                     f"factor = {DEFAULT_FOULING}"
@@ -468,7 +473,7 @@ def get_fouling_factor(
     fouling = entry["base"]
 
     if debug:
-        print(f"[DEBUG] Base fouling factor = {fouling}")
+        logger.debug(f"[DEBUG] Base fouling factor = {fouling}")
 
     # ======================================================
     # VELOCITY CORRECTION
@@ -487,7 +492,7 @@ def get_fouling_factor(
                 fouling *= 1.30
 
                 if debug:
-                    print(
+                    logger.debug(
                         f"[DEBUG] Low velocity correction "
                         f"applied (v={velocity:.3f} m/s)"
                     )
@@ -496,7 +501,7 @@ def get_fouling_factor(
                 fouling *= 0.85
 
                 if debug:
-                    print(
+                    logger.debug(
                         f"[DEBUG] High velocity correction "
                         f"applied (v={velocity:.3f} m/s)"
                     )
@@ -518,7 +523,7 @@ def get_fouling_factor(
                 fouling *= 1.25
 
                 if debug:
-                    print(
+                    logger.debug(
                         f"[DEBUG] High temperature "
                         f"correction applied "
                         f"(T={temperature:.2f} °C)"
@@ -528,7 +533,7 @@ def get_fouling_factor(
                 fouling *= 0.95
 
                 if debug:
-                    print(
+                    logger.debug(
                         f"[DEBUG] Low temperature "
                         f"correction applied "
                         f"(T={temperature:.2f} °C)"
@@ -539,7 +544,7 @@ def get_fouling_factor(
     # ======================================================
 
     if debug:
-        print(
+        logger.debug(
             f"[DEBUG] Final fouling factor "
             f"for '{key}' = {fouling}"
         )

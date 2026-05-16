@@ -77,8 +77,25 @@ class CondenserHX(ShellAndTubeHX):
             h_shell = h_cond
         return h_tube, h_shell
 
-    def _calculate_pressure_drop(self, hot: Dict[str, float], cold: Dict[str, float], geometry: Dict[str, float], tube_passes: int, tube_count: int):
-        tube_dp, shell_dp = super()._calculate_pressure_drop(hot, cold, geometry, tube_passes, tube_count)
+    def _calculate_pressure_drop(
+        self,
+        geometry: Dict[str, float],
+        hot: Dict[str, float],
+        cold: Dict[str, float],
+        shell_velocity: float,
+        tube_velocity: float,
+        shell_passes: int = 1,
+        tube_passes: int = 1,
+    ):
+        tube_dp, shell_dp = super()._calculate_pressure_drop(
+            geometry=geometry,
+            hot=hot,
+            cold=cold,
+            shell_velocity=shell_velocity,
+            tube_velocity=tube_velocity,
+            shell_passes=shell_passes,
+            tube_passes=tube_passes,
+        )
         if self.orientation == "vertical":
             static_head = float(self.specs.get("condensate_density", 850.0)) * 9.81 * max(float(geometry.get("tube_length", 6.0)), 0.0)
             if self.condensing_side == "tube":

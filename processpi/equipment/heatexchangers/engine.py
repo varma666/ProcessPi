@@ -21,7 +21,7 @@ class HeatExchangerResults:
         return (
             f"Heat Exchanger Summary\n"
             f"Type: {self.data.get('hx_type')}\n"
-            f"Q: {self.data.get('Q', 0.0):.2f} W\n"
+            f"Q: {self.data.get('Q', 0.0):.2f} kW\n"
             f"Area: {self.data.get('Area', 0.0):.3f} m2\n"
             f"U_assumed/U_calculated: {self.data.get('U_assumed', 0.0):.2f}/{self.data.get('U_calculated', 0.0):.2f} W/m2K\n"
             f"Status: {self.data.get('status', 'UNKNOWN')}"

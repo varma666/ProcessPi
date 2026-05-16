@@ -15,20 +15,9 @@ class HeatExchangerBaseMixin:
         self.logger = self.specs.get("logger") or logging.getLogger(f"processpi.hx.{self.__class__.__name__.lower()}")
         self._warnings: list[str] = []
 
-    def _debug(self, *args):
-    
-        if not getattr(self, "verbose", False):
-            return
-    
-        message = " ".join(str(a) for a in args)
-    
-        if getattr(self, "logger", None):
-    
-            self.logger.debug(message)
-    
-        else:
-    
-            print(message)
+    def _debug(self, *args: object) -> None:
+        if self.verbose:
+            self.logger.debug(" ".join(str(a) for a in args))
 
     def _warn(self, message: str) -> None:
         self._warnings.append(message)
