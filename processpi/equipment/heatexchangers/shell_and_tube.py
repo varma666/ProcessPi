@@ -175,8 +175,20 @@ class ShellAndTubeHX(HeatExchanger):
     def _round_tube_count_to_passes(self, tube_count: int, tube_passes: int) -> int:
         return max(tube_passes, int(math.ceil(tube_count / max(tube_passes, 1)) * max(tube_passes, 1)))
 
-    def _debug(self, message: str) -> None:
-        super()._debug(message)
+    def _debug(self, *args):
+    
+        if not getattr(self, "verbose", False):
+            return
+    
+        message = " ".join(str(a) for a in args)
+    
+        if getattr(self, "logger", None):
+    
+            self.logger.debug(message)
+    
+        else:
+    
+            print(message)
 
     def _load_standard_tables(self) -> None:
         self._tube_count_tables = STANDARD_TUBE_COUNT_TABLES
