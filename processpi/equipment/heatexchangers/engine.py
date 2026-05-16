@@ -17,19 +17,17 @@ from .shell_and_tube import ShellAndTubeHX
 class HeatExchangerResults:
     data: Dict[str, Any]
 
-    def summary(self):
-        print("\n=== Heat Exchanger Summary ===")
-        print(f"Type: {self.data['hx_type']}")
-        print(f"Q: {self.data['Q']:.2f} W")
-        print(f"Area: {self.data['Area']:.3f} m2")
-        print(f"U_assumed/U_calculated: {self.data['U_assumed']:.2f}/{self.data['U_calculated']:.2f} W/m2K")
-        print(f"Status: {self.data['status']}")
-        return self.data
+    def summary(self) -> str:
+        return (
+            f"Heat Exchanger Summary\n"
+            f"Type: {self.data.get('hx_type')}\n"
+            f"Q: {self.data.get('Q', 0.0):.2f} W\n"
+            f"Area: {self.data.get('Area', 0.0):.3f} m2\n"
+            f"U_assumed/U_calculated: {self.data.get('U_assumed', 0.0):.2f}/{self.data.get('U_calculated', 0.0):.2f} W/m2K\n"
+            f"Status: {self.data.get('status', 'UNKNOWN')}"
+        )
 
-    def detailed_summary(self):
-        print("\n=== Heat Exchanger Detailed Summary ===")
-        for k, v in self.data.items():
-            print(f"- {k}: {v}")
+    def detailed_summary(self) -> Dict[str, Any]:
         return self.data
 
 
@@ -174,11 +172,6 @@ class HeatExchangerEngine:
             .lower()
         )
     
-        print("\n" + "=" * 60)
-        print(f"[DEBUG] Heat Exchanger Mode : {mode.upper()}")
-        print(f"[DEBUG] Heat Exchanger Type : {hx_type}")
-        print(f"[DEBUG] Design Method       : {self.method}")
-        print("=" * 60)
     
         # ======================================================
         # DESIGN MODE
@@ -235,7 +228,6 @@ class HeatExchangerEngine:
 
     def summary(self):
         if not self._results:
-            print("No results available for summary.")
             return None
         return self._results.summary()
     def results(self):
