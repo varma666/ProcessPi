@@ -179,32 +179,6 @@ class DoublePipeHX(HeatExchanger):
         )
 
         # ======================================================
-        # DEBUG
-        # ======================================================
-
-        print("\n" + "=" * 60)
-        print("DOUBLE PIPE HX — DESIGN MODE")
-        print("=" * 60)
-
-        print(f"Heat Duty          : {q:.4f} kW")
-        print(f"LMTD               : {lmtd:.4f} K")
-        print(f"U Assumed          : {u_assumed:.4f} W/m2.K")
-        print(f"Required Area      : {area_required:.4f} m2")
-        print(f"Actual Area        : {area:.4f} m2")
-
-        print("-" * 60)
-
-        print(f"Tube Velocity      : {tube_velocity:.4f} m/s")
-        print(f"Annulus Velocity   : {annulus_velocity:.4f} m/s")
-
-        print("-" * 60)
-
-        print(f"Tube DP            : {tube_dp:.2f} Pa")
-        print(f"Annulus DP         : {annulus_dp:.2f} Pa")
-
-        print("=" * 60)
-
-        # ======================================================
         # RESULTS
         # ======================================================
 
@@ -214,6 +188,8 @@ class DoublePipeHX(HeatExchanger):
             "Q": q,
             "Area": area,
             "U_assumed": u_assumed,
+            "U_clean": u_assumed,
+            "U_dirty": u_assumed,
             "U_calculated": u_assumed,
             "LMTD": lmtd,
             "tube_count": 1,
@@ -471,27 +447,13 @@ class DoublePipeHX(HeatExchanger):
         # DEBUG
         # ======================================================
 
-        print("\n" + "=" * 60)
-        print("DOUBLE PIPE HX — RATE MODE")
-        print("=" * 60)
 
-        print(f"UA                 : {UA:.4f}")
-        print(f"NTU                : {NTU:.4f}")
-        print(f"Effectiveness      : {effectiveness:.4f}")
 
-        print("-" * 60)
 
-        print(f"Actual Duty        : {q_actual/1000:.4f} kW")
 
-        print(f"Hot Outlet Temp    : {th_out:.2f} K")
-        print(f"Cold Outlet Temp   : {tc_out:.2f} K")
 
-        print("-" * 60)
 
-        print(f"Tube Velocity      : {tube_velocity:.4f} m/s")
-        print(f"Annulus Velocity   : {annulus_velocity:.4f} m/s")
 
-        print("=" * 60)
 
         # ======================================================
         # RESULTS
