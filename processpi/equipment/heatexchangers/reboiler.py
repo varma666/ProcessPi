@@ -22,7 +22,7 @@ class ReboilerHX(EvaporatorHX):
         }
         return factors.get(self.reboiler_type, 1.00)
 
-    def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float]):
+    def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float], **kwargs: Any):
         h_tube, h_shell = super()._calculate_htc(dimless, geometry, hot, cold)
         boost = self._circulation_factor()
         if self.boiling_side == "tube":

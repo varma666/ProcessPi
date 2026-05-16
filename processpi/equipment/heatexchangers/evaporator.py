@@ -22,7 +22,7 @@ class EvaporatorHX(ShellAndTubeHX):
             "max_area": float(self.specs.get("max_area", 1000.0)),
         }
 
-    def _calculate_heat_duty(self, hot: Dict[str, float], cold: Dict[str, float]):
+    def _calculate_heat_duty(self, hot: Dict[str, float], cold: Dict[str, float], **kwargs: Any):
         latent_heat = self.specs.get("latent_heat")
         if latent_heat is None:
             raise ValueError("Evaporator requires latent_heat")
@@ -46,7 +46,7 @@ class EvaporatorHX(ShellAndTubeHX):
         orientation_factor = 1.1 if self.orientation == "vertical" else 1.0
         return max(1500.0, min(h_boil * orientation_factor, 18000.0))
 
-    def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float]):
+    def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float], **kwargs: Any):
         h_tube, h_shell = super()._calculate_htc(dimless, geometry, hot, cold)
         q_flux = max(float(self.specs.get("Q", 1e6)) / max(geometry.get("area", 1.0), 1e-9), 1e3)
         h_boil = self._calculate_boiling_htc(cold, q_flux)
@@ -79,8 +79,7 @@ class EvaporatorHX(ShellAndTubeHX):
         cold: Dict[str, float],
         shell_velocity: float,
         tube_velocity: float,
-        shell_passes: int = 1,
-        tube_passes: int = 1,
+        **kwargs: Any,
     ):
         tube_dp, shell_dp = super()._calculate_pressure_drop(
             geometry=geometry,
@@ -88,10 +87,12 @@ class EvaporatorHX(ShellAndTubeHX):
             cold=cold,
             shell_velocity=shell_velocity,
             tube_velocity=tube_velocity,
-            shell_passes=shell_passes,
-            tube_passes=tube_passes,
+            shell_passes=kwargs.get("shell_passes", 1),
+            tube_passes=kwargs.get("tube_passes", 1),
         )
-        if self.orientation == "vertical":
+        orientation = str(kwargs.get("orientation", self.orientation)).lower()
+        _ = kwargs.get("shell_diameter")
+        if orientation == "vertical":
             rho = cold.get("density", 900.0) if self.boiling_side == "tube" else hot.get("density", 900.0)
             static_head = rho * 9.81 * max(float(geometry.get("tube_length", 6.0)), 0.0)
             if self.boiling_side == "tube":

@@ -17,7 +17,7 @@ class CondenserHX(ShellAndTubeHX):
         self.condensing_side = str(self.specs.get("condensing_side", "shell")).lower()
         self.condensation_mode = str(self.specs.get("condensation_mode", "total")).lower()
 
-    def _calculate_heat_duty(self, hot: Dict[str, float], cold: Dict[str, float]):
+    def _calculate_heat_duty(self, hot: Dict[str, float], cold: Dict[str, float], **kwargs: Any):
         latent_heat = self.specs.get("latent_heat")
         if latent_heat is None:
             raise ValueError("Condenser requires latent_heat for condensation service")
@@ -67,7 +67,7 @@ class CondenserHX(ShellAndTubeHX):
         h_cond = h_base * orientation_factor * side_factor
         return max(1200.0, min(h_cond, 20000.0))
 
-    def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float]):
+    def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float], **kwargs: Any):
         h_tube, h_shell = super()._calculate_htc(dimless, geometry, hot, cold)
         h_cond = self._calculate_condensation_htc(hot, geometry)
 
@@ -84,8 +84,7 @@ class CondenserHX(ShellAndTubeHX):
         cold: Dict[str, float],
         shell_velocity: float,
         tube_velocity: float,
-        shell_passes: int = 1,
-        tube_passes: int = 1,
+        **kwargs: Any,
     ):
         tube_dp, shell_dp = super()._calculate_pressure_drop(
             geometry=geometry,
@@ -93,10 +92,12 @@ class CondenserHX(ShellAndTubeHX):
             cold=cold,
             shell_velocity=shell_velocity,
             tube_velocity=tube_velocity,
-            shell_passes=shell_passes,
-            tube_passes=tube_passes,
+            shell_passes=kwargs.get("shell_passes", 1),
+            tube_passes=kwargs.get("tube_passes", 1),
         )
-        if self.orientation == "vertical":
+        orientation = str(kwargs.get("orientation", self.orientation)).lower()
+        _ = kwargs.get("shell_diameter")
+        if orientation == "vertical":
             static_head = float(self.specs.get("condensate_density", 850.0)) * 9.81 * max(float(geometry.get("tube_length", 6.0)), 0.0)
             if self.condensing_side == "tube":
                 tube_dp += static_head
