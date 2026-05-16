@@ -1105,17 +1105,23 @@ class ShellAndTubeHX(HeatExchanger):
       
     def _calculate_pressure_drop(
         self,
+        geometry: Dict[str, Any] | None,
         hot: Dict[str, float],
         cold: Dict[str, float],
-        shell_passes: int,
-        tube_passes: int,
-        shell_diameter: float,
-        tube_length: float,
-        tube_id: float,
-        v_tube: float,
-        v_shell: float,
-        geometry: Dict[str, Any] | None = None,
+        shell_velocity: float | None = None,
+        tube_velocity: float | None = None,
+        **kwargs: Any,
     ) -> Tuple[float, float]:
+        shell_velocity = shell_velocity if shell_velocity is not None else float(kwargs.get("shell_velocity", kwargs.get("v_shell", 0.0)))
+        tube_velocity = tube_velocity if tube_velocity is not None else float(kwargs.get("tube_velocity", kwargs.get("v_tube", 0.0)))
+        shell_passes = int(kwargs.get("shell_passes", 1))
+        tube_passes = int(kwargs.get("tube_passes", 1))
+        shell_diameter = float(kwargs.get("shell_diameter", 0.0) or 0.0)
+        orientation = str(kwargs.get("orientation", "horizontal")).lower()
+        tube_length = float(kwargs.get("tube_length", (geometry or {}).get("tube_length", 1.0)))
+        tube_id = float(kwargs.get("tube_id", (geometry or {}).get("tube_id", 0.016)))
+        v_tube = tube_velocity
+        v_shell = shell_velocity
     
         # ==========================================================
         # TUBE SIDE DP
