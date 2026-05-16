@@ -31,6 +31,37 @@ class ReboilerHX(EvaporatorHX):
             h_shell *= boost
         return h_tube, h_shell
 
+    def _calculate_pressure_drop(
+        self,
+        geometry: Dict[str, float],
+        hot: Dict[str, float],
+        cold: Dict[str, float],
+        shell_velocity: float | None = None,
+        tube_velocity: float | None = None,
+        **kwargs: Any,
+    ):
+        shell_velocity = (
+            shell_velocity
+            if shell_velocity is not None
+            else float(kwargs.get("shell_velocity", 0.0))
+        )
+        tube_velocity = (
+            tube_velocity
+            if tube_velocity is not None
+            else float(kwargs.get("tube_velocity", 0.0))
+        )
+        kwargs.setdefault("shell_passes", int(kwargs.get("shell_passes", 1)))
+        kwargs.setdefault("tube_passes", int(kwargs.get("tube_passes", 1)))
+        _shell_diameter = kwargs.get("shell_diameter")
+        return super()._calculate_pressure_drop(
+            geometry=geometry,
+            hot=hot,
+            cold=cold,
+            shell_velocity=shell_velocity,
+            tube_velocity=tube_velocity,
+            **kwargs,
+        )
+
     def _decorate_results(self, results: Dict[str, Any]) -> Dict[str, Any]:
         results = super()._decorate_results(results)
         results.update({

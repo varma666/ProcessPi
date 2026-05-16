@@ -82,18 +82,32 @@ class CondenserHX(ShellAndTubeHX):
         geometry: Dict[str, float],
         hot: Dict[str, float],
         cold: Dict[str, float],
-        shell_velocity: float,
-        tube_velocity: float,
+        shell_velocity: float | None = None,
+        tube_velocity: float | None = None,
         **kwargs: Any,
     ):
+        shell_velocity = (
+            shell_velocity
+            if shell_velocity is not None
+            else float(kwargs.get("shell_velocity", 0.0))
+        )
+        tube_velocity = (
+            tube_velocity
+            if tube_velocity is not None
+            else float(kwargs.get("tube_velocity", 0.0))
+        )
+        shell_passes = int(kwargs.get("shell_passes", 1))
+        tube_passes = int(kwargs.get("tube_passes", 1))
+        _shell_diameter = kwargs.get("shell_diameter")
+
         tube_dp, shell_dp = super()._calculate_pressure_drop(
             geometry=geometry,
             hot=hot,
             cold=cold,
             shell_velocity=shell_velocity,
             tube_velocity=tube_velocity,
-            shell_passes=kwargs.get("shell_passes", 1),
-            tube_passes=kwargs.get("tube_passes", 1),
+            shell_passes=shell_passes,
+            tube_passes=tube_passes,
         )
         orientation = str(kwargs.get("orientation", self.orientation)).lower()
         _ = kwargs.get("shell_diameter")
