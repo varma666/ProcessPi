@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List, Tuple
 
+from processpi.calculations.heat_transfer import LMTD
 from processpi.calculations.heat_transfer.hx_kern import (
     ConvectiveH,
     DarcyDrop,
@@ -82,17 +83,22 @@ class ShellAndTubeHX(HeatExchanger):
         return q_kw * 1000.0, th_out, tc_out
 
     def _calculate_lmtd(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
+        eps = 1e-3
         dt1 = hot["t_k"] - tc_out
         dt2 = th_out - cold["t_k"]
         phase_change_service = str(getattr(self, "service_type", "")).lower() in {"condenser", "reboiler", "evaporator"}
 
-        if phase_change_service and (dt1 <= 0 or dt2 <= 0):
-            self._warn_with_category("FEASIBILITY_WARNING", "Temperature crossing/zero approach detected for phase-change service")
-            raise ValueError("Invalid temperature approach for phase-change exchanger service")
-
-        # Phase-change stabilization: avoid near-singularity in isothermal-side services.
-        if phase_change_service and abs(dt1 - dt2) < 1e-6:
-            return max(dt1, 1e-6)
+        if phase_change_service:
+            if dt1 <= eps:
+                self._warn_with_category("FEASIBILITY_WARNING", "Phase-change LMTD stabilization applied on terminal dT1")
+                dt1 = eps
+            if dt2 <= eps:
+                self._warn_with_category("FEASIBILITY_WARNING", "Phase-change LMTD stabilization applied on terminal dT2")
+                dt2 = eps
+            if abs(dt1 - dt2) < eps:
+                self._warn_with_category("FEASIBILITY_WARNING", "Near-isothermal phase-change exchanger stabilized")
+                return 0.5 * (dt1 + dt2)
+            return LMTD(dT1=dt1, dT2=dt2).calculate()
 
         return self.lmtd(hot["t_k"], th_out, cold["t_k"], tc_out)
 

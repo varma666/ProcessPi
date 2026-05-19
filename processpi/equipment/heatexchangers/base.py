@@ -96,6 +96,31 @@ class HeatExchanger(HeatExchangerBaseMixin, ABC):
             return 2257000.0
         return None
 
+    def _is_phase_change_service(self) -> bool:
+        service = str(self.specs.get("service") or getattr(self, "service_type", "")).lower()
+        return service in {"condenser", "reboiler", "evaporator"}
+
+    def _get_stream_outlet_phase(self, side: str, default_phase: str) -> str:
+        if side == "hot":
+            stream = self.hot_out
+            spec_key = "hot_out_phase"
+        else:
+            stream = self.cold_out
+            spec_key = "cold_out_phase"
+        if stream is not None and getattr(stream, "phase", None):
+            return str(stream.phase).lower()
+        return str(self.specs.get(spec_key, default_phase)).lower()
+
+    def _available_thermal_capacity(self, side: str, inlet: Dict[str, float], other_inlet_tk: float) -> float:
+        in_phase = str(inlet.get("phase", "liquid")).lower()
+        out_phase = self._get_stream_outlet_phase(side, in_phase)
+        if in_phase != out_phase:
+            latent = self._resolve_phase_change_latent_heat(inlet if side == "hot" else {"phase":"liquid"}, inlet if side == "cold" else {"phase":"liquid"})
+            if latent is None:
+                latent = 2257000.0
+            return inlet["m_dot"] * latent
+        return inlet["m_dot"] * inlet["cp"] * 1000.0 * max(inlet["t_k"] - other_inlet_tk, 0.5)
+
     def heat_duty(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("Q") is not None:
             return float(self.specs["Q"])
