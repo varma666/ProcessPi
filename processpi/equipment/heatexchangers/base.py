@@ -50,11 +50,60 @@ class HeatExchanger(HeatExchangerBaseMixin, ABC):
             "t_k": s.temperature.to("K").value if s.temperature else None,
         }
 
+    def _lookup_steam_latent_heat(self, pressure_bar: float) -> float:
+        """Approximate saturated steam latent heat [J/kg] using simple interpolation table."""
+        table = [
+            (1.0, 2257000.0),
+            (2.0, 2202000.0),
+            (3.0, 2163000.0),
+            (5.0, 2108000.0),
+            (8.0, 2048000.0),
+            (10.0, 2014000.0),
+            (15.0, 1944000.0),
+            (20.0, 1889000.0),
+        ]
+        p = max(float(pressure_bar), 0.5)
+        if p <= table[0][0]:
+            return table[0][1]
+        if p >= table[-1][0]:
+            return table[-1][1]
+        for (p1, h1), (p2, h2) in zip(table[:-1], table[1:]):
+            if p1 <= p <= p2:
+                ratio = (p - p1) / (p2 - p1)
+                return h1 + ratio * (h2 - h1)
+        return table[3][1]
+
+    def _resolve_phase_change_latent_heat(self, hot: Dict[str, float], cold: Dict[str, float]) -> float | None:
+        explicit_latent = self.specs.get("latent_heat")
+        if explicit_latent is not None:
+            return float(explicit_latent)
+
+        service = str(self.specs.get("service") or getattr(self, "service_type", "")).lower()
+        hot_in_phase = hot.get("phase", "liquid")
+        cold_in_phase = cold.get("phase", "liquid")
+        hot_out_phase = str(self.specs.get("hot_out_phase", hot_in_phase)).lower()
+        cold_out_phase = str(self.specs.get("cold_out_phase", cold_in_phase)).lower()
+
+        hot_condensing = hot_in_phase == "vapor" and hot_out_phase == "liquid"
+        cold_boiling = cold_in_phase == "liquid" and cold_out_phase == "vapor"
+        service_phase_change = service in {"condenser", "reboiler", "evaporator"}
+
+        if hot_condensing or service == "condenser":
+            return self._lookup_steam_latent_heat(hot.get("p_bar", 1.0))
+        if cold_boiling or service_phase_change:
+            if cold_in_phase == "steam" or getattr(self.cold_in.component, "name", "").lower() == "steam":
+                return self._lookup_steam_latent_heat(cold.get("p_bar", 1.0))
+            return 2257000.0
+        return None
+
     def heat_duty(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("Q") is not None:
             return float(self.specs["Q"])
-        if self.specs.get("latent_heat") is not None:
-            return LatentDuty(m_dot=hot["m_dot"], latent_heat=self.specs["latent_heat"]).calculate().to("W").value
+        latent_heat = self._resolve_phase_change_latent_heat(hot, cold)
+        if latent_heat is not None:
+            latent_side = str(self.specs.get("latent_side", "hot")).lower()
+            m_dot = hot["m_dot"] if latent_side == "hot" else cold["m_dot"]
+            return LatentDuty(m_dot=m_dot, latent_heat=latent_heat).calculate().to("W").value
         if self.hot_out and hot["t_k"] is not None and self.hot_out.temperature is not None:
             return SensibleDuty(m_dot=hot["m_dot"], cp=hot["cp"], t_in=hot["t_k"], t_out=self.hot_out.temperature.to("K").value).calculate().to("W").value
         if self.cold_out and cold["t_k"] is not None and self.cold_out.temperature is not None:

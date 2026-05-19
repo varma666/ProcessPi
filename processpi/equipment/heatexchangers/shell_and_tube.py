@@ -82,7 +82,18 @@ class ShellAndTubeHX(HeatExchanger):
         return q_kw * 1000.0, th_out, tc_out
 
     def _calculate_lmtd(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
-        #self._debug(f"Hot in: {hot["t_k"]} Hot out: {th_out} cold in: {cold["t_k"]} cold out: { tc_out}")
+        dt1 = hot["t_k"] - tc_out
+        dt2 = th_out - cold["t_k"]
+        phase_change_service = str(getattr(self, "service_type", "")).lower() in {"condenser", "reboiler", "evaporator"}
+
+        if phase_change_service and (dt1 <= 0 or dt2 <= 0):
+            self._warn_with_category("FEASIBILITY_WARNING", "Temperature crossing/zero approach detected for phase-change service")
+            raise ValueError("Invalid temperature approach for phase-change exchanger service")
+
+        # Phase-change stabilization: avoid near-singularity in isothermal-side services.
+        if phase_change_service and abs(dt1 - dt2) < 1e-6:
+            return max(dt1, 1e-6)
+
         return self.lmtd(hot["t_k"], th_out, cold["t_k"], tc_out)
 
     def _safe_log_ratio(self, numerator: float, denominator: float) -> float:
@@ -249,6 +260,13 @@ class ShellAndTubeHX(HeatExchanger):
         - exchanger side
         """
     
+        service = str(getattr(self, "service_type", self.specs.get("service", "heat_exchanger"))).lower()
+
+        if service in {"condenser", "reboiler", "evaporator"}:
+            if side == "tube":
+                return (0.6, 1.5)
+            return (0.3, 1.2)
+
         if hasattr(component, "hx_data"):
             data = component.hx_data()
         elif isinstance(component, dict):
@@ -2274,4 +2292,3 @@ class ShellAndTubeHX(HeatExchanger):
         }
     
         return self._finalize_results(payload)
-
