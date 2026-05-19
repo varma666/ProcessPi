@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List, Tuple
 
+from processpi.calculations.heat_transfer import LMTD
 from processpi.calculations.heat_transfer.hx_kern import (
     ConvectiveH,
     DarcyDrop,
@@ -82,7 +83,23 @@ class ShellAndTubeHX(HeatExchanger):
         return q_kw * 1000.0, th_out, tc_out
 
     def _calculate_lmtd(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
-        #self._debug(f"Hot in: {hot["t_k"]} Hot out: {th_out} cold in: {cold["t_k"]} cold out: { tc_out}")
+        eps = 1e-3
+        dt1 = hot["t_k"] - tc_out
+        dt2 = th_out - cold["t_k"]
+        phase_change_service = str(getattr(self, "service_type", "")).lower() in {"condenser", "reboiler", "evaporator"}
+
+        if phase_change_service:
+            if dt1 <= eps:
+                self._warn_with_category("FEASIBILITY_WARNING", "Phase-change LMTD stabilization applied on terminal dT1")
+                dt1 = eps
+            if dt2 <= eps:
+                self._warn_with_category("FEASIBILITY_WARNING", "Phase-change LMTD stabilization applied on terminal dT2")
+                dt2 = eps
+            if abs(dt1 - dt2) < eps:
+                self._warn_with_category("FEASIBILITY_WARNING", "Near-isothermal phase-change exchanger stabilized")
+                return 0.5 * (dt1 + dt2)
+            return LMTD(dT1=dt1, dT2=dt2).calculate()
+
         return self.lmtd(hot["t_k"], th_out, cold["t_k"], tc_out)
 
     def _safe_log_ratio(self, numerator: float, denominator: float) -> float:
@@ -249,6 +266,13 @@ class ShellAndTubeHX(HeatExchanger):
         - exchanger side
         """
     
+        service = str(getattr(self, "service_type", self.specs.get("service", "heat_exchanger"))).lower()
+
+        if service in {"condenser", "reboiler", "evaporator"}:
+            if side == "tube":
+                return (0.6, 1.5)
+            return (0.3, 1.2)
+
         if hasattr(component, "hx_data"):
             data = component.hx_data()
         elif isinstance(component, dict):
@@ -2274,4 +2298,3 @@ class ShellAndTubeHX(HeatExchanger):
         }
     
         return self._finalize_results(payload)
-

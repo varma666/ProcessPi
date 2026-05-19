@@ -14,9 +14,22 @@ class LMTD(CalculationBase):
                 raise ValueError(f"Missing required input: {key}")
 
     def calculate(self):
+        eps = 1e-6
 
         dT1 = self._get_value(self.inputs["dT1"], "temperature")
         dT2 = self._get_value(self.inputs["dT2"], "temperature")
 
-        dTlm = dT1 if dT1 == dT2 else (dT1 - dT2) / math.log(dT1 / dT2)
-        return dTlm
+        if dT1 <= 0 or dT2 <= 0:
+            raise ValueError("Invalid temperature approach in LMTD calculation.")
+
+        dT1 = max(dT1, eps)
+        dT2 = max(dT2, eps)
+
+        if abs(dT1 - dT2) < eps:
+            return dT1
+
+        ratio = dT1 / dT2
+        if ratio <= 0:
+            raise ValueError("Invalid temperature approach in LMTD calculation.")
+
+        return (dT1 - dT2) / math.log(ratio)
