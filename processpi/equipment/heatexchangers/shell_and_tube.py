@@ -249,6 +249,13 @@ class ShellAndTubeHX(HeatExchanger):
         - exchanger side
         """
     
+        service = str(getattr(self, "service_type", self.specs.get("service", "heat_exchanger"))).lower()
+
+        if service in {"condenser", "reboiler", "evaporator"}:
+            if side == "tube":
+                return (0.6, 1.5)
+            return (0.3, 1.2)
+
         if hasattr(component, "hx_data"):
             data = component.hx_data()
         elif isinstance(component, dict):
@@ -2274,4 +2281,3 @@ class ShellAndTubeHX(HeatExchanger):
         }
     
         return self._finalize_results(payload)
-
