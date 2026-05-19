@@ -2161,21 +2161,31 @@ class ShellAndTubeHX(HeatExchanger):
             warnings.append(f"Using {n_units} exchangers in series to satisfy Ft requirement")
 
         cltd = max(ft * lmtd, 1e-9)
+
         # ==========================================================
         # PRESSURE DROP
         # ==========================================================
-    
+        
         tube_dp, shell_dp = (
             self._calculate_pressure_drop(
+                geometry=geometry,
                 hot=hot,
                 cold=cold,
+        
+                shell_velocity=v_shell,
+                tube_velocity=v_tube,
+        
                 shell_passes=shell_passes,
                 tube_passes=tube_passes,
+        
                 shell_diameter=shell_diameter,
                 tube_length=geometry["tube_length"],
                 tube_id=geometry["tube_id"],
-                v_tube=v_tube,
-                v_shell=v_shell,
+        
+                orientation=self.specs.get(
+                    "orientation",
+                    "horizontal",
+                ),
             )
         )
     
