@@ -36,7 +36,7 @@ class EvaporatorHX(ShellAndTubeHX):
         else:
             q_max = hot["m_dot"] * hot["cp"] * 1000.0 * max(hot["t_k"] - cold["t_k"], 0.5)
         if q_watts > 0.98 * q_max:
-            self._warn_with_category("FEASIBILITY_WARNING", "Requested evaporator duty exceeds hot-side available sensible heat; clipping to feasible duty")
+            self._warn_with_category("FEASIBILITY_WARNING", "Requested evaporator duty exceeds hot-side available thermal capacity (latent/sensible); clipping to feasible duty")
             q_watts = 0.98 * q_max
 
         th_out = hot["t_k"] - q_watts / max(hot["m_dot"] * hot["cp"] * 1000.0, 1e-12)
