@@ -25,14 +25,19 @@ class EvaporatorHX(ShellAndTubeHX):
         }
 
     def _calculate_heat_duty(self, hot: Dict[str, float], cold: Dict[str, float], **kwargs: Any):
-        latent_heat = self.specs.get("latent_heat")
+        latent_heat = self.specs.get("latent_heat") or self._resolve_phase_change_latent_heat(hot, cold)
         if latent_heat is None:
-            raise ValueError("Evaporator requires latent_heat")
+            raise ValueError("Evaporator requires latent_heat or detectable phase-change service")
         q_watts = LatentDuty(m_dot=cold["m_dot"], latent_heat=latent_heat).calculate().to("W").value
 
-        q_max = hot["m_dot"] * hot["cp"] * 1000.0 * max(hot["t_k"] - cold["t_k"], 0.5)
+        hot_out_phase = self._get_stream_outlet_phase("hot", str(hot.get("phase", "liquid")))
+        if hot_out_phase != str(hot.get("phase", "liquid")):
+            hot_latent = self._resolve_phase_change_latent_heat(hot, cold) or self._lookup_steam_latent_heat(hot.get("p_bar", 1.0))
+            q_max = hot["m_dot"] * hot_latent
+        else:
+            q_max = hot["m_dot"] * hot["cp"] * 1000.0 * max(hot["t_k"] - cold["t_k"], 0.5)
         if q_watts > 0.98 * q_max:
-            self._warn_with_category("FEASIBILITY_WARNING", "Requested evaporator duty exceeds hot-side available sensible heat; clipping to feasible duty")
+            self._warn_with_category("FEASIBILITY_WARNING", "Requested evaporator duty exceeds hot-side available thermal capacity (latent/sensible); clipping to feasible duty")
             q_watts = 0.98 * q_max
 
         th_out = hot["t_k"] - q_watts / max(hot["m_dot"] * hot["cp"] * 1000.0, 1e-12)

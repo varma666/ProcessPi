@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List, Tuple
 
+from processpi.calculations.heat_transfer import LMTD
 from processpi.calculations.heat_transfer.hx_kern import (
     ConvectiveH,
     DarcyDrop,
@@ -82,7 +83,23 @@ class ShellAndTubeHX(HeatExchanger):
         return q_kw * 1000.0, th_out, tc_out
 
     def _calculate_lmtd(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
-        #self._debug(f"Hot in: {hot["t_k"]} Hot out: {th_out} cold in: {cold["t_k"]} cold out: { tc_out}")
+        eps = 1e-3
+        dt1 = hot["t_k"] - tc_out
+        dt2 = th_out - cold["t_k"]
+        phase_change_service = str(getattr(self, "service_type", "")).lower() in {"condenser", "reboiler", "evaporator"}
+
+        if phase_change_service:
+            if dt1 <= eps:
+                self._warn_with_category("FEASIBILITY_WARNING", "Phase-change LMTD stabilization applied on terminal dT1")
+                dt1 = eps
+            if dt2 <= eps:
+                self._warn_with_category("FEASIBILITY_WARNING", "Phase-change LMTD stabilization applied on terminal dT2")
+                dt2 = eps
+            if abs(dt1 - dt2) < eps:
+                self._warn_with_category("FEASIBILITY_WARNING", "Near-isothermal phase-change exchanger stabilized")
+                return 0.5 * (dt1 + dt2)
+            return LMTD(dT1=dt1, dT2=dt2).calculate()
+
         return self.lmtd(hot["t_k"], th_out, cold["t_k"], tc_out)
 
     def _safe_log_ratio(self, numerator: float, denominator: float) -> float:
@@ -249,6 +266,13 @@ class ShellAndTubeHX(HeatExchanger):
         - exchanger side
         """
     
+        service = str(getattr(self, "service_type", self.specs.get("service", "heat_exchanger"))).lower()
+
+        if service in {"condenser", "reboiler"}:
+            return (0.6, 2.0) if side == "tube" else (0.3, 1.0)
+        if service in {"evaporator"}:
+            return (0.8, 2.0) if side == "tube" else (0.3, 1.0)
+
         if hasattr(component, "hx_data"):
             data = component.hx_data()
         elif isinstance(component, dict):
@@ -276,9 +300,9 @@ class ShellAndTubeHX(HeatExchanger):
                 if "water" in family:
                     return (1.5, 2.5)
     
-                return (1.0, 2.0)
-    
-            return (0.3, 1.0)
+                return (1.0, 2.5)
+
+            return (0.5, 1.5)
     
         # ==========================================================
         # VAPORS / GASES
@@ -416,11 +440,31 @@ class ShellAndTubeHX(HeatExchanger):
             tube_count = math.ceil(area_required / max(area_per_tube, 1e-12))
             self._debug("Tube Count: ",tube_count)
 
-        standard_geom = self._select_best_standard_geometry(area_required, tube_od, tube_length, tube_passes)
+        # Thermo-hydraulic tube count target: satisfy area and avoid tube-side velocity collapse.
+        area_per_tube = math.pi * tube_od * tube_length
+        tube_flow_per_tube = math.pi * tube_id**2 / 4.0
+        required_count = math.ceil(area_required / max(area_per_tube, 1e-12))
+        required_count = self._round_tube_count_to_passes(required_count, tube_passes)
+        vmin, vmax = self._get_velocity_limits("tube", self.hot_in.component)
+        q_vol_hot = hot["m_dot"] / max(hot["density"], 1e-12)
+        low_v_count = int(math.floor((q_vol_hot * tube_passes) / max(vmin * tube_flow_per_tube, 1e-12)))
+        high_v_count = int(math.ceil((q_vol_hot * tube_passes) / max(vmax * tube_flow_per_tube, 1e-12)))
+        if high_v_count > 0:
+            required_count = max(required_count, self._round_tube_count_to_passes(high_v_count, tube_passes))
+        if low_v_count > 0 and required_count > low_v_count:
+            self._warn_with_category("HYDRAULIC_WARNING", "Thermal area pushes tube count above hydraulic velocity target; using capped thermo-hydraulic count")
+            required_count = self._round_tube_count_to_passes(low_v_count, tube_passes)
+
+        standard_geom = self._select_best_standard_geometry(max(area_required, required_count * area_per_tube), tube_od, tube_length, tube_passes)
         std_tube_count = standard_geom.get("tube_count")
         if std_tube_count and std_tube_count >= tube_count:
             self._debug(f"Using standard tube count lookup >= required: {std_tube_count}")
             tube_count = std_tube_count
+        tube_count = max(tube_count, required_count)
+        tube_count_max = int(self.specs.get("tube_count_max", 1200))
+        if tube_count > tube_count_max:
+            self._warn_with_category("GEOMETRY_WARNING", f"Tube count clipped to practical maximum ({tube_count_max})")
+            tube_count = tube_count_max
         tube_count = self._round_tube_count_to_passes(tube_count, tube_passes)
         self._debug("Tube Count Round: ",tube_count)
         tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
@@ -2274,4 +2318,3 @@ class ShellAndTubeHX(HeatExchanger):
         }
     
         return self._finalize_results(payload)
-
