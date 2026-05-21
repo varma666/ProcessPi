@@ -896,9 +896,14 @@ class ShellAndTubeHX(HeatExchanger):
         u_range: Tuple[float, float] | None,
     ) -> Dict[str, Any]:
     
+        u_user = None
+        if self.specs.get("U") is not None:
+            u_user = float(self.specs["U"].to("W/m2K").value)
+            self._trace_step("THERMAL", "U user supplied", u_user)
         state = {
             "iterations": 0,
             "u_assumed": u_assumed,
+            "u_user": u_user,
         }
     
         max_iter = 15
@@ -915,6 +920,8 @@ class ShellAndTubeHX(HeatExchanger):
                 state["u_assumed"],
                 cltd,
             )
+            self._trace_step("THERMAL", "U iteration", i)
+            self._trace_step("THERMAL", "Area required", area_required)
     
             # ======================================================
             # GEOMETRY
@@ -932,6 +939,8 @@ class ShellAndTubeHX(HeatExchanger):
                 tube_passes,
                 hot,
             )
+            self._trace_step("GEOMETRY", "Tube count", geometry["tube_count"])
+            self._trace_step("GEOMETRY", "Tube length", geometry["tube_length"])
     
             bundle_diameter = self._calculate_bundle_diameter(
                 geometry["tube_count"],
@@ -968,6 +977,8 @@ class ShellAndTubeHX(HeatExchanger):
                 shell_passes,
                 shell_diameter,
             )
+            self._trace_step("HYDRAULICS", "Tube velocity", v_tube)
+            self._trace_step("HYDRAULICS", "Shell velocity", v_shell)
     
             geometry["tube_count"] = tube_count
     
@@ -988,6 +999,8 @@ class ShellAndTubeHX(HeatExchanger):
                 v_tube,
                 v_shell,
             )
+            self._trace_step("DIMENSIONLESS", "Re_tube", dimless["re_t"])
+            self._trace_step("DIMENSIONLESS", "Nu_tube", dimless["nu_t"])
     
             h_t, h_s = self._calculate_htc(
                 dimless,
@@ -1009,6 +1022,10 @@ class ShellAndTubeHX(HeatExchanger):
     
             u_dirty = u_results["U_dirty"]
             u_clean = u_results["U_clean"]
+            self._trace_step("THERMAL", "U clean", u_clean)
+            self._trace_step("THERMAL", "U calculated", u_dirty)
+            if u_user is not None:
+                self._trace_step("THERMAL", "U calc vs U user", f"{u_dirty:.2f} vs {u_user:.2f}")
     
             # ======================================================
             # DIRTY AREA
@@ -1066,6 +1083,8 @@ class ShellAndTubeHX(HeatExchanger):
     
             state["tube_dp"] = tube_dp
             state["shell_dp"] = shell_dp
+            self._trace_step("HYDRAULICS", "Tube pressure drop", tube_dp)
+            self._trace_step("HYDRAULICS", "Shell pressure drop", shell_dp)
     
             # ======================================================
             # VALIDATION
@@ -1095,6 +1114,7 @@ class ShellAndTubeHX(HeatExchanger):
                     / max(u_old, 1e-12)
                 ) * 100.0
             )
+            self._trace_step("THERMAL", "U convergence error %", convergence_error)
     
             self._debug("\n" + "=" * 60)
             self._debug(f"Iteration          : {i}")
@@ -1127,6 +1147,15 @@ class ShellAndTubeHX(HeatExchanger):
                 existing.extend(soft_warnings)
     
                 state["warnings"] = list(dict.fromkeys(existing))
+
+            if "tube_velocity" in hard_violations or "shell_velocity" in hard_violations:
+                self._trace_step("GEOMETRY", "Geometry rejected", f"hydraulic violation {hard_violations}")
+                if self.specs.get("tube_length") is None:
+                    geometry["tube_length"] = min(12.0, geometry["tube_length"] * 1.15)
+                    self._trace_step("GEOMETRY", "Tube length adjusted", geometry["tube_length"])
+                tube_passes = min(8, max(tube_passes, 2) * 2 if tube_passes < 8 else 8)
+                self._trace_step("GEOMETRY", "Tube passes adjusted", tube_passes)
+                continue
     
             # ======================================================
             # CONVERGENCE CHECK
@@ -1444,6 +1473,7 @@ class ShellAndTubeHX(HeatExchanger):
             "Q": payload["q_watts_original"] / 1000.0,
             "Area": payload["area"],
             "U_assumed": payload["u_assumed"],
+            "U_user": payload.get("u_user"),
             "U_calculated": payload["u_calculated"],
             "LMTD": payload["lmtd"],
             "tube_count": payload["geometry"]["tube_count"],
@@ -1466,6 +1496,7 @@ class ShellAndTubeHX(HeatExchanger):
             "shell_side_fluid": payload.get("assignment", {}).get("shell_side_fluid"),
             "assignment_reason": payload.get("assignment", {}).get("assignment_reason", []),
             "assignment": payload.get("assignment", {}),
+            "calculation_trace": list(self._calculation_trace),
         }
 
     def _design_kern(self) -> Dict[str, Any]:
@@ -1485,12 +1516,14 @@ class ShellAndTubeHX(HeatExchanger):
             self.service_type = "heater"
 
         q_watts, th_out, tc_out = self._calculate_heat_duty(hot, cold)
-        self._debug(q_watts)
+        self._trace_step("THERMAL", "Heat duty (W)", q_watts)
         lmtd = self._calculate_lmtd(hot, cold, th_out, tc_out)
-        self._debug(lmtd)
+        self._trace_step("THERMAL", "LMTD", lmtd)
 
         shell_passes, tube_passes, ft = self._adjust_passes(hot, cold, th_out, tc_out)
-        self._debug(ft, shell_passes, tube_passes)
+        self._trace_step("THERMAL", "Ft", ft)
+        self._trace_step("GEOMETRY", "Shell passes", shell_passes)
+        self._trace_step("GEOMETRY", "Tube passes", tube_passes)
         warnings: List[str] = list(getattr(self, "_warnings", []))
 
         n_units = 1
@@ -1504,7 +1537,7 @@ class ShellAndTubeHX(HeatExchanger):
         self._debug(cltd)
 
         u_assumed = self._assume_u(hot, cold)
-        self._debug(u_assumed)
+        self._trace_step("THERMAL", "U assumed initial", u_assumed)
         hot_hx = self.hot_in.component.hx_data() if hasattr(self.hot_in.component, "hx_data") else {"u_key": getattr(self.hot_in.component, "hx_type", "generic")}
         cold_hx = self.cold_in.component.hx_data() if hasattr(self.cold_in.component, "hx_data") else {"u_key": getattr(self.cold_in.component, "hx_type", "generic")}
         self._debug(f"Hot hx_data = {hot_hx}")
@@ -1567,6 +1600,7 @@ class ShellAndTubeHX(HeatExchanger):
             "area": state["geometry"]["area"],
             "u_assumed": state["u_assumed"],
             "u_calculated": state["u_calculated"],
+            "u_user": state.get("u_user"),
             "re_shell": state["re_shell"],
         }
         return self._finalize_results(payload)

@@ -30,6 +30,23 @@ class HeatExchangerResults:
     def detailed_summary(self) -> Dict[str, Any]:
         return self.data
 
+    def trace(self) -> str:
+        trace_entries = self.data.get("calculation_trace", [])
+        grouped: Dict[str, list[dict[str, Any]]] = {}
+        for entry in trace_entries:
+            grouped.setdefault(entry.get("section", "GENERAL"), []).append(entry)
+        lines: list[str] = []
+        for section in ["THERMAL", "GEOMETRY", "HYDRAULICS", "DIMENSIONLESS", "PHASE_CHANGE", "GENERAL"]:
+            rows = grouped.get(section, [])
+            if not rows:
+                continue
+            lines.append("=" * 48)
+            lines.append(section)
+            lines.append("=" * len(section))
+            for row in rows:
+                lines.append(f"{row.get('name','item'):<24}: {row.get('value')}")
+        return "\n".join(lines) if lines else "No engineering trace available."
+
 
 class HeatExchangerEngine:
     _map: Dict[str, Type[HeatExchanger]] = {

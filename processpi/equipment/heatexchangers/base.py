@@ -14,6 +14,7 @@ class HeatExchangerBaseMixin:
         self.verbose = bool(self.specs.get("verbose", False))
         self.logger = self.specs.get("logger") or logging.getLogger(f"processpi.hx.{self.__class__.__name__.lower()}")
         self._warnings: list[str] = []
+        self._calculation_trace: list[dict[str, Any]] = []
 
     def _debug(self, *args: object) -> None:
         if self.verbose:
@@ -27,6 +28,12 @@ class HeatExchangerBaseMixin:
         tagged = f"[{category}] {message}"
         self._warnings.append(tagged)
         self.logger.warning(tagged)
+
+    def _trace_step(self, section: str, name: str, value: Any) -> None:
+        entry = {"section": section, "name": name, "value": value}
+        self._calculation_trace.append(entry)
+        if self.verbose:
+            self.logger.debug(f"[{section}] {name}: {value}")
 
 
 class HeatExchanger(HeatExchangerBaseMixin, ABC):
