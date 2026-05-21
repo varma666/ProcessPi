@@ -45,7 +45,7 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("U") is not None:
-            return float(self.specs["U"].to("W/m2K").value)
+            return self._safe_float(self.specs["U"].to("W/m2K"), "U")
         hot_type = getattr(self.hot_in.component, "hx_type", "generic")
         cold_type = getattr(self.cold_in.component, "hx_type", "generic")
         service_type = getattr(self, "service_type", "heat_exchanger")
@@ -75,14 +75,14 @@ class ShellAndTubeHX(HeatExchanger):
         th_in = hot["t_k"]
         tc_in = cold["t_k"]
         #self._debug(f"Hot Cp: {hot["cp"]} Cold Cp {cold["cp"]}")
-        if self.hot_out and self.hot_out.temperature and self.hot_out.temperature.to("C").value == 25 :
-            th_out = self.hot_out.temperature.to("K").value
+        if self.hot_out and self.hot_out.temperature and self._safe_float(self.hot_out.temperature.to("C"), "hot_out.temperature") == 25 :
+            th_out = self._safe_float(self.hot_out.temperature.to("K"), "hot_out.temperature")
         else:
             th_out = th_in - (q_kw / max(hot["m_dot"] * hot["cp"], 1e-9))
 
-        if self.cold_out and self.cold_out.temperature and self.cold_out.temperature.to("C").value == 25:
+        if self.cold_out and self.cold_out.temperature and self._safe_float(self.cold_out.temperature.to("C"), "cold_out.temperature") == 25:
             #self._debug("Hello World")
-            tc_out = self.cold_out.temperature.to("K").value
+            tc_out = self._safe_float(self.cold_out.temperature.to("K"), "cold_out.temperature")
         else:
             tc_out = tc_in + (q_kw / max(cold["m_dot"] * cold["cp"], 1e-9))
             #self._debug(f"tc_out = {tc_in} + ({q_kw}/({cold["m_dot"]}*{cold["cp"]})")
@@ -683,8 +683,8 @@ class ShellAndTubeHX(HeatExchanger):
         return {"re_t": re_t, "pr_t": pr_t, "nu_t": nu_t, "de_shell": de_shell, "re_s": re_s, "pr_s": pr_s, "nu_s": nu_s}
 
     def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float]) -> Tuple[float, float]:
-        h_t = ConvectiveH(nusselt=dimless["nu_t"], k=hot["k"], diameter=geometry["tube_id"]).calculate().to("W/m2K").value
-        h_s = ConvectiveH(nusselt=dimless["nu_s"], k=cold["k"], diameter=dimless["de_shell"]).calculate().to("W/m2K").value
+        h_t = self._safe_float(ConvectiveH(nusselt=dimless["nu_t"], k=hot["k"], diameter=geometry["tube_id"]).calculate().to("W/m2K"), "h_t")
+        h_s = self._safe_float(ConvectiveH(nusselt=dimless["nu_s"], k=cold["k"], diameter=dimless["de_shell"]).calculate().to("W/m2K"), "h_s")
         return h_t, h_s
 
     def _calculate_overall_U(
@@ -715,7 +715,9 @@ class ShellAndTubeHX(HeatExchanger):
         # TUBE WALL RESISTANCE
         # ======================================================
 
-        tube_wall_thickness = (tube_od.value - tube_id) / 2
+        tube_od = self._safe_float(tube_od, "tube_od")
+        tube_id = self._safe_float(tube_id, "tube_id")
+        tube_wall_thickness = (tube_od - tube_id) / 2
 
         tube_material_k = self.specs.get(
             "tube_thermal_conductivity"
@@ -765,8 +767,8 @@ class ShellAndTubeHX(HeatExchanger):
         shell_velocity = getattr(self, "shell_velocity", None)
         tube_velocity = getattr(self, "tube_velocity", None)
 
-        shell_temperature = self.hot_in.temperature.to("C").value
-        tube_temperature = self.cold_in.temperature.to("C").value
+        shell_temperature = self._safe_float(self.hot_in.temperature.to("C"), "shell_temperature")
+        tube_temperature = self._safe_float(self.cold_in.temperature.to("C"), "tube_temperature")
 
         # ======================================================
         # FOULING FACTORS (Rf)
@@ -939,7 +941,7 @@ class ShellAndTubeHX(HeatExchanger):
     
         u_user = None
         if self.specs.get("U") is not None:
-            u_user = float(self.specs["U"].to("W/m2K").value)
+            u_user = self._safe_float(self.specs["U"].to("W/m2K"), "U")
             self._trace_step("THERMAL", "U user supplied", u_user)
         state = {
             "iterations": 0,
@@ -1594,8 +1596,8 @@ class ShellAndTubeHX(HeatExchanger):
 
         tube_limit_val = self.specs.get("tube_dp", self._dp_limit(hot))
         shell_limit_val = self.specs.get("shell_dp", self._dp_limit(cold))
-        tube_limit = float(tube_limit_val.to("Pa").value) if hasattr(tube_limit_val, "to") else float(tube_limit_val)
-        shell_limit = float(shell_limit_val.to("Pa").value) if hasattr(shell_limit_val, "to") else float(shell_limit_val)
+        tube_limit = self._safe_float(tube_limit_val.to("Pa"), "tube_dp_limit") if hasattr(tube_limit_val, "to") else self._safe_float(tube_limit_val, "tube_dp_limit")
+        shell_limit = self._safe_float(shell_limit_val.to("Pa"), "shell_dp_limit") if hasattr(shell_limit_val, "to") else self._safe_float(shell_limit_val, "shell_dp_limit")
 
         if tube_dp > tube_limit:
             warnings.append(f"Tube-side pressure drop {tube_dp:.1f} Pa exceeds limit {tube_limit:.1f} Pa")
@@ -1800,13 +1802,13 @@ class ShellAndTubeHX(HeatExchanger):
     
         h_ideal = float(data["h_shell"])
     
-        shell_id = geometry["shell_diameter"].value
+        shell_id = self._safe_float(geometry["shell_diameter"], "shell_diameter")
     
-        tube_od = geometry["tube_od"].value
+        tube_od = self._safe_float(geometry["tube_od"], "tube_od")
     
         tube_pitch = tube_od * 1.25
     
-        baffle_spacing = geometry["baffle_spacing"].value
+        baffle_spacing = self._safe_float(geometry["baffle_spacing"], "baffle_spacing")
     
         # ======================================================
         # APPROXIMATE BELL GEOMETRY
