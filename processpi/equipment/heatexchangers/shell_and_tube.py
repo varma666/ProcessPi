@@ -1804,7 +1804,7 @@ class ShellAndTubeHX(HeatExchanger):
     
         tube_od = geometry["tube_od"].value
     
-        tube_pitch = tube_od.to("m").value * 1.25
+        tube_pitch = tube_od * 1.25
     
         baffle_spacing = geometry["baffle_spacing"]
     
