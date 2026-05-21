@@ -59,6 +59,36 @@ class HeatExchanger(HeatExchangerBaseMixin, ABC):
             "t_k": s.temperature.to("K").value if s.temperature else None,
         }
 
+    def _to_float(self, value: Any, unit: str | None = None) -> float:
+        if hasattr(value, "to") and callable(value.to):
+            converted = value.to(unit) if unit else value
+            return float(getattr(converted, "value", converted))
+        return float(value)
+
+    def _wrap_length(self, value: float, unit: str = "m"):
+        from processpi.units.length import Length
+        return Length(float(value), unit)
+
+    def _wrap_pressure(self, value: float, unit: str = "Pa"):
+        from processpi.units.pressure import Pressure
+        return Pressure(float(value), unit)
+
+    def _wrap_velocity(self, value: float, unit: str = "m/s"):
+        from processpi.units.velocity import Velocity
+        return Velocity(float(value), unit)
+
+    def _wrap_area(self, value: float, unit: str = "m2"):
+        from processpi.units.area import Area
+        return Area(float(value), unit)
+
+    def _wrap_u(self, value: float, unit: str = "W/m2K"):
+        from processpi.units.heat_transfer_coefficient import HeatTransferCoefficient
+        return HeatTransferCoefficient(float(value), unit)
+
+    def _wrap_heat(self, value: float, unit: str = "W"):
+        from processpi.units.heat_flow import HeatFlow
+        return HeatFlow(float(value), unit)
+
     def _lookup_steam_latent_heat(self, pressure_bar: float) -> float:
         """Approximate saturated steam latent heat [J/kg] using simple interpolation table."""
         table = [

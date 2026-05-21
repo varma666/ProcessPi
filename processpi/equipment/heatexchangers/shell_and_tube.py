@@ -329,7 +329,7 @@ class ShellAndTubeHX(HeatExchanger):
         geometry["tube_count"] = self._round_tube_count_to_passes(geometry["tube_count"], tube_passes)
         geometry["area"] = geometry["tube_count"] * area_per_tube
         geometry["area_per_tube"] = area_per_tube
-        geometry["tube_pitch"] = float(self.specs.get("tube_pitch", 1.25 * geometry["tube_od"]))
+        geometry["tube_pitch"] = self._to_float(self.specs.get("tube_pitch"), "m") if self.specs.get("tube_pitch") is not None else (1.25 * geometry["tube_od"])
         geometry["bundle_diameter"] = self._calculate_bundle_diameter(geometry["tube_count"], geometry["tube_od"])
         geometry["shell_diameter"] = self._calculate_shell_diameter(geometry["bundle_diameter"])
         area_per_tube_flow = math.pi * geometry["tube_id"] ** 2 / 4.0
@@ -422,9 +422,9 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _select_tube_geometry(self, area_required: float, hot: Dict[str, float], cold: Dict[str, float],
                               tube_passes: int) -> Dict[str, float]:
-        tube_od = float(self.specs.get("tube_od")) if self.specs.get("tube_od") is not None else None
-        tube_id = float(self.specs.get("tube_id")) if self.specs.get("tube_id") is not None else None
-        tube_length = float(self.specs.get("tube_length")) if self.specs.get("tube_length") is not None else None
+        tube_od = self._to_float(self.specs.get("tube_od"), "m") if self.specs.get("tube_od") is not None else None
+        tube_id = self._to_float(self.specs.get("tube_id"), "m") if self.specs.get("tube_id") is not None else None
+        tube_length = self._to_float(self.specs.get("tube_length"), "m") if self.specs.get("tube_length") is not None else None
 
         if tube_od is None or tube_id is None or tube_length is None:
             tube_config = select_tube_configuration(
@@ -475,7 +475,7 @@ class ShellAndTubeHX(HeatExchanger):
             tube_count = tube_count_max
         tube_count = self._round_tube_count_to_passes(tube_count, tube_passes)
         self._debug("Tube Count Round: ",tube_count)
-        tube_pitch = float(self.specs.get("tube_pitch", 1.25 * tube_od))
+        tube_pitch = self._to_float(self.specs.get("tube_pitch"), "m") if self.specs.get("tube_pitch") is not None else (1.25 * tube_od)
         self._debug("Tube Pitch: ",tube_pitch)
         area = tube_count * math.pi * tube_od * tube_length
         self._debug("Tubes Surface Area: ",area)
