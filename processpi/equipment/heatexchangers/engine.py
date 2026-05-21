@@ -30,6 +30,46 @@ class HeatExchangerResults:
     def detailed_summary(self) -> Dict[str, Any]:
         return self.data
 
+    def trace(self) -> str:
+        trace_entries = self.data.get("calculation_trace", [])
+        grouped: Dict[str, list[dict[str, Any]]] = {}
+        for entry in trace_entries:
+            grouped.setdefault(entry.get("section", "GENERAL"), []).append(entry)
+        lines: list[str] = []
+        for section in ["THERMAL", "GEOMETRY", "HYDRAULICS", "DIMENSIONLESS", "PHASE_CHANGE", "GENERAL"]:
+            rows = grouped.get(section, [])
+            if not rows:
+                continue
+            lines.append("=" * 48)
+            lines.append(section)
+            lines.append("=" * len(section))
+            for row in rows:
+                lines.append(f"{row.get('name','item'):<24}: {row.get('value')}")
+        return "\n".join(lines) if lines else "No engineering trace available."
+
+    def debug_summary(self) -> Dict[str, Any]:
+        warnings = self.data.get("warnings", [])
+        return {
+            "status": self.data.get("status"),
+            "iterations": self.data.get("iterations"),
+            "u_values": {
+                "U_user": self.data.get("U_user"),
+                "U_assumed": self.data.get("U_assumed"),
+                "U_calculated": self.data.get("U_calculated"),
+            },
+            "velocities": {
+                "tube_velocity": self.data.get("tube_velocity"),
+                "shell_velocity": self.data.get("shell_velocity"),
+            },
+            "pressure_drop": {
+                "tube_dp": self.data.get("tube_dp"),
+                "shell_dp": self.data.get("shell_dp"),
+            },
+            "warning_count": len(warnings),
+            "warnings": warnings,
+            "optimization_actions": self.data.get("optimization_actions", []),
+        }
+
 
 class HeatExchangerEngine:
     _map: Dict[str, Type[HeatExchanger]] = {
