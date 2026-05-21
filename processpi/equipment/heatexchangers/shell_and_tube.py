@@ -1806,7 +1806,7 @@ class ShellAndTubeHX(HeatExchanger):
     
         tube_pitch = tube_od * 1.25
     
-        baffle_spacing = geometry["baffle_spacing"]
+        baffle_spacing = geometry["baffle_spacing"].value
     
         # ======================================================
         # APPROXIMATE BELL GEOMETRY
