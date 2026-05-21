@@ -26,6 +26,8 @@ class HeatExchangerBaseMixin:
 
     def _warn_with_category(self, category: str, message: str) -> None:
         tagged = f"[{category}] {message}"
+        if tagged in self._warnings:
+            return
         self._warnings.append(tagged)
         self.logger.warning(tagged)
 

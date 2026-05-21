@@ -47,6 +47,29 @@ class HeatExchangerResults:
                 lines.append(f"{row.get('name','item'):<24}: {row.get('value')}")
         return "\n".join(lines) if lines else "No engineering trace available."
 
+    def debug_summary(self) -> Dict[str, Any]:
+        warnings = self.data.get("warnings", [])
+        return {
+            "status": self.data.get("status"),
+            "iterations": self.data.get("iterations"),
+            "u_values": {
+                "U_user": self.data.get("U_user"),
+                "U_assumed": self.data.get("U_assumed"),
+                "U_calculated": self.data.get("U_calculated"),
+            },
+            "velocities": {
+                "tube_velocity": self.data.get("tube_velocity"),
+                "shell_velocity": self.data.get("shell_velocity"),
+            },
+            "pressure_drop": {
+                "tube_dp": self.data.get("tube_dp"),
+                "shell_dp": self.data.get("shell_dp"),
+            },
+            "warning_count": len(warnings),
+            "warnings": warnings,
+            "optimization_actions": self.data.get("optimization_actions", []),
+        }
+
 
 class HeatExchangerEngine:
     _map: Dict[str, Type[HeatExchanger]] = {
