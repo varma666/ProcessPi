@@ -715,7 +715,7 @@ class ShellAndTubeHX(HeatExchanger):
         # TUBE WALL RESISTANCE
         # ======================================================
 
-        tube_wall_thickness = (tube_od.value - tube_id.value) / 2
+        tube_wall_thickness = (tube_od.value - tube_id) / 2
 
         tube_material_k = self.specs.get(
             "tube_thermal_conductivity"
