@@ -9,6 +9,20 @@ from .base import HeatExchanger
 
 class DoublePipeHX(HeatExchanger):
 
+    def _velocity_targets(self) -> dict[str, float]:
+        return {
+            "tube_min": float(self.specs.get("tube_velocity_min", 0.5)),
+            "tube_max": float(self.specs.get("tube_velocity_max", 2.5)),
+            "annulus_min": float(self.specs.get("annulus_velocity_min", 0.3)),
+            "annulus_max": float(self.specs.get("annulus_velocity_max", 2.0)),
+        }
+
+    def _compute_parallel_paths(self, tube_velocity: float, annulus_velocity: float) -> int:
+        limits = self._velocity_targets()
+        n_tube = max(1, math.ceil(tube_velocity / max(limits["tube_max"], 1e-6)))
+        n_annulus = max(1, math.ceil(annulus_velocity / max(limits["annulus_max"], 1e-6)))
+        return max(n_tube, n_annulus)
+
     # ==========================================================
     # DESIGN MODE
     # ==========================================================
@@ -146,7 +160,7 @@ class DoublePipeHX(HeatExchanger):
             / 4.0
         )
 
-        tube_velocity = (
+        tube_velocity_single = (
             cold["m_dot"]
             / (
                 cold["density"]
@@ -154,7 +168,7 @@ class DoublePipeHX(HeatExchanger):
             )
         )
 
-        annulus_velocity = (
+        annulus_velocity_single = (
             hot["m_dot"]
             / (
                 hot["density"]
@@ -162,21 +176,20 @@ class DoublePipeHX(HeatExchanger):
             )
         )
 
+        parallel_paths = self._compute_parallel_paths(tube_velocity_single, annulus_velocity_single)
+        tube_velocity = tube_velocity_single / parallel_paths
+        annulus_velocity = annulus_velocity_single / parallel_paths
+
         # ======================================================
         # PRESSURE DROP
         # ======================================================
 
-        tube_dp = (
-            0.5
-            * cold["density"]
-            * tube_velocity**2
-        )
+        friction_factor_tube = float(self.specs.get("tube_friction_factor", 0.02))
+        friction_factor_annulus = float(self.specs.get("annulus_friction_factor", 0.03))
+        tube_dp = friction_factor_tube * (tube_length / max(tube_id, 1e-6)) * (cold["density"] * tube_velocity**2 / 2.0)
 
-        annulus_dp = (
-            0.5
-            * hot["density"]
-            * annulus_velocity**2
-        )
+        hydraulic_diameter = max(annulus_diameter - tube_od, 1e-6)
+        annulus_dp = friction_factor_annulus * (tube_length / hydraulic_diameter) * (hot["density"] * annulus_velocity**2 / 2.0)
 
         # ======================================================
         # RESULTS
@@ -192,7 +205,8 @@ class DoublePipeHX(HeatExchanger):
             "U_dirty": u_assumed,
             "U_calculated": u_assumed,
             "LMTD": lmtd,
-            "tube_count": 1,
+            "tube_count": parallel_paths,
+            "parallel_paths": parallel_paths,
             "tube_od": tube_od,
             "tube_id": tube_id,
             "tube_length": tube_length,
@@ -203,8 +217,21 @@ class DoublePipeHX(HeatExchanger):
             "shell_dp": annulus_dp,
             "iterations": 1,
             "status": "OK",
-            "warnings": [],
+            "warnings": self._double_pipe_warnings(tube_velocity, annulus_velocity),
         }
+
+    def _double_pipe_warnings(self, tube_velocity: float, annulus_velocity: float) -> list[str]:
+        limits = self._velocity_targets()
+        warnings: list[str] = []
+        if tube_velocity < limits["tube_min"]:
+            warnings.append("[HYDRAULIC_WARNING] Tube velocity below recommended range for double-pipe exchanger")
+        elif tube_velocity > limits["tube_max"]:
+            warnings.append("[HYDRAULIC_WARNING] Tube velocity above recommended range for double-pipe exchanger")
+        if annulus_velocity < limits["annulus_min"]:
+            warnings.append("[HYDRAULIC_WARNING] Annulus velocity below recommended range for double-pipe exchanger")
+        elif annulus_velocity > limits["annulus_max"]:
+            warnings.append("[HYDRAULIC_WARNING] Annulus velocity above recommended range for double-pipe exchanger")
+        return warnings
 
     # ==========================================================
     # RATE MODE
@@ -262,7 +289,7 @@ class DoublePipeHX(HeatExchanger):
         # VELOCITIES
         # ======================================================
 
-        tube_velocity = (
+        tube_velocity_single = (
             cold["m_dot"]
             / (
                 cold["density"]
@@ -270,13 +297,16 @@ class DoublePipeHX(HeatExchanger):
             )
         )
 
-        annulus_velocity = (
+        annulus_velocity_single = (
             hot["m_dot"]
             / (
                 hot["density"]
                 * annulus_area
             )
         )
+        parallel_paths = int(self.specs.get("parallel_paths", self._compute_parallel_paths(tube_velocity_single, annulus_velocity_single)))
+        tube_velocity = tube_velocity_single / parallel_paths
+        annulus_velocity = annulus_velocity_single / parallel_paths
 
         # ======================================================
         # HEAT TRANSFER COEFFICIENTS
@@ -431,17 +461,10 @@ class DoublePipeHX(HeatExchanger):
         # PRESSURE DROP
         # ======================================================
 
-        tube_dp = (
-            0.5
-            * cold["density"]
-            * tube_velocity**2
-        )
-
-        annulus_dp = (
-            0.5
-            * hot["density"]
-            * annulus_velocity**2
-        )
+        friction_factor_tube = float(self.specs.get("tube_friction_factor", 0.02))
+        friction_factor_annulus = float(self.specs.get("annulus_friction_factor", 0.03))
+        tube_dp = friction_factor_tube * (tube_length / max(tube_id, 1e-6)) * (cold["density"] * tube_velocity**2 / 2.0)
+        annulus_dp = friction_factor_annulus * (tube_length / max(hydraulic_diameter, 1e-6)) * (hot["density"] * annulus_velocity**2 / 2.0)
 
         # ======================================================
         # DEBUG
@@ -467,7 +490,8 @@ class DoublePipeHX(HeatExchanger):
             "U_assumed": u_dirty,
             "U_calculated": u_dirty,
             "LMTD": None,
-            "tube_count": 1,
+            "tube_count": parallel_paths,
+            "parallel_paths": parallel_paths,
             "tube_od": tube_od,
             "tube_id": tube_id,
             "tube_length": tube_length,
@@ -478,7 +502,7 @@ class DoublePipeHX(HeatExchanger):
             "shell_dp": annulus_dp,
             "iterations": 1,
             "status": "OK",
-            "warnings": [],
+            "warnings": self._double_pipe_warnings(tube_velocity, annulus_velocity),
             "NTU": NTU,
             "effectiveness": effectiveness,
         }

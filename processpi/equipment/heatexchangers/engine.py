@@ -4,6 +4,12 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, Type
 
 from processpi.streams.material import MaterialStream
+from processpi.units.area import Area
+from processpi.units.heat_flow import HeatFlow
+from processpi.units.heat_transfer_coefficient import HeatTransferCoefficient
+from processpi.units.length import Length
+from processpi.units.pressure import Pressure
+from processpi.units.velocity import Velocity
 
 from .base import HeatExchanger
 from .condenser import CondenserHX
@@ -18,17 +24,73 @@ class HeatExchangerResults:
     data: Dict[str, Any]
 
     def summary(self) -> str:
+        q = self.data.get('Q')
+        area = self.data.get('Area')
+        ucalc = self.data.get('U_calculated')
+        tv = self.data.get('tube_velocity')
+        sv = self.data.get('shell_velocity')
+        tdp = self.data.get('tube_dp')
+        sdp = self.data.get('shell_dp')
+        tl = self.data.get('tube_length')
         return (
             f"Heat Exchanger Summary\n"
-            f"Type: {self.data.get('hx_type')}\n"
-            f"Q: {self.data.get('Q', 0.0):.2f} kW\n"
-            f"Area: {self.data.get('Area', 0.0):.3f} m2\n"
-            f"U_assumed/U_calculated: {self.data.get('U_assumed', 0.0):.2f}/{self.data.get('U_calculated', 0.0):.2f} W/m2K\n"
-            f"Status: {self.data.get('status', 'UNKNOWN')}"
+            f"------------------------------\n"
+            f"Type                  : {self.data.get('hx_type')}\n"
+            f"Method                : {self.data.get('method')}\n"
+            f"Heat Duty             : {q.to('kW') if hasattr(q, 'to') else HeatFlow(float(q or 0.0), 'kW')}\n"
+            f"Area                  : {area if hasattr(area, 'to') else Area(float(area or 0.0), 'm2')}\n"
+            f"U Calculated          : {ucalc if hasattr(ucalc, 'to') else HeatTransferCoefficient(float(ucalc or 0.0), 'W/m2K')}\n"
+            f"Tube Velocity         : {tv if hasattr(tv, 'to') else Velocity(float(tv or 0.0), 'm/s')}\n"
+            f"Shell Velocity        : {sv if hasattr(sv, 'to') else Velocity(float(sv or 0.0), 'm/s')}\n"
+            f"Tube Pressure Drop    : {(tdp.to('psi') if hasattr(tdp, 'to') else Pressure(float(tdp or 0.0), 'Pa').to('psi'))}\n"
+            f"Shell Pressure Drop   : {(sdp.to('psi') if hasattr(sdp, 'to') else Pressure(float(sdp or 0.0), 'Pa').to('psi'))}\n"
+            f"Tube Count            : {self.data.get('tube_count')}\n"
+            f"Tube Length           : {tl if hasattr(tl, 'to') else Length(float(tl or 0.0), 'm')}\n"
+            f"Status                : {self.data.get('status', 'UNKNOWN')}"
         )
 
     def detailed_summary(self) -> Dict[str, Any]:
         return self.data
+
+    def trace(self) -> str:
+        trace_entries = self.data.get("calculation_trace", [])
+        grouped: Dict[str, list[dict[str, Any]]] = {}
+        for entry in trace_entries:
+            grouped.setdefault(entry.get("section", "GENERAL"), []).append(entry)
+        lines: list[str] = []
+        for section in ["THERMAL", "GEOMETRY", "HYDRAULICS", "DIMENSIONLESS", "PHASE_CHANGE", "GENERAL"]:
+            rows = grouped.get(section, [])
+            if not rows:
+                continue
+            lines.append("=" * 48)
+            lines.append(section)
+            lines.append("=" * len(section))
+            for row in rows:
+                lines.append(f"{row.get('name','item'):<24}: {row.get('value')}")
+        return "\n".join(lines) if lines else "No engineering trace available."
+
+    def debug_summary(self) -> Dict[str, Any]:
+        warnings = self.data.get("warnings", [])
+        return {
+            "status": self.data.get("status"),
+            "iterations": self.data.get("iterations"),
+            "u_values": {
+                "U_user": self.data.get("U_user"),
+                "U_assumed": self.data.get("U_assumed"),
+                "U_calculated": self.data.get("U_calculated"),
+            },
+            "velocities": {
+                "tube_velocity": self.data.get("tube_velocity"),
+                "shell_velocity": self.data.get("shell_velocity"),
+            },
+            "pressure_drop": {
+                "tube_dp": self.data.get("tube_dp"),
+                "shell_dp": self.data.get("shell_dp"),
+            },
+            "warning_count": len(warnings),
+            "warnings": warnings,
+            "optimization_actions": self.data.get("optimization_actions", []),
+        }
 
 
 class HeatExchangerEngine:
