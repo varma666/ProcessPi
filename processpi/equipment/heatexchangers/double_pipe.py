@@ -39,7 +39,7 @@ class DoublePipeHX(HeatExchanger):
         # ======================================================
 
         th_out = (
-            self.hot_out.temperature.to("K").value
+            self._safe_float(self.hot_out.temperature.to("K"), "hot_out.temperature")
             if (
                 self.hot_out
                 and self.hot_out.temperature
@@ -55,7 +55,7 @@ class DoublePipeHX(HeatExchanger):
         )
 
         tc_out = (
-            self.cold_out.temperature.to("K").value
+            self._safe_float(self.cold_out.temperature.to("K"), "cold_out.temperature")
             if (
                 self.cold_out
                 and self.cold_out.temperature
@@ -85,12 +85,8 @@ class DoublePipeHX(HeatExchanger):
         # U
         # ======================================================
 
-        u_assumed = float(
-            self.specs.get(
-                "U",
-                350.0,
-            ).to("W/m2K").value
-        )
+        u_spec = self.specs.get("U", 350.0)
+        u_assumed = self._safe_float(u_spec.to("W/m2K"), "U") if hasattr(u_spec, "to") else self._safe_float(u_spec, "U")
 
         # ======================================================
         # AREA

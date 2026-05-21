@@ -47,16 +47,39 @@ class HeatExchanger(HeatExchangerBaseMixin, ABC):
         self.specs = specs
         self._init_runtime()
 
+    @staticmethod
+    def _get_value(x, name):
+        """
+        Extract numeric value from floats or ProcessPI unit objects.
+        """
+        if hasattr(x, "value"):
+            return x.value
+        try:
+            return float(x)
+        except (TypeError, ValueError):
+            raise TypeError(f"Could not interpret {name} value: {x!r}")
+
+    def _safe_float(self, x: Any, name: str) -> float:
+        return float(self._get_value(x, name))
+
+    def _safe_positive(self, x: Any, name: str, minimum: float = 1e-12) -> float:
+        value = self._safe_float(x, name)
+        return max(value, minimum)
+
+    def _safe_nonzero(self, x: Any, name: str, eps: float = 1e-12) -> float:
+        value = self._safe_float(x, name)
+        return value if abs(value) > eps else eps
+
     def _stream_props(self, s: MaterialStream) -> Dict[str, float]:
         return {
-            "density": s.density.to("kg/m3").value,
-            "viscosity": s.component.viscosity().to("Pa·s").value if s.component and hasattr(s.component, "viscosity") else self.specs.get("viscosity", 1e-3),
-            "cp": s.specific_heat.to("J/kgK").value if s.specific_heat else self.specs.get("cp", 4180.0),
-            "k": s.component.thermal_conductivity().to("W/mK").value if s.component and hasattr(s.component, "thermal_conductivity") else self.specs.get("thermal_conductivity", 0.6),
-            "m_dot": s.mass_flow().to("kg/s").value if s.mass_flow() else self.specs.get("mass_flow_rate", 1.0),
-            "p_bar": s.pressure.to("bar").value if s.pressure else 1.0,
+            "density": self._safe_float(s.density.to("kg/m3"), "density"),
+            "viscosity": self._safe_float(s.component.viscosity().to("Pa·s"), "viscosity") if s.component and hasattr(s.component, "viscosity") else self._safe_float(self.specs.get("viscosity", 1e-3), "viscosity"),
+            "cp": self._safe_float(s.specific_heat.to("J/kgK"), "cp") if s.specific_heat else self._safe_float(self.specs.get("cp", 4180.0), "cp"),
+            "k": self._safe_float(s.component.thermal_conductivity().to("W/mK"), "k") if s.component and hasattr(s.component, "thermal_conductivity") else self._safe_float(self.specs.get("thermal_conductivity", 0.6), "k"),
+            "m_dot": self._safe_float(s.mass_flow().to("kg/s"), "m_dot") if s.mass_flow() else self._safe_float(self.specs.get("mass_flow_rate", 1.0), "m_dot"),
+            "p_bar": self._safe_float(s.pressure.to("bar"), "p_bar") if s.pressure else 1.0,
             "phase": (s.phase or "liquid").lower(),
-            "t_k": s.temperature.to("K").value if s.temperature else None,
+            "t_k": self._safe_float(s.temperature.to("K"), "t_k") if s.temperature else None,
         }
 
     def _to_float(self, value: Any, unit: str | None = None) -> float:
@@ -167,22 +190,24 @@ class HeatExchanger(HeatExchangerBaseMixin, ABC):
         if latent_heat is not None:
             latent_side = str(self.specs.get("latent_side", "hot")).lower()
             m_dot = hot["m_dot"] if latent_side == "hot" else cold["m_dot"]
-            return LatentDuty(m_dot=m_dot, latent_heat=latent_heat).calculate().to("W").value
+            return self._safe_float(LatentDuty(m_dot=m_dot, latent_heat=latent_heat).calculate().to("W"), "latent_duty")
         if self.hot_out and hot["t_k"] is not None and self.hot_out.temperature is not None:
-            return SensibleDuty(m_dot=hot["m_dot"], cp=hot["cp"], t_in=hot["t_k"], t_out=self.hot_out.temperature.to("K").value).calculate().to("W").value
+            t_out = self._safe_float(self.hot_out.temperature.to("K"), "hot_out_temperature")
+            return self._safe_float(SensibleDuty(m_dot=hot["m_dot"], cp=hot["cp"], t_in=hot["t_k"], t_out=t_out).calculate().to("W"), "sensible_duty_hot")
         if self.cold_out and cold["t_k"] is not None and self.cold_out.temperature is not None:
-            return SensibleDuty(m_dot=cold["m_dot"], cp=cold["cp"], t_in=self.cold_out.temperature.to("K").value, t_out=cold["t_k"]).calculate().to("W").value
+            t_in = self._safe_float(self.cold_out.temperature.to("K"), "cold_out_temperature")
+            return self._safe_float(SensibleDuty(m_dot=cold["m_dot"], cp=cold["cp"], t_in=t_in, t_out=cold["t_k"]).calculate().to("W"), "sensible_duty_cold")
         raise ValueError("Insufficient thermal specification. Provide one outlet stream or Q/latent_heat.")
 
     def lmtd(self, th_in: float, th_out: float, tc_in: float, tc_out: float) -> float:
         return LMTD(dT1=th_in - tc_out, dT2=th_out - tc_in).calculate()
 
     def area(self, q_w: float, u: float, dtlm: float) -> float:
-        return HeatExchangerArea(heat_duty=q_w, overall_heat_transfer_coeff=u, log_mean_temp_diff=dtlm).calculate().to("m2").value
+        return self._safe_float(HeatExchangerArea(heat_duty=q_w, overall_heat_transfer_coeff=u, log_mean_temp_diff=dtlm).calculate().to("m2"), "area")
 
     def overall_u(self, h_tube: float, h_shell: float, fouling_factor: float = 0.0) -> float:
         u = OverallHeatTransferCoefficient(resistances=[1.0 / h_tube, fouling_factor, 1.0 / h_shell]).calculate()
-        return u.to("W/m2K").value
+        return self._safe_float(u.to("W/m2K"), "overall_u")
 
     @abstractmethod
     def design(self) -> Dict[str, Any]:

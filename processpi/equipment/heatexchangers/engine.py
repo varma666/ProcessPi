@@ -180,8 +180,8 @@ class HeatExchangerEngine:
         if cold_out and cold_out.phase == "vapor":
             return "reboiler"
 
-        hot_m = hot_in.mass_flow().to("kg/s").value if hot_in.mass_flow() else 0.0
-        cold_m = self.data["cold_in"].mass_flow().to("kg/s").value if self.data["cold_in"].mass_flow() else 0.0
+        hot_m = float(getattr(hot_in.mass_flow().to("kg/s"), "value", hot_in.mass_flow().to("kg/s"))) if hot_in.mass_flow() else 0.0
+        cold_m = float(getattr(self.data["cold_in"].mass_flow().to("kg/s"), "value", self.data["cold_in"].mass_flow().to("kg/s"))) if self.data["cold_in"].mass_flow() else 0.0
         if max(hot_m, cold_m) <= 1.0:
             return "double_pipe"
         return "shell_and_tube"

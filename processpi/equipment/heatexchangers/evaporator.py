@@ -28,7 +28,7 @@ class EvaporatorHX(ShellAndTubeHX):
         latent_heat = self.specs.get("latent_heat") or self._resolve_phase_change_latent_heat(hot, cold)
         if latent_heat is None:
             raise ValueError("Evaporator requires latent_heat or detectable phase-change service")
-        q_watts = LatentDuty(m_dot=cold["m_dot"], latent_heat=latent_heat).calculate().to("W").value
+        q_watts = self._safe_float(LatentDuty(m_dot=cold["m_dot"], latent_heat=latent_heat).calculate().to("W"), "q_watts")
 
         hot_out_phase = self._get_stream_outlet_phase("hot", str(hot.get("phase", "liquid")))
         if hot_out_phase != str(hot.get("phase", "liquid")):
@@ -49,7 +49,7 @@ class EvaporatorHX(ShellAndTubeHX):
 
     def _calculate_boiling_htc(self, cold: Dict[str, float], q_flux: float) -> float:
         pressure = max(cold.get("p_bar", 1.0), 0.5)
-        h_boil = BoilingHTC(heat_flux=max(q_flux, 1e3), pressure=pressure).calculate().to("W/m2K").value
+        h_boil = self._safe_float(BoilingHTC(heat_flux=max(q_flux, 1e3), pressure=pressure).calculate().to("W/m2K"), "h_boil")
         orientation_factor = 1.1 if self.orientation == "vertical" else 1.0
         return max(1500.0, min(h_boil * orientation_factor, 18000.0))
 

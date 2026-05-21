@@ -25,7 +25,7 @@ class CondenserHX(ShellAndTubeHX):
         vapor_fraction = float(self.specs.get("vapor_fraction_condensed", 1.0 if self.condensation_mode == "total" else 0.5))
         vapor_fraction = max(0.05, min(vapor_fraction, 1.0))
 
-        q_watts = LatentDuty(m_dot=hot["m_dot"] * vapor_fraction, latent_heat=latent_heat).calculate().to("W").value
+        q_watts = self._safe_float(LatentDuty(m_dot=hot["m_dot"] * vapor_fraction, latent_heat=latent_heat).calculate().to("W"), "q_watts")
         th_in = hot["t_k"]
         tc_in = cold["t_k"]
 
@@ -52,7 +52,7 @@ class CondenserHX(ShellAndTubeHX):
         delta_t = max(float(self.specs.get("condensation_dT", 5.0)), 0.5)
         length = max(float(geometry.get("tube_length", 6.0)), 0.5)
 
-        h_base = CondensationHTC(
+        h_base = self._safe_float(CondensationHTC(
             rho_l=liquid_density,
             rho_v=vapor_density,
             mu_l=liquid_viscosity,
@@ -60,7 +60,7 @@ class CondenserHX(ShellAndTubeHX):
             h_fg=latent_heat,
             delta_t=delta_t,
             length=length,
-        ).calculate().to("W/m2K").value
+        ).calculate().to("W/m2K"), "h_base")
 
         orientation_factor = 1.0 if self.orientation == "vertical" else 0.85
         side_factor = 0.9 if self.condensing_side == "tube" else 1.0
