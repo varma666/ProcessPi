@@ -4,6 +4,12 @@ import math
 from typing import Any, Dict, List, Tuple
 
 from processpi.calculations.heat_transfer import LMTD
+from processpi.units.area import Area
+from processpi.units.heat_flow import HeatFlow
+from processpi.units.heat_transfer_coefficient import HeatTransferCoefficient
+from processpi.units.length import Length
+from processpi.units.pressure import Pressure
+from processpi.units.velocity import Velocity
 from processpi.calculations.heat_transfer.hx_kern import (
     ConvectiveH,
     DarcyDrop,
@@ -33,6 +39,8 @@ class ShellAndTubeHX(HeatExchanger):
         if self.method not in {"kern", "bell_delaware"}:
             raise ValueError("method must be 'kern' or 'bell_delaware'")
         super().__init__(*args, **kwargs)
+        fixed_keys = ["tube_length", "tube_od", "tube_id", "tube_pitch", "tube_passes", "shell_passes", "shell_diameter", "tube_count", "tube_layout", "baffle_spacing"]
+        self.fixed_geometry = {k: (self.specs.get(k) is not None) for k in fixed_keys}
         self._load_standard_tables()
 
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
@@ -1148,15 +1156,19 @@ class ShellAndTubeHX(HeatExchanger):
             if "tube_velocity" in hard_violations or "shell_velocity" in hard_violations:
                 self._trace_step("OPTIMIZATION", "Geometry rejected", f"hydraulic violation {hard_violations}")
                 state["optimization_actions"].append(f"hydraulic_reject:{hard_violations}")
-                if self.specs.get("tube_length") is None:
+                if not self.fixed_geometry.get("tube_length", False):
                     geometry["tube_length"] = min(12.0, geometry["tube_length"] * 1.10)
                     self._trace_step("OPTIMIZATION", "Action", "increase_tube_length")
-                elif tube_passes < 8:
+                elif tube_passes < 8 and not self.fixed_geometry.get("tube_passes", False):
                     tube_passes = min(8, tube_passes * 2)
                     self._trace_step("OPTIMIZATION", "Action", "increase_tube_passes")
+                elif not self.fixed_geometry.get("shell_diameter", False):
+                    geometry["shell_diameter"] = max(0.15, geometry["shell_diameter"] * 0.95)
+                    self._trace_step("OPTIMIZATION", "Action", "reduce_shell_diameter")
                 else:
-                    geometry["tube_count"] = max(tube_passes, int(geometry["tube_count"] * 0.9))
-                    self._trace_step("OPTIMIZATION", "Action", "reduce_tube_count")
+                    self._warn_with_category("FEASIBILITY_WARNING", "Fixed geometry is hydraulically infeasible")
+                    state["status_override"] = "FAILED_CONVERGENCE"
+                    break
                 continue
     
             if len(state["geometry_history"]) >= 3 and len(set(state["geometry_history"][-3:])) == 1:
@@ -1477,22 +1489,22 @@ class ShellAndTubeHX(HeatExchanger):
         return {
             "hx_type": "shell_and_tube",
             "method": payload.get("method", self.method),
-            "Q": payload["q_watts_original"] / 1000.0,
-            "Area": payload["area"],
-            "U_assumed": payload["u_assumed"],
-            "U_user": payload.get("u_user"),
-            "U_calculated": payload["u_calculated"],
+            "Q": HeatFlow(payload["q_watts_original"] / 1000.0, "kW"),
+            "Area": Area(payload["area"], "m2"),
+            "U_assumed": HeatTransferCoefficient(payload["u_assumed"], "W/m2K"),
+            "U_user": (HeatTransferCoefficient(payload.get("u_user"), "W/m2K") if payload.get("u_user") is not None else None),
+            "U_calculated": HeatTransferCoefficient(payload["u_calculated"], "W/m2K"),
             "LMTD": payload["lmtd"],
             "tube_count": payload["geometry"]["tube_count"],
-            "tube_od": payload["geometry"]["tube_od"],
-            "tube_id": payload["geometry"]["tube_id"],
-            "tube_length": payload["geometry"]["tube_length"],
-            "baffle_spacing": max(0.4 * payload["shell_diameter"], 1e-6),
-            "shell_diameter": payload["shell_diameter"],
-            "tube_velocity": payload["v_tube"],
-            "shell_velocity": payload["v_shell"],
-            "tube_dp": payload["tube_dp"],
-            "shell_dp": payload["shell_dp"],
+            "tube_od": Length(payload["geometry"]["tube_od"], "m"),
+            "tube_id": Length(payload["geometry"]["tube_id"], "m"),
+            "tube_length": Length(payload["geometry"]["tube_length"], "m"),
+            "baffle_spacing": Length(max(0.4 * payload["shell_diameter"], 1e-6), "m"),
+            "shell_diameter": Length(payload["shell_diameter"], "m"),
+            "tube_velocity": Velocity(payload["v_tube"], "m/s"),
+            "shell_velocity": Velocity(payload["v_shell"], "m/s"),
+            "tube_dp": Pressure(payload["tube_dp"], "Pa"),
+            "shell_dp": Pressure(payload["shell_dp"], "Pa"),
             "iterations": payload["iterations"],
             "h_tube": payload.get("h_t"),
             "h_shell": payload.get("h_s"),
