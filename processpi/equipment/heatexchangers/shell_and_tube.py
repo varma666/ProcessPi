@@ -1800,9 +1800,9 @@ class ShellAndTubeHX(HeatExchanger):
     
         h_ideal = float(data["h_shell"])
     
-        shell_id = geometry["shell_diameter"]
+        shell_id = geometry["shell_diameter"].value
     
-        tube_od = geometry["tube_od"]
+        tube_od = geometry["tube_od"].value
     
         tube_pitch = tube_od.to("m").value * 1.25
     
@@ -1813,36 +1813,36 @@ class ShellAndTubeHX(HeatExchanger):
         # ======================================================
     
         as_cross = (
-            shell_id.value
+            shell_id
             * baffle_spacing
             * (
-                (tube_pitch - tube_od.to("m").value)
+                (tube_pitch - tube_od)
                 / max(tube_pitch, 1e-9)
             )
         )
     
         ab = (
             0.05
-            * shell_id.value
+            * shell_id
             * baffle_spacing
         )
     
         atb = (
             0.00025
             * math.pi
-            * tube_od.value
+            * tube_od
             * geometry["tube_count"]
         )
         
         asb = (
             0.0015
-            * shell_id.value
+            * shell_id
         )
     
         rw = 0.20
     
         ncv = max(
-            shell_id.value / tube_pitch,
+            shell_id / tube_pitch,
             1.0,
         )
     
