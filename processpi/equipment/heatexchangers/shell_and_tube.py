@@ -1813,36 +1813,36 @@ class ShellAndTubeHX(HeatExchanger):
         # ======================================================
     
         as_cross = (
-            shell_id
+            shell_id.value
             * baffle_spacing
             * (
-                (tube_pitch - tube_od)
+                (tube_pitch - tube_od.to("m").value)
                 / max(tube_pitch, 1e-9)
             )
         )
     
         ab = (
             0.05
-            * shell_id
+            * shell_id.value
             * baffle_spacing
         )
     
         atb = (
             0.00025
             * math.pi
-            * tube_od
+            * tube_od.value
             * geometry["tube_count"]
         )
         
         asb = (
             0.0015
-            * shell_id
+            * shell_id.value
         )
     
         rw = 0.20
     
         ncv = max(
-            shell_id / tube_pitch,
+            shell_id.value / tube_pitch,
             1.0,
         )
     
