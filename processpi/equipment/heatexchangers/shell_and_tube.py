@@ -2050,7 +2050,7 @@ class ShellAndTubeHX(HeatExchanger):
             "tube_od": float(self.specs.get("tube_od", state["geometry"]["tube_od"]),
             "tube_id": float(self.specs.get("tube_id", state["geometry"]["tube_id"]),
             "tube_length": float(self.specs.get("tube_length", state["geometry"]["tube_length"]),
-            "tube_count": int(self.specs.get("tube_count", state["geometry"]["tube_count"]),
+            "tube_count": int(self.specs.get("tube_count", state["geometry"]["tube_count"])),
             "tube_pitch": float(
                 self.specs.get(
                     "tube_pitch",
