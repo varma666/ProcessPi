@@ -2047,9 +2047,9 @@ class ShellAndTubeHX(HeatExchanger):
         state = self._iterate_U(effective_q_watts, cltd, hot, cold, shell_passes, tube_passes, u_assumed, u_range)
         
         geometry = {
-            "tube_od": float(self.specs.get("tube_od", state["geometry"]["tube_od"]),
-            "tube_id": float(self.specs.get("tube_id", state["geometry"]["tube_id"]),
-            "tube_length": float(self.specs.get("tube_length", state["geometry"]["tube_length"]),
+            "tube_od": float(self.specs.get("tube_od", state["geometry"]["tube_od"])),
+            "tube_id": float(self.specs.get("tube_id", state["geometry"]["tube_id"])),
+            "tube_length": float(self.specs.get("tube_length", state["geometry"]["tube_length"])),
             "tube_count": int(self.specs.get("tube_count", state["geometry"]["tube_count"])),
             "tube_pitch": float(
                 self.specs.get(
