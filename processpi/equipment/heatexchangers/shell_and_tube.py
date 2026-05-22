@@ -2016,7 +2016,7 @@ class ShellAndTubeHX(HeatExchanger):
                 f"Missing: {missing}"
             )
         q_watts, th_out, tc_out = self._calculate_heat_duty(hot, cold)
-    self._trace_step("THERMAL", "Heat duty (W)", q_watts)
+        self._trace_step("THERMAL", "Heat duty (W)", q_watts)
         lmtd = self._calculate_lmtd(hot, cold, th_out, tc_out)
         self._trace_step("THERMAL", "LMTD", lmtd)
 
