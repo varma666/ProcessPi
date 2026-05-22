@@ -2015,12 +2015,42 @@ class ShellAndTubeHX(HeatExchanger):
                 f"Rate mode requires fixed geometry. "
                 f"Missing: {missing}"
             )
-    
+        q_watts, th_out, tc_out = self._calculate_heat_duty(hot, cold)
+    self._trace_step("THERMAL", "Heat duty (W)", q_watts)
+        lmtd = self._calculate_lmtd(hot, cold, th_out, tc_out)
+        self._trace_step("THERMAL", "LMTD", lmtd)
+
+        shell_passes, tube_passes, ft = self._adjust_passes(hot, cold, th_out, tc_out)
+        self._trace_step("THERMAL", "Ft", ft)
+        self._trace_step("GEOMETRY", "Shell passes", shell_passes)
+        self._trace_step("GEOMETRY", "Tube passes", tube_passes)
+        warnings: List[str] = list(getattr(self, "_warnings", []))
+
+        n_units = 1
+        effective_q_watts = q_watts
+        if ft < 0.78:
+            n_units = int(math.ceil(0.78 / max(ft, 1e-6)))
+            effective_q_watts = q_watts / n_units
+            warnings.append(f"Using {n_units} exchangers in series to satisfy Ft requirement")
+
+        cltd = max(ft * lmtd, 1e-9)
+        self._debug(cltd)
+
+        u_assumed = self._assume_u(hot, cold)
+        self._trace_step("THERMAL", "U assumed initial", u_assumed)
+        hot_hx = self.hot_in.component.hx_data() if hasattr(self.hot_in.component, "hx_data") else {"u_key": getattr(self.hot_in.component, "hx_type", "generic")}
+        cold_hx = self.cold_in.component.hx_data() if hasattr(self.cold_in.component, "hx_data") else {"u_key": getattr(self.cold_in.component, "hx_type", "generic")}
+        self._debug(f"Hot hx_data = {hot_hx}")
+        self._debug(f"Cold hx_data = {cold_hx}")
+        u_range = get_u_range("shell_and_tube", self.service_type, hot_hx.get("u_key", "generic"), cold_hx.get("u_key", "generic"))
+
+        state = self._iterate_U(effective_q_watts, cltd, hot, cold, shell_passes, tube_passes, u_assumed, u_range)
+        
         geometry = {
-            "tube_od": float(self.specs["tube_od"]),
-            "tube_id": float(self.specs["tube_id"]),
-            "tube_length": float(self.specs["tube_length"]),
-            "tube_count": int(self.specs.get("tube_count", 100)),
+            "tube_od": float(self.specs.get("tube_od", state["geometry"]["tube_od"]),
+            "tube_id": float(self.specs.get("tube_id", state["geometry"]["tube_id"]),
+            "tube_length": float(self.specs.get("tube_length", state["geometry"]["tube_length"]),
+            "tube_count": int(self.specs.get("tube_count", state["geometry"]["tube_count"]),
             "tube_pitch": float(
                 self.specs.get(
                     "tube_pitch",
