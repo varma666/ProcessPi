@@ -331,7 +331,8 @@ class ShellAndTubeHX(HeatExchanger):
         geometry["area_per_tube"] = area_per_tube
         geometry["tube_pitch"] = self._to_float(self.specs.get("tube_pitch"), "m") if self.specs.get("tube_pitch") is not None else (1.25 * geometry["tube_od"])
         geometry["bundle_diameter"] = self._calculate_bundle_diameter(geometry["tube_count"], geometry["tube_od"])
-        geometry["shell_diameter"] = self._calculate_shell_diameter(geometry["bundle_diameter"])
+        if "shell_diameter" not in geometry:
+            geometry["shell_diameter"] = self._calculate_shell_diameter(geometry["bundle_diameter"])
         area_per_tube_flow = math.pi * geometry["tube_id"] ** 2 / 4.0
         geometry["tube_flow_area"] = max(geometry["tube_count"] / max(tube_passes, 1) * area_per_tube_flow, 1e-12)
         if hot is not None:
