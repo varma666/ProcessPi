@@ -1945,7 +1945,7 @@ class ShellAndTubeHX(HeatExchanger):
         # Increase shell DP slightly for Bell realism
         # ======================================================
     
-        data["shell_dp"] *= 1.15
+        data["shell_dp"] = self._get_value(data["shell_dp"], name="shell_dp") * 1.15
     
         return data
     def design(self) -> Dict[str, Any]:

@@ -1,17 +1,17 @@
-# ============================================
-# EXAMPLE 1 — BENZENE COOLING
-# ============================================
+# ============================================================
+# DEBUG LOGGING
+# ============================================================
+import logging
 
-# Problem:
-# 21000 kg/h of liquid benzene at 90°C is to be cooled to 30°C
-# using a heat exchanger.
-# Cooling water available: 60500 kg/h at 15°C
-# Maximum allowable pressure drop: 1 bar on both sides
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(levelname)s:%(name)s:%(message)s"
+)
 
-
-# ============================================
-# IMPORTS
-# ============================================
+# ============================================================
+# PROCESSPI — HORIZONTAL n-PROPANOL CONDENSER
+# Example 12.1 Conversion
+# ============================================================
 
 from processpi.units import *
 from processpi.components import *
@@ -19,78 +19,126 @@ from processpi.streams import MaterialStream
 from processpi.equipment.heatexchangers import HeatExchangerEngine
 
 
-# ============================================
-# DEFINE FLUIDS
-# ============================================
+# ============================================================
+# COMPONENTS
+# ============================================================
 
-benzene = Benzene(
-    density=Density(876, "kg/m3"),
-    viscosity=Viscosity(0.6, "cP"),
-    specific_heat=SpecificHeat(1.74, "kJ/kgK"),
-)
-
-water = Water(
-    density=Density(1000, "kg/m3"),
-    viscosity=Viscosity(1.0, "cP"),
-    specific_heat=SpecificHeat(4.18, "kJ/kgK"),
-)
+water = Water()
+n_propanol = OrganicLiquid()
 
 
-# ============================================
-# DEFINE STREAMS
-# ============================================
+# ============================================================
+# HOT SIDE — n-PROPANOL VAPOR
+# ============================================================
 
 hot_in = MaterialStream(
-    "hot_in",
-    component=benzene,
-    temperature=Temperature(90, "C"),
-    mass_flow=MassFlowRate(21000, "kg/h"),
+    "npropanol_vapor_in",
+    component=n_propanol,
+    phase="vapor",
+
+    temperature=Temperature(118, "C"),
+    pressure=Pressure(2.03, "bar"),
+
+    mass_flow=MassFlowRate(60000, "lb/h"),
 )
 
 hot_out = MaterialStream(
-    "hot_out",
-    component=benzene,
-    temperature=Temperature(30, "C"),
+    "npropanol_liquid_out",
+    component=n_propanol,
+    phase="liquid",
+
+    temperature=Temperature(118, "C"),
 )
+
+
+# ============================================================
+# COLD SIDE — COOLING WATER
+# ============================================================
 
 cold_in = MaterialStream(
-    "cold_in",
+    "cooling_water_in",
     component=water,
-    temperature=Temperature(15, "C"),
-    mass_flow=MassFlowRate(60500, "kg/h"),
+    phase="liquid",
+
+    temperature=Temperature(29.4, "C"),
+    pressure=Pressure(1, "bar"),
 )
 
-# Outlet temperature unknown → to be calculated
 cold_out = MaterialStream(
-    "cold_out",
-    component=water
+    "cooling_water_out",
+    component=water,
+
+    temperature=Temperature(40.6, "C"),
 )
 
 
-# ============================================
-# RUN HEAT EXCHANGER MODEL
-# ============================================
+# ============================================================
+# CONDENSER
+# ============================================================
 
-hx = HeatExchangerEngine()
+hx = HeatExchangerEngine(
+    method="bell_delaware"
+)
 
 hx.fit(
+
+    hx_type="condenser",
+
     hot_in=hot_in,
     hot_out=hot_out,
+
     cold_in=cold_in,
     cold_out=cold_out,
-    #U=HeatTransferCoefficient(570, "W/m2K"),
-    shell_dp=Pressure(1, "bar"),
-    tube_dp=Pressure(1, "bar"),
+
+    # 285 Btu/lb ≈ 663000 J/kg
+    latent_heat=663000,
+
+    orientation="horizontal",
+
+    shell_passes=1,
+    tube_passes=2,
+
+    tube_length=Length(8, "ft").to("m").value,
+
+    tube_outer_diameter=Length(0.75, "in").to("m").value,
+
+    tube_gauge=16,
+
+    tube_pitch=Length(1.0625, "in").to("m").value,
+
+    tube_layout="triangular",
+
+    shell_dp=Pressure(2, "psi"),
+
+    tube_dp=Pressure(10, "psi"),
+    U=HeatTransferCoefficient(568, "W/m2K"),
+
+    mode="design",
+
+    #verbose=True,
 )
 
-hx.run()
+# ============================================================
+# RUN
+# ============================================================
 
-results = hx.results()
+results = hx.run()
 
+# ============================================================
+# RESULTS
+# ============================================================
 
-# ============================================
-# DISPLAY RESULTS
-# ============================================
+print("\n")
+print("=" * 80)
+print("HORIZONTAL n-PROPANOL CONDENSER")
+print("=" * 80)
 
-print("\n=== DESIGN RESULTS ===")
-print(results)
+print(results.summary())
+
+print("\n")
+print("=" * 80)
+print("RAW RESULT DATA")
+print("=" * 80)
+
+for k, v in results.data.items():
+    print(f"{k:25s} : {v}")
