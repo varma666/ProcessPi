@@ -2096,280 +2096,553 @@ class ShellAndTubeHX(HeatExchanger):
     
         return data
     def rate(self) -> Dict[str, Any]:
-        """
-        Rate mode evaluation for an existing heat exchanger.
     
-        This function evaluates a heat exchanger using fixed geometry
-        supplied by the user. It calculates hydraulics, U, LMTD, duty,
-        and provides an engineering assessment without changing geometry.
         """
+        Universal intelligent rating engine for ProcessPI heat exchangers.
+        """
+    
         import math
     
-        # ======================================================
-        # STREAM PROPERTIES
-        # ======================================================
+        self._warnings = []
+        recommendations = []
+    
+        # ==========================================================
+        # VALIDATE STREAMS
+        # ==========================================================
+    
+        if self.hot_in is None:
+            raise ValueError("Hot stream is mandatory")
+    
+        if self.cold_in is None:
+            raise ValueError("Cold stream is mandatory")
+    
         hot = self._stream_props(self.hot_in)
         cold = self._stream_props(self.cold_in)
-    
-        self._warnings = []
     
         self._validate_inputs(hot, cold)
     
         assignment = self._assign_fluids_to_sides(hot, cold)
     
-        # ======================================================
-        # SERVICE TYPE
-        # ======================================================
-        if hot["phase"] == "vapor":
+        # ==========================================================
+        # IDENTIFY SERVICE TYPE
+        # ==========================================================
+    
+        if hot["phase"] == "vapor" and hot["t_k"] > cold["t_k"]:
             self.service_type = "condenser"
+    
         elif cold["phase"] == "vapor":
-            self.service_type = "evaporator"
+            self.service_type = "reboiler"
+    
         elif hot["t_k"] > cold["t_k"]:
             self.service_type = "cooler"
+    
         else:
             self.service_type = "heater"
     
-        # ======================================================
-        # FIXED GEOMETRY
-        # ======================================================
-        required_geometry = ["tube_od", "tube_id", "tube_length", "tube_count", "shell_diameter"]
-        missing = [key for key in required_geometry if self.specs.get(key) is None]
-        if missing:
-            raise ValueError(f"Rate mode requires fixed geometry. Missing: {missing}")
+        # ==========================================================
+        # DUTY CALCULATION
+        # ==========================================================
     
-        geometry = {
-            "tube_od": self._safe_float(self.specs["tube_od"], "tube_od"),
-            "tube_id": self._safe_float(self.specs["tube_id"], "tube_id"),
-            "tube_length": self._safe_float(self.specs["tube_length"], "tube_length"),
-            "tube_count": int(self.specs["tube_count"]),
-            "tube_pitch": self._safe_float(self.specs.get(
-                "tube_pitch", 1.25 * self._safe_float(self.specs["tube_od"], "tube_od")
-            ), "tube_pitch"),
-        }
+        if self.service_type in ["condenser", "reboiler"]:
     
-        shell_diameter = self._safe_float(self.specs["shell_diameter"], "shell_diameter")
+            latent_heat = self._safe_float(
+                self.specs.get("latent_heat", 2257000.0),
+                "latent_heat"
+            )
+    
+            q_actual = hot["m_dot"] * latent_heat
+    
+        else:
+    
+            Ch = hot["m_dot"] * hot["cp"] * 1000.0
+            Cc = cold["m_dot"] * cold["cp"] * 1000.0
+    
+            q_hot = Ch * abs(
+                hot.get("t_in_k", hot["t_k"]) -
+                hot.get("t_out_k", hot["t_k"] - 10.0)
+            )
+    
+            q_cold = Cc * abs(
+                cold.get("t_out_k", cold["t_k"] + 10.0) -
+                cold.get("t_in_k", cold["t_k"])
+            )
+    
+            q_actual = min(q_hot, q_cold)
+    
+        # ==========================================================
+        # OVERALL U VALUE
+        # ==========================================================
+    
+        u_source = "assumed"
+    
+        if self.specs.get("U") is not None:
+    
+            u_dirty = self._safe_float(self.specs["U"], "U")
+            u_clean = u_dirty * 1.15
+            u_source = "user"
+    
+        else:
+    
+            hot_hx = (
+                self.hot_in.component.hx_data()
+                if hasattr(self.hot_in.component, "hx_data")
+                else {"u_key": "generic"}
+            )
+    
+            cold_hx = (
+                self.cold_in.component.hx_data()
+                if hasattr(self.cold_in.component, "hx_data")
+                else {"u_key": "generic"}
+            )
+    
+            u_range = get_u_range(
+                "shell_and_tube",
+                self.service_type,
+                hot_hx.get("u_key", "generic"),
+                cold_hx.get("u_key", "generic"),
+            )
+    
+            u_dirty = 0.5 * (u_range[0] + u_range[1])
+            u_clean = u_dirty * 1.15
+    
+        # ==========================================================
+        # TEMPERATURE DIFFERENCE
+        # ==========================================================
+    
+        th_in = hot["t_k"]
+        tc_in = cold["t_k"]
+    
+        th_out_guess = hot.get("t_out_k", th_in - 10.0)
+        tc_out_guess = cold.get("t_out_k", tc_in + 10.0)
+    
+        lmtd = self._calculate_lmtd(
+            hot,
+            cold,
+            th_out_guess,
+            tc_out_guess,
+        )
+    
+        ft = self.specs.get("ft", 1.0)
+    
+        cltd = max(lmtd * ft, 1e-9)
+    
+        # ==========================================================
+        # AREA DETERMINATION
+        # ==========================================================
+    
+        provided_area = self.specs.get("area")
+    
+        if provided_area is not None:
+    
+            area = self._safe_float(provided_area, "area")
+            area_source = "provided"
+    
+        else:
+    
+            area = q_actual / max(u_dirty * cltd, 1e-9)
+            area_source = "calculated"
+    
+        # ==========================================================
+        # GEOMETRY SOLVER
+        # ==========================================================
+    
+        tube_od = self._safe_float(
+            self.specs.get("tube_od", 0.01905),
+            "tube_od"
+        )
+    
+        tube_id = self._safe_float(
+            self.specs.get("tube_id", 0.016),
+            "tube_id"
+        )
+    
+        tube_length = self._safe_float(
+            self.specs.get("tube_length", 6.0),
+            "tube_length"
+        )
+    
+        tube_pitch = self._safe_float(
+            self.specs.get("tube_pitch", 1.25 * tube_od),
+            "tube_pitch"
+        )
+    
         tube_passes = int(self.specs.get("tube_passes", 2))
         shell_passes = int(self.specs.get("shell_passes", 1))
     
-        # ======================================================
-        # CALCULATE HYDRAULICS
-        # ======================================================
+        # ----------------------------------------------------------
+    
+        if self.specs.get("tube_count") is not None:
+    
+            tube_count = int(self.specs["tube_count"])
+    
+        else:
+    
+            tube_count = max(
+                1,
+                int(area / (math.pi * tube_od * tube_length))
+            )
+    
+            recommendations.append(
+                "Tube count estimated from available area"
+            )
+    
+        # ----------------------------------------------------------
+    
+        if self.specs.get("shell_diameter") is not None:
+    
+            shell_diameter = self._safe_float(
+                self.specs["shell_diameter"],
+                "shell_diameter"
+            )
+    
+        else:
+    
+            shell_diameter = max(
+                0.1,
+                0.637 * (
+                    (
+                        tube_count
+                        * tube_pitch**2
+                    ) / 0.785
+                )**0.5
+            )
+    
+            recommendations.append(
+                "Shell diameter estimated from tube bundle"
+            )
+    
+        geometry = {
+    
+            "tube_od": tube_od,
+            "tube_id": tube_id,
+            "tube_length": tube_length,
+            "tube_count": tube_count,
+            "tube_pitch": tube_pitch,
+    
+        }
+    
+        # ==========================================================
+        # GEOMETRY VALIDATION
+        # ==========================================================
+    
+        geometry_valid = True
+    
+        if tube_pitch < 1.25 * tube_od:
+    
+            geometry_valid = False
+    
+            self._warnings.append(
+                "[MECHANICAL_WARNING] Tube pitch below TEMA minimum"
+            )
+    
+        # ==========================================================
+        # FLOW HYDRAULICS
+        # ==========================================================
+    
         q_vol_hot = hot["m_dot"] / max(hot["density"], 1e-12)
+    
         q_vol_cold = cold["m_dot"] / max(cold["density"], 1e-12)
     
-        tube_flow_area = (geometry["tube_count"] / tube_passes) * (math.pi * geometry["tube_id"]**2 / 4.0)
+        tube_flow_area = (
+            (tube_count / tube_passes)
+            * (math.pi * tube_id**2 / 4.0)
+        )
+    
         v_tube = q_vol_hot / max(tube_flow_area, 1e-12)
     
-        shell_flow_area = shell_diameter * (tube_passes * geometry["tube_pitch"] - geometry["tube_od"])
-        v_shell = q_vol_cold / max(shell_flow_area, 1e-12)
+        shell_flow_area = max(
+            shell_diameter
+            * (tube_pitch - tube_od),
+            1e-9
+        )
     
-        # ======================================================
-        # CALCULATE HTC AND OVERALL U
-        # ======================================================
-        dimless = self._calculate_dimensionless(geometry, hot, cold, v_tube, v_shell)
-        h_t, h_s = self._calculate_htc(dimless, geometry, hot, cold)
+        v_shell = q_vol_cold / shell_flow_area
     
-        hot_hx = self.hot_in.component.hx_data() if hasattr(self.hot_in.component, "hx_data") else {"u_key": "generic"}
-        cold_hx = self.cold_in.component.hx_data() if hasattr(self.cold_in.component, "hx_data") else {"u_key": "generic"}
+        # ==========================================================
+        # DIMENSIONLESS + HTC
+        # ==========================================================
     
-        u_range = get_u_range("shell_and_tube", self.service_type, hot_hx.get("u_key", "generic"), cold_hx.get("u_key", "generic"))
+        dimless = self._calculate_dimensionless(
+            geometry,
+            hot,
+            cold,
+            v_tube,
+            v_shell,
+        )
     
-        u_results = self._calculate_overall_U(h_t=h_t, h_s=h_s, geometry=geometry, u_range=u_range)
+        h_t, h_s = self._calculate_htc(
+            dimless,
+            geometry,
+            hot,
+            cold,
+        )
+    
+        u_results = self._calculate_overall_U(
+            h_t=h_t,
+            h_s=h_s,
+            geometry=geometry,
+            u_range=(u_dirty, u_clean),
+        )
+    
         u_dirty = u_results["U_dirty"]
         u_clean = u_results["U_clean"]
     
-        # ======================================================
-        # CALCULATE DUTY
-        # ======================================================
-        if self.service_type == "condenser":
-            latent_heat = self._safe_float(self.specs["latent_heat"], "latent_heat")
-            q_actual = hot["m_dot"] * latent_heat
-            th_out = hot["t_k"]
-            tc_out = cold["t_k"] + q_actual / (cold["m_dot"] * cold["cp"] * 1000.0)
-        else:
-            UA = u_dirty * geometry["tube_count"] * math.pi * geometry["tube_od"] * geometry["tube_length"]
-            Ch = hot["m_dot"] * hot["cp"] * 1000.0
-            Cc = cold["m_dot"] * cold["cp"] * 1000.0
-            Cmin = min(Ch, Cc)
-            Cmax = max(Ch, Cc)
-            Cr = Cmin / max(Cmax, 1e-12)
-            NTU = UA / max(Cmin, 1e-12)
-            effectiveness = (1.0 - math.exp(-NTU * (1.0 - Cr))) / (1.0 - Cr * math.exp(-NTU * (1.0 - Cr)))
-            q_max = Cmin * (hot["t_k"] - cold["t_k"])
-            q_actual = effectiveness * q_max
-            th_out = hot["t_k"] - q_actual / Ch
-            tc_out = cold["t_k"] + q_actual / Cc
+        # ==========================================================
+        # OUTLET TEMPERATURES
+        # ==========================================================
     
-        # ======================================================
-        # CALCULATE LMTD
-        # ======================================================
-        lmtd = self._calculate_lmtd(hot, cold, th_out, tc_out)
-        cltd = max(lmtd, 1e-9)
+        Ch = hot["m_dot"] * hot["cp"] * 1000.0
+        Cc = cold["m_dot"] * cold["cp"] * 1000.0
     
-        # ======================================================
-        # CALCULATE PRESSURE DROP
-        # ======================================================
+        th_out = th_in - q_actual / max(Ch, 1e-12)
+    
+        tc_out = tc_in + q_actual / max(Cc, 1e-12)
+    
+        # ==========================================================
+        # PRESSURE DROP
+        # ==========================================================
+    
         tube_dp, shell_dp = self._calculate_pressure_drop(
+    
             geometry=geometry,
+    
             hot=hot,
+    
             cold=cold,
+    
             shell_velocity=v_shell,
+    
             tube_velocity=v_tube,
+    
             shell_passes=shell_passes,
+    
             tube_passes=tube_passes,
+    
             shell_diameter=shell_diameter,
-            tube_length=geometry["tube_length"],
-            tube_id=geometry["tube_id"],
-            orientation=self.specs.get("orientation", "horizontal"),
+    
+            tube_length=tube_length,
+    
+            tube_id=tube_id,
+    
+            orientation=self.specs.get(
+                "orientation",
+                "horizontal",
+            ),
         )
     
-        # ======================================================
-        # ENGINEERING ASSESSMENT
-        # ======================================================
-        hydraulic_ok = True
-        pressure_drop_ok = tube_dp <= self._safe_float(self.specs.get("tube_dp", 70000.0), "tube_dp_limit") and \
-                           shell_dp <= self._safe_float(self.specs.get("shell_dp", 14000.0), "shell_dp_limit")
-        status = "OK" if hydraulic_ok and pressure_drop_ok else "VIOLATION"
+        # ==========================================================
+        # CONSTRAINTS
+        # ==========================================================
+    
+        tube_velocity_ok = 0.5 <= v_tube <= 3.0
+    
+        shell_velocity_ok = 0.3 <= v_shell <= 2.0
+    
+        pressure_drop_ok = (
+    
+            tube_dp <= self._safe_float(
+                self.specs.get("tube_dp", 70000.0),
+                "tube_dp_limit"
+            )
+    
+            and
+    
+            shell_dp <= self._safe_float(
+                self.specs.get("shell_dp", 14000.0),
+                "shell_dp_limit"
+            )
+        )
+    
+        thermal_feasible = area > 0.0
+    
+        hydraulic_feasible = (
+    
+            tube_velocity_ok
+            and shell_velocity_ok
+            and pressure_drop_ok
+    
+        )
+    
+        # ==========================================================
+        # WARNINGS
+        # ==========================================================
+    
+        if not tube_velocity_ok:
+    
+            self._warnings.append(
+                "[HYDRAULIC_WARNING] Tube velocity outside recommended range"
+            )
+    
+        if not shell_velocity_ok:
+    
+            self._warnings.append(
+                "[HYDRAULIC_WARNING] Shell velocity outside recommended range"
+            )
+    
+        if not pressure_drop_ok:
+    
+            self._warnings.append(
+                "[PRESSURE_DROP_WARNING] Pressure drop exceeds allowable limits"
+            )
+    
+        # ==========================================================
+        # FEASIBILITY SCORE
+        # ==========================================================
+    
+        score = 100
+    
+        if not geometry_valid:
+            score -= 20
+    
+        if not tube_velocity_ok:
+            score -= 10
+    
+        if not shell_velocity_ok:
+            score -= 10
+    
+        if not pressure_drop_ok:
+            score -= 20
+    
+        if score >= 90:
+            assessment = "EXCELLENT"
+    
+        elif score >= 75:
+            assessment = "ACCEPTABLE"
+    
+        elif score >= 60:
+            assessment = "MARGINAL"
+    
+        else:
+            assessment = "NOT_RECOMMENDED"
+    
+        # ==========================================================
+        # PAYLOAD
+        # ==========================================================
     
         payload = {
-        
-            # ==================================================
+    
+            # ------------------------------------------------------
             # CORE
-            # ==================================================
-        
+            # ------------------------------------------------------
+    
             "method": self.method,
-        
-            "q_watts_original": q_actual,
-        
-            "q_watts_effective": q_actual,
-        
-            "area": (
-                geometry["tube_count"]
-                * math.pi
-                * geometry["tube_od"]
-                * geometry["tube_length"]
-            ),
-        
-            "u_assumed": u_dirty,
-        
-            "u_calculated": u_dirty,
-        
-            "u_clean": u_clean,
-        
-            "lmtd": lmtd,
-        
-            "cltd": cltd,
-        
-            "ft": 1.0,
-        
-            # ==================================================
-            # GEOMETRY
-            # ==================================================
-        
-            "geometry": geometry,
-        
-            "shell_diameter": shell_diameter,
-        
-            "bundle_diameter": self._calculate_bundle_diameter(
-                geometry["tube_count"],
-                geometry["tube_od"],
-            ),
-        
-            # ==================================================
-            # HYDRAULICS
-            # ==================================================
-        
-            "v_tube": v_tube,
-        
-            "v_shell": v_shell,
-        
-            "tube_dp": tube_dp,
-        
-            "shell_dp": shell_dp,
-        
-            # ==================================================
-            # HTC
-            # ==================================================
-        
-            "h_t": h_t,
-        
-            "h_s": h_s,
-        
-            "dimless": dimless,
-        
-            # ==================================================
-            # PERFORMANCE
-            # ==================================================
-        
-            "th_out": th_out,
-        
-            "tc_out": tc_out,
-        
-            "tube_passes": tube_passes,
-        
-            "shell_passes": shell_passes,
-        
-            # ==================================================
-            # STATUS
-            # ==================================================
-        
-            "warnings": self._warnings,
-        
-            "assignment": assignment,
-        
-            "status_override": status,
-        
-            "iterations": 1,
-        
-            # ==================================================
-            # RATE MODE INFO
-            # ==================================================
-        
-            "optimization_actions": [],
-        
-            "geometry_history": [],
-        
-            "convergence_history": [],
-        
-            "warning_details": [],
-        
-            # ==================================================
-            # ENGINEERING
-            # ==================================================
-        
-            "thermal_feasible": True,
-        
-            "hydraulic_feasible": hydraulic_ok,
-        
-            "pressure_drop_feasible": pressure_drop_ok,
-        
-            "engineering_assessment": (
-        
-                "ACCEPTABLE"
-        
-                if status == "OK"
-        
-                else "MARGINAL"
-            ),
-        
-            "recommendations": [],
-        
-            # ==================================================
-            # SERVICE
-            # ==================================================
-        
+    
             "service": self.service_type,
-        
+    
+            "q_watts_original": q_actual,
+    
+            "q_watts_effective": q_actual,
+    
+            "lmtd": lmtd,
+    
+            "cltd": cltd,
+    
+            "ft": ft,
+    
+            "u_dirty": u_dirty,
+    
+            "u_clean": u_clean,
+    
+            "u_source": u_source,
+    
+            "area": area,
+    
+            "area_source": area_source,
+    
+            # ------------------------------------------------------
+            # GEOMETRY
+            # ------------------------------------------------------
+    
+            "geometry": geometry,
+    
+            "shell_diameter": shell_diameter,
+    
+            "bundle_diameter": self._calculate_bundle_diameter(
+                tube_count,
+                tube_od,
+            ),
+    
+            "tube_passes": tube_passes,
+    
+            "shell_passes": shell_passes,
+    
+            # ------------------------------------------------------
+            # PERFORMANCE
+            # ------------------------------------------------------
+    
+            "th_out": th_out,
+    
+            "tc_out": tc_out,
+    
+            "h_t": h_t,
+    
+            "h_s": h_s,
+    
+            "dimless": dimless,
+    
+            # ------------------------------------------------------
+            # HYDRAULICS
+            # ------------------------------------------------------
+    
+            "v_tube": v_tube,
+    
+            "v_shell": v_shell,
+    
+            "tube_dp": tube_dp,
+    
+            "shell_dp": shell_dp,
+    
+            # ------------------------------------------------------
+            # FEASIBILITY
+            # ------------------------------------------------------
+    
+            "thermal_feasible": thermal_feasible,
+    
+            "hydraulic_feasible": hydraulic_feasible,
+    
+            "pressure_drop_feasible": pressure_drop_ok,
+    
+            "geometry_valid": geometry_valid,
+    
+            "engineering_assessment": assessment,
+    
+            "feasibility_score": score,
+    
+            # ------------------------------------------------------
+            # STATUS
+            # ------------------------------------------------------
+    
+            "warnings": self._warnings,
+    
+            "recommendations": recommendations,
+    
+            "assignment": assignment,
+    
+            "iterations": 1,
+    
+            # ------------------------------------------------------
+            # EXTRA
+            # ------------------------------------------------------
+    
+            "optimization_actions": [],
+    
+            "geometry_history": [],
+    
+            "convergence_history": [],
+    
+            "warning_details": [],
+    
             "phase_change": (
                 self.service_type
-                in ["condenser", "evaporator"]
+                in ["condenser", "reboiler"]
             ),
-        
+    
             "orientation": self.specs.get(
                 "orientation",
                 "horizontal",
             ),
         }
+    
         return self._finalize_results(payload)
     def design(self) -> Dict[str, Any]:
         """
