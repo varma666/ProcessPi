@@ -2273,28 +2273,37 @@ class ShellAndTubeHX(HeatExchanger):
     
         provided_area = self.specs.get("area")
     
-        if provided_area is not None:
-    
-            if hasattr(provided_area, "to"):
-    
-                area = self._safe_float(
-                    provided_area.to("m2"),
-                    "area",
-                )
-    
-            else:
-    
-                area = self._safe_float(
-                    provided_area,
-                    "area",
-                )
-    
-            area_source = "provided"
-    
-        else:
-    
-            area = q_actual / max(u_dirty * cltd, 1e-12)
-    
+        # ==========================================================
+        # ACTUAL GEOMETRIC AREA
+        # ==========================================================
+        
+        actual_area = (
+            tube_count
+            * math.pi
+            * tube_od
+            * tube_length
+        )
+        
+        # ==========================================================
+        # REQUIRED THERMAL AREA
+        # ==========================================================
+        
+        required_area = (
+            q_actual
+            / max(u_dirty * cltd, 1e-12)
+        )
+        
+        # ==========================================================
+        # OVERSURFACE
+        # ==========================================================
+        
+        oversurface_pct = (
+            (
+                actual_area - required_area
+            )
+            / max(required_area, 1e-12)
+        ) * 100.0
+            
             area_source = "calculated"
     
         # ==========================================================
