@@ -3381,6 +3381,18 @@ class ShellAndTubeHX(HeatExchanger):
             "h_shell": h_s,
     
             "re_shell": dimless.get("re_shell"),
+
+            # ======================================================
+            # FEASIBILITY FLAGS
+            # ======================================================
+            
+            "engineering_assessment": assessment,
+            
+            "thermal_feasible": thermal_feasible,
+            
+            "hydraulic_feasible": hydraulic_feasible,
+            
+            "pressure_drop_feasible": pressure_drop_ok,
     
             "status": status,
     
