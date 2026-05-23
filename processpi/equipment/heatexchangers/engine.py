@@ -28,91 +28,104 @@ class HeatExchangerResults:
         q = self.data.get("Q")
         area = self.data.get("Area")
         ucalc = self.data.get("U_calculated")
+    
         tv = self.data.get("tube_velocity")
         sv = self.data.get("shell_velocity")
+    
         tdp = self.data.get("tube_dp")
         sdp = self.data.get("shell_dp")
+    
         tl = self.data.get("tube_length")
     
-        lines = [
+        status = self.data.get("status", "UNKNOWN")
     
-            "Heat Exchanger Summary",
-            "------------------------------",
+        warnings = self.data.get("warnings", [])
     
-            f"Type                  : {self.data.get('hx_type')}",
+        insights = self.data.get("engineering_insights", [])
     
-            f"Method                : {self.data.get('method')}",
+        assessment = self.data.get("engineering_assessment")
     
-            f"Heat Duty             : "
-            f"{q.to('kW') if hasattr(q, 'to') else HeatFlow(float(q or 0.0), 'kW')}",
+        recommendations = self.data.get("recommendations", [])
     
-            f"Area                  : "
-            f"{area if hasattr(area, 'to') else Area(float(area or 0.0), 'm2')}",
-    
-            f"U Calculated          : "
-            f"{ucalc if hasattr(ucalc, 'to') else HeatTransferCoefficient(float(ucalc or 0.0), 'W/m2K')}",
-    
-            f"Tube Velocity         : "
-            f"{tv if hasattr(tv, 'to') else Velocity(float(tv or 0.0), 'm/s')}",
-    
-            f"Shell Velocity        : "
-            f"{sv if hasattr(sv, 'to') else Velocity(float(sv or 0.0), 'm/s')}",
-    
-            f"Tube Pressure Drop    : "
-            f"{(tdp.to('psi') if hasattr(tdp, 'to') else Pressure(float(tdp or 0.0), 'Pa').to('psi'))}",
-    
-            f"Shell Pressure Drop   : "
-            f"{(sdp.to('psi') if hasattr(sdp, 'to') else Pressure(float(sdp or 0.0), 'Pa').to('psi'))}",
-    
-            f"Tube Count            : "
-            f"{self.data.get('tube_count')}",
-    
-            f"Tube Length           : "
-            f"{tl if hasattr(tl, 'to') else Length(float(tl or 0.0), 'm')}",
-    
-            f"Status                : "
-            f"{self.data.get('status', 'UNKNOWN')}",
-        ]
-    
-        # ======================================================
-        # ENGINEERING INSIGHTS
-        # ======================================================
-    
-        insights = self.data.get(
-            "engineering_insights",
-            [],
+        output = (
+            f"Heat Exchanger Summary\n"
+            f"------------------------------\n"
+            f"Type                  : {self.data.get('hx_type')}\n"
+            f"Method                : {self.data.get('method')}\n"
+            f"Heat Duty             : {q.to('kW') if hasattr(q, 'to') else q}\n"
+            f"Area                  : {area if hasattr(area, 'to') else area}\n"
+            f"U Calculated          : {ucalc if hasattr(ucalc, 'to') else ucalc}\n"
+            f"Tube Velocity         : {tv if hasattr(tv, 'to') else tv}\n"
+            f"Shell Velocity        : {sv if hasattr(sv, 'to') else sv}\n"
+            f"Tube Pressure Drop    : {(tdp.to('psi') if hasattr(tdp, 'to') else tdp)}\n"
+            f"Shell Pressure Drop   : {(sdp.to('psi') if hasattr(sdp, 'to') else sdp)}\n"
+            f"Tube Count            : {self.data.get('tube_count')}\n"
+            f"Tube Length           : {tl if hasattr(tl, 'to') else tl}\n"
+            f"Status                : {status}\n"
         )
+    
+        # ==========================================================
+        # ENGINEERING ASSESSMENT
+        # ==========================================================
+    
+        if assessment:
+    
+            output += (
+                "\n"
+                "Engineering Assessment\n"
+                "------------------------------\n"
+                f"{assessment}\n"
+            )
+    
+        # ==========================================================
+        # ENGINEERING INSIGHTS
+        # ==========================================================
     
         if insights:
     
-            lines.append("")
-            lines.append("Engineering Insights")
-            lines.append("------------------------------")
+            output += (
+                "\n"
+                "Engineering Insights\n"
+                "------------------------------\n"
+            )
     
             for item in insights:
     
-                lines.append(f"• {item}")
+                output += f"• {item}\n"
     
-        # ======================================================
+        # ==========================================================
         # WARNINGS
-        # ======================================================
-    
-        warnings = self.data.get(
-            "warnings",
-            [],
-        )
+        # ==========================================================
     
         if warnings:
     
-            lines.append("")
-            lines.append("Warnings")
-            lines.append("------------------------------")
+            output += (
+                "\n"
+                "Warnings\n"
+                "------------------------------\n"
+            )
     
-            for warning in warnings:
+            for w in warnings:
     
-                lines.append(f"• {warning}")
+                output += f"• {w}\n"
     
-        return "\n".join(lines)
+        # ==========================================================
+        # RECOMMENDATIONS
+        # ==========================================================
+    
+        if recommendations:
+    
+            output += (
+                "\n"
+                "Recommendations\n"
+                "------------------------------\n"
+            )
+    
+            for r in recommendations:
+    
+                output += f"• {r}\n"
+    
+        return output
     def detailed_summary(self) -> Dict[str, Any]:
         return self.data
 
