@@ -3064,6 +3064,15 @@ class ShellAndTubeHX(HeatExchanger):
             ),
     
             "U_calculated": u_dirty,
+            "q_watts_original": q_actual,
+
+            "q_watts_effective": q_actual,
+
+            "area": actual_area,
+
+            "u_dirty": u_dirty,
+
+            "u_clean": u_clean,
     
             "U_clean": u_clean,
     
