@@ -3015,6 +3015,26 @@ class ShellAndTubeHX(HeatExchanger):
             "LMTD": lmtd,
 
             "lmtd": lmtd,
+
+            "geometry": {
+
+                                "tube_od": tube_od,
+                            
+                                "tube_id": tube_id,
+                            
+                                "tube_length": tube_length,
+                            
+                                "tube_count": tube_count,
+                            
+                                "tube_pitch": tube_pitch,
+                            
+                                "shell_diameter": shell_diameter,
+                            
+                                "baffle_spacing": baffle_spacing,
+                            
+                                "area": actual_area,
+                            
+                            },
     
             "tube_count": tube_count,
     
