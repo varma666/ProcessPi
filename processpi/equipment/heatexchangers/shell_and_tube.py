@@ -2328,10 +2328,6 @@ class ShellAndTubeHX(HeatExchanger):
     
         tc_in = cold["t_k"]
     
-        # ----------------------------------------------------------
-        # CONDENSER / REBOILER STABILIZATION
-        # ----------------------------------------------------------
-    
         if self.service_type in [
     
             "condenser",
@@ -2466,7 +2462,7 @@ class ShellAndTubeHX(HeatExchanger):
         )
     
         # ==========================================================
-        # REQUIRED THERMAL AREA
+        # REQUIRED AREA
         # ==========================================================
     
         required_area = (
@@ -2612,7 +2608,7 @@ class ShellAndTubeHX(HeatExchanger):
         ) * 100.0
     
         # ==========================================================
-        # GEOMETRY OBJECT
+        # GEOMETRY
         # ==========================================================
     
         geometry = {
@@ -2632,20 +2628,6 @@ class ShellAndTubeHX(HeatExchanger):
             "baffle_spacing": baffle_spacing,
     
         }
-    
-        # ==========================================================
-        # GEOMETRY VALIDATION
-        # ==========================================================
-    
-        geometry_valid = True
-    
-        if tube_pitch < 1.25 * tube_od:
-    
-            geometry_valid = False
-    
-            self._warnings.append(
-                "[MECHANICAL_WARNING] Tube pitch below TEMA minimum"
-            )
     
         # ==========================================================
         # FLOW HYDRAULICS
@@ -2851,7 +2833,7 @@ class ShellAndTubeHX(HeatExchanger):
         )
     
         # ==========================================================
-        # CONSTRAINTS
+        # LIMITS
         # ==========================================================
     
         tube_velocity_ok = (
@@ -2943,24 +2925,6 @@ class ShellAndTubeHX(HeatExchanger):
             )
     
         # ==========================================================
-        # SCORE
-        # ==========================================================
-    
-        score = 100
-    
-        if not geometry_valid:
-            score -= 20
-    
-        if not tube_velocity_ok:
-            score -= 10
-    
-        if not shell_velocity_ok:
-            score -= 10
-    
-        if not pressure_drop_ok:
-            score -= 20
-    
-        # ==========================================================
         # ENGINEERING ASSESSMENT
         # ==========================================================
     
@@ -2980,64 +2944,49 @@ class ShellAndTubeHX(HeatExchanger):
     
             assessment = "VIOLATION"
     
-        elif score >= 90:
-    
-            assessment = "EXCELLENT"
-    
-        elif score >= 75:
-    
-            assessment = "ACCEPTABLE"
-    
-        elif score >= 60:
-    
-            assessment = "MARGINAL"
-    
         else:
     
-            assessment = "NOT_RECOMMENDED"
+            assessment = "OK"
     
         # ==========================================================
-        # STATUS
+        # FINAL STATUS
         # ==========================================================
     
-        if not thermal_feasible:
-    
-            status = "THERMAL_FAILURE"
-    
-        elif not pressure_drop_ok:
-    
-            status = "PRESSURE_DROP_FAILURE"
-    
-        elif assessment == "OVERSIZED":
-    
-            status = "OVERSIZED"
-    
-        elif not hydraulic_feasible:
-    
-            status = "HYDRAULIC_LIMITED"
-    
-        elif assessment in [
-    
-            "EXCELLENT",
-            "ACCEPTABLE",
-    
-        ]:
-    
-            status = "OK"
-    
-        elif assessment == "MARGINAL":
-    
-            status = "MARGINAL"
-    
-        else:
-    
-            status = assessment
+        status = assessment
     
         # ==========================================================
         # PAYLOAD
         # ==========================================================
     
         payload = {
+    
+            # ------------------------------------------------------
+            # LEGACY KEYS
+            # ------------------------------------------------------
+    
+            "q_watts_original": q_actual,
+    
+            "q_watts_effective": q_actual,
+    
+            "area": actual_area,
+    
+            "u_dirty": u_dirty,
+    
+            "u_clean": u_clean,
+    
+            "u_assumed": u_dirty,
+    
+            "u_user": (
+                u_dirty
+                if u_source == "user"
+                else None
+            ),
+    
+            "u_calculated": u_dirty,
+    
+            # ------------------------------------------------------
+            # MAIN RESULTS
+            # ------------------------------------------------------
     
             "method": self.method,
     
@@ -3054,25 +3003,12 @@ class ShellAndTubeHX(HeatExchanger):
             "U_assumed": u_dirty,
     
             "U_user": (
-    
                 u_dirty
-    
                 if u_source == "user"
-    
                 else None
-    
             ),
     
             "U_calculated": u_dirty,
-            "q_watts_original": q_actual,
-
-            "q_watts_effective": q_actual,
-
-            "area": actual_area,
-
-            "u_dirty": u_dirty,
-
-            "u_clean": u_clean,
     
             "U_clean": u_clean,
     
