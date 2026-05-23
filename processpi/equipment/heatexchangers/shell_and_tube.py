@@ -3013,6 +3013,8 @@ class ShellAndTubeHX(HeatExchanger):
             "U_clean": u_clean,
     
             "LMTD": lmtd,
+
+            "lmtd": lmtd,
     
             "tube_count": tube_count,
     
