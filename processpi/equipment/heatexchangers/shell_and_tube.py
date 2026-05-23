@@ -3170,7 +3170,7 @@ class ShellAndTubeHX(HeatExchanger):
     
         }
     
-        return HeatExchangerResults(payload)
+        return self._finalize_results(payload)
     def design(self) -> Dict[str, Any]:
         """
         Main design entry point for Shell & Tube HX.
