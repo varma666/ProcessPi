@@ -2465,7 +2465,9 @@ class ShellAndTubeHX(HeatExchanger):
             )
         )
     
-        # ----------------------------------------------------------
+        # ==========================================================
+        # REQUIRED THERMAL AREA
+        # ==========================================================
     
         required_area = (
     
@@ -2481,7 +2483,9 @@ class ShellAndTubeHX(HeatExchanger):
     
         )
     
-        # ----------------------------------------------------------
+        # ==========================================================
+        # TUBE COUNT
+        # ==========================================================
     
         if self.specs.get("tube_count") is not None:
     
@@ -2515,7 +2519,9 @@ class ShellAndTubeHX(HeatExchanger):
                 "Tube count estimated from required area"
             )
     
-        # ----------------------------------------------------------
+        # ==========================================================
+        # SHELL DIAMETER
+        # ==========================================================
     
         if self.specs.get("shell_diameter") is not None:
     
@@ -2554,7 +2560,9 @@ class ShellAndTubeHX(HeatExchanger):
                 "Shell diameter estimated from bundle geometry"
             )
     
-        # ----------------------------------------------------------
+        # ==========================================================
+        # BAFFLE SPACING
+        # ==========================================================
     
         baffle_spacing = self._safe_float(
     
@@ -2571,7 +2579,7 @@ class ShellAndTubeHX(HeatExchanger):
         )
     
         # ==========================================================
-        # ACTUAL GEOMETRIC AREA
+        # ACTUAL AREA
         # ==========================================================
     
         actual_area = (
@@ -2665,9 +2673,9 @@ class ShellAndTubeHX(HeatExchanger):
     
         )
     
-        # ----------------------------------------------------------
+        # ==========================================================
         # TUBE SIDE
-        # ----------------------------------------------------------
+        # ==========================================================
     
         tube_flow_area = (
     
@@ -2693,9 +2701,9 @@ class ShellAndTubeHX(HeatExchanger):
     
         )
     
-        # ----------------------------------------------------------
+        # ==========================================================
         # SHELL SIDE
-        # ----------------------------------------------------------
+        # ==========================================================
     
         shell_flow_area = (
     
@@ -2920,14 +2928,22 @@ class ShellAndTubeHX(HeatExchanger):
                 "[HYDRAULIC_WARNING] Shell velocity outside recommended range"
             )
     
-        if not pressure_drop_ok:
+        if (
+    
+            tube_dp > tube_dp_limit
+    
+            or
+    
+            shell_dp > shell_dp_limit
+    
+        ):
     
             self._warnings.append(
                 "[PRESSURE_DROP_WARNING] Pressure drop exceeds allowable limits"
             )
     
         # ==========================================================
-        # FEASIBILITY SCORE
+        # SCORE
         # ==========================================================
     
         score = 100
@@ -2981,6 +2997,43 @@ class ShellAndTubeHX(HeatExchanger):
             assessment = "NOT_RECOMMENDED"
     
         # ==========================================================
+        # STATUS
+        # ==========================================================
+    
+        if not thermal_feasible:
+    
+            status = "THERMAL_FAILURE"
+    
+        elif not pressure_drop_ok:
+    
+            status = "PRESSURE_DROP_FAILURE"
+    
+        elif assessment == "OVERSIZED":
+    
+            status = "OVERSIZED"
+    
+        elif not hydraulic_feasible:
+    
+            status = "HYDRAULIC_LIMITED"
+    
+        elif assessment in [
+    
+            "EXCELLENT",
+            "ACCEPTABLE",
+    
+        ]:
+    
+            status = "OK"
+    
+        elif assessment == "MARGINAL":
+    
+            status = "MARGINAL"
+    
+        else:
+    
+            status = assessment
+    
+        # ==========================================================
         # PAYLOAD
         # ==========================================================
     
@@ -2990,23 +3043,17 @@ class ShellAndTubeHX(HeatExchanger):
     
             "service": self.service_type,
     
-            "q_watts_original": q_actual,
+            "Q": q_actual / 1000.0,
     
-            "q_watts_effective": q_actual,
+            "Area": actual_area,
     
-            "lmtd": lmtd,
+            "required_area": required_area,
     
-            "cltd": cltd,
+            "oversurface_pct": oversurface_pct,
     
-            "ft": ft,
+            "U_assumed": u_dirty,
     
-            "u_assumed": u_dirty,
-    
-            "u_calculated": u_dirty,
-    
-            "u_clean": u_clean,
-    
-            "u_user": (
+            "U_user": (
     
                 u_dirty
     
@@ -3016,93 +3063,114 @@ class ShellAndTubeHX(HeatExchanger):
     
             ),
     
-            "u_source": u_source,
+            "U_calculated": u_dirty,
     
-            "area": actual_area,
+            "U_clean": u_clean,
     
-            "required_area": required_area,
+            "LMTD": lmtd,
     
-            "oversurface_pct": oversurface_pct,
+            "tube_count": tube_count,
     
-            "geometry": geometry,
+            "tube_od": tube_od,
+    
+            "tube_id": tube_id,
+    
+            "tube_length": tube_length,
+    
+            "baffle_spacing": baffle_spacing,
     
             "shell_diameter": shell_diameter,
     
-            "bundle_diameter": self._calculate_bundle_diameter(
-                tube_count,
-                tube_od,
-            ),
+            "tube_velocity": v_tube,
     
-            "tube_passes": tube_passes,
-    
-            "shell_passes": shell_passes,
-    
-            "th_out": th_out,
-    
-            "tc_out": tc_out,
-    
-            "h_t": h_t,
-    
-            "h_s": h_s,
-    
-            "dimless": dimless,
-    
-            "v_tube": v_tube,
-    
-            "v_shell": v_shell,
+            "shell_velocity": v_shell,
     
             "tube_dp": tube_dp,
     
             "shell_dp": shell_dp,
     
-            "thermal_feasible": thermal_feasible,
+            "iterations": 1,
     
-            "hydraulic_feasible": hydraulic_feasible,
+            "h_tube": h_t,
     
-            "pressure_drop_feasible": pressure_drop_ok,
+            "h_shell": h_s,
     
-            "geometry_valid": geometry_valid,
+            "re_shell": dimless.get("re_shell"),
     
-            "engineering_assessment": assessment,
-    
-            "feasibility_score": score,
+            "status": status,
     
             "warnings": self._warnings,
     
-            "recommendations": recommendations,
+            "tube_side_fluid": assignment["tube_side_fluid"],
+    
+            "shell_side_fluid": assignment["shell_side_fluid"],
+    
+            "assignment_reason": assignment["assignment_reason"],
     
             "assignment": assignment,
     
-            "iterations": 1,
-    
-            "optimization_actions": [],
+            "calculation_trace": [],
     
             "geometry_history": [],
     
             "convergence_history": [],
     
-            "warning_details": [],
+            "optimization_actions": [],
+    
+            "warning_details": [
+    
+                {
+    
+                    "category": (
+                        w.split("]")[0]
+                        .replace("[", "")
+                    ),
+    
+                    "message": (
+                        w.split("]")[1]
+                        .strip()
+                    )
+    
+                }
+    
+                for w in self._warnings
+    
+            ],
+    
+            "feasibility_summary": {
+    
+                "thermal_ok": thermal_feasible,
+    
+                "hydraulic_ok": hydraulic_feasible,
+    
+                "pressure_drop_ok": pressure_drop_ok,
+    
+                "status": status,
+    
+            },
+    
+            "service": f"total_{self.service_type}",
     
             "phase_change": (
-    
                 self.service_type
-    
                 in [
-    
                     "condenser",
                     "reboiler",
-    
                 ]
-    
             ),
     
             "orientation": self.specs.get(
                 "orientation",
                 "horizontal",
             ),
+    
+            "condensing_side": "shell",
+    
+            "convergence_status": status,
+    
         }
     
-        return self._finalize_results(payload)
+        return HeatExchangerResults(payload)
     def design(self) -> Dict[str, Any]:
         """
         Main design entry point for Shell & Tube HX.
