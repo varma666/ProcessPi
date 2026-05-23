@@ -1468,212 +1468,522 @@ class ShellAndTubeHX(HeatExchanger):
         return warnings
 
     def _finalize_results(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        warnings = list(dict.fromkeys(payload["warnings"]))
-        critical: List[str] = []
-        advisory: List[str] = []
-        for w in warnings:
-            wl = w.lower()
-            if "pressure drop" in wl or "significantly undersized" in wl or "erosion risk" in wl:
-                critical.append(w)
-            else:
-                advisory.append(w)
-
-        if payload.get("status_override") == "PARTIAL":
-            status = "PARTIAL"
-        elif "Area significantly undersized — redesign required" in warnings:
-            status = "FAILED"
-        elif critical:
-            status = "VIOLATION"
-        elif advisory:
-            status = "WARNING"
-        else:
+    
+        """
+        Finalize and normalize heat exchanger results.
+        """
+    
+        # ==========================================================
+        # WARNINGS
+        # ==========================================================
+    
+        warnings = list(
+            dict.fromkeys(
+                payload.get("warnings", [])
+            )
+        )
+    
+        # ==========================================================
+        # ENGINEERING FLAGS
+        # ==========================================================
+    
+        assessment = payload.get(
+            "engineering_assessment",
+            "UNKNOWN",
+        )
+    
+        thermal_ok = payload.get(
+            "thermal_feasible",
+            True,
+        )
+    
+        hydraulic_ok = payload.get(
+            "hydraulic_feasible",
+            True,
+        )
+    
+        pressure_ok = payload.get(
+            "pressure_drop_feasible",
+            True,
+        )
+    
+        # ==========================================================
+        # FINAL STATUS
+        # ==========================================================
+    
+        if not thermal_ok:
+    
+            status = "THERMAL_FAILURE"
+    
+        elif not pressure_ok:
+    
+            status = "PRESSURE_DROP_FAILURE"
+    
+        elif assessment == "OVERSIZED":
+    
+            status = "OVERSIZED"
+    
+        elif not hydraulic_ok:
+    
+            status = "HYDRAULIC_LIMITED"
+    
+        elif assessment in [
+    
+            "OK",
+            "EXCELLENT",
+            "ACCEPTABLE",
+    
+        ]:
+    
             status = "OK"
-
-
+    
+        elif assessment == "MARGINAL":
+    
+            status = "MARGINAL"
+    
+        else:
+    
+            status = assessment
+    
         # ==========================================================
         # ENGINEERING INSIGHTS
         # ==========================================================
-        
+    
         engineering_insights = []
-        
+    
         # ----------------------------------------------------------
-        # THERMAL PERFORMANCE
+        # U VALUE
         # ----------------------------------------------------------
-        
-        u_calc = payload.get("u_calculated", 0.0)
-        
+    
+        u_calc = payload.get(
+            "u_calculated",
+            0.0,
+        )
+    
         if u_calc < 100:
-        
+    
             engineering_insights.append(
                 "Very low overall heat-transfer coefficient detected. "
                 "Likely caused by poor turbulence or oversized exchanger."
             )
-        
+    
         elif u_calc < 300:
-        
+    
             engineering_insights.append(
                 "Moderate heat-transfer coefficient. "
                 "Thermal performance may be limited."
             )
-        
+    
         else:
-        
+    
             engineering_insights.append(
                 "Heat-transfer coefficient within acceptable range."
             )
-        
+    
         # ----------------------------------------------------------
         # TUBE VELOCITY
         # ----------------------------------------------------------
-        
-        v_tube = payload.get("v_tube", 0.0)
-        
+    
+        v_tube = payload.get(
+            "v_tube",
+            0.0,
+        )
+    
         if v_tube < 0.3:
-        
+    
             engineering_insights.append(
                 "Tube-side velocity extremely low. "
                 "High fouling risk and poor turbulence expected."
             )
-        
+    
         elif v_tube < 1.0:
-        
+    
             engineering_insights.append(
                 "Tube-side velocity acceptable but below ideal turbulent range."
             )
-        
+    
         elif v_tube > 3.0:
-        
+    
             engineering_insights.append(
                 "Tube-side velocity very high. "
                 "Potential erosion/vibration risk."
             )
-        
+    
         else:
-        
+    
             engineering_insights.append(
                 "Tube-side velocity within recommended range."
             )
-        
+    
         # ----------------------------------------------------------
         # SHELL VELOCITY
         # ----------------------------------------------------------
-        
-        v_shell = payload.get("v_shell", 0.0)
-        
+    
+        v_shell = payload.get(
+            "v_shell",
+            0.0,
+        )
+    
         if v_shell < 0.2:
-        
+    
             engineering_insights.append(
                 "Shell-side velocity extremely low. "
                 "Possible vapor blanketing and poor shell-side heat transfer."
             )
-        
+    
         elif v_shell < 0.5:
-        
+    
             engineering_insights.append(
                 "Shell-side velocity slightly low."
             )
-        
+    
         elif v_shell > 2.0:
-        
+    
             engineering_insights.append(
                 "Shell-side velocity very high. "
                 "Potential shell-side erosion risk."
             )
-        
+    
         else:
-        
+    
             engineering_insights.append(
                 "Shell-side velocity acceptable."
             )
-        
+    
         # ----------------------------------------------------------
         # PRESSURE DROP
         # ----------------------------------------------------------
-        
-        tube_dp = payload.get("tube_dp", 0.0)
-        shell_dp = payload.get("shell_dp", 0.0)
-        
-        tube_dp_limit = self._safe_float(
-            self.specs.get("tube_dp", 1e9),
-            "tube_dp_limit",
+    
+        tube_dp = payload.get(
+            "tube_dp",
+            0.0,
         )
-        
-        shell_dp_limit = self._safe_float(
-            self.specs.get("shell_dp", 1e9),
-            "shell_dp_limit",
+    
+        shell_dp = payload.get(
+            "shell_dp",
+            0.0,
         )
-        
+    
+        tube_dp_limit = self.specs.get(
+            "tube_dp",
+            Pressure(70000.0, "Pa"),
+        )
+    
+        shell_dp_limit = self.specs.get(
+            "shell_dp",
+            Pressure(14000.0, "Pa"),
+        )
+    
+        if hasattr(tube_dp_limit, "to"):
+    
+            tube_dp_limit = (
+                tube_dp_limit
+                .to("Pa")
+                .value
+            )
+    
+        if hasattr(shell_dp_limit, "to"):
+    
+            shell_dp_limit = (
+                shell_dp_limit
+                .to("Pa")
+                .value
+            )
+    
         if tube_dp > tube_dp_limit:
-        
+    
             engineering_insights.append(
                 "Tube-side pressure drop exceeds allowable limit."
             )
-        
+    
         if shell_dp > shell_dp_limit:
-        
+    
             engineering_insights.append(
                 "Shell-side pressure drop exceeds allowable limit."
             )
-        
+    
         # ----------------------------------------------------------
-        # OVERALL ASSESSMENT
+        # OVERSIZED
         # ----------------------------------------------------------
-        
+    
         if (
+    
             v_tube < 0.3
-            and v_shell < 0.2
+    
+            and
+    
+            v_shell < 0.2
+    
         ):
-        
+    
             engineering_insights.append(
                 "Exchanger appears significantly oversized "
                 "for the current operating conditions."
             )
-        
-        # ----------------------------------------------------------
-        # STORE
-        # ----------------------------------------------------------
-        
-        payload["engineering_insights"] = engineering_insights
-
-        return {
-            "hx_type": "shell_and_tube",
-            "method": payload.get("method", self.method),
-            "Q": HeatFlow(payload["q_watts_original"] / 1000.0, "kW"),
-            "Area": Area(payload["area"], "m2"),
-            "U_assumed": HeatTransferCoefficient(payload["u_assumed"], "W/m2K"),
-            "U_user": (HeatTransferCoefficient(payload.get("u_user"), "W/m2K") if payload.get("u_user") is not None else None),
-            "U_calculated": HeatTransferCoefficient(payload["u_calculated"], "W/m2K"),
-            "LMTD": payload["lmtd"],
-            "tube_count": payload["geometry"]["tube_count"],
-            "tube_od": Length(payload["geometry"]["tube_od"], "m"),
-            "tube_id": Length(payload["geometry"]["tube_id"], "m"),
-            "tube_length": Length(payload["geometry"]["tube_length"], "m"),
-            "baffle_spacing": Length(max(0.4 * payload["shell_diameter"], 1e-6), "m"),
-            "shell_diameter": Length(payload["shell_diameter"], "m"),
-            "tube_velocity": Velocity(payload["v_tube"], "m/s"),
-            "shell_velocity": Velocity(payload["v_shell"], "m/s"),
-            "tube_dp": Pressure(payload["tube_dp"], "Pa"),
-            "shell_dp": Pressure(payload["shell_dp"], "Pa"),
-            "iterations": payload["iterations"],
-            "h_tube": payload.get("h_t"),
-            "h_shell": payload.get("h_s"),
-            "re_shell": payload.get("re_shell"),
+    
+        # ==========================================================
+        # WARNING DETAILS
+        # ==========================================================
+    
+        warning_details = []
+    
+        for w in warnings:
+    
+            if w.startswith("[") and "]" in w:
+    
+                category = (
+                    w.split("]", 1)[0]
+                    .replace("[", "")
+                )
+    
+                message = (
+                    w.split("]", 1)[1]
+                    .strip()
+                )
+    
+            else:
+    
+                category = "GENERAL_WARNING"
+    
+                message = w
+    
+            warning_details.append({
+    
+                "category": category,
+    
+                "message": message,
+    
+            })
+    
+        # ==========================================================
+        # FEASIBILITY SUMMARY
+        # ==========================================================
+    
+        feasibility_summary = {
+    
+            "thermal_ok": thermal_ok,
+    
+            "hydraulic_ok": hydraulic_ok,
+    
+            "pressure_drop_ok": pressure_ok,
+    
             "status": status,
+    
+        }
+    
+        # ==========================================================
+        # RETURN
+        # ==========================================================
+    
+        return {
+    
+            "hx_type": "shell_and_tube",
+    
+            "method": payload.get(
+                "method",
+                self.method,
+            ),
+    
+            "Q": HeatFlow(
+                payload["q_watts_original"] / 1000.0,
+                "kW",
+            ),
+    
+            "Area": Area(
+                payload["area"],
+                "m2",
+            ),
+    
+            "U_assumed": HeatTransferCoefficient(
+                payload["u_assumed"],
+                "W/m2K",
+            ),
+    
+            "U_user": (
+    
+                HeatTransferCoefficient(
+                    payload.get("u_user"),
+                    "W/m2K",
+                )
+    
+                if payload.get("u_user") is not None
+    
+                else None
+    
+            ),
+    
+            "U_calculated": HeatTransferCoefficient(
+                payload["u_calculated"],
+                "W/m2K",
+            ),
+    
+            "LMTD": payload["lmtd"],
+    
+            # ======================================================
+            # GEOMETRY
+            # ======================================================
+    
+            "tube_count": payload["geometry"]["tube_count"],
+    
+            "tube_od": Length(
+                payload["geometry"]["tube_od"],
+                "m",
+            ),
+    
+            "tube_id": Length(
+                payload["geometry"]["tube_id"],
+                "m",
+            ),
+    
+            "tube_length": Length(
+                payload["geometry"]["tube_length"],
+                "m",
+            ),
+    
+            "baffle_spacing": Length(
+    
+                payload["geometry"].get(
+                    "baffle_spacing",
+                    max(
+                        0.4 * payload["shell_diameter"],
+                        1e-6,
+                    ),
+                ),
+    
+                "m",
+            ),
+    
+            "shell_diameter": Length(
+                payload["shell_diameter"],
+                "m",
+            ),
+    
+            # ======================================================
+            # HYDRAULICS
+            # ======================================================
+    
+            "tube_velocity": Velocity(
+                payload["v_tube"],
+                "m/s",
+            ),
+    
+            "shell_velocity": Velocity(
+                payload["v_shell"],
+                "m/s",
+            ),
+    
+            "tube_dp": Pressure(
+                payload["tube_dp"],
+                "Pa",
+            ),
+    
+            "shell_dp": Pressure(
+                payload["shell_dp"],
+                "Pa",
+            ),
+    
+            # ======================================================
+            # THERMAL
+            # ======================================================
+    
+            "iterations": payload.get(
+                "iterations",
+                1,
+            ),
+    
+            "h_tube": payload.get("h_t"),
+    
+            "h_shell": payload.get("h_s"),
+    
+            "re_shell": payload.get("re_shell"),
+    
+            # ======================================================
+            # STATUS
+            # ======================================================
+    
+            "status": status,
+    
             "warnings": warnings,
-            "tube_side_fluid": payload.get("assignment", {}).get("tube_side_fluid"),
-            "shell_side_fluid": payload.get("assignment", {}).get("shell_side_fluid"),
-            "assignment_reason": payload.get("assignment", {}).get("assignment_reason", []),
-            "assignment": payload.get("assignment", {}),
-            "calculation_trace": list(self._calculation_trace),
-            "geometry_history": payload.get("geometry_history", []),
-            "convergence_history": payload.get("convergence_history", []),
-            "optimization_actions": payload.get("optimization_actions", []),
-            "warning_details": [{"category": (w.split("]",1)[0][1:] if w.startswith("[") and "]" in w else "GENERAL_WARNING"), "message": (w.split("]",1)[1].strip() if w.startswith("[") and "]" in w else w)} for w in warnings],
-            "feasibility_summary": {
-                "hydraulic_ok": payload.get("v_tube", 0.0) > 0 and payload.get("v_shell", 0.0) > 0,
-                "pressure_drop_ok": payload.get("tube_dp", 0.0) <= self._dp_limit({"phase":"liquid","viscosity":1e-3,"p_bar":1.0}) and payload.get("shell_dp", 0.0) <= self._dp_limit({"phase":"liquid","viscosity":1e-3,"p_bar":1.0}),
-                "status": status,
-            },
+    
+            "engineering_insights": engineering_insights,
+    
+            # ======================================================
+            # ASSIGNMENT
+            # ======================================================
+    
+            "tube_side_fluid": (
+                payload.get("assignment", {})
+                .get("tube_side_fluid")
+            ),
+    
+            "shell_side_fluid": (
+                payload.get("assignment", {})
+                .get("shell_side_fluid")
+            ),
+    
+            "assignment_reason": (
+                payload.get("assignment", {})
+                .get("assignment_reason", [])
+            ),
+    
+            "assignment": payload.get(
+                "assignment",
+                {},
+            ),
+    
+            # ======================================================
+            # DEBUG
+            # ======================================================
+    
+            "calculation_trace": list(
+                self._calculation_trace
+            ),
+    
+            "geometry_history": payload.get(
+                "geometry_history",
+                [],
+            ),
+    
+            "convergence_history": payload.get(
+                "convergence_history",
+                [],
+            ),
+    
+            "optimization_actions": payload.get(
+                "optimization_actions",
+                [],
+            ),
+    
+            "warning_details": warning_details,
+    
+            "feasibility_summary": feasibility_summary,
+    
+            # ======================================================
+            # SERVICE
+            # ======================================================
+    
+            "service": payload.get(
+                "service",
+                "unknown",
+            ),
+    
+            "phase_change": payload.get(
+                "phase_change",
+                False,
+            ),
+    
+            "orientation": payload.get(
+                "orientation",
+                "horizontal",
+            ),
+    
+            "condensing_side": payload.get(
+                "condensing_side",
+                "shell",
+            ),
+    
+            "convergence_status": status,
+    
         }
 
     def _design_kern(self) -> Dict[str, Any]:
