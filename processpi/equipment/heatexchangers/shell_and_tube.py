@@ -2124,30 +2124,34 @@ class ShellAndTubeHX(HeatExchanger):
         assignment = self._assign_fluids_to_sides(hot, cold)
     
         # ==========================================================
-        # IDENTIFY SERVICE TYPE
+        # SERVICE IDENTIFICATION
         # ==========================================================
     
-        if hot["phase"] == "vapor" and hot["t_k"] > cold["t_k"]:
+        if hot["phase"] == "vapor":
+    
             self.service_type = "condenser"
     
         elif cold["phase"] == "vapor":
+    
             self.service_type = "reboiler"
     
         elif hot["t_k"] > cold["t_k"]:
+    
             self.service_type = "cooler"
     
         else:
+    
             self.service_type = "heater"
     
         # ==========================================================
-        # DUTY CALCULATION
+        # DUTY
         # ==========================================================
     
         if self.service_type in ["condenser", "reboiler"]:
     
             latent_heat = self._safe_float(
                 self.specs.get("latent_heat", 2257000.0),
-                "latent_heat"
+                "latent_heat",
             )
     
             q_actual = hot["m_dot"] * latent_heat
@@ -2158,27 +2162,35 @@ class ShellAndTubeHX(HeatExchanger):
             Cc = cold["m_dot"] * cold["cp"] * 1000.0
     
             q_hot = Ch * abs(
-                hot.get("t_in_k", hot["t_k"]) -
-                hot.get("t_out_k", hot["t_k"] - 10.0)
+                hot.get("t_in_k", hot["t_k"])
+                - hot.get("t_out_k", hot["t_k"] - 10.0)
             )
     
             q_cold = Cc * abs(
-                cold.get("t_out_k", cold["t_k"] + 10.0) -
-                cold.get("t_in_k", cold["t_k"])
+                cold.get("t_out_k", cold["t_k"] + 10.0)
+                - cold.get("t_in_k", cold["t_k"])
             )
     
             q_actual = min(q_hot, q_cold)
     
         # ==========================================================
-        # OVERALL U VALUE
+        # USER U / ASSUMED U
         # ==========================================================
     
-        u_source = "assumed"
+        user_u = self.specs.get("U")
     
-        if self.specs.get("U") is not None:
+        if user_u is not None:
     
-            u_dirty = self._safe_float(self.specs["U"], "U")
+            if hasattr(user_u, "to"):
+                u_dirty = self._safe_float(
+                    user_u.to("W/m2K"),
+                    "U",
+                )
+            else:
+                u_dirty = self._safe_float(user_u, "U")
+    
             u_clean = u_dirty * 1.15
+    
             u_source = "user"
     
         else:
@@ -2203,70 +2215,114 @@ class ShellAndTubeHX(HeatExchanger):
             )
     
             u_dirty = 0.5 * (u_range[0] + u_range[1])
+    
             u_clean = u_dirty * 1.15
     
+            u_source = "assumed"
+    
         # ==========================================================
-        # TEMPERATURE DIFFERENCE
+        # TEMPERATURE PROFILE
         # ==========================================================
     
         th_in = hot["t_k"]
         tc_in = cold["t_k"]
     
-        th_out_guess = hot.get("t_out_k", th_in - 10.0)
-        tc_out_guess = cold.get("t_out_k", tc_in + 10.0)
+        # ----------------------------------------------------------
+        # CONDENSER / REBOILER STABILIZATION
+        # ----------------------------------------------------------
+    
+        if self.service_type in ["condenser", "reboiler"]:
+    
+            condensing_temp = hot["t_k"]
+    
+            th_out = condensing_temp - 2.0
+    
+            th_in = condensing_temp + 2.0
+    
+            Cc = cold["m_dot"] * cold["cp"] * 1000.0
+    
+            tc_out = tc_in + q_actual / max(Cc, 1e-12)
+    
+        else:
+    
+            Ch = hot["m_dot"] * hot["cp"] * 1000.0
+            Cc = cold["m_dot"] * cold["cp"] * 1000.0
+    
+            th_out = th_in - q_actual / max(Ch, 1e-12)
+    
+            tc_out = tc_in + q_actual / max(Cc, 1e-12)
+    
+        # ==========================================================
+        # LMTD
+        # ==========================================================
     
         lmtd = self._calculate_lmtd(
             hot,
             cold,
-            th_out_guess,
-            tc_out_guess,
+            th_out,
+            tc_out,
         )
     
-        ft = self.specs.get("ft", 1.0)
+        ft = float(self.specs.get("ft", 1.0))
     
-        cltd = max(lmtd * ft, 1e-9)
+        cltd = max(ft * lmtd, 1e-9)
     
         # ==========================================================
-        # AREA DETERMINATION
+        # AREA
         # ==========================================================
     
         provided_area = self.specs.get("area")
     
         if provided_area is not None:
     
-            area = self._safe_float(provided_area, "area")
+            if hasattr(provided_area, "to"):
+    
+                area = self._safe_float(
+                    provided_area.to("m2"),
+                    "area",
+                )
+    
+            else:
+    
+                area = self._safe_float(
+                    provided_area,
+                    "area",
+                )
+    
             area_source = "provided"
     
         else:
     
-            area = q_actual / max(u_dirty * cltd, 1e-9)
+            area = q_actual / max(u_dirty * cltd, 1e-12)
+    
             area_source = "calculated"
     
         # ==========================================================
-        # GEOMETRY SOLVER
+        # GEOMETRY
         # ==========================================================
     
         tube_od = self._safe_float(
             self.specs.get("tube_od", 0.01905),
-            "tube_od"
+            "tube_od",
         )
     
         tube_id = self._safe_float(
             self.specs.get("tube_id", 0.016),
-            "tube_id"
+            "tube_id",
         )
     
         tube_length = self._safe_float(
             self.specs.get("tube_length", 6.0),
-            "tube_length"
+            "tube_length",
         )
     
         tube_pitch = self._safe_float(
             self.specs.get("tube_pitch", 1.25 * tube_od),
-            "tube_pitch"
+            "tube_pitch",
         )
     
         tube_passes = int(self.specs.get("tube_passes", 2))
+    
         shell_passes = int(self.specs.get("shell_passes", 1))
     
         # ----------------------------------------------------------
@@ -2279,11 +2335,18 @@ class ShellAndTubeHX(HeatExchanger):
     
             tube_count = max(
                 1,
-                int(area / (math.pi * tube_od * tube_length))
+                int(
+                    area
+                    / (
+                        math.pi
+                        * tube_od
+                        * tube_length
+                    )
+                ),
             )
     
             recommendations.append(
-                "Tube count estimated from available area"
+                "Tube count estimated from required area"
             )
     
         # ----------------------------------------------------------
@@ -2292,24 +2355,35 @@ class ShellAndTubeHX(HeatExchanger):
     
             shell_diameter = self._safe_float(
                 self.specs["shell_diameter"],
-                "shell_diameter"
+                "shell_diameter",
             )
     
         else:
     
             shell_diameter = max(
                 0.1,
-                0.637 * (
+                0.637
+                * (
                     (
                         tube_count
                         * tube_pitch**2
                     ) / 0.785
-                )**0.5
+                )**0.5,
             )
     
             recommendations.append(
-                "Shell diameter estimated from tube bundle"
+                "Shell diameter estimated from bundle geometry"
             )
+    
+        # ----------------------------------------------------------
+    
+        baffle_spacing = self._safe_float(
+            self.specs.get(
+                "baffle_spacing",
+                0.4 * shell_diameter,
+            ),
+            "baffle_spacing",
+        )
     
         geometry = {
     
@@ -2318,6 +2392,8 @@ class ShellAndTubeHX(HeatExchanger):
             "tube_length": tube_length,
             "tube_count": tube_count,
             "tube_pitch": tube_pitch,
+            "shell_diameter": shell_diameter,
+            "baffle_spacing": baffle_spacing,
     
         }
     
@@ -2339,28 +2415,81 @@ class ShellAndTubeHX(HeatExchanger):
         # FLOW HYDRAULICS
         # ==========================================================
     
-        q_vol_hot = hot["m_dot"] / max(hot["density"], 1e-12)
+        q_vol_hot = (
+            hot["m_dot"]
+            / max(hot["density"], 1e-12)
+        )
     
-        q_vol_cold = cold["m_dot"] / max(cold["density"], 1e-12)
+        q_vol_cold = (
+            cold["m_dot"]
+            / max(cold["density"], 1e-12)
+        )
+    
+        # ----------------------------------------------------------
+        # TUBE SIDE
+        # ----------------------------------------------------------
     
         tube_flow_area = (
+    
             (tube_count / tube_passes)
-            * (math.pi * tube_id**2 / 4.0)
+    
+            * (
+    
+                math.pi
+                * tube_id**2
+                / 4.0
+    
+            )
         )
     
-        v_tube = q_vol_hot / max(tube_flow_area, 1e-12)
+        v_tube = (
+            q_vol_hot
+            / max(tube_flow_area, 1e-12)
+        )
     
-        shell_flow_area = max(
+        # ----------------------------------------------------------
+        # SHELL SIDE
+        # ----------------------------------------------------------
+    
+        shell_flow_area = (
+    
             shell_diameter
-            * (tube_pitch - tube_od),
-            1e-9
+    
+            * baffle_spacing
+    
+            * (
+    
+                (tube_pitch - tube_od)
+                / max(tube_pitch, 1e-12)
+    
+            )
+    
+            * 0.62
         )
     
-        v_shell = q_vol_cold / shell_flow_area
+        v_shell = (
+            q_vol_cold
+            / max(shell_flow_area, 1e-12)
+        )
     
         # ==========================================================
-        # DIMENSIONLESS + HTC
+        # DIMENSIONLESS
         # ==========================================================
+    
+        de_shell = (
+    
+            1.10
+    
+            * (
+    
+                tube_pitch**2
+                - 0.917 * tube_od**2
+    
+            )
+    
+            / max(tube_od, 1e-12)
+    
+        )
     
         dimless = self._calculate_dimensionless(
             geometry,
@@ -2370,6 +2499,12 @@ class ShellAndTubeHX(HeatExchanger):
             v_shell,
         )
     
+        dimless["de_shell"] = de_shell
+    
+        # ==========================================================
+        # HTC
+        # ==========================================================
+    
         h_t, h_s = self._calculate_htc(
             dimless,
             geometry,
@@ -2377,26 +2512,30 @@ class ShellAndTubeHX(HeatExchanger):
             cold,
         )
     
-        u_results = self._calculate_overall_U(
-            h_t=h_t,
-            h_s=h_s,
-            geometry=geometry,
-            u_range=(u_dirty, u_clean),
-        )
-    
-        u_dirty = u_results["U_dirty"]
-        u_clean = u_results["U_clean"]
-    
         # ==========================================================
-        # OUTLET TEMPERATURES
+        # OVERALL U
         # ==========================================================
     
-        Ch = hot["m_dot"] * hot["cp"] * 1000.0
-        Cc = cold["m_dot"] * cold["cp"] * 1000.0
+        # IMPORTANT:
+        # Do NOT overwrite user U in rate mode
     
-        th_out = th_in - q_actual / max(Ch, 1e-12)
+        if u_source != "user":
     
-        tc_out = tc_in + q_actual / max(Cc, 1e-12)
+            u_results = self._calculate_overall_U(
+    
+                h_t=h_t,
+    
+                h_s=h_s,
+    
+                geometry=geometry,
+    
+                u_range=(u_dirty, u_clean),
+    
+            )
+    
+            u_dirty = u_results["U_dirty"]
+    
+            u_clean = u_results["U_clean"]
     
         # ==========================================================
         # PRESSURE DROP
@@ -2434,23 +2573,32 @@ class ShellAndTubeHX(HeatExchanger):
         # CONSTRAINTS
         # ==========================================================
     
-        tube_velocity_ok = 0.5 <= v_tube <= 3.0
+        tube_velocity_ok = (
+            0.5 <= v_tube <= 3.0
+        )
     
-        shell_velocity_ok = 0.3 <= v_shell <= 2.0
+        shell_velocity_ok = (
+            0.3 <= v_shell <= 2.0
+        )
+    
+        tube_dp_limit = self._safe_float(
+            self.specs.get("tube_dp", 70000.0),
+            "tube_dp_limit",
+        )
+    
+        shell_dp_limit = self._safe_float(
+            self.specs.get("shell_dp", 14000.0),
+            "shell_dp_limit",
+        )
     
         pressure_drop_ok = (
     
-            tube_dp <= self._safe_float(
-                self.specs.get("tube_dp", 70000.0),
-                "tube_dp_limit"
-            )
+            tube_dp <= tube_dp_limit
     
             and
     
-            shell_dp <= self._safe_float(
-                self.specs.get("shell_dp", 14000.0),
-                "shell_dp_limit"
-            )
+            shell_dp <= shell_dp_limit
+    
         )
     
         thermal_feasible = area > 0.0
@@ -2486,7 +2634,7 @@ class ShellAndTubeHX(HeatExchanger):
             )
     
         # ==========================================================
-        # FEASIBILITY SCORE
+        # ENGINEERING ASSESSMENT
         # ==========================================================
     
         score = 100
@@ -2504,15 +2652,19 @@ class ShellAndTubeHX(HeatExchanger):
             score -= 20
     
         if score >= 90:
+    
             assessment = "EXCELLENT"
     
         elif score >= 75:
+    
             assessment = "ACCEPTABLE"
     
         elif score >= 60:
+    
             assessment = "MARGINAL"
     
         else:
+    
             assessment = "NOT_RECOMMENDED"
     
         # ==========================================================
@@ -2520,10 +2672,6 @@ class ShellAndTubeHX(HeatExchanger):
         # ==========================================================
     
         payload = {
-    
-            # ------------------------------------------------------
-            # CORE
-            # ------------------------------------------------------
     
             "method": self.method,
     
@@ -2539,19 +2687,23 @@ class ShellAndTubeHX(HeatExchanger):
     
             "ft": ft,
     
-            "u_dirty": u_dirty,
+            "u_assumed": u_dirty,
+    
+            "u_calculated": u_dirty,
     
             "u_clean": u_clean,
+    
+            "u_user": (
+                u_dirty
+                if u_source == "user"
+                else None
+            ),
     
             "u_source": u_source,
     
             "area": area,
     
             "area_source": area_source,
-    
-            # ------------------------------------------------------
-            # GEOMETRY
-            # ------------------------------------------------------
     
             "geometry": geometry,
     
@@ -2566,10 +2718,6 @@ class ShellAndTubeHX(HeatExchanger):
     
             "shell_passes": shell_passes,
     
-            # ------------------------------------------------------
-            # PERFORMANCE
-            # ------------------------------------------------------
-    
             "th_out": th_out,
     
             "tc_out": tc_out,
@@ -2580,10 +2728,6 @@ class ShellAndTubeHX(HeatExchanger):
     
             "dimless": dimless,
     
-            # ------------------------------------------------------
-            # HYDRAULICS
-            # ------------------------------------------------------
-    
             "v_tube": v_tube,
     
             "v_shell": v_shell,
@@ -2591,10 +2735,6 @@ class ShellAndTubeHX(HeatExchanger):
             "tube_dp": tube_dp,
     
             "shell_dp": shell_dp,
-    
-            # ------------------------------------------------------
-            # FEASIBILITY
-            # ------------------------------------------------------
     
             "thermal_feasible": thermal_feasible,
     
@@ -2608,10 +2748,6 @@ class ShellAndTubeHX(HeatExchanger):
     
             "feasibility_score": score,
     
-            # ------------------------------------------------------
-            # STATUS
-            # ------------------------------------------------------
-    
             "warnings": self._warnings,
     
             "recommendations": recommendations,
@@ -2619,10 +2755,6 @@ class ShellAndTubeHX(HeatExchanger):
             "assignment": assignment,
     
             "iterations": 1,
-    
-            # ------------------------------------------------------
-            # EXTRA
-            # ------------------------------------------------------
     
             "optimization_actions": [],
     
