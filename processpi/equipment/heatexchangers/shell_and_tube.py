@@ -2225,3 +2225,86 @@ class ShellAndTubeHX(HeatExchanger):
             ),
         }
         return self._finalize_results(payload)
+    def design(self) -> Dict[str, Any]:
+        """
+        Main design entry point for Shell & Tube HX.
+        
+        Supports:
+        - Kern method
+        - Bell-Delaware method
+        
+        Returns:
+            Dict[str, Any]
+        """
+    
+        # ==========================================================
+        # RESET TRACE / WARNINGS
+        # ==========================================================
+    
+        self._warnings = []
+    
+        if not hasattr(self, "_calculation_trace"):
+            self._calculation_trace = []
+    
+        # ==========================================================
+        # VALIDATE METHOD
+        # ==========================================================
+    
+        if self.method not in {"kern", "bell_delaware"}:
+    
+            raise ValueError(
+                "method must be 'kern' or 'bell_delaware'"
+            )
+    
+        # ==========================================================
+        # DEBUG HEADER
+        # ==========================================================
+    
+        self._debug("\n" + "=" * 70)
+        self._debug("STARTING SHELL & TUBE HX DESIGN")
+        self._debug(f"Method : {self.method}")
+        self._debug("=" * 70)
+    
+        # ==========================================================
+        # RUN METHOD
+        # ==========================================================
+    
+        if self.method == "kern":
+    
+            results = self._design_kern()
+    
+        elif self.method == "bell_delaware":
+    
+            results = self._design_bell_delaware()
+    
+        else:
+    
+            raise ValueError(
+                f"Unsupported design method: {self.method}"
+            )
+    
+        # ==========================================================
+        # FINAL ENGINEERING STATUS
+        # ==========================================================
+    
+        status = results.get("status", "UNKNOWN")
+    
+        self._debug("\n" + "=" * 70)
+        self._debug("DESIGN COMPLETED")
+        self._debug(f"Final Status : {status}")
+    
+        if results.get("warnings"):
+    
+            self._debug("\nWarnings:")
+    
+            for w in results["warnings"]:
+    
+                self._debug(f" - {w}")
+    
+        self._debug("=" * 70 + "\n")
+    
+        # ==========================================================
+        # RETURN
+        # ==========================================================
+    
+        return results
