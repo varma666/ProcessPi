@@ -2304,7 +2304,7 @@ class ShellAndTubeHX(HeatExchanger):
             / max(required_area, 1e-12)
         ) * 100.0
             
-            area_source = "calculated"
+        area_source = "calculated"
     
         # ==========================================================
         # GEOMETRY
