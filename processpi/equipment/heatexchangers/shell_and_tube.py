@@ -3154,28 +3154,32 @@ class ShellAndTubeHX(HeatExchanger):
             0.3 <= v_shell <= 2.0
         )
     
-        tube_dp_limit = self._safe_float(
-    
-            self.specs.get(
-                "tube_dp",
-                70000.0,
-            ),
-    
-            "tube_dp_limit",
-    
+        tube_dp_limit = self.specs.get(
+            "tube_dp",
+            Pressure(70000.0, "Pa"),
         )
-    
-        shell_dp_limit = self._safe_float(
-    
-            self.specs.get(
-                "shell_dp",
-                14000.0,
-            ),
-    
-            "shell_dp_limit",
-    
+        
+        shell_dp_limit = self.specs.get(
+            "shell_dp",
+            Pressure(14000.0, "Pa"),
         )
-    
+        
+        if hasattr(tube_dp_limit, "to"):
+        
+            tube_dp_limit = (
+                tube_dp_limit
+                .to("Pa")
+                .value
+            )
+        
+        if hasattr(shell_dp_limit, "to"):
+        
+            shell_dp_limit = (
+                shell_dp_limit
+                .to("Pa")
+                .value
+            )
+            
         pressure_drop_ok = (
     
             tube_dp <= tube_dp_limit
