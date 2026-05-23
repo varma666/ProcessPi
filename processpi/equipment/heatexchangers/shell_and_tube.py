@@ -3016,6 +3016,14 @@ class ShellAndTubeHX(HeatExchanger):
 
             "lmtd": lmtd,
 
+            # ------------------------------------------------------
+            # LEGACY VELOCITY KEYS
+            # ------------------------------------------------------
+            
+            "v_tube": v_tube,
+            
+            "v_shell": v_shell,
+
             "geometry": {
 
                                 "tube_od": tube_od,
