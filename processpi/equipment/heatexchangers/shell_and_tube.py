@@ -1489,6 +1489,152 @@ class ShellAndTubeHX(HeatExchanger):
         else:
             status = "OK"
 
+
+        # ==========================================================
+        # ENGINEERING INSIGHTS
+        # ==========================================================
+        
+        engineering_insights = []
+        
+        # ----------------------------------------------------------
+        # THERMAL PERFORMANCE
+        # ----------------------------------------------------------
+        
+        u_calc = payload.get("u_calculated", 0.0)
+        
+        if u_calc < 100:
+        
+            engineering_insights.append(
+                "Very low overall heat-transfer coefficient detected. "
+                "Likely caused by poor turbulence or oversized exchanger."
+            )
+        
+        elif u_calc < 300:
+        
+            engineering_insights.append(
+                "Moderate heat-transfer coefficient. "
+                "Thermal performance may be limited."
+            )
+        
+        else:
+        
+            engineering_insights.append(
+                "Heat-transfer coefficient within acceptable range."
+            )
+        
+        # ----------------------------------------------------------
+        # TUBE VELOCITY
+        # ----------------------------------------------------------
+        
+        v_tube = payload.get("v_tube", 0.0)
+        
+        if v_tube < 0.3:
+        
+            engineering_insights.append(
+                "Tube-side velocity extremely low. "
+                "High fouling risk and poor turbulence expected."
+            )
+        
+        elif v_tube < 1.0:
+        
+            engineering_insights.append(
+                "Tube-side velocity acceptable but below ideal turbulent range."
+            )
+        
+        elif v_tube > 3.0:
+        
+            engineering_insights.append(
+                "Tube-side velocity very high. "
+                "Potential erosion/vibration risk."
+            )
+        
+        else:
+        
+            engineering_insights.append(
+                "Tube-side velocity within recommended range."
+            )
+        
+        # ----------------------------------------------------------
+        # SHELL VELOCITY
+        # ----------------------------------------------------------
+        
+        v_shell = payload.get("v_shell", 0.0)
+        
+        if v_shell < 0.2:
+        
+            engineering_insights.append(
+                "Shell-side velocity extremely low. "
+                "Possible vapor blanketing and poor shell-side heat transfer."
+            )
+        
+        elif v_shell < 0.5:
+        
+            engineering_insights.append(
+                "Shell-side velocity slightly low."
+            )
+        
+        elif v_shell > 2.0:
+        
+            engineering_insights.append(
+                "Shell-side velocity very high. "
+                "Potential shell-side erosion risk."
+            )
+        
+        else:
+        
+            engineering_insights.append(
+                "Shell-side velocity acceptable."
+            )
+        
+        # ----------------------------------------------------------
+        # PRESSURE DROP
+        # ----------------------------------------------------------
+        
+        tube_dp = payload.get("tube_dp", 0.0)
+        shell_dp = payload.get("shell_dp", 0.0)
+        
+        tube_dp_limit = self._safe_float(
+            self.specs.get("tube_dp", 1e9),
+            "tube_dp_limit",
+        )
+        
+        shell_dp_limit = self._safe_float(
+            self.specs.get("shell_dp", 1e9),
+            "shell_dp_limit",
+        )
+        
+        if tube_dp > tube_dp_limit:
+        
+            engineering_insights.append(
+                "Tube-side pressure drop exceeds allowable limit."
+            )
+        
+        if shell_dp > shell_dp_limit:
+        
+            engineering_insights.append(
+                "Shell-side pressure drop exceeds allowable limit."
+            )
+        
+        # ----------------------------------------------------------
+        # OVERALL ASSESSMENT
+        # ----------------------------------------------------------
+        
+        if (
+            v_tube < 0.3
+            and v_shell < 0.2
+        ):
+        
+            engineering_insights.append(
+                "Exchanger appears significantly oversized "
+                "for the current operating conditions."
+            )
+        
+        # ----------------------------------------------------------
+        # STORE
+        # ----------------------------------------------------------
+        
+        payload["engineering_insights"] = engineering_insights
+
         return {
             "hx_type": "shell_and_tube",
             "method": payload.get("method", self.method),
