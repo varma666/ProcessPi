@@ -2086,26 +2086,142 @@ class ShellAndTubeHX(HeatExchanger):
         status = "OK" if hydraulic_ok and pressure_drop_ok else "VIOLATION"
     
         payload = {
-            "geometry": geometry,
-            "shell_diameter": shell_diameter,
-            "tube_velocity": v_tube,
-            "shell_velocity": v_shell,
-            "U_calculated": u_dirty,
-            "U_clean": u_clean,
-            "tube_dp": tube_dp,
-            "shell_dp": shell_dp,
-            "Q": q_actual,
-            "LMTD": lmtd,
+        
+            # ==================================================
+            # CORE
+            # ==================================================
+        
+            "method": self.method,
+        
+            "q_watts_original": q_actual,
+        
+            "q_watts_effective": q_actual,
+        
+            "area": (
+                geometry["tube_count"]
+                * math.pi
+                * geometry["tube_od"]
+                * geometry["tube_length"]
+            ),
+        
+            "u_assumed": u_dirty,
+        
+            "u_calculated": u_dirty,
+        
+            "u_clean": u_clean,
+        
+            "lmtd": lmtd,
+        
             "cltd": cltd,
-            "tube_passes": tube_passes,
-            "shell_passes": shell_passes,
-            "tube_count": geometry["tube_count"],
+        
+            "ft": 1.0,
+        
+            # ==================================================
+            # GEOMETRY
+            # ==================================================
+        
+            "geometry": geometry,
+        
+            "shell_diameter": shell_diameter,
+        
+            "bundle_diameter": self._calculate_bundle_diameter(
+                geometry["tube_count"],
+                geometry["tube_od"],
+            ),
+        
+            # ==================================================
+            # HYDRAULICS
+            # ==================================================
+        
+            "v_tube": v_tube,
+        
+            "v_shell": v_shell,
+        
+            "tube_dp": tube_dp,
+        
+            "shell_dp": shell_dp,
+        
+            # ==================================================
+            # HTC
+            # ==================================================
+        
+            "h_t": h_t,
+        
+            "h_s": h_s,
+        
+            "dimless": dimless,
+        
+            # ==================================================
+            # PERFORMANCE
+            # ==================================================
+        
             "th_out": th_out,
+        
             "tc_out": tc_out,
-            "service": self.service_type,
-            "status": status,
+        
+            "tube_passes": tube_passes,
+        
+            "shell_passes": shell_passes,
+        
+            # ==================================================
+            # STATUS
+            # ==================================================
+        
             "warnings": self._warnings,
+        
             "assignment": assignment,
+        
+            "status_override": status,
+        
+            "iterations": 1,
+        
+            # ==================================================
+            # RATE MODE INFO
+            # ==================================================
+        
+            "optimization_actions": [],
+        
+            "geometry_history": [],
+        
+            "convergence_history": [],
+        
+            "warning_details": [],
+        
+            # ==================================================
+            # ENGINEERING
+            # ==================================================
+        
+            "thermal_feasible": True,
+        
+            "hydraulic_feasible": hydraulic_ok,
+        
+            "pressure_drop_feasible": pressure_drop_ok,
+        
+            "engineering_assessment": (
+        
+                "ACCEPTABLE"
+        
+                if status == "OK"
+        
+                else "MARGINAL"
+            ),
+        
+            "recommendations": [],
+        
+            # ==================================================
+            # SERVICE
+            # ==================================================
+        
+            "service": self.service_type,
+        
+            "phase_change": (
+                self.service_type
+                in ["condenser", "evaporator"]
+            ),
+        
+            "orientation": self.specs.get(
+                "orientation",
+                "horizontal",
+            ),
         }
-    
         return self._finalize_results(payload)
