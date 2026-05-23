@@ -1957,7 +1957,7 @@ class ShellAndTubeHX(HeatExchanger):
         raise ValueError("method must be 'kern' or 'bell_delaware'")
 
     def rate(self) -> Dict[str, Any]:
-
+    
         # ==========================================================
         # STREAM PROPERTIES
         # ==========================================================
@@ -1995,13 +1995,15 @@ class ShellAndTubeHX(HeatExchanger):
             self.service_type = "heater"
     
         # ==========================================================
-        # FIXED GEOMETRY
+        # FIXED GEOMETRY VALIDATION
         # ==========================================================
     
         required_geometry = [
             "tube_od",
             "tube_id",
             "tube_length",
+            "tube_count",
+            "shell_diameter",
         ]
     
         missing = [
@@ -2016,49 +2018,48 @@ class ShellAndTubeHX(HeatExchanger):
                 f"Rate mode requires fixed geometry. "
                 f"Missing: {missing}"
             )
-        q_watts, th_out, tc_out = self._calculate_heat_duty(hot, cold)
-        self._trace_step("THERMAL", "Heat duty (W)", q_watts)
-        lmtd = self._calculate_lmtd(hot, cold, th_out, tc_out)
-        self._trace_step("THERMAL", "LMTD", lmtd)
-
-        shell_passes, tube_passes, ft = self._adjust_passes(hot, cold, th_out, tc_out)
-        self._trace_step("THERMAL", "Ft", ft)
-        self._trace_step("GEOMETRY", "Shell passes", shell_passes)
-        self._trace_step("GEOMETRY", "Tube passes", tube_passes)
-        warnings: List[str] = list(getattr(self, "_warnings", []))
-
-        n_units = 1
-        effective_q_watts = q_watts
-        if ft < 0.78:
-            n_units = int(math.ceil(0.78 / max(ft, 1e-6)))
-            effective_q_watts = q_watts / n_units
-            warnings.append(f"Using {n_units} exchangers in series to satisfy Ft requirement")
-
-        cltd = max(ft * lmtd, 1e-9)
-        self._debug(cltd)
-
-        u_assumed = self._assume_u(hot, cold)
-        self._trace_step("THERMAL", "U assumed initial", u_assumed)
-        hot_hx = self.hot_in.component.hx_data() if hasattr(self.hot_in.component, "hx_data") else {"u_key": getattr(self.hot_in.component, "hx_type", "generic")}
-        cold_hx = self.cold_in.component.hx_data() if hasattr(self.cold_in.component, "hx_data") else {"u_key": getattr(self.cold_in.component, "hx_type", "generic")}
-        self._debug(f"Hot hx_data = {hot_hx}")
-        self._debug(f"Cold hx_data = {cold_hx}")
-        u_range = get_u_range("shell_and_tube", self.service_type, hot_hx.get("u_key", "generic"), cold_hx.get("u_key", "generic"))
-
-        state = self._iterate_U(effective_q_watts, cltd, hot, cold, shell_passes, tube_passes, u_assumed, u_range)
-        
+    
+        # ==========================================================
+        # FIXED GEOMETRY
+        # ==========================================================
+    
         geometry = {
-            "tube_od": float(self.specs.get("tube_od", state["geometry"]["tube_od"])),
-            "tube_id": float(self.specs.get("tube_id", state["geometry"]["tube_id"])),
-            "tube_length": float(self.specs.get("tube_length", state["geometry"]["tube_length"])),
-            "tube_count": int(self.specs.get("tube_count", state["geometry"]["tube_count"])),
-            "tube_pitch": float(
+    
+            "tube_od": self._safe_float(
+                self.specs["tube_od"],
+                "tube_od",
+            ),
+    
+            "tube_id": self._safe_float(
+                self.specs["tube_id"],
+                "tube_id",
+            ),
+    
+            "tube_length": self._safe_float(
+                self.specs["tube_length"],
+                "tube_length",
+            ),
+    
+            "tube_count": int(
+                self.specs["tube_count"]
+            ),
+    
+            "tube_pitch": self._safe_float(
                 self.specs.get(
                     "tube_pitch",
-                    1.25 * float(self.specs["tube_od"])
-                )
+                    1.25 * self._safe_float(
+                        self.specs["tube_od"],
+                        "tube_od",
+                    ),
+                ),
+                "tube_pitch",
             ),
         }
+    
+        shell_diameter = self._safe_float(
+            self.specs["shell_diameter"],
+            "shell_diameter",
+        )
     
         shell_passes = int(
             self.specs.get("shell_passes", 1)
@@ -2068,55 +2069,84 @@ class ShellAndTubeHX(HeatExchanger):
             self.specs.get("tube_passes", 2)
         )
     
-        geometry = self._regenerate_geometry(
-            geometry,
-            tube_passes,
-            hot,
-        )
-    
         # ==========================================================
-        # SHELL DIAMETER
+        # AREA
         # ==========================================================
     
-        bundle_diameter = self._calculate_bundle_diameter(
-            geometry["tube_count"],
-            geometry["tube_od"],
+        geometry["area"] = (
+            geometry["tube_count"]
+            * math.pi
+            * geometry["tube_od"]
+            * geometry["tube_length"]
         )
     
-        shell_diameter = float(
+        geometry["baffle_spacing"] = self._safe_float(
             self.specs.get(
-                "shell_diameter",
-                self._calculate_shell_diameter(
-                    bundle_diameter
-                ),
-            )
+                "baffle_spacing",
+                0.4 * shell_diameter,
+            ),
+            "baffle_spacing",
         )
     
         # ==========================================================
         # VELOCITIES
         # ==========================================================
     
-        (
-            v_tube,
-            v_shell,
-            tube_count,
-            shell_diameter,
-            tube_passes,
-        ) = self._check_velocities(
-            geometry,
-            hot,
-            cold,
-            tube_passes,
-            shell_passes,
-            shell_diameter,
+        q_vol_hot = (
+            hot["m_dot"]
+            / max(hot["density"], 1e-12)
         )
     
-        geometry["tube_count"] = tube_count
+        q_vol_cold = (
+            cold["m_dot"]
+            / max(cold["density"], 1e-12)
+        )
     
-        geometry = self._regenerate_geometry(
-            geometry,
-            tube_passes,
-            hot,
+        tube_flow_area = (
+            geometry["tube_count"]
+            / tube_passes
+            * (
+                math.pi
+                * geometry["tube_id"]**2
+                / 4.0
+            )
+        )
+    
+        v_tube = (
+            q_vol_hot
+            / max(tube_flow_area, 1e-12)
+        )
+    
+        shell_flow_area = (
+            shell_diameter
+            * geometry["baffle_spacing"]
+            * (
+                (
+                    geometry["tube_pitch"]
+                    - geometry["tube_od"]
+                )
+                / max(
+                    geometry["tube_pitch"],
+                    1e-12,
+                )
+            )
+        )
+    
+        v_shell = (
+            q_vol_cold
+            / max(shell_flow_area, 1e-12)
+        )
+    
+        self._trace_step(
+            "HYDRAULICS",
+            "Tube velocity",
+            v_tube,
+        )
+    
+        self._trace_step(
+            "HYDRAULICS",
+            "Shell velocity",
+            v_shell,
         )
     
         # ==========================================================
@@ -2148,13 +2178,19 @@ class ShellAndTubeHX(HeatExchanger):
     
         hot_hx = (
             self.hot_in.component.hx_data()
-            if hasattr(self.hot_in.component, "hx_data")
+            if hasattr(
+                self.hot_in.component,
+                "hx_data",
+            )
             else {"u_key": "generic"}
         )
     
         cold_hx = (
             self.cold_in.component.hx_data()
-            if hasattr(self.cold_in.component, "hx_data")
+            if hasattr(
+                self.cold_in.component,
+                "hx_data",
+            )
             else {"u_key": "generic"}
         )
     
@@ -2181,149 +2217,158 @@ class ShellAndTubeHX(HeatExchanger):
         u_clean = u_results["U_clean"]
     
         # ==========================================================
-        # ACTUAL AREA
+        # HEAT DUTY
         # ==========================================================
     
-        actual_area = geometry["area"]
+        if self.service_type == "condenser":
     
-        # ==========================================================
-        # UA
-        # ==========================================================
+            latent_heat = self._safe_float(
+                self.specs["latent_heat"],
+                "latent_heat",
+            )
     
-        UA = (
-            u_dirty
-            * actual_area
-        )
+            q_actual = (
+                hot["m_dot"]
+                * latent_heat
+            )
     
-        # ==========================================================
-        # HEAT CAPACITY RATES
-        # ==========================================================
+            th_out = hot["t_k"]
     
-        Ch = (
-            hot["m_dot"]
-            * hot["cp"]
-            * 1000.0
-        )
-    
-        Cc = (
-            cold["m_dot"]
-            * cold["cp"]
-            * 1000.0
-        )
-    
-        Cmin = min(Ch, Cc)
-    
-        Cmax = max(Ch, Cc)
-    
-        Cr = (
-            Cmin
-            / max(Cmax, 1e-12)
-        )
-    
-        # ==========================================================
-        # NTU
-        # ==========================================================
-    
-        NTU = (
-            UA
-            / max(Cmin, 1e-12)
-        )
-    
-        # ==========================================================
-        # EFFECTIVENESS
-        # ==========================================================
-    
-        if abs(1.0 - Cr) < 1e-9:
-    
-            effectiveness = (
-                NTU
-                / (1.0 + NTU)
+            tc_out = (
+                cold["t_k"]
+                + (
+                    q_actual
+                    / (
+                        cold["m_dot"]
+                        * cold["cp"]
+                        * 1000.0
+                    )
+                )
             )
     
         else:
     
-            effectiveness = (
-                1.0
-                - math.exp(
-                    -NTU * (1.0 - Cr)
+            UA = (
+                u_dirty
+                * geometry["area"]
+            )
+    
+            Ch = (
+                hot["m_dot"]
+                * hot["cp"]
+                * 1000.0
+            )
+    
+            Cc = (
+                cold["m_dot"]
+                * cold["cp"]
+                * 1000.0
+            )
+    
+            Cmin = min(Ch, Cc)
+    
+            Cmax = max(Ch, Cc)
+    
+            Cr = (
+                Cmin
+                / max(Cmax, 1e-12)
+            )
+    
+            NTU = (
+                UA
+                / max(Cmin, 1e-12)
+            )
+    
+            if abs(1.0 - Cr) < 1e-9:
+    
+                effectiveness = (
+                    NTU
+                    / (1.0 + NTU)
                 )
-            ) / (
-                1.0
-                - Cr * math.exp(
-                    -NTU * (1.0 - Cr)
+    
+            else:
+    
+                effectiveness = (
+                    1.0
+                    - math.exp(
+                        -NTU * (1.0 - Cr)
+                    )
+                ) / (
+                    1.0
+                    - Cr
+                    * math.exp(
+                        -NTU * (1.0 - Cr)
+                    )
+                )
+    
+            q_max = (
+                Cmin
+                * (
+                    hot["t_k"]
+                    - cold["t_k"]
                 )
             )
     
-        # ==========================================================
-        # MAXIMUM DUTY
-        # ==========================================================
+            q_actual = (
+                effectiveness
+                * q_max
+            )
     
-        q_max = (
-            Cmin
-            * (
+            th_out = (
                 hot["t_k"]
-                - cold["t_k"]
+                - q_actual / Ch
+            )
+    
+            tc_out = (
+                cold["t_k"]
+                + q_actual / Cc
+            )
+    
+        # ==========================================================
+        # LMTD
+        # ==========================================================
+    
+        lmtd = self._calculate_lmtd(
+            hot,
+            cold,
+            th_out,
+            tc_out,
+        )
+    
+        shell_passes, tube_passes, ft = (
+            self._adjust_passes(
+                hot,
+                cold,
+                th_out,
+                tc_out,
             )
         )
     
-        # ==========================================================
-        # ACTUAL DUTY
-        # ==========================================================
-    
-        q_actual = (
-            effectiveness
-            * q_max
+        cltd = max(
+            ft * lmtd,
+            1e-9,
         )
     
-        # ==========================================================
-        # OUTLET TEMPERATURES
-        # ==========================================================
-    
-        th_out = (
-            hot["t_k"]
-            - q_actual / Ch
-        )
-    
-        tc_out = (
-            cold["t_k"]
-            + q_actual / Cc
-        )
-        lmtd = self._calculate_lmtd(hot, cold, th_out, tc_out)
-        #self._debug(lmtd)
-
-        shell_passes, tube_passes, ft = self._adjust_passes(hot, cold, th_out, tc_out)
-        #self._debug(ft, shell_passes, tube_passes)
-        warnings: List[str] = list(getattr(self, "_warnings", []))
-
-        n_units = 1
-        effective_q_watts = q_actual
-        if ft < 0.78:
-            n_units = int(math.ceil(0.78 / max(ft, 1e-6)))
-            effective_q_watts = q_actual / n_units
-            warnings.append(f"Using {n_units} exchangers in series to satisfy Ft requirement")
-
-        cltd = max(ft * lmtd, 1e-9)
-
         # ==========================================================
         # PRESSURE DROP
         # ==========================================================
-        
+    
         tube_dp, shell_dp = (
             self._calculate_pressure_drop(
                 geometry=geometry,
                 hot=hot,
                 cold=cold,
-        
+    
                 shell_velocity=v_shell,
                 tube_velocity=v_tube,
-        
+    
                 shell_passes=shell_passes,
                 tube_passes=tube_passes,
-        
+    
                 shell_diameter=shell_diameter,
                 tube_length=geometry["tube_length"],
                 tube_id=geometry["tube_id"],
-        
+    
                 orientation=self.specs.get(
                     "orientation",
                     "horizontal",
@@ -2346,6 +2391,51 @@ class ShellAndTubeHX(HeatExchanger):
             )
         )
     
+        tube_limit = self._safe_float(
+            self.specs.get(
+                "tube_dp",
+                70000.0,
+            ),
+            "tube_dp_limit",
+        )
+    
+        shell_limit = self._safe_float(
+            self.specs.get(
+                "shell_dp",
+                14000.0,
+            ),
+            "shell_dp_limit",
+        )
+    
+        if tube_dp > tube_limit:
+    
+            warnings.append(
+                f"Tube-side pressure drop "
+                f"{tube_dp:.2f} Pa exceeds "
+                f"limit {tube_limit:.2f} Pa"
+            )
+    
+        if shell_dp > shell_limit:
+    
+            warnings.append(
+                f"Shell-side pressure drop "
+                f"{shell_dp:.2f} Pa exceeds "
+                f"limit {shell_limit:.2f} Pa"
+            )
+    
+        # ==========================================================
+        # STATUS
+        # ==========================================================
+    
+        status = "OK"
+    
+        if (
+            tube_dp > tube_limit
+            or shell_dp > shell_limit
+        ):
+    
+            status = "FAILED"
+    
         # ==========================================================
         # DEBUG SUMMARY
         # ==========================================================
@@ -2354,31 +2444,61 @@ class ShellAndTubeHX(HeatExchanger):
         self._debug("RATE MODE SUMMARY")
         self._debug("=" * 60)
     
-        self._debug(f"UA                 : {UA:.4f}")
-        self._debug(f"NTU                : {NTU:.4f}")
-        self._debug(f"Effectiveness      : {effectiveness:.4f}")
+        self._debug(
+            f"Heat Duty         : "
+            f"{q_actual/1000:.4f} kW"
+        )
+    
+        self._debug(
+            f"U Dirty           : "
+            f"{u_dirty:.4f} W/m2.K"
+        )
+    
+        self._debug(
+            f"U Clean           : "
+            f"{u_clean:.4f} W/m2.K"
+        )
+    
+        self._debug(
+            f"Area              : "
+            f"{geometry['area']:.4f} m2"
+        )
     
         self._debug("-" * 60)
     
-        self._debug(f"Actual Duty        : {q_actual/1000:.4f} kW")
-        self._debug(f"U Dirty            : {u_dirty:.4f} W/m2.K")
-        self._debug(f"U Clean            : {u_clean:.4f} W/m2.K")
-        self._debug(f"Area               : {actual_area:.4f} m2")
+        self._debug(
+            f"Tube Velocity     : "
+            f"{v_tube:.4f} m/s"
+        )
+    
+        self._debug(
+            f"Shell Velocity    : "
+            f"{v_shell:.4f} m/s"
+        )
     
         self._debug("-" * 60)
     
-        self._debug(f"Tube Velocity      : {v_tube:.4f} m/s")
-        self._debug(f"Shell Velocity     : {v_shell:.4f} m/s")
+        self._debug(
+            f"Tube DP           : "
+            f"{tube_dp:.2f} Pa"
+        )
+    
+        self._debug(
+            f"Shell DP          : "
+            f"{shell_dp:.2f} Pa"
+        )
     
         self._debug("-" * 60)
     
-        self._debug(f"Tube DP            : {tube_dp:.2f} Pa")
-        self._debug(f"Shell DP           : {shell_dp:.2f} Pa")
+        self._debug(
+            f"Hot Outlet Temp   : "
+            f"{th_out:.2f} K"
+        )
     
-        self._debug("-" * 60)
-    
-        self._debug(f"Hot Outlet Temp    : {th_out:.2f} K")
-        self._debug(f"Cold Outlet Temp   : {tc_out:.2f} K")
+        self._debug(
+            f"Cold Outlet Temp  : "
+            f"{tc_out:.2f} K"
+        )
     
         self._debug("=" * 60)
     
@@ -2387,32 +2507,57 @@ class ShellAndTubeHX(HeatExchanger):
         # ==========================================================
     
         payload = {
+    
             "iterations": 1,
+    
             "geometry": geometry,
-            "bundle_diameter": bundle_diameter,
+    
+            "bundle_diameter": self._calculate_bundle_diameter(
+                geometry["tube_count"],
+                geometry["tube_od"],
+            ),
+    
             "shell_diameter": shell_diameter,
+    
             "v_tube": v_tube,
+    
             "v_shell": v_shell,
+    
             "dimless": dimless,
+    
             "h_t": h_t,
+    
             "h_s": h_s,
+    
             "u_assumed": u_dirty,
+    
             "u_calculated": u_dirty,
+    
             "u_clean": u_clean,
+    
             "tube_dp": tube_dp,
+    
             "shell_dp": shell_dp,
+    
             "warnings": warnings,
+    
             "assignment": assignment,
+    
             "q_watts_original": q_actual,
+    
             "q_watts_effective": q_actual,
-            "ntu": NTU,
-            "effectiveness": effectiveness,
+    
             "method": self.method,
-            "area": actual_area,
+    
+            "area": geometry["area"],
+    
             "lmtd": lmtd,
+    
             "cltd": cltd,
+    
             "ft": ft,
-            "n_units": n_units,
+    
+            "status_override": status,
         }
     
         return self._finalize_results(payload)
