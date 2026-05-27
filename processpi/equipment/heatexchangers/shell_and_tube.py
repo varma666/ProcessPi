@@ -2466,9 +2466,26 @@ class ShellAndTubeHX(HeatExchanger):
         service = self._infer_service_type(hot, cold)
         self.service_type = service
 
-        q_hot = hot["m_dot"] * hot["cp"] * 1000.0 * max(hot["t_k"] - th_out, 0.0)
-        q_cold = cold["m_dot"] * cold["cp"] * 1000.0 * max(tc_out - cold["t_k"], 0.0)
-        q_actual = min(max(q_hot, 0.0), max(q_cold, 0.0))
+        condenser_services = {"condenser", "total_condenser", "partial_condenser"}
+        reboiler_services = {"reboiler", "kettle_reboiler", "thermosyphon_reboiler", "evaporator"}
+
+        if service in condenser_services:
+            latent_heat = self.specs.get("latent_heat")
+            if latent_heat is None:
+                raise ValueError("Condenser service requires latent_heat in specs (J/kg)")
+            latent_heat_jkg = self._safe_float(latent_heat.to("J/kg"), "latent_heat") if hasattr(latent_heat, "to") else self._safe_float(latent_heat, "latent_heat")
+            q_actual = hot["m_dot"] * latent_heat_jkg
+        elif service in reboiler_services:
+            latent_heat = self.specs.get("latent_heat")
+            if latent_heat is None:
+                raise ValueError("Reboiler/evaporator service requires latent_heat in specs (J/kg)")
+            latent_heat_jkg = self._safe_float(latent_heat.to("J/kg"), "latent_heat") if hasattr(latent_heat, "to") else self._safe_float(latent_heat, "latent_heat")
+            q_actual = cold["m_dot"] * latent_heat_jkg
+        else:
+            q_hot = hot["m_dot"] * hot["cp"] * 1000.0 * max(hot["t_k"] - th_out, 0.0)
+            q_cold = cold["m_dot"] * cold["cp"] * 1000.0 * max(tc_out - cold["t_k"], 0.0)
+            q_actual = min(max(q_hot, 0.0), max(q_cold, 0.0))
+
         lmtd = self._calculate_service_lmtd(service, hot, cold, th_out, tc_out)
 
         user_u = self.specs.get("U")
@@ -2528,7 +2545,7 @@ class ShellAndTubeHX(HeatExchanger):
         else:
             assessment = "OK"
 
-        payload = {"method": self.method, "service": service, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "warnings": list(dict.fromkeys(self._velocity_warnings(v_tube, v_shell, hot, cold))), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
+        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "warnings": list(dict.fromkeys(self._velocity_warnings(v_tube, v_shell, hot, cold))), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
 
         return self._finalize_results(payload)
     def design(self) -> Dict[str, Any]:
