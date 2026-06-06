@@ -55,4 +55,4 @@ Here’s what you can do with it:
 
 ---
 
-👉 Browse the [Examples](../examples/pipeline-example.md) to see ProcessPI in action.
+👉 Browse the [Examples](../examples/index.md) to see ProcessPI in action.

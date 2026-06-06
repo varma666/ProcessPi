@@ -22,10 +22,10 @@ hide:
       with the tools to model, optimize, and visualize complex process networks with precision and ease.
     </div>
     <div style="margin-top: 1.5rem;">
-      <a class="md-button md-button--primary" href="installation/">
+      <a class="md-button md-button--primary" href="installation.md">
         Get Started
       </a>
-      <a class="md-button" href="user-guide/introduction/">
+      <a class="md-button" href="user-guide/introduction.md">
         Learn More
       </a>
     </div>
@@ -72,10 +72,10 @@ hide:
 
 <div class="grid cards" markdown>
 
--   :material-download: **[Installation](installation/)**  
+-   :material-download: **[Installation](installation.md)**  
     Quick setup guide to install Process PI and get started with Python.
 
--   :material-book-open-variant: **[User Guide](user-guide/introduction/)**  
+-   :material-book-open-variant: **[User Guide](user-guide/introduction.md)**  
     Step-by-step tutorials and detailed documentation for all features.
 
 -   :material-lightbulb-on-outline: **[Examples](examples/index.md)**  

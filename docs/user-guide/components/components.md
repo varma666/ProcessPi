@@ -17,8 +17,8 @@ These components can be used in calculations, simulations, and design workflows 
 - [Chloroform](chloroform.md)  
 - [Carbon Tetrachloride](carbon_tetrachloride.md)  
 - [Chloro Methane](chloromethane.md)  
-- [Cyclobenzene](cyclobenzene.md)  
-- [Cyclohexane](cyclohexane.md)  
+- [Chlorobenzene](chlorobenzene.md)  
+- [Cyclohexene](cyclohexene.md)  
 - [Ethane](ethane.md)  
 - [Ethanol](ethanol.md)  
 - [Ethyl Acetate](ethylacetate.md)  
@@ -50,4 +50,4 @@ These components can be used in calculations, simulations, and design workflows 
 The Components Library is continuously expanding.  
 Future releases will include additional hydrocarbons, refrigerants, solvents, and specialty chemicals commonly used in process industries.  
 
-Stay tuned for updates in the [changelog](../about/changelog.md) and contribute your requests via the [GitHub repository](https://github.com/varma666/ProcessPi).  
+Stay tuned for updates in the [changelog](../../about/changelog.md) and contribute your requests via the [GitHub repository](https://github.com/varma666/ProcessPi).  

@@ -2,6 +2,16 @@
 
 <div class="grid cards" markdown style="grid-template-columns: 1fr; gap: 1.5rem;">
 
+-   :material-book-open-page-variant: **v0.2.0.4 – Documentation Modernization (2026-06-06)**  
+    Documentation was audited against the implementation inventory generated from the `processpi/` package.  
+    **Highlights:**  
+    - Added generated API inventory pages for calculations, components, equipment, pipelines, streams, units, integration, and CLI  
+    - Added heat-exchanger engineering theory, sizing/rating workflows, condenser and reboiler-style examples, and pressure-drop guidance  
+    - Added component/property/stream documentation with units, validation notes, and mixture examples  
+    - Added CLI documentation aligned with the packaged `processpi` entry point  
+    - Added documentation audit report identifying renamed/missing top-level package names and remaining gaps  
+
+
 -   :material-rocket-launch: **v0.2.0 – Initial Public Release (2025-09-15)**  
     Welcome to the first public release of **ProcessPI**! This release introduces core pipeline, network, and calculation functionalities.  
     **Highlights:**  

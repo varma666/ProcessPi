@@ -51,3 +51,15 @@ This roadmap highlights upcoming features, improvements, and long-term vision.
     Community-driven libraries, templates for standard chemical processes, and verified industry case studies.
 
 </div>
+
+---
+
+## Documentation Alignment Priorities
+
+The current documentation now tracks the implemented package layout. Future documentation work should focus on:
+
+- Adding source docstrings with parameter units and correlation validity ranges for every public calculation class.
+- Migrating the static source inventory to `mkdocstrings` once documentation dependencies are standardized.
+- Adding tested examples for every heat-transfer, thermodynamics, mass-transfer, reaction-engineering, and pipeline calculation primitive.
+- Documenting component correlation sources and valid temperature/pressure ranges in a structured database.
+- Clarifying the distinction between preliminary heat-exchanger screening, rating, and vendor/mechanical design.

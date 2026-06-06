@@ -20,7 +20,7 @@ from importlib.metadata import version, PackageNotFoundError
 try:
     __version__ = version("processpi")
 except PackageNotFoundError:
-    __version__ = "0.1.0"
+    __version__ = "0.2.0.4"
 
 # -------------------------------------------------------------------
 # Submodules (explicit imports for static analyzers)
