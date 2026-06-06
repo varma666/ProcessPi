@@ -113,6 +113,19 @@ nav:
           - Fittings: user-guide/pipe_lines/fittings.md
           - Pipe Line Networks: user-guide/pipe_lines/network.md
 
+      - Streams:
+          - Overview: user-guide/streams/overview.md
+          - Stream Types: user-guide/streams/stream_types.md
+          - Stream Properties: user-guide/streams/stream_properties.md
+          - Stream Operations: user-guide/streams/stream_operations.md
+      - Equipment:
+          - Overview: user-guide/equipment/overview.md
+          - Heat Exchangers: user-guide/equipment/heat_exchangers.md
+          - Pumps: user-guide/equipment/pumps.md
+          - Compressors: user-guide/equipment/compressors.md
+          - Valves: user-guide/equipment/valves.md
+          - Reactors: user-guide/equipment/reactors.md
+
               
   - Examples:
       - Overview: examples/index.md
