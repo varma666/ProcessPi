@@ -18,7 +18,7 @@ hide:
     </h1>
     <div class="hero-subtitle" style="font-size: 1.2rem; margin-top: 1rem; line-height: 1.6; color: var(--md-typeset-color);">
       Build, simulate, and analyze chemical process systems with an open-source Python toolkit.<br><br>
-      From pipelines and pumps to heat exchangers and mixers, <strong>Process PI</strong> provides engineers 
+      From pipelines and pumps to heat exchangers and mixers, <strong>Process PI</strong> provides engineers
       with the tools to model, optimize, and visualize complex process networks with precision and ease.
     </div>
     <div style="margin-top: 1.5rem;">
@@ -34,86 +34,152 @@ hide:
 
 ---
 
-<!-- Feature Grid Section -->
+## Why ProcessPI?
+
+| Feature | ProcessPI | Traditional Spreadsheets | Commercial Simulators |
+|----------|----------|----------|----------|
+| Open Source | ✅ | ⚠️ | ❌ |
+| Python Native | ✅ | ❌ | ❌ |
+| Version Control Friendly | ✅ | ❌ | ⚠️ |
+| Automation Ready | ✅ | ❌ | ⚠️ |
+| Cost | Free | Free | $$$$ |
+| Engineering Calculations | ✅ | ⚠️ | ✅ |
+
+ProcessPI bridges the gap between quick spreadsheet calculations and expensive process simulation software by providing engineers with a programmable engineering toolkit built entirely in Python.
+
+---
+
+## Quick Example
+
+Calculate pressure drop through a carbon monoxide pipeline with valves and elbows.
+
+```python
+from processpi.units import *
+from processpi.components import *
+from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.pipes import Pipe
+from processpi.pipelines.fittings import Fitting
+
+fluid = CarbonMonoxide(
+    temperature=Temperature(50, "C")
+)
+
+mass_flow = MassFlowRate(1500, "kg/h")
+
+pipe = Pipe(
+    name="Main Pipe",
+    length=Length(4, "km"),
+    material="CS"
+)
+
+valves = Fitting(
+    fitting_type="gate_valve",
+    quantity=2
+)
+
+elbows_90 = Fitting(
+    fitting_type="standard_elbow_90_deg",
+    quantity=6
+)
+
+model = PipelineEngine()
+
+model.fit(
+    fluid=fluid,
+    mass_flow=mass_flow,
+    pipe=pipe,
+    fittings=[valves, elbows_90],
+    available_dp=Pressure(50, "kPa")
+)
+
+results = model.run()
+
+print(results.total_pressure_drop.to("atm"))
+```
+
+Example output:
+
+```text
+PIPELINE SUMMARY
+----------------------------------
+Fluid              : Carbon Monoxide
+Mass Flow          : 1500 kg/h
+Pipe Length        : 4 km
+Available ΔP       : 50 kPa
+
+Total Pressure Drop: 0.31 atm
+```
+
+---
+
 ## Key Features
 
 <div class="grid cards" markdown>
 
--   :material-pipe: **Pipeline Networks**  
-    <p>Design, simulate, and analyze fluid flow through pipes, valves, pumps, and splitters.  
+-   :material-pipe: **Pipeline Networks**
+    <p>Design, simulate, and analyze fluid flow through pipes, valves, pumps, and splitters.
     Optimize your process network with precise pressure drop and flow calculations.</p>
 
--   :material-fire: **Heat Transfer**  
-    <p>Compute heat flux, energy balances, and heat exchanger performance.  
+-   :material-fire: **Heat Transfer**
+    <p>Compute heat flux, energy balances, and heat exchanger performance.
     Supports a wide range of unit operations for chemical process engineering.</p>
 
--   :material-flask: **Components Library**  
-    <p>Access a curated database of chemicals, mixtures, and equipment properties.  
+-   :material-flask: **Components Library**
+    <p>Access a curated database of chemicals, mixtures, and equipment properties.
     Retrieve physical and thermodynamic data for accurate simulations.</p>
 
--   :material-chart-line: **Visualization & Analysis**  
-    <p>Generate schematics, performance plots, and interactive charts for process optimization.  
-    Visualize flows, temperatures, and equipment networks in a single interface.</p>
+-   :material-chart-line: **Visualization & Analysis**
+    <p>Generate schematics, performance plots, and interactive charts for process optimization.</p>
 
--   :material-cog: **Process Optimization**  
-    <p>Run simulations to optimize process parameters, energy efficiency, and system performance.  
-    Explore multiple scenarios with Python scripting.</p>
+-   :material-cog: **Process Optimization**
+    <p>Run simulations to optimize process parameters, energy efficiency, and system performance.</p>
 
--   :material-book: **Documentation & Examples**  
-    <p>Follow tutorials, examples, and API reference to get started quickly.  
-    Step-by-step guides help engineers implement Process PI in real projects.</p>
+-   :material-book: **Documentation & Examples**
+    <p>Follow tutorials, examples, and API references to get started quickly.</p>
 
 </div>
 
 ---
 
-<!-- Explore / Quick Links Section -->
 ## Explore
 
 <div class="grid cards" markdown>
 
--   :material-download: **[Installation](installation/)**  
+-   :material-download: **[Installation](installation/)**
     Quick setup guide to install Process PI and get started with Python.
 
--   :material-book-open-variant: **[User Guide](user-guide/introduction/)**  
+-   :material-book-open-variant: **[User Guide](user-guide/introduction/)**
     Step-by-step tutorials and detailed documentation for all features.
 
--   :material-lightbulb-on-outline: **[Examples](examples/index.md)**  
+-   :material-lightbulb-on-outline: **[Examples](examples/index.md)**
     Real-world pipelines, heat transfer, and component simulations you can try immediately.
 
 </div>
 
 ---
 
-<!-- Dependencies Section -->
+## Validation & Reliability
+
+ProcessPI calculations are validated against established engineering references and published correlations including:
+
+- Crane TP-410
+- Perry's Chemical Engineers' Handbook
+- GPSA Engineering Data Book
+- Standard fluid mechanics correlations
+- Industry-accepted pressure drop methodologies
+
+Validation examples and benchmark studies will continue to expand with future releases.
+
+---
+
 ## Dependencies
 
-ProcessPI is built on top of powerful open-source libraries and AI tools:
+ProcessPI is built on top of powerful open-source libraries and AI tools.
 
-<div class="grid cards" markdown>
+---
 
--   **[tabulate](https://pypi.org/project/tabulate/)** `>=0.9.0`  
-    Table formatting for clean console and markdown output.
+## Mission
 
--   **[matplotlib](https://pypi.org/project/matplotlib/)** `>=3.7.0`  
-    Static 2D plotting for engineering charts and graphs.
+**To create the leading open-source Python platform for process and chemical engineering calculations.**
 
--   **[networkx](https://pypi.org/project/networkx/)** `>=3.1`  
-    Network analysis and graph modeling for pipelines and process flows.
-
--   **[CoolProp](https://pypi.org/project/CoolProp/)** `>=6.5.0`  
-    Thermophysical property database for fluids and mixtures.
-
--   **[tqdm](https://pypi.org/project/tqdm/)** `>=4.65.0`  
-    Progress bars for simulations and iterative computations.
-
--   **[plotly](https://pypi.org/project/plotly/)** `>=5.18.0`  
-    Interactive plots and dashboards for process visualization.
-
--   **[ChatGPT](https://openai.com/chatgpt)**  
-    AI assistant for documentation, code generation, and examples.
-
--   **[Google Gemini](https://deepmind.google/technologies/gemini/)**  
-    AI model support for documentation and smart code assistance.
-
-</div>
+Whether you're a student, researcher, consultant, or plant engineer, ProcessPI provides transparent, reproducible, and extensible engineering tools without proprietary limitations.
