@@ -119,7 +119,7 @@ nav:
           - Fittings: user-guide/pipe_lines/fittings.md
           - Pipe Line Networks: user-guide/pipe_lines/network.md
       - Streams:
-          - Overview: user-guide/streams/streams.md
+          - Overview: user-guide/streams/overview.md
           - Material Streams: user-guide/streams/material.md
           - Energy Streams: user-guide/pipe_lines/energy.md
 
