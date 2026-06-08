@@ -29,7 +29,7 @@ extra_css:
   - css/custom.css
 
 nav:
-  - Home: index.md
+  #- Home: index.md
   - Install:
       - Installation: installation.md
   - User Guide:
@@ -121,7 +121,7 @@ nav:
       - Streams:
           - Overview: user-guide/streams/overview.md
           - Material Streams: user-guide/streams/material.md
-          - Energy Streams: user-guide/pipe_lines/energy.md
+          - Energy Streams: user-guide/streams/energy.md
 
 
               
