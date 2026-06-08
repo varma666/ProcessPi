@@ -113,11 +113,10 @@ nav:
           - Pipes: user-guide/pipe_lines/pipes.md
           - Fittings: user-guide/pipe_lines/fittings.md
           - Pipe Line Networks: user-guide/pipe_lines/network.md
+          
       - Equipment:
-          - Overview: user-guide/pipe_lines/engine.md
-          - Pipes: user-guide/pipe_lines/pipes.md
-          - Fittings: user-guide/pipe_lines/fittings.md
-          - Pipe Line Networks: user-guide/pipe_lines/network.md
+
+          
       - Streams:
           - Overview: user-guide/streams/overview.md
           - Material Streams: user-guide/streams/material.md
