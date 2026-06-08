@@ -29,7 +29,7 @@ extra_css:
   - css/custom.css
 
 nav:
-  #- Home: index.md
+  - Home: index.md
   - Install:
       - Installation: installation.md
   - User Guide:
