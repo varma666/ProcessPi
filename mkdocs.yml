@@ -115,6 +115,8 @@ nav:
           - Pipe Line Networks: user-guide/pipe_lines/network.md
           
       - Equipment:
+          - Overview: user-guide/equipment/overview.md
+            - Heat Exchangers: user-guide/equipment/heat_exchangers/overview.md
           - Coming Soon: user-guide/equipment/coming_soon.md
 
           
