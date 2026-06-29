@@ -148,6 +148,11 @@ nav:
           - Hazen-Williams Pressure Drop (US Units): examples/calculations/pressure_drop_hw_us.md
       - Equipment:
           - Benzene Cooler: examples/equipment/heatexchanger/benzene_cooler.md
+          - Benzene Condenser: examples/equipment/heatexchanger/benzene_condenser.md
+          - Double Pipe: examples/equipment/heatexchanger/double_pipe.md
+          - N Proponal Condenser : examples/equipment/heatexchanger/nproponal_condenser.md
+          
+          
 
       
   - Community:
