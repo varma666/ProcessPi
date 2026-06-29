@@ -147,7 +147,8 @@ nav:
           - Long Pipeline Pressure Drop (Metric Units): examples/calculations/long_pipe_friction_factor.md
           - Hazen-Williams Pressure Drop (US Units): examples/calculations/pressure_drop_hw_us.md
       - Equipment:
-          - Shell and Tube Example 1: examples/equipment/heatexchanger/benzene_cooler.md
+          - Benzene Cooler: examples/equipment/heatexchanger/benzene_cooler.md
+
       
   - Community:
       - Roadmap: about/roadmap.md
