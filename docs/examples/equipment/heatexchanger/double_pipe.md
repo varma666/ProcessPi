@@ -1,0 +1,234 @@
+# Double Pipe Heat Exchanger — Hot Oil Cooler
+
+**Problem**
+
+Design a **horizontal counter-current double pipe heat exchanger** to cool hot oil using cooling water under the following operating conditions.
+
+- Hot fluid: **Process Oil**
+- Hot fluid flow rate: **8,000 kg/h**
+- Inlet temperature: **140°C**
+- Outlet temperature: **90°C**
+- Cold fluid: **Water**
+- Cooling water flow rate: **12,000 kg/h**
+- Cooling water inlet temperature: **25°C**
+- Overall heat-transfer coefficient (U): **350 W/m²·K**
+- Maximum allowable tube-side pressure drop: **0.2 bar**
+- Maximum allowable annulus-side pressure drop: **0.2 bar**
+- Flow arrangement: **Counter Current**
+- Orientation: **Horizontal**
+
+---
+
+## Code
+
+```python
+from processpi.units import *
+from processpi.components import *
+from processpi.streams import MaterialStream
+from processpi.equipment.heatexchangers import HeatExchangerEngine
+
+
+# ============================================
+# DEFINE COMPONENTS
+# ============================================
+
+oil = Oil()
+water = Water()
+
+
+# ============================================
+# DEFINE MATERIAL STREAMS
+# ============================================
+
+hot_in = MaterialStream(
+    "oil_in",
+    component=oil,
+    phase="liquid",
+    temperature=Temperature(140, "C"),
+    pressure=Pressure(2, "bar"),
+    mass_flow=MassFlowRate(8000, "kg/h"),
+)
+
+hot_out = MaterialStream(
+    "oil_out",
+    component=oil,
+    phase="liquid",
+    temperature=Temperature(90, "C"),
+)
+
+cold_in = MaterialStream(
+    "water_in",
+    component=water,
+    phase="liquid",
+    temperature=Temperature(25, "C"),
+    pressure=Pressure(1, "bar"),
+    mass_flow=MassFlowRate(12000, "kg/h"),
+)
+
+# Outlet temperature calculated automatically
+cold_out = MaterialStream(
+    "water_out",
+    component=water,
+)
+
+
+# ============================================
+# CREATE DOUBLE PIPE MODEL
+# ============================================
+
+hx = HeatExchangerEngine(
+    method="kern"
+)
+
+hx.fit(
+    hx_type="double_pipe",
+
+    hot_in=hot_in,
+    hot_out=hot_out,
+
+    cold_in=cold_in,
+    cold_out=cold_out,
+
+    U=HeatTransferCoefficient(350, "W/m2K"),
+
+    shell_dp=Pressure(0.2, "bar"),
+    tube_dp=Pressure(0.2, "bar"),
+
+    orientation="horizontal",
+    flow_arrangement="counter_current",
+
+    mode="design",
+)
+
+results = hx.run()
+
+
+# ============================================
+# OUTPUT
+# ============================================
+
+print(results.summary())
+
+# Complete engineering report
+results.detailed_summary()
+```
+
+---
+
+## Output
+
+```text
+Heat Exchanger Summary
+------------------------------
+Type                  : double_pipe
+Method                : basic
+Heat Duty             : 127.915 kW
+Area                  : 4.170 m²
+U Calculated          : 350.000 W/m²·K
+Tube Velocity         : 2.419 m/s
+Shell Velocity        : 0.255 m/s
+Tube Pressure Drop    : 16.63 kPa
+Shell Pressure Drop   : 355.35 Pa
+Tube Count            : 4
+Tube Length           : 6.0 m
+Status                : OK
+
+Warnings
+------------------------------
+• [HYDRAULIC_WARNING] Annulus velocity below recommended range for double-pipe exchanger
+```
+
+---
+
+## Discussion
+
+This example demonstrates the design of a **horizontal counter-current double pipe heat exchanger**, a compact and economical solution commonly used for moderate heat duties, pilot plants, utility services, and applications involving relatively low flow rates.
+
+The **HeatExchangerEngine** performs a complete thermal and hydraulic design based on the specified process conditions and design constraints.
+
+During the calculation, the engine automatically determines:
+
+- Heat duty
+- Required heat-transfer area
+- Tube sizing
+- Number of tubes
+- Tube length
+- Tube-side velocity
+- Annulus-side velocity
+- Tube-side pressure drop
+- Annulus-side pressure drop
+- Overall heat-transfer performance
+- Engineering validation
+
+---
+
+## Design Results
+
+| Parameter | Value |
+|-----------|-------|
+| Heat Exchanger Type | Double Pipe |
+| Design Method | Basic |
+| Flow Arrangement | Counter Current |
+| Orientation | Horizontal |
+| Heat Duty | 127.92 kW |
+| Required Area | 4.17 m² |
+| Overall U | 350 W/m²·K |
+| Tube Count | 4 |
+| Tube Length | 6.0 m |
+| Tube Velocity | 2.42 m/s |
+| Annulus Velocity | 0.255 m/s |
+
+The calculated tube-side velocity lies within a desirable operating range, promoting turbulent flow and efficient heat transfer inside the inner tube.
+
+The calculated annulus velocity is relatively low, which may reduce shell-side heat-transfer performance. The engine identifies this condition automatically and reports it as a hydraulic warning while still producing a valid design.
+
+---
+
+## Engineering Assessment
+
+The calculated heat-transfer area satisfies the required thermal duty while remaining compact, making the design suitable for typical industrial double-pipe applications.
+
+The warning generated by the engine indicates that the annulus-side velocity is below the recommended design range. Depending on the application, this may be improved by:
+
+- Reducing annulus flow area
+- Selecting a different pipe size combination
+- Increasing annulus-side flow rate
+- Considering a multi-pass arrangement
+
+These changes can improve turbulence and increase the overall heat-transfer coefficient.
+
+---
+
+## Typical Applications
+
+Double pipe heat exchangers are commonly used for:
+
+- Hot oil cooling
+- Chemical process heating
+- Utility water services
+- Pilot plants
+- Laboratory-scale process equipment
+- High-pressure process streams
+- Small process heaters and coolers
+
+---
+
+## Additional Reports
+
+For the complete calculation results, use:
+
+```python
+results.detailed_summary()
+```
+
+To inspect every engineering calculation performed during the design:
+
+```python
+results.trace()
+```
+
+For diagnostic information including warnings, optimization actions, and convergence details:
+
+```python
+results.debug_summary()
+```
