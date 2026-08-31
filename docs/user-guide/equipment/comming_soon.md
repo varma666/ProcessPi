@@ -30,15 +30,6 @@ equipment, including:
 -   Reboilers
 -   Evaporators
 
-### Pressure Vessels
-
--   Horizontal Pressure Vessels
--   Vertical Pressure Vessels
--   Storage Tanks
--   Vessel Geometry Utilities
--   Volume Calculations
--   Design Helpers
-
 ### Separation Equipment
 
 -   Flash Drums
