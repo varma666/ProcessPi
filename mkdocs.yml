@@ -117,6 +117,7 @@ nav:
       - Equipment:
           - Overview: user-guide/equipment/overview.md
           - Heat Exchangers: user-guide/equipment/heat_exchangers/overview.md
+          - Pressure Vessels: user-guide/equipment/pressure_vessel.md
           - Coming Soon: user-guide/equipment/coming_soon.md
 
           

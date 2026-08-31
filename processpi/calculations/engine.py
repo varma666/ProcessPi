@@ -16,6 +16,7 @@ from processpi.calculations.fluids.friction_factor_colebrookwhite import Colebro
 from processpi.calculations.fluids.pressure_drop_darcy import PressureDropDarcy
 from processpi.calculations.fluids.pressure_drop_fanning import PressureDropFanning
 from processpi.calculations.fluids.pressure_drop_hazen_williams import PressureDropHazenWilliams
+from processpi.equipment.pressure_vessel import PressureVessel
 # Add more imports here as you implement new calculations
 # from processpi.calculations.fluids.pressure_drop import PressureDrop
 # from processpi.calculations.heat_transfer import HeatTransfer
@@ -68,6 +69,8 @@ class CalculationEngine:
             "pressure_drop": PressureDropDarcy,
             "pressure_drop_fanning": PressureDropFanning,
             "pressure_drop_hazen_williams": PressureDropHazenWilliams,
+            "pressure_vessel": PressureVessel,
+            "vessel_design": PressureVessel,
 
             # Add more mappings as new calculations are added
             # "pressure_drop": PressureDrop,
