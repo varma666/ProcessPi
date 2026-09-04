@@ -1,23 +1,51 @@
 """
-Preliminary ASME VIII-1 internal-pressure pressure-vessel design.
+ProcessPI Pressure Vessel Module
+================================
 
-This module is intentionally an equipment module (rather than a calculation in
-``equipment.base``), in the same way that the heat-exchanger implementations
-live below :mod:`processpi.equipment`.
+Preliminary ASME Section VIII Division 1 internal-pressure vessel design.
 
-It provides preliminary sizing only; the warnings returned by
-:meth:`PressureVessel.design` are part of that scope.
+Features
+--------
+- Cylindrical and spherical vessels
+- Horizontal / vertical orientation
+- Flat, 2:1 ellipsoidal, torispherical,
+  hemispherical and conical heads
+- Temperature-dependent allowable stresses
+- ASME material aliases
+- Conservative temperature-band selection
+- Corrosion allowance
+- Weld joint efficiency
+- Nozzle and manhole registration
+- Geometry-derived vessel volume
+- Specified-vs-calculated volume consistency check
+- Hydrotest pressure
+- Preliminary vessel weight estimation
 
-Allowable material stresses are based on the supplied temperature-specific
-material stress table.
+IMPORTANT
+---------
+This module is intended for preliminary engineering calculations.
 
-IMPORTANT:
-    The material allowable-stress values supplied in this module are treated
-    as ksi and converted to psi when returned by ``get_allowable_stress()``.
+The material allowable-stress values included here are the supplied
+ProcessPI database values. They must be verified against the applicable
+ASME Section II, Part D tables before code-stamped design or fabrication.
 
-    This is a preliminary engineering database and must be verified against
-    the applicable ASME Section II, Part D material tables before code-stamped
-    design or fabrication.
+This module does NOT perform complete ASME VIII-1 design verification for:
+
+- external pressure / vacuum
+- nozzle reinforcement
+- flange design
+- support design
+- saddle stresses
+- wind
+- seismic
+- fatigue
+- MDMT / impact testing
+- PWHT
+- local discontinuity stresses
+- thermal stresses
+- detailed head geometry
+- openings and reinforcement
+- detailed UG-99 hydrotest evaluation
 """
 
 from __future__ import annotations
@@ -27,46 +55,48 @@ from math import acos, pi, sqrt
 from typing import Any, Dict, List, Optional
 
 from processpi.calculations.base import CalculationBase
-from processpi.units import Area, Diameter, Length, Pressure, Temperature, Volume
+from processpi.units import (
+    Area,
+    Diameter,
+    Length,
+    Pressure,
+    Temperature,
+    Volume,
+)
 
 
 # ============================================================================
-# ASME MATERIAL ALLOWABLE STRESS DATA
+# ASME MATERIAL ALLOWABLE STRESS DATABASE
 # ============================================================================
 #
-# Values are supplied in ksi.
+# Values are in ksi.
 #
-# Temperature keys are in degrees Fahrenheit.
+# Temperature values are in °F.
 #
-# The table contains the allowable stress at the specified ASME temperature
-# bands:
+# The supplied database contains allowable stress values at:
 #
-#     100 F
-#     200 F
-#     300 F
-#     400 F
-#     500 F
-#     600 F
-#     700 F
-#     800 F
+#     100, 200, 300, 400, 500, 600, 700 and 800°F
 #
-# Temperature handling is intentionally conservative:
-# a design temperature between two tabulated temperatures uses the NEXT HIGHER
-# temperature band.
+# For an actual design temperature between two table temperatures,
+# ProcessPI conservatively selects the NEXT HIGHER temperature band.
 #
 # Example:
-#     450 F -> 500 F allowable stress
 #
-# Temperatures below 100 F use the 100 F value.
-# Temperatures above 800 F are rejected because the supplied database does not
-# contain allowable stresses above 800 F.
+#     302°F -> 400°F
+#     450°F -> 500°F
+#     550°F -> 600°F
+#
+# Temperatures <= 100°F use the 100°F value.
+#
+# Temperatures > 800°F are rejected because this database does not
+# contain values above 800°F.
 #
 # ============================================================================
 
 asme_material_stress_data: Dict[str, Dict[int, float]] = {
 
     # ------------------------------------------------------------------------
-    # CARBON STEELS / LOW ALLOY STEELS
+    # CARBON / LOW-ALLOY STEELS
     # ------------------------------------------------------------------------
 
     "SA515-55": {
@@ -458,65 +488,51 @@ asme_material_stress_data: Dict[str, Dict[int, float]] = {
 
 
 # ============================================================================
-# LEGACY / USER-FRIENDLY MATERIAL ALIASES
+# MATERIAL ALIASES
 # ============================================================================
 
-MATERIAL_ALIASES = {
-    "sa515-55": "SA515-55",
-    "sa515-70": "SA515-70",
-    "sa516-55": "SA516-55",
-    "sa516-70": "SA516-70",
-    "sa256-a": "SA256-A",
-    "sa285-b": "SA285-B",
-    "sa285-c": "SA285-C",
-    "sa202-a": "SA202-A",
-    "sa202-b": "SA202-B",
-    "sa387-d": "SA387-D",
+MATERIAL_ALIASES: Dict[str, str] = {
 
-    "sa240-304": "SA240-304",
-    "sa240-304l": "SA240-304L",
-    "sa240-309s": "SA240-309S",
-    "sa240-310": "SA240-310",
-    "sa240-316": "SA240-316",
-    "sa240-316l": "SA240-316L",
-    "sa240-317l": "SA240-317L",
-    "sa240-347": "SA240-347",
-
-    "b162": "B162",
-    "201": "201",
-    "b127": "B127",
-    "b168": "B168",
-    "b443": "B443",
-    "c-22 alloy": "C-22 alloy",
-    "c22 alloy": "C-22 alloy",
-    "b575": "B575",
-    "b333": "B333",
-    "b463": "B463",
-    "b409": "B409",
-    "b424": "B424",
-    "b688": "B688",
-
-    "a240 904": "A240 904",
-    "a240-904": "A240 904",
-    "g-30 alloy": "G-30 Alloy",
-    "g30 alloy": "G-30 Alloy",
-    "titanium grade 2": "Titanium Grade 2",
-    "zirconium 702": "Zinccronium 702",
-    "zinccronium 702": "Zinccronium 702",
-
-    # Existing ProcessPI generic names
+    # Carbon / low alloy
     "carbon_steel": "SA516-70",
     "carbon steel": "SA516-70",
     "sa-516-70": "SA516-70",
+    "sa51670": "SA516-70",
+
+    # Stainless
     "stainless_304": "SA240-304",
     "stainless 304": "SA240-304",
+    "ss304": "SA240-304",
+
+    "stainless_304l": "SA240-304L",
+    "stainless 304l": "SA240-304L",
+    "ss304l": "SA240-304L",
+
     "stainless_316": "SA240-316",
     "stainless 316": "SA240-316",
+    "ss316": "SA240-316",
+
+    "stainless_316l": "SA240-316L",
+    "stainless 316l": "SA240-316L",
+    "ss316l": "SA240-316L",
+
+    # Other aliases
+    "c22": "C-22 alloy",
+    "c-22": "C-22 alloy",
+
+    "g30": "G-30 Alloy",
+    "g-30": "G-30 Alloy",
+
+    "titanium grade 2": "Titanium Grade 2",
+    "ti grade 2": "Titanium Grade 2",
+
+    "zirconium 702": "Zinccronium 702",
+    "zirconium grade 702": "Zinccronium 702",
 }
 
 
 # ============================================================================
-# TEMPERATURE FUNCTIONS
+# CONSTANTS
 # ============================================================================
 
 ASME_STRESS_TEMPERATURES_F = (
@@ -530,170 +546,23 @@ ASME_STRESS_TEMPERATURES_F = (
     800,
 )
 
+SUPPORTED_VESSEL_TYPES = {
+    "horizontal",
+    "vertical",
+    "spherical",
+}
 
-def set_temperature_range(temperature: Any) -> Temperature:
-    """
-    Return the ASME material-stress temperature band.
-
-    The supplied stress database is tabulated at 100°F increments.
-
-    Selection is conservative:
-
-        <= 100°F  -> 100°F
-        <= 200°F  -> 200°F
-        <= 300°F  -> 300°F
-        ...
-        <= 800°F  -> 800°F
-
-    Temperatures above 800°F are rejected because no allowable-stress data
-    has been supplied for higher temperatures.
-    """
-
-    fahrenheit = _value(temperature, "temperature", "F")
-
-    if fahrenheit <= 100:
-        return Temperature(100, "F")
-
-    if fahrenheit <= 200:
-        return Temperature(200, "F")
-
-    if fahrenheit <= 300:
-        return Temperature(300, "F")
-
-    if fahrenheit <= 400:
-        return Temperature(400, "F")
-
-    if fahrenheit <= 500:
-        return Temperature(500, "F")
-
-    if fahrenheit <= 600:
-        return Temperature(600, "F")
-
-    if fahrenheit <= 700:
-        return Temperature(700, "F")
-
-    if fahrenheit <= 800:
-        return Temperature(800, "F")
-
-    raise ValueError(
-        "Design temperature exceeds the available allowable-stress database "
-        "(maximum supported temperature = 800°F)."
-    )
-
-
-def normalize_material(material: Any) -> str:
-    """
-    Normalize a material name to the key used in the ASME stress database.
-    """
-
-    key = str(material).strip()
-
-    if key in asme_material_stress_data:
-        return key
-
-    alias_key = key.lower()
-
-    if alias_key in MATERIAL_ALIASES:
-        return MATERIAL_ALIASES[alias_key]
-
-    # Case-insensitive direct lookup
-    for material_name in asme_material_stress_data:
-        if material_name.lower() == alias_key:
-            return material_name
-
-    raise ValueError(
-        f"Unsupported pressure-vessel material: {material!r}. "
-        f"Available materials: {', '.join(asme_material_stress_data.keys())}"
-    )
-
-
-def get_allowable_stress(
-    material: Any,
-    temperature: Any = Temperature(20, "C"),
-) -> Pressure:
-    """
-    Return the allowable stress for a material at the specified temperature.
-
-    Parameters
-    ----------
-    material:
-        ASME material identifier, for example ``SA516-70`` or ``SA240-316L``.
-
-        A numerical value may also be supplied. In that case it is interpreted
-        as an allowable stress in ksi.
-
-    temperature:
-        ProcessPI Temperature or numeric temperature.
-
-        Numeric temperature values are interpreted as Fahrenheit when no
-        ProcessPI Temperature object is supplied.
-
-    Returns
-    -------
-    Pressure
-        Allowable stress in psi.
-
-    Notes
-    -----
-    The material database is in ksi.
-
-    For a temperature between two tabulated values, the next higher
-    temperature band is selected conservatively.
-
-    Example:
-
-        450°F -> 500°F stress
-
-    """
-
-    # ------------------------------------------------------------------------
-    # Explicit numerical allowable stress
-    # ------------------------------------------------------------------------
-
-    if isinstance(material, (int, float)):
-        stress_ksi = float(material)
-
-        if stress_ksi <= 0:
-            raise ValueError("Allowable stress must be greater than zero.")
-
-        return Pressure(stress_ksi * 1000, "psi")
-
-    # ------------------------------------------------------------------------
-    # Normalize material
-    # ------------------------------------------------------------------------
-
-    material_key = normalize_material(material)
-
-    # ------------------------------------------------------------------------
-    # Convert design temperature to the ASME table band
-    # ------------------------------------------------------------------------
-
-    temperature_band = set_temperature_range(temperature)
-
-    temperature_f = int(round(_value(temperature_band, "temperature", "F")))
-
-    stress_ksi = asme_material_stress_data[material_key][temperature_f]
-
-    # ------------------------------------------------------------------------
-    # Zero values indicate that the supplied table has no allowable stress
-    # available at that temperature.
-    # ------------------------------------------------------------------------
-
-    if stress_ksi <= 0:
-        raise ValueError(
-            f"No allowable stress is available for material "
-            f"{material_key!r} at {temperature_f}°F."
-        )
-
-    # ------------------------------------------------------------------------
-    # Convert ksi -> psi
-    # ------------------------------------------------------------------------
-
-    return Pressure(stress_ksi * 1000, "psi")
+SUPPORTED_HEAD_TYPES = {
+    "flat",
+    "ellipsoidal",
+    "torispherical",
+    "hemispherical",
+    "conical",
+}
 
 
 # ============================================================================
-# UNIT / VALUE HELPER
+# GENERAL VALUE HELPER
 # ============================================================================
 
 def _value(
@@ -702,37 +571,359 @@ def _value(
     unit: Optional[str] = None,
 ) -> float:
     """
-    Extract a numeric value from either a plain number or ProcessPI unit.
+    Extract a numeric value from a ProcessPI unit object or numeric value.
 
-    ProcessPI unit objects expose ``value`` / ``original_value`` depending on
-    the unit implementation, so both are handled.
+    If a unit is supplied and the object supports ``to()``, the value is
+    converted first.
     """
 
-    if hasattr(value, "to") and unit:
+    if value is None:
+        raise ValueError(f"{name} cannot be None.")
+
+    if hasattr(value, "to") and unit is not None:
         value = value.to(unit)
 
-    value = getattr(
-        value,
-        "original_value",
-        getattr(value, "value", value),
-    )
+    if hasattr(value, "value"):
+        value = value.value
+    elif hasattr(value, "original_value"):
+        value = value.original_value
 
     try:
         return float(value)
     except (TypeError, ValueError) as exc:
         raise TypeError(
-            f"{name} must be numeric or a ProcessPI unit value"
+            f"{name} must be numeric or a compatible ProcessPI unit."
         ) from exc
 
 
 # ============================================================================
-# RESULTS
+# MATERIAL NORMALIZATION
+# ============================================================================
+
+def normalize_material(material: Any) -> str:
+    """
+    Convert material aliases and case variations into canonical material names.
+
+    Examples
+    --------
+    ``carbon_steel`` -> ``SA516-70``
+
+    ``stainless_316`` -> ``SA240-316``
+
+    ``sa516-70`` -> ``SA516-70``
+    """
+
+    if material is None:
+        raise ValueError("Material cannot be None.")
+
+    material_string = str(material).strip()
+
+    # Exact match
+    if material_string in asme_material_stress_data:
+        return material_string
+
+    # Alias
+    alias_key = material_string.lower()
+
+    if alias_key in MATERIAL_ALIASES:
+        return MATERIAL_ALIASES[alias_key]
+
+    # Case-insensitive direct match
+    for material_name in asme_material_stress_data:
+        if material_name.lower() == alias_key:
+            return material_name
+
+    available = ", ".join(asme_material_stress_data.keys())
+
+    raise ValueError(
+        f"Unsupported pressure-vessel material: {material!r}. "
+        f"Available materials: {available}"
+    )
+
+
+# ============================================================================
+# HEAD TYPE NORMALIZATION
+# ============================================================================
+
+def normalize_head_type(head_type: Any) -> str:
+    """
+    Normalize user-facing head names.
+
+    Examples
+    --------
+    ``2:1_ellipsoidal`` -> ``ellipsoidal``
+
+    ``2:1 ellipsoidal`` -> ``ellipsoidal``
+
+    ``2:1-ellipsoidal`` -> ``ellipsoidal``
+    """
+
+    if head_type is None:
+        return "ellipsoidal"
+
+    key = str(head_type).strip().lower()
+
+    aliases = {
+        "flat": "flat",
+
+        "ellipsoidal": "ellipsoidal",
+        "2:1_ellipsoidal": "ellipsoidal",
+        "2:1 ellipsoidal": "ellipsoidal",
+        "2:1-ellipsoidal": "ellipsoidal",
+        "2:1 elliptical": "ellipsoidal",
+        "2:1_elliptical": "ellipsoidal",
+
+        "torispherical": "torispherical",
+        "torispheric": "torispherical",
+
+        "hemispherical": "hemispherical",
+        "hemispheric": "hemispherical",
+        "half spherical": "hemispherical",
+
+        "conical": "conical",
+        "cone": "conical",
+    }
+
+    if key in aliases:
+        return aliases[key]
+
+    raise ValueError(
+        f"Unsupported head_type: {head_type!r}. "
+        f"Supported head types: {sorted(SUPPORTED_HEAD_TYPES)}"
+    )
+
+
+# ============================================================================
+# TEMPERATURE RANGE
+# ============================================================================
+
+def set_temperature_range(
+    temperature: Any,
+) -> Temperature:
+    """
+    Select the conservative allowable-stress temperature band.
+
+    The supplied database is tabulated at 100°F increments.
+
+    Temperatures between table points use the next higher temperature band.
+
+    Examples
+    --------
+    100°F -> 100°F
+    101°F -> 200°F
+    302°F -> 400°F
+    450°F -> 500°F
+    800°F -> 800°F
+    """
+
+    # ProcessPI Temperature -> Fahrenheit
+    if hasattr(temperature, "to"):
+        temperature_f = _value(
+            temperature,
+            "temperature",
+            "F",
+        )
+    else:
+        # Plain numeric temperatures are interpreted as Fahrenheit.
+        temperature_f = float(temperature)
+
+    if temperature_f <= 100:
+        return Temperature(100, "F")
+
+    for table_temperature in ASME_STRESS_TEMPERATURES_F:
+
+        if temperature_f <= table_temperature:
+            return Temperature(
+                table_temperature,
+                "F",
+            )
+
+    raise ValueError(
+        "Design temperature exceeds the available allowable-stress "
+        "database limit of 800°F."
+    )
+
+
+# ============================================================================
+# ALLOWABLE STRESS
+# ============================================================================
+
+def get_allowable_stress(
+    material: Any,
+    temperature: Any = Temperature(20, "C"),
+) -> Pressure:
+    """
+    Return allowable material stress.
+
+    Parameters
+    ----------
+    material:
+        Material name or ProcessPI material alias.
+
+    temperature:
+        ProcessPI Temperature object or numeric Fahrenheit value.
+
+    Returns
+    -------
+    Pressure
+        Allowable stress in psi.
+
+    Notes
+    -----
+    The database values are in ksi.
+    """
+
+    # ------------------------------------------------------------------------
+    # Direct numerical allowable stress
+    # ------------------------------------------------------------------------
+
+    if isinstance(material, (int, float)):
+
+        stress_ksi = float(material)
+
+        if stress_ksi <= 0:
+            raise ValueError(
+                "Allowable stress must be greater than zero."
+            )
+
+        return Pressure(
+            stress_ksi * 1000,
+            "psi",
+        )
+
+    # ------------------------------------------------------------------------
+    # Normalize material
+    # ------------------------------------------------------------------------
+
+    material_key = normalize_material(material)
+
+    # ------------------------------------------------------------------------
+    # Select temperature band
+    # ------------------------------------------------------------------------
+
+    temperature_band = set_temperature_range(
+        temperature
+    )
+
+    temperature_f = int(
+        round(
+            _value(
+                temperature_band,
+                "temperature band",
+                "F",
+            )
+        )
+    )
+
+    # ------------------------------------------------------------------------
+    # Retrieve stress
+    # ------------------------------------------------------------------------
+
+    stress_ksi = asme_material_stress_data[
+        material_key
+    ][temperature_f]
+
+    # Zero means no usable allowable stress was supplied.
+    if stress_ksi <= 0:
+
+        raise ValueError(
+            f"No positive allowable stress is available for "
+            f"{material_key} at {temperature_f}°F."
+        )
+
+    return Pressure(
+        stress_ksi * 1000,
+        "psi",
+    )
+
+
+# ============================================================================
+# STRESS INFORMATION
+# ============================================================================
+
+def get_stress_data(
+    material: Any,
+    temperature: Any,
+) -> Dict[str, Any]:
+    """
+    Return complete audit information for the selected allowable stress.
+    """
+
+    material_key = normalize_material(material)
+
+    # Actual temperature in F
+    if hasattr(temperature, "to"):
+
+        actual_temperature_f = _value(
+            temperature,
+            "design temperature",
+            "F",
+        )
+
+    else:
+
+        actual_temperature_f = float(
+            temperature
+        )
+
+    selected_band = set_temperature_range(
+        temperature
+    )
+
+    selected_temperature_f = int(
+        round(
+            _value(
+                selected_band,
+                "selected temperature band",
+                "F",
+            )
+        )
+    )
+
+    allowable_stress_ksi = (
+        asme_material_stress_data[
+            material_key
+        ][selected_temperature_f]
+    )
+
+    if allowable_stress_ksi <= 0:
+
+        raise ValueError(
+            f"No positive allowable stress is available for "
+            f"{material_key} at {selected_temperature_f}°F."
+        )
+
+    return {
+        "material": material_key,
+
+        "temperature_actual": temperature,
+
+        "temperature_actual_f": actual_temperature_f,
+
+        "temperature_table_band": selected_band,
+
+        "temperature_table_band_f": selected_temperature_f,
+
+        "allowable_stress_ksi": allowable_stress_ksi,
+
+        "allowable_stress_psi": (
+            allowable_stress_ksi * 1000
+        ),
+
+        "selection_method": (
+            "next_higher_temperature_band"
+        ),
+    }
+
+
+# ============================================================================
+# RESULTS CONTAINER
 # ============================================================================
 
 @dataclass
 class PressureVesselResults:
     """
-    Structured results returned by the pressure-vessel design workflow.
+    Structured PressureVessel design results.
     """
 
     data: Dict[str, Any]
@@ -742,7 +933,13 @@ class PressureVesselResults:
 
     @property
     def warnings(self) -> List[str]:
-        return self.data["warnings"]
+        return self.data.get(
+            "warnings",
+            [],
+        )
+
+    def __repr__(self) -> str:
+        return repr(self.data)
 
 
 # ============================================================================
@@ -751,26 +948,43 @@ class PressureVesselResults:
 
 class PressureVessel(CalculationBase):
     """
-    Preliminary ASME VIII-1 vessel with cylindrical or spherical geometry.
+    Preliminary ASME VIII-1 pressure vessel.
 
-    Dimensions are SI when plain numbers are supplied:
+    Parameters
+    ----------
+    volume:
+        Optional specified vessel volume.
 
-        length      -> m
-        diameter    -> m
-        pressure    -> Pa
-        density     -> kg/m³
+    diameter:
+        Vessel internal diameter.
 
-    ProcessPI:
+    length:
+        Cylindrical tangent-to-tangent length.
 
-        Pressure
-        Temperature
-        Length
-        Diameter
-        Volume
+    design_pressure:
+        Internal design pressure.
 
-    objects are accepted directly.
+    design_temperature:
+        Design temperature.
+
+    vessel_type:
+        ``horizontal``, ``vertical`` or ``spherical``.
+
+    head_type:
+        ``flat``, ``2:1_ellipsoidal``, ``torispherical``,
+        ``hemispherical`` or ``conical``.
+
+    material:
+        ASME material or ProcessPI material alias.
+
+    corrosion_allowance:
+        Corrosion allowance.
+
+    joint_efficiency:
+        Weld joint efficiency.
     """
 
+    # Standard preliminary plate thicknesses
     STANDARD_THICKNESSES_MM = (
         3,
         4,
@@ -785,242 +999,310 @@ class PressureVessel(CalculationBase):
         32,
         40,
         50,
+        60,
+        75,
+        80,
+        100,
     )
 
-    _HEADS = {
-        "flat",
-        "ellipsoidal",
-        "torispherical",
-        "hemispherical",
-        "conical",
-    }
-
-    _TYPES = {
-        "horizontal",
-        "vertical",
-        "spherical",
-    }
-
     def __init__(self, **kwargs: Any):
+
         super().__init__(**kwargs)
 
         self.nozzles: Dict[str, Dict[str, Any]] = {}
+
         self.manholes: Dict[str, Dict[str, Any]] = {}
 
-    # ------------------------------------------------------------------------
-    # INPUT VALIDATION
-    # ------------------------------------------------------------------------
-
-    def validate_inputs(self) -> None:
-
-        inputs = self.inputs
-
-        vessel_type = str(
-            inputs.get(
-                "vessel_type",
-                inputs.get("orientation", "horizontal"),
-            )
-        ).lower()
-
-        if vessel_type not in self._TYPES:
-            raise ValueError(
-                f"vessel_type must be one of {sorted(self._TYPES)}"
-            )
-
-        pressure = inputs.get(
-            "design_pressure",
-            inputs.get("pressure"),
-        )
-
-        if pressure is None or _value(
-            pressure,
-            "design_pressure",
-            "Pa",
-        ) <= 0:
-            raise ValueError(
-                "design_pressure must be greater than zero"
-            )
-
-        diameter = inputs.get(
-            "diameter",
-            inputs.get("inside_diameter"),
-        )
-
-        if diameter is None or _value(
-            diameter,
-            "diameter",
-            "m",
-        ) <= 0:
-            raise ValueError(
-                "diameter must be greater than zero"
-            )
-
-        if vessel_type != "spherical":
-
-            length = inputs.get(
-                "length",
-                inputs.get("tangent_to_tangent_length"),
-            )
-
-            if length is None or _value(
-                length,
-                "length",
-                "m",
-            ) <= 0:
-                raise ValueError(
-                    "length must be greater than zero for cylindrical vessels"
-                )
-
-        joint_efficiency = float(
-            inputs.get("joint_efficiency", 1.0)
-        )
-
-        if not 0 < joint_efficiency <= 1:
-            raise ValueError(
-                "joint_efficiency must be greater than zero and no more than one"
-            )
-
-        corrosion_allowance = _value(
-            inputs.get("corrosion_allowance", 0.0),
-            "corrosion_allowance",
-            "m",
-        )
-
-        if corrosion_allowance < 0:
-            raise ValueError(
-                "corrosion_allowance must be non-negative"
-            )
-
-        # Validate material and temperature database
-        material = inputs.get(
-            "material",
-            "SA516-70",
-        )
-
-        design_temperature = inputs.get(
-            "design_temperature",
-            Temperature(20, "C"),
-        )
-
-        get_allowable_stress(
-            material,
-            design_temperature,
-        )
-
-    # ------------------------------------------------------------------------
-    # VESSEL TYPE
-    # ------------------------------------------------------------------------
+    # ========================================================================
+    # INPUT PROPERTIES
+    # ========================================================================
 
     @property
     def vessel_type(self) -> str:
+
         return str(
             self.inputs.get(
                 "vessel_type",
-                self.inputs.get("orientation", "horizontal"),
+                self.inputs.get(
+                    "orientation",
+                    "horizontal",
+                ),
             )
-        ).lower()
-
-    # ------------------------------------------------------------------------
-    # MATERIAL
-    # ------------------------------------------------------------------------
+        ).strip().lower()
 
     @property
-    def material(self) -> str:
-        return normalize_material(
+    def material_input(self) -> str:
+
+        return str(
             self.inputs.get(
                 "material",
                 "SA516-70",
             )
         )
 
-    # ------------------------------------------------------------------------
-    # DESIGN TEMPERATURE
-    # ------------------------------------------------------------------------
+    @property
+    def material(self) -> str:
+
+        return normalize_material(
+            self.material_input
+        )
+
+    @property
+    def head_type_input(self) -> str:
+
+        return str(
+            self.inputs.get(
+                "head_type",
+                "ellipsoidal",
+            )
+        )
+
+    @property
+    def head_type(self) -> str:
+
+        return normalize_head_type(
+            self.head_type_input
+        )
 
     @property
     def design_temperature(self) -> Any:
+
         return self.inputs.get(
             "design_temperature",
             Temperature(20, "C"),
         )
 
-    # ------------------------------------------------------------------------
+    # ========================================================================
+    # VALIDATION
+    # ========================================================================
+
+    def validate_inputs(self) -> None:
+
+        inputs = self.inputs
+
+        # --------------------------------------------------------------------
+        # Vessel type
+        # --------------------------------------------------------------------
+
+        if self.vessel_type not in SUPPORTED_VESSEL_TYPES:
+
+            raise ValueError(
+                f"vessel_type must be one of "
+                f"{sorted(SUPPORTED_VESSEL_TYPES)}"
+            )
+
+        # --------------------------------------------------------------------
+        # Pressure
+        # --------------------------------------------------------------------
+
+        pressure = inputs.get(
+            "design_pressure",
+            inputs.get("pressure"),
+        )
+
+        if pressure is None:
+
+            raise ValueError(
+                "design_pressure is required."
+            )
+
+        pressure_pa = _value(
+            pressure,
+            "design_pressure",
+            "Pa",
+        )
+
+        if pressure_pa <= 0:
+
+            raise ValueError(
+                "design_pressure must be greater than zero."
+            )
+
+        # --------------------------------------------------------------------
+        # Diameter
+        # --------------------------------------------------------------------
+
+        diameter = inputs.get(
+            "diameter",
+            inputs.get("inside_diameter"),
+        )
+
+        if diameter is None:
+
+            raise ValueError(
+                "diameter is required."
+            )
+
+        diameter_m = _value(
+            diameter,
+            "diameter",
+            "m",
+        )
+
+        if diameter_m <= 0:
+
+            raise ValueError(
+                "diameter must be greater than zero."
+            )
+
+        # --------------------------------------------------------------------
+        # Length
+        # --------------------------------------------------------------------
+
+        if self.vessel_type != "spherical":
+
+            length = inputs.get(
+                "length",
+                inputs.get(
+                    "tangent_to_tangent_length"
+                ),
+            )
+
+            if length is None:
+
+                raise ValueError(
+                    "length is required for cylindrical vessels."
+                )
+
+            length_m = _value(
+                length,
+                "length",
+                "m",
+            )
+
+            if length_m <= 0:
+
+                raise ValueError(
+                    "length must be greater than zero."
+                )
+
+        # --------------------------------------------------------------------
+        # Joint efficiency
+        # --------------------------------------------------------------------
+
+        joint_efficiency = float(
+            inputs.get(
+                "joint_efficiency",
+                1.0,
+            )
+        )
+
+        if not 0 < joint_efficiency <= 1:
+
+            raise ValueError(
+                "joint_efficiency must be > 0 and <= 1."
+            )
+
+        # --------------------------------------------------------------------
+        # Corrosion allowance
+        # --------------------------------------------------------------------
+
+        corrosion_allowance = _value(
+            inputs.get(
+                "corrosion_allowance",
+                0.0,
+            ),
+            "corrosion_allowance",
+            "m",
+        )
+
+        if corrosion_allowance < 0:
+
+            raise ValueError(
+                "corrosion_allowance cannot be negative."
+            )
+
+        # --------------------------------------------------------------------
+        # Material
+        # --------------------------------------------------------------------
+
+        normalize_material(
+            inputs.get(
+                "material",
+                "SA516-70",
+            )
+        )
+
+        # --------------------------------------------------------------------
+        # Head
+        # --------------------------------------------------------------------
+
+        normalize_head_type(
+            inputs.get(
+                "head_type",
+                "ellipsoidal",
+            )
+        )
+
+        # --------------------------------------------------------------------
+        # Temperature / allowable stress
+        # --------------------------------------------------------------------
+
+        get_allowable_stress(
+            inputs.get(
+                "material",
+                "SA516-70",
+            ),
+            inputs.get(
+                "design_temperature",
+                Temperature(20, "C"),
+            ),
+        )
+
+        # --------------------------------------------------------------------
+        # Volume
+        # --------------------------------------------------------------------
+
+        if "volume" in inputs and inputs["volume"] is not None:
+
+            volume_m3 = _value(
+                inputs["volume"],
+                "volume",
+                "m3",
+            )
+
+            if volume_m3 <= 0:
+
+                raise ValueError(
+                    "volume must be greater than zero."
+                )
+
+    # ========================================================================
     # ALLOWABLE STRESS
-    # ------------------------------------------------------------------------
+    # ========================================================================
 
     def allowable_stress(self) -> Pressure:
-        """
-        Return allowable stress at the design temperature.
-        """
 
         return get_allowable_stress(
             self.material,
             self.design_temperature,
         )
 
-    # ------------------------------------------------------------------------
-    # NOZZLES
-    # ------------------------------------------------------------------------
+    # ========================================================================
+    # STRESS DATA
+    # ========================================================================
 
-    def add_nozzle(
-        self,
-        name: str,
-        diameter: Any,
-        **details: Any,
-    ) -> None:
+    def stress_data(self) -> Dict[str, Any]:
 
-        diameter_m = _value(
-            diameter,
-            "nozzle diameter",
-            "m",
+        return get_stress_data(
+            self.material,
+            self.design_temperature,
         )
 
-        if diameter_m <= 0:
-            raise ValueError(
-                "nozzle diameter must be greater than zero"
-            )
-
-        self.nozzles[name] = {
-            "diameter": Diameter(diameter_m),
-            **details,
-        }
-
-    # ------------------------------------------------------------------------
-    # MANHOLES
-    # ------------------------------------------------------------------------
-
-    def add_manhole(
-        self,
-        name: str,
-        diameter: Any,
-        **details: Any,
-    ) -> None:
-
-        diameter_m = _value(
-            diameter,
-            "manhole diameter",
-            "m",
-        )
-
-        if diameter_m <= 0:
-            raise ValueError(
-                "manhole diameter must be greater than zero"
-            )
-
-        self.manholes[name] = {
-            "diameter": Diameter(diameter_m),
-            **details,
-        }
-
-    # ------------------------------------------------------------------------
+    # ========================================================================
     # SHELL THICKNESS
-    # ------------------------------------------------------------------------
+    # ========================================================================
 
     def shell_thickness(self) -> Length:
         """
-        UG-27(c)(1) cylindrical-shell thickness.
+        Preliminary cylindrical shell thickness.
 
-        Includes corrosion allowance.
+        Based on the internal-pressure relation:
+
+            t = P R / (S E - 0.6P)
+
+        Corrosion allowance is added after calculating the pressure
+        thickness.
         """
 
         pressure = _value(
@@ -1043,12 +1325,8 @@ class PressureVessel(CalculationBase):
 
         radius = diameter / 2
 
-        allowable_stress = (
-            self.allowable_stress().to("Pa")
-        )
-
-        s = _value(
-            allowable_stress,
+        allowable_stress = _value(
+            self.allowable_stress(),
             "allowable stress",
             "Pa",
         )
@@ -1069,28 +1347,40 @@ class PressureVessel(CalculationBase):
             "m",
         )
 
-        t_pressure = (
-            pressure * radius
-            /
-            (
-                s * joint_efficiency
-                - 0.6 * pressure
+        denominator = (
+            allowable_stress
+            * joint_efficiency
+            - 0.6 * pressure
+        )
+
+        if denominator <= 0:
+
+            raise ValueError(
+                "Invalid pressure/material combination: "
+                "S*E - 0.6P must be greater than zero."
             )
+
+        pressure_thickness = (
+            pressure
+            * radius
+            / denominator
         )
 
         return Length(
-            t_pressure + corrosion_allowance
+            pressure_thickness
+            + corrosion_allowance
         )
 
-    # ------------------------------------------------------------------------
+    # ========================================================================
     # HEAD THICKNESS
-    # ------------------------------------------------------------------------
+    # ========================================================================
 
     def head_thickness(self) -> Length:
         """
-        Preliminary UG-34 / UG-32 head thickness.
+        Preliminary head thickness.
 
-        Includes corrosion allowance.
+        The head factors used here are preliminary engineering factors and
+        are not a substitute for detailed ASME head design.
         """
 
         pressure = _value(
@@ -1111,12 +1401,8 @@ class PressureVessel(CalculationBase):
             "m",
         )
 
-        allowable_stress = (
-            self.allowable_stress().to("Pa")
-        )
-
-        s = _value(
-            allowable_stress,
+        allowable_stress = _value(
+            self.allowable_stress(),
             "allowable stress",
             "Pa",
         )
@@ -1137,24 +1423,9 @@ class PressureVessel(CalculationBase):
             "m",
         )
 
-        head = str(
-            self.inputs.get(
-                "head_type",
-                "ellipsoidal",
-            )
-        ).lower()
+        head = self.head_type
 
-        head = (
-            head
-            .replace("2:1_", "")
-            .replace("2:1 ", "")
-        )
-
-        if head not in self._HEADS:
-            raise ValueError(
-                f"head_type must be one of {sorted(self._HEADS)}"
-            )
-
+        # Preliminary pressure-thickness factors
         factors = {
             "flat": 0.50,
             "ellipsoidal": 0.25,
@@ -1163,29 +1434,84 @@ class PressureVessel(CalculationBase):
             "conical": 0.35,
         }
 
-        t_pressure = (
-            factors[head]
+        factor = factors[head]
+
+        denominator = (
+            allowable_stress
+            * joint_efficiency
+            - 0.1 * pressure
+        )
+
+        if denominator <= 0:
+
+            raise ValueError(
+                "Invalid pressure/material combination for head."
+            )
+
+        pressure_thickness = (
+            factor
             * pressure
             * diameter
-            /
-            (
-                s * joint_efficiency
-                - 0.1 * pressure
-            )
+            / denominator
         )
 
         return Length(
-            t_pressure + corrosion_allowance
+            pressure_thickness
+            + corrosion_allowance
         )
 
-    # ------------------------------------------------------------------------
+    # ========================================================================
+    # HEAD VOLUME
+    # ========================================================================
+
+    def _head_volume(
+        self,
+        radius: float,
+    ) -> float:
+        """
+        Preliminary geometric head-volume contribution.
+
+        This is a simplified geometry model used for preliminary volume
+        estimation.
+        """
+
+        factors = {
+            "flat": 0.0,
+
+            # 2:1 ellipsoidal head approximation
+            "ellipsoidal": 2.0 / 3.0,
+
+            "torispherical": 0.5,
+
+            "hemispherical": 4.0 / 3.0,
+
+            "conical": 1.0 / 3.0,
+        }
+
+        return (
+            factors[self.head_type]
+            * pi
+            * radius**3
+        )
+
+    # ========================================================================
     # VOLUME
-    # ------------------------------------------------------------------------
+    # ========================================================================
 
     def volume(
         self,
         liquid_level: Optional[Any] = None,
     ) -> Volume:
+        """
+        Calculate internal vessel volume from geometry.
+
+        Important:
+        The supplied ``volume`` input is treated as a specified/reference
+        volume. It does NOT override explicitly supplied diameter and length.
+
+        The calculated geometric volume is therefore the governing result
+        for the geometry.
+        """
 
         diameter = _value(
             self.inputs.get(
@@ -1198,14 +1524,22 @@ class PressureVessel(CalculationBase):
 
         radius = diameter / 2
 
+        # --------------------------------------------------------------------
+        # Spherical vessel
+        # --------------------------------------------------------------------
+
         if self.vessel_type == "spherical":
 
             full_volume = (
-                4
+                4.0
+                / 3.0
                 * pi
                 * radius**3
-                / 3
             )
+
+        # --------------------------------------------------------------------
+        # Cylindrical vessel
+        # --------------------------------------------------------------------
 
         else:
 
@@ -1220,15 +1554,35 @@ class PressureVessel(CalculationBase):
                 "m",
             )
 
-            full_volume = (
+            cylindrical_volume = (
                 pi
                 * radius**2
                 * length
-                + self._head_volume(radius)
             )
 
+            head_volume = self._head_volume(
+                radius
+            )
+
+            full_volume = (
+                cylindrical_volume
+                + head_volume
+            )
+
+        # --------------------------------------------------------------------
+        # Full volume requested
+        # --------------------------------------------------------------------
+
         if liquid_level is None:
-            return Volume(full_volume)
+
+            return Volume(
+                full_volume,
+                "m3",
+            )
+
+        # --------------------------------------------------------------------
+        # Liquid level
+        # --------------------------------------------------------------------
 
         level = _value(
             liquid_level,
@@ -1237,76 +1591,133 @@ class PressureVessel(CalculationBase):
         )
 
         if not 0 <= level <= diameter:
+
             raise ValueError(
-                "liquid_level must be between zero and vessel diameter"
+                "liquid_level must be between "
+                "0 and vessel diameter."
             )
 
-        fraction = (
-            (
-                radius**2
-                * acos(
-                    (radius - level)
-                    / radius
-                )
-                -
+        # --------------------------------------------------------------------
+        # Simplified cylindrical segment calculation
+        # --------------------------------------------------------------------
+
+        segment_volume = (
+            radius**2
+            * acos(
                 (radius - level)
-                * sqrt(
-                    max(
-                        0,
-                        2 * radius * level
-                        - level**2,
-                    )
+                / radius
+            )
+            -
+            (radius - level)
+            * sqrt(
+                max(
+                    0.0,
+                    2.0 * radius * level
+                    - level**2,
                 )
             )
+        )
+
+        segment_fraction = (
+            segment_volume
             /
-            (pi * radius**2)
+            (
+                pi * radius**2
+            )
         )
 
         return Volume(
-            full_volume * fraction
+            full_volume
+            * segment_fraction,
+            "m3",
         )
 
-    # ------------------------------------------------------------------------
-    # HEAD VOLUME
-    # ------------------------------------------------------------------------
+    # ========================================================================
+    # VOLUME CHECK
+    # ========================================================================
 
-    def _head_volume(
-        self,
-        radius: float,
-    ) -> float:
+    def volume_check(self) -> Dict[str, Any]:
+        """
+        Compare user-specified volume with geometry-derived volume.
 
-        head = str(
+        The geometry-derived volume is not replaced by the specified volume.
+        """
+
+        calculated_volume = self.volume()
+
+        calculated_m3 = _value(
+            calculated_volume,
+            "calculated volume",
+            "m3",
+        )
+
+        specified = self.inputs.get(
+            "volume"
+        )
+
+        # No volume supplied
+        if specified is None:
+
+            return {
+                "specified_volume": None,
+                "calculated_volume": calculated_volume,
+                "difference_m3": None,
+                "difference_percent": None,
+                "status": "calculated_from_geometry",
+            }
+
+        specified_m3 = _value(
+            specified,
+            "volume",
+            "m3",
+        )
+
+        difference_m3 = (
+            calculated_m3
+            - specified_m3
+        )
+
+        difference_percent = (
+            difference_m3
+            / specified_m3
+            * 100.0
+        )
+
+        tolerance_percent = float(
             self.inputs.get(
-                "head_type",
-                "ellipsoidal",
+                "volume_tolerance_percent",
+                1.0,
             )
-        ).lower()
+        )
 
-        factors = {
-            "flat": 0.0,
-            "ellipsoidal": 2 / 3,
-            "torispherical": 0.5,
-            "hemispherical": 4 / 3,
-            "conical": 1 / 3,
+        if abs(difference_percent) <= tolerance_percent:
+
+            status = "consistent"
+
+        else:
+
+            status = "geometry_volume_differs"
+
+        return {
+            "specified_volume": specified,
+            "calculated_volume": calculated_volume,
+            "difference_m3": difference_m3,
+            "difference_percent": difference_percent,
+            "tolerance_percent": tolerance_percent,
+            "status": status,
         }
 
-        return (
-            factors.get(
-                head,
-                2 / 3,
-            )
-            * pi
-            * radius**3
-        )
-
-    # ------------------------------------------------------------------------
+    # ========================================================================
     # STANDARD THICKNESS
-    # ------------------------------------------------------------------------
+    # ========================================================================
 
     def select_standard_thickness(
         self,
         required: Any,
     ) -> Length:
+        """
+        Select the next available standard plate thickness.
+        """
 
         required_mm = _value(
             required,
@@ -1314,43 +1725,139 @@ class PressureVessel(CalculationBase):
             "mm",
         )
 
-        for thickness in self.STANDARD_THICKNESSES_MM:
+        for thickness_mm in self.STANDARD_THICKNESSES_MM:
 
-            if thickness >= required_mm:
+            if thickness_mm >= required_mm:
+
                 return Length(
-                    thickness,
+                    thickness_mm,
                     "mm",
                 )
 
+        # If required thickness exceeds the standard list,
+        # return the calculated requirement rather than silently
+        # selecting an inadequate plate.
         return Length(
             required_mm,
             "mm",
         )
 
-    # ------------------------------------------------------------------------
+    # ========================================================================
+    # NOZZLE
+    # ========================================================================
+
+    def add_nozzle(
+        self,
+        name: str,
+        diameter: Any,
+        **details: Any,
+    ) -> None:
+        """
+        Register a nozzle.
+
+        This method registers the nozzle only. It does not perform
+        UG-37/UG-40 reinforcement calculations.
+        """
+
+        if not name:
+            raise ValueError(
+                "Nozzle name cannot be empty."
+            )
+
+        diameter_m = _value(
+            diameter,
+            "nozzle diameter",
+            "m",
+        )
+
+        if diameter_m <= 0:
+
+            raise ValueError(
+                "nozzle diameter must be greater than zero."
+            )
+
+        self.nozzles[name] = {
+            "diameter": Diameter(
+                diameter_m,
+                "m",
+            ),
+            **details,
+        }
+
+    # ========================================================================
+    # MANHOLE
+    # ========================================================================
+
+    def add_manhole(
+        self,
+        name: str,
+        diameter: Any,
+        **details: Any,
+    ) -> None:
+        """
+        Register a manhole.
+
+        This method registers the manhole only. It does not perform
+        detailed opening reinforcement calculations.
+        """
+
+        if not name:
+            raise ValueError(
+                "Manhole name cannot be empty."
+            )
+
+        diameter_m = _value(
+            diameter,
+            "manhole diameter",
+            "m",
+        )
+
+        if diameter_m <= 0:
+
+            raise ValueError(
+                "manhole diameter must be greater than zero."
+            )
+
+        self.manholes[name] = {
+            "diameter": Diameter(
+                diameter_m,
+                "m",
+            ),
+            **details,
+        }
+
+    # ========================================================================
     # DESIGN
-    # ------------------------------------------------------------------------
+    # ========================================================================
 
     def design(self) -> Dict[str, Any]:
         """
-        Execute the preliminary pressure-vessel design calculation.
+        Run the complete preliminary pressure-vessel design.
+
+        Returns
+        -------
+        dict
+            Design results.
         """
 
-        # Validate inputs first
+        # --------------------------------------------------------------------
+        # Validate
+        # --------------------------------------------------------------------
+
         self.validate_inputs()
 
         # --------------------------------------------------------------------
-        # Required shell / head thickness
+        # Thickness calculations
         # --------------------------------------------------------------------
 
-        if self.vessel_type != "spherical":
-            shell_required = self.shell_thickness()
-        else:
-            shell_required = self.head_thickness()
+        shell_required = (
+            self.shell_thickness()
+        )
 
-        head_required = self.head_thickness()
+        head_required = (
+            self.head_thickness()
+        )
 
-        # Convert both to mm before comparison
         shell_required_mm = _value(
             shell_required,
             "shell thickness",
@@ -1368,28 +1875,39 @@ class PressureVessel(CalculationBase):
             head_required_mm,
         )
 
-        selected = self.select_standard_thickness(
-            Length(
-                governing_required_mm,
-                "mm",
+        selected_thickness = (
+            self.select_standard_thickness(
+                Length(
+                    governing_required_mm,
+                    "mm",
+                )
             )
         )
 
+        selected_thickness_mm = _value(
+            selected_thickness,
+            "selected thickness",
+            "mm",
+        )
+
         # --------------------------------------------------------------------
-        # Design pressure
+        # Pressure
         # --------------------------------------------------------------------
 
-        design_pressure = _value(
-            self.inputs.get(
-                "design_pressure",
-                self.inputs.get("pressure"),
-            ),
+        design_pressure = self.inputs.get(
+            "design_pressure",
+            self.inputs.get("pressure"),
+        )
+
+        design_pressure_pa = _value(
+            design_pressure,
             "design_pressure",
             "Pa",
         )
 
-        hydrotest = Pressure(
-            1.3 * design_pressure
+        hydrotest_pressure = Pressure(
+            1.3 * design_pressure_pa,
+            "Pa",
         )
 
         # --------------------------------------------------------------------
@@ -1399,20 +1917,24 @@ class PressureVessel(CalculationBase):
         diameter = _value(
             self.inputs.get(
                 "diameter",
-                self.inputs.get("inside_diameter"),
+                self.inputs.get(
+                    "inside_diameter"
+                ),
             ),
             "diameter",
             "m",
         )
+
+        radius = diameter / 2.0
 
         if self.vessel_type == "spherical":
 
             length = 0.0
 
             external_area = (
-                4
+                4.0
                 * pi
-                * (diameter / 2) ** 2
+                * radius**2
             )
 
         else:
@@ -1428,16 +1950,25 @@ class PressureVessel(CalculationBase):
                 "m",
             )
 
-            external_area = (
-                pi * diameter * length
-                +
-                2
+            shell_area = (
+                pi
+                * diameter
+                * length
+            )
+
+            head_area = (
+                2.0
                 * pi
-                * (diameter / 2) ** 2
+                * radius**2
+            )
+
+            external_area = (
+                shell_area
+                + head_area
             )
 
         # --------------------------------------------------------------------
-        # Approximate material weight
+        # Weight estimate
         # --------------------------------------------------------------------
 
         density = float(
@@ -1448,28 +1979,25 @@ class PressureVessel(CalculationBase):
         )
 
         selected_thickness_m = (
-            _value(
-                selected,
-                "selected thickness",
-                "m",
-            )
+            selected_thickness_mm
+            / 1000.0
         )
 
-        weight = (
+        estimated_weight_kg = (
             external_area
             * selected_thickness_m
             * density
         )
 
         # --------------------------------------------------------------------
-        # Temperature / allowable stress information
+        # Stress data
         # --------------------------------------------------------------------
 
-        temperature_band = set_temperature_range(
-            self.design_temperature
-        )
+        stress_data = self.stress_data()
 
-        allowable_stress = self.allowable_stress()
+        allowable_stress = (
+            self.allowable_stress()
+        )
 
         allowable_stress_psi = _value(
             allowable_stress,
@@ -1478,106 +2006,339 @@ class PressureVessel(CalculationBase):
         )
 
         allowable_stress_ksi = (
-            allowable_stress_psi / 1000
+            allowable_stress_psi
+            / 1000.0
+        )
+
+        # --------------------------------------------------------------------
+        # Volume
+        # --------------------------------------------------------------------
+
+        volume_data = (
+            self.volume_check()
+        )
+
+        calculated_volume = (
+            volume_data[
+                "calculated_volume"
+            ]
         )
 
         # --------------------------------------------------------------------
         # Warnings
         # --------------------------------------------------------------------
 
-        warnings = [
-            "Preliminary ASME Section VIII Division 1 "
-            "internal-pressure sizing only.",
+        warnings: List[str] = []
 
-            "Allowable stresses are taken from the supplied "
-            "temperature-specific preliminary material database.",
+        warnings.append(
+            "Preliminary ASME Section VIII "
+            "Division 1 internal-pressure "
+            "sizing only."
+        )
 
-            "Verify all material allowable stresses against the "
-            "applicable ASME Section II, Part D tables before "
-            "code-stamped design or fabrication.",
+        warnings.append(
+            "Allowable stresses are taken from "
+            "the supplied ProcessPI material "
+            "database."
+        )
 
-            "External pressure/vacuum, complete nozzle reinforcement, "
-            "supports, wind, seismic, fatigue, MDMT, PWHT, and flanges "
-            "are not evaluated.",
-        ]
+        warnings.append(
+            "Verify all material allowable stresses "
+            "against the applicable ASME Section II, "
+            "Part D tables before code-stamped design "
+            "or fabrication."
+        )
 
-        if self.nozzles or self.manholes:
+        warnings.append(
+            "External pressure/vacuum, complete nozzle "
+            "reinforcement, supports, wind, seismic, "
+            "fatigue, MDMT, PWHT, and flange design "
+            "are not evaluated."
+        )
+
+        if self.nozzles:
 
             warnings.append(
-                "Nozzle and manhole reinforcement calculations "
+                "Nozzle reinforcement calculations "
                 "are not included."
             )
 
+        if self.manholes:
+
+            warnings.append(
+                "Manhole/opening reinforcement calculations "
+                "are not included."
+            )
+
+        if (
+            volume_data["status"]
+            == "geometry_volume_differs"
+        ):
+
+            warnings.append(
+                "Specified vessel volume differs from "
+                "the geometry-derived volume by "
+                f"{abs(volume_data['difference_percent']):.2f}%."
+            )
+
         # --------------------------------------------------------------------
-        # Results
+        # Standard thickness warning
         # --------------------------------------------------------------------
 
-        return PressureVesselResults({
+        if (
+            selected_thickness_mm
+            > governing_required_mm
+        ):
+
+            warnings.append(
+                "Selected thickness has been rounded up "
+                "to the next available standard plate thickness."
+            )
+
+        # --------------------------------------------------------------------
+        # Temperature-band warning
+        # --------------------------------------------------------------------
+
+        actual_temperature_f = (
+            stress_data[
+                "temperature_actual_f"
+            ]
+        )
+
+        selected_temperature_f = (
+            stress_data[
+                "temperature_table_band_f"
+            ]
+        )
+
+        if (
+            abs(
+                actual_temperature_f
+                - selected_temperature_f
+            )
+            > 1e-9
+        ):
+
+            warnings.append(
+                "Allowable stress was selected using "
+                f"the next higher temperature band "
+                f"({selected_temperature_f:.0f}°F) "
+                f"for the actual design temperature "
+                f"of {actual_temperature_f:.1f}°F."
+            )
+
+        # --------------------------------------------------------------------
+        # Result
+        # --------------------------------------------------------------------
+
+        result = {
+
+            # ---------------------------------------------------------------
+            # Vessel identification
+            # ---------------------------------------------------------------
 
             "vessel_type": self.vessel_type,
 
-            "head_type": self.inputs.get(
-                "head_type",
-                "ellipsoidal",
-            ),
+            "head_type": self.head_type,
+
+            "head_type_input": self.head_type_input,
 
             "material": self.material,
 
+            "material_input": self.material_input,
+
+            # ---------------------------------------------------------------
+            # Design conditions
+            # ---------------------------------------------------------------
+
+            "design_pressure": design_pressure,
+
             "design_temperature": self.design_temperature,
 
-            "allowable_stress_temperature_band": temperature_band,
+            # ---------------------------------------------------------------
+            # Stress
+            # ---------------------------------------------------------------
 
-            "allowable_stress": allowable_stress,
-
-            "allowable_stress_ksi": allowable_stress_ksi,
-
-            "shell_required_thickness": shell_required,
-
-            "head_required_thickness": head_required,
-
-            "governing_required_thickness": Length(
-                governing_required_mm,
-                "mm",
+            "allowable_stress_temperature_band": (
+                stress_data[
+                    "temperature_table_band"
+                ]
             ),
 
-            "selected_thickness": selected,
+            "allowable_stress": (
+                allowable_stress
+            ),
 
-            "internal_volume": self.volume(),
+            "allowable_stress_ksi": (
+                allowable_stress_ksi
+            ),
+
+            "stress_data": stress_data,
+
+            # ---------------------------------------------------------------
+            # Thickness
+            # ---------------------------------------------------------------
+
+            "shell_required_thickness": (
+                shell_required
+            ),
+
+            "head_required_thickness": (
+                head_required
+            ),
+
+            "governing_required_thickness": (
+                Length(
+                    governing_required_mm,
+                    "mm",
+                )
+            ),
+
+            "selected_thickness": (
+                selected_thickness
+            ),
+
+            "selected_thickness_mm": (
+                selected_thickness_mm
+            ),
+
+            # ---------------------------------------------------------------
+            # Geometry
+            # ---------------------------------------------------------------
+
+            "diameter": (
+                self.inputs.get(
+                    "diameter",
+                    self.inputs.get(
+                        "inside_diameter"
+                    ),
+                )
+            ),
+
+            "length": (
+                self.inputs.get(
+                    "length",
+                    self.inputs.get(
+                        "tangent_to_tangent_length"
+                    ),
+                )
+                if self.vessel_type != "spherical"
+                else None
+            ),
+
+            # ---------------------------------------------------------------
+            # Volume
+            # ---------------------------------------------------------------
+
+            "specified_volume": (
+                volume_data[
+                    "specified_volume"
+                ]
+            ),
+
+            "internal_volume": (
+                calculated_volume
+            ),
+
+            "calculated_volume": (
+                calculated_volume
+            ),
+
+            "volume_difference_m3": (
+                volume_data[
+                    "difference_m3"
+                ]
+            ),
+
+            "volume_difference_percent": (
+                volume_data[
+                    "difference_percent"
+                ]
+            ),
+
+            "volume_check": volume_data,
+
+            # ---------------------------------------------------------------
+            # Area / weight
+            # ---------------------------------------------------------------
 
             "external_area": Area(
-                external_area
+                external_area,
+                "m2",
             ),
 
-            "estimated_weight_kg": weight,
+            "estimated_weight_kg": (
+                estimated_weight_kg
+            ),
 
-            "hydrotest_pressure": hydrotest,
+            "material_density_kg_m3": (
+                density
+            ),
 
-            "nozzles": self.nozzles.copy(),
+            # ---------------------------------------------------------------
+            # Hydrotest
+            # ---------------------------------------------------------------
 
-            "manholes": self.manholes.copy(),
+            "hydrotest_pressure": (
+                hydrotest_pressure
+            ),
+
+            # ---------------------------------------------------------------
+            # Openings
+            # ---------------------------------------------------------------
+
+            "nozzles": (
+                self.nozzles.copy()
+            ),
+
+            "manholes": (
+                self.manholes.copy()
+            ),
+
+            # ---------------------------------------------------------------
+            # Warnings
+            # ---------------------------------------------------------------
 
             "warnings": warnings,
 
+            # ---------------------------------------------------------------
+            # Design basis
+            # ---------------------------------------------------------------
+
             "design_basis": (
                 "ASME VIII-1 preliminary: "
-                "UG-27(c)(1), UG-34, UG-32, UG-99(b)"
+                "UG-27(c)(1), UG-32, UG-34, "
+                "UG-99(b)"
             ),
+        }
 
-        }).to_dict()
+        return PressureVesselResults(
+            result
+        ).to_dict()
+
+    # ========================================================================
+    # CALCULATION ALIAS
+    # ========================================================================
 
     calculate = design
 
 
 # ============================================================================
-# BACKWARD-COMPATIBLE CLASSES
+# BACKWARD COMPATIBILITY CLASSES
 # ============================================================================
 
-class CylindricalHorizontalFlatEnd(PressureVessel):
+class CylindricalHorizontalFlatEnd(
+    PressureVessel
+):
     """
-    Backward-compatible horizontal cylindrical vessel with flat heads.
+    Backward-compatible horizontal cylindrical
+    vessel with flat heads.
     """
 
-    def __init__(self, **kwargs: Any):
+    def __init__(
+        self,
+        **kwargs: Any,
+    ):
 
         super().__init__(
             vessel_type="horizontal",
@@ -1586,12 +2347,18 @@ class CylindricalHorizontalFlatEnd(PressureVessel):
         )
 
 
-class CylindricalHorizontalDishEnd(PressureVessel):
+class CylindricalHorizontalDishEnd(
+    PressureVessel
+):
     """
-    Backward-compatible horizontal cylindrical vessel with dished heads.
+    Backward-compatible horizontal cylindrical
+    vessel with ellipsoidal heads.
     """
 
-    def __init__(self, **kwargs: Any):
+    def __init__(
+        self,
+        **kwargs: Any,
+    ):
 
         super().__init__(
             vessel_type="horizontal",
@@ -1600,7 +2367,10 @@ class CylindricalHorizontalDishEnd(PressureVessel):
         )
 
 
-# Backward-compatible alias
+# ============================================================================
+# BACKWARD-COMPATIBLE ALIAS
+# ============================================================================
+
 PressureVessels = PressureVessel
 
 
@@ -1612,12 +2382,18 @@ __all__ = [
     "PressureVessel",
     "PressureVessels",
     "PressureVesselResults",
+
     "CylindricalHorizontalFlatEnd",
     "CylindricalHorizontalDishEnd",
+
     "asme_material_stress_data",
     "MATERIAL_ALIASES",
     "ASME_STRESS_TEMPERATURES_F",
+
     "normalize_material",
-    "get_allowable_stress",
+    "normalize_head_type",
+
     "set_temperature_range",
+    "get_allowable_stress",
+    "get_stress_data",
 ]
