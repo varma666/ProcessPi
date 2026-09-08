@@ -162,7 +162,6 @@ Total Pressure Drop: 0.31 atm
 
 ProcessPI calculations are validated against established engineering references and published correlations including:
 
-- Crane TP-410
 - Perry's Chemical Engineers' Handbook
 - GPSA Engineering Data Book
 - Standard fluid mechanics correlations
