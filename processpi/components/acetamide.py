@@ -45,8 +45,8 @@ class Acetamide(Component):
     _critical_acentric_factor = 0.421
 
     _density_constants = [1.016, 0.21845, 761.0, 0.26116]
-    _specific_heat_constants = [0.0, 128.7, 0.0, 0.0, 0.0, 1.4788, 1.7579]
-    _viscosity_constants = [1.5525, 1376.4, -2.0126]
-    _thermal_conductivity_constants = [0.39363, -0.00037053]
-    _vapor_pressure_constants = [125.81, 0.0, -14.589, 5.08e-06, 2.0]
-    _enthalpy_constants = [8.107, 0.42]
+    _specific_heat_constants = [102300, 128.7,0,0,0]
+    _viscosity_constants = [1.5525, 1376.4, -2.0126,0,0]
+    _thermal_conductivity_constants = [0.39363, -0.00037053,0,0,0]
+    _vapor_pressure_constants = [125.81, -12376, -14.589, 5.08e-06, 2.0]
+    _enthalpy_constants = [8.107, 0.42,0,0,0]
