@@ -218,6 +218,60 @@ asme_material_stress_data: Dict[str, Dict[int, float]] = {
         100: 15.7, 200: 13.7, 300: 11.2, 400: 9.1,
         500: 7.4, 600: 6.4, 700: 5.2, 800: 0.0,
     },
+
+    # --------------------------------------------------------------------
+    # IS 2825:1969 reference-scan entries supplied by the user.
+    # Original table units: kgf/mm2 at deg C.
+    # Stored in this unified dictionary as ksi at deg F.
+    # --------------------------------------------------------------------
+    "IS 2002-1962 Grade I": {
+        482: 9.5 * 14.223343307, 572: 8.7 * 14.223343307,
+        662: 7.8 * 14.223343307, 707: 7.5 * 14.223343307,
+        752: 7.2 * 14.223343307, 797: 5.9 * 14.223343307,
+        842: 4.3 * 14.223343307, 887: 3.6 * 14.223343307,
+    },
+    "IS 2002-1962 Grade 2A": {
+        482: 9.0 * 14.223343307, 572: 9.0 * 14.223343307,
+        662: 8.0 * 14.223343307, 707: 7.7 * 14.223343307,
+        752: 7.7 * 14.223343307, 797: 5.9 * 14.223343307,
+        842: 4.3 * 14.223343307, 887: 3.6 * 14.223343307,
+    },
+    "IS 2002-1962 Grade 2B": {
+        482: 12.1 * 14.223343307, 572: 11.1 * 14.223343307,
+        662: 10.0 * 14.223343307, 707: 9.5 * 14.223343307,
+        752: 8.3 * 14.223343307, 797: 5.9 * 14.223343307,
+        842: 4.3 * 14.223343307, 887: 3.6 * 14.223343307,
+    },
+    "IS 2004-1962 Class 1": {
+        482: 8.6 * 14.223343307, 572: 7.9 * 14.223343307,
+        662: 7.1 * 14.223343307, 707: 6.8 * 14.223343307,
+        752: 6.5 * 14.223343307, 797: 5.9 * 14.223343307,
+        842: 4.3 * 14.223343307, 887: 3.6 * 14.223343307,
+    },
+    "IS 2004-1962 Class 2": {
+        482: 10.2 * 14.223343307, 572: 9.3 * 14.223343307,
+        662: 8.5 * 14.223343307, 707: 8.0 * 14.223343307,
+        752: 7.7 * 14.223343307, 797: 5.9 * 14.223343307,
+        842: 4.3 * 14.223343307, 887: 3.6 * 14.223343307,
+    },
+    "IS 2004-1962 Class 3": {
+        482: 11.7 * 14.223343307, 572: 10.7 * 14.223343307,
+        662: 9.6 * 14.223343307, 707: 9.1 * 14.223343307,
+        752: 8.3 * 14.223343307, 797: 5.9 * 14.223343307,
+        842: 4.3 * 14.223343307, 887: 3.6 * 14.223343307,
+    },
+    "IS 2004-1962 Class 4": {
+        482: 14.7 * 14.223343307, 572: 13.4 * 14.223343307,
+        662: 12.2 * 14.223343307, 707: 11.5 * 14.223343307,
+        752: 8.3 * 14.223343307, 797: 5.9 * 14.223343307,
+        842: 4.3 * 14.223343307, 887: 3.6 * 14.223343307,
+    },
+    "IS 1570-1961 04Cr19Ni9": {
+        122: 16.00 * 14.223343307, 212: 14.20 * 14.223343307,
+        302: 12.40 * 14.223343307, 392: 10.60 * 14.223343307,
+        482: 9.97 * 14.223343307, 572: 9.35 * 14.223343307,
+        662: 8.70 * 14.223343307, 752: 8.07 * 14.223343307,
+    },
 }
 
 
@@ -263,6 +317,15 @@ MATERIAL_DENSITIES: Dict[str, float] = {
 
     "Titanium Grade 2": 4510.0,
     "Zinccronium 702": 6500.0,
+
+    "IS 2002-1962 Grade I": 7850.0,
+    "IS 2002-1962 Grade 2A": 7850.0,
+    "IS 2002-1962 Grade 2B": 7850.0,
+    "IS 2004-1962 Class 1": 7850.0,
+    "IS 2004-1962 Class 2": 7850.0,
+    "IS 2004-1962 Class 3": 7850.0,
+    "IS 2004-1962 Class 4": 7850.0,
+    "IS 1570-1961 04Cr19Ni9": 8000.0,
 }
 
 
@@ -348,6 +411,16 @@ MATERIAL_ALIASES: Dict[str, str] = {
 
     "zirconium 702": "Zinccronium 702",
     "zinccronium 702": "Zinccronium 702",
+
+    "is 2002-1962 grade i": "IS 2002-1962 Grade I",
+    "is2002 grade i": "IS 2002-1962 Grade I",
+    "is 2002-1962 grade 2a": "IS 2002-1962 Grade 2A",
+    "is 2002-1962 grade 2b": "IS 2002-1962 Grade 2B",
+    "is 2004-1962 class 1": "IS 2004-1962 Class 1",
+    "is 2004-1962 class 2": "IS 2004-1962 Class 2",
+    "is 2004-1962 class 3": "IS 2004-1962 Class 3",
+    "is 2004-1962 class 4": "IS 2004-1962 Class 4",
+    "is 1570-1961 04cr19ni9": "IS 1570-1961 04Cr19Ni9",
 }
 
 
@@ -443,49 +516,58 @@ def _temperature_to_f(temperature: Any) -> float:
 # TEMPERATURE-BAND SELECTION
 # ============================================================================
 
-def set_temperature_range(temperature: Any) -> Temperature:
-    """
-    Select the conservative allowable-stress temperature band.
+def set_temperature_range(
+    temperature: Any,
+    material: Optional[Any] = None,
+) -> Temperature:
+    """Select the next available material temperature band conservatively.
 
-    Examples
-    --------
-    25 C  -> 100 F
-    150 C -> 400 F
-    175 C -> 400 F
-    225 C -> 500 F
-    425 C -> 800 F
-
-    A temperature between table values uses the NEXT HIGHER band.
-
-    The important implementation detail is that the selected band is returned
-    and later used as the DATABASE KEY. The actual design temperature is never
-    used directly as a dictionary key.
-
-    This fixes the previous failure:
-
-        KeyError: 533
-
-    for a design temperature of 150 C = 302 F.
+    With no material, the historical ProcessPI 100..800 F bands are used.
+    With a material, the actual temperature points present in that material's
+    row of the unified database are used.
     """
     temperature_f = _temperature_to_f(temperature)
 
-    if temperature_f < MIN_SUPPORTED_TEMPERATURE_F - TEMPERATURE_TOLERANCE_F:
+    if material is None:
+        if temperature_f < MIN_SUPPORTED_TEMPERATURE_F - TEMPERATURE_TOLERANCE_F:
+            raise ValueError(
+                "Design temperature is below the available allowable-stress "
+                "database. Minimum supported temperature is "
+                f"{MIN_SUPPORTED_TEMPERATURE_F:g}°F."
+            )
+        for band in ASME_STRESS_TEMPERATURES_F:
+            if temperature_f <= band + TEMPERATURE_TOLERANCE_F:
+                return Temperature(band, "F")
         raise ValueError(
-            "Design temperature is below the available "
-            "allowable-stress database. "
-            f"Minimum supported temperature is "
-            f"{MIN_SUPPORTED_TEMPERATURE_F:g}°F."
+            "Design temperature exceeds the available allowable-stress "
+            "database. Maximum supported temperature is "
+            f"{MAX_SUPPORTED_TEMPERATURE_F:g}°F."
         )
 
-    for band in ASME_STRESS_TEMPERATURES_F:
+    material_key = _normalize_material_key(material)
+    bands = sorted(int(k) for k in asme_material_stress_data[material_key])
+
+    if not bands:
+        raise ValueError(
+            f"No allowable-stress temperature data exists for material "
+            f"'{material_key}'."
+        )
+
+    if temperature_f < bands[0] - TEMPERATURE_TOLERANCE_F:
+        raise ValueError(
+            f"Design temperature is below the available allowable-stress "
+            f"database for material '{material_key}'. Minimum supported "
+            f"temperature is {bands[0]}°F."
+        )
+
+    for band in bands:
         if temperature_f <= band + TEMPERATURE_TOLERANCE_F:
             return Temperature(band, "F")
 
     raise ValueError(
-        "Design temperature exceeds the available "
-        "allowable-stress database. "
-        f"Maximum supported temperature is "
-        f"{MAX_SUPPORTED_TEMPERATURE_F:g}°F."
+        f"Design temperature exceeds the available allowable-stress "
+        f"database for material '{material_key}'. Maximum supported "
+        f"temperature is {bands[-1]}°F."
     )
 
 
@@ -497,45 +579,29 @@ def get_allowable_stress(
     material: Any,
     temperature: Any = Temperature(20, "C"),
 ) -> Pressure:
-    """
-    Return preliminary allowable stress as a ProcessPI Pressure in psi.
-
-    Numeric material input is supported for backward compatibility and is
-    interpreted as an explicit allowable stress in ksi.
-
-    For database materials, the temperature is first converted to the
-    conservative temperature band and THAT band is used for the lookup.
-    """
-    # Explicit numerical allowable stress in ksi.
+    """Return allowable stress as a ProcessPI Pressure in psi."""
     if isinstance(material, (int, float)):
         stress_ksi = float(material)
-
         if stress_ksi <= 0:
             raise ValueError("Allowable stress must be greater than zero.")
-
         return Pressure(stress_ksi * 1000.0, "psi")
 
     material_key = _normalize_material_key(material)
-
-    temperature_band = set_temperature_range(temperature)
-    temperature_band_f = int(
-        round(_value(temperature_band, "temperature band", "F"))
-    )
-
+    temperature_band = set_temperature_range(temperature, material_key)
+    temperature_f = int(round(_value(temperature_band, "temperature band", "F")))
     stress_table = asme_material_stress_data[material_key]
 
-    if temperature_band_f not in stress_table:
+    if temperature_f not in stress_table:
         raise ValueError(
-            f"No allowable stress temperature band is available "
-            f"for material '{material_key}' at {temperature_band_f}°F."
+            f"No allowable stress temperature band is available for material "
+            f"'{material_key}' at {temperature_f}°F."
         )
 
-    stress_ksi = float(stress_table[temperature_band_f])
-
+    stress_ksi = float(stress_table[temperature_f])
     if stress_ksi <= 0:
         raise ValueError(
             f"No allowable stress is available for material "
-            f"'{material_key}' at {temperature_band_f}°F."
+            f"'{material_key}' at {temperature_f}°F."
         )
 
     return Pressure(stress_ksi * 1000.0, "psi")
@@ -1265,7 +1331,8 @@ class PressureVessel(CalculationBase):
         # ---- Allowable stress ----------------------------------------------
 
         temperature_band = set_temperature_range(
-            design_temperature
+            design_temperature,
+            material=material,
         )
 
         allowable_stress = get_allowable_stress(
