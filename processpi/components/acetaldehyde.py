@@ -45,8 +45,8 @@ class Acetaldehyde(Component):
     _critical_acentric_factor = 0.2907
 
     _density_constants = [1.6994, 0.26167, 466.0, 0.2913]
-    _specific_heat_constants = [0.0, -433.0, 1.425, 0.0, 0.0, 0.8221, 1.1097]
-    _viscosity_constants = [-5.895, 668.21, -0.84323]
-    _thermal_conductivity_constants = [0.311, -0.000436]
+    _specific_heat_constants = [115100,-433,1.425,0,0]
+    _viscosity_constants = [-5.895, 668.21, -0.84323,0,0]
+    _thermal_conductivity_constants = [0.311, -0.000436,0,0,0]
     _vapor_pressure_constants = [193.69, 0.0, -29.502, 0.0437, 1.0]
-    _enthalpy_constants = [3.8366, 0.40081]
+    _enthalpy_constants = [3.8366, 0.40081,0,0,0]
