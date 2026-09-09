@@ -49,4 +49,4 @@ class Acetaldehyde(Component):
     _viscosity_constants = [-5.895, 668.21, -0.84323,0,0]
     _thermal_conductivity_constants = [0.311, -0.000436,0,0,0]
     _vapor_pressure_constants = [193.69, 0.0, -29.502, 0.0437, 1.0]
-    _enthalpy_constants = [3.8366, 0.40081,0,0,0]
+    _enthalpy_constants = [3.8366, 0.40081,0,0]
