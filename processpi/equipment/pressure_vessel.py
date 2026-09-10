@@ -500,6 +500,36 @@ MATERIAL_ALIASES: Dict[str, str] = {
 
 
 # ============================================================================
+# DESIGN-STANDARD SELECTION
+# ============================================================================
+
+STANDARD_ALIASES: Dict[str, str] = {
+    "asme": "ASME",
+    "asme viii": "ASME",
+    "asme viii-1": "ASME",
+    "asme section viii": "ASME",
+    "asme section viii division 1": "ASME",
+    "is2825": "IS2825",
+    "is 2825": "IS2825",
+    "is 2825:1969": "IS2825",
+}
+
+SUPPORTED_STANDARDS = {
+    "ASME": "ASME Section VIII Division 1",
+    "IS2825": "IS 2825:1969",
+}
+
+# The unified stress dictionary above stores every temperature key in °F.
+# IS 2825 source temperatures are converted from °C to °F once when the
+# dictionary is built. The standard selector below determines which grid is
+# applicable; it does not mix ASME and IS 2825 material families.
+MATERIAL_STANDARD: Dict[str, str] = {
+    key: ("IS2825" if key.startswith("IS ") else "ASME")
+    for key in asme_material_stress_data
+}
+
+
+# ============================================================================
 # TEMPERATURE CONSTANTS
 # ============================================================================
 
@@ -542,6 +572,60 @@ def _value(
         raise TypeError(
             f"{name} must be numeric or a compatible ProcessPI unit value"
         ) from exc
+
+
+def _normalize_standard(std: Any = "ASME") -> str:
+    """Normalize a pressure-vessel design standard name."""
+
+    if std is None:
+        std = "ASME"
+
+    text = str(std).strip()
+    if not text:
+        raise ValueError(
+            "Design standard must be specified as 'ASME' or 'IS2825'."
+        )
+
+    if text in SUPPORTED_STANDARDS:
+        return text
+
+    lowered = text.lower()
+    if lowered in STANDARD_ALIASES:
+        return STANDARD_ALIASES[lowered]
+
+    raise ValueError(
+        f"Unsupported pressure-vessel design standard {std!r}. "
+        "Supported standards: ASME, IS2825."
+    )
+
+
+def normalize_standard(std: Any = "ASME") -> str:
+    """Public design-standard normalization helper."""
+    return _normalize_standard(std)
+
+
+def _validate_standard_material(material_key: str, std: Any) -> str:
+    """Validate that a material belongs to the selected design standard."""
+
+    standard = _normalize_standard(std)
+    material_standard = MATERIAL_STANDARD.get(material_key)
+
+    if material_standard is None:
+        raise ValueError(
+            f"No design-standard mapping is available for material "
+            f"'{material_key}'."
+        )
+
+    if material_standard != standard:
+        expected = SUPPORTED_STANDARDS[material_standard]
+        selected = SUPPORTED_STANDARDS[standard]
+        raise ValueError(
+            f"Material '{material_key}' belongs to {expected}, but std="
+            f"'{standard}' selects {selected}. Select a material compatible "
+            f"with the chosen design standard."
+        )
+
+    return standard
 
 
 def _normalize_material_key(material: Any) -> str:
@@ -602,55 +686,45 @@ def _material_temperature_bands(material_key: str) -> List[int]:
 def set_temperature_range(
     temperature: Any,
     material: Optional[Any] = None,
+    std: Any = "ASME",
 ) -> Temperature:
     """
-    Select the first available temperature point at or above the design
-    temperature.
+    Select the first applicable allowable-stress temperature point at or
+    above the design temperature.
 
-    For ASME preliminary entries this reproduces the historical 100°F bands.
-
-    For IS entries it uses the actual material-specific temperature points
-    from the supplied reference table. This avoids forcing IS data into an
-    unrelated 100°F grid.
+    ASME uses the supplied ProcessPI preliminary 100°F grid.
+    IS2825 uses the actual material-specific temperature points represented
+    in the unified dictionary. The selected standard is explicit when the
+    class is used and may be supplied directly to this helper.
     """
 
+    standard = _normalize_standard(std)
     temperature_f = _temperature_to_f(temperature)
 
     if material is None:
-        if (
-            temperature_f
-            < MIN_SUPPORTED_TEMPERATURE_F - TEMPERATURE_TOLERANCE_F
-        ):
+        if standard != "ASME":
             raise ValueError(
-                "Design temperature is below the available allowable-stress "
-                "database. Minimum supported temperature is "
-                f"{MIN_SUPPORTED_TEMPERATURE_F:g}°F."
+                "material must be provided when std='IS2825' is selected."
             )
+        bands = list(ASME_STRESS_TEMPERATURES_F)
+        minimum = MIN_SUPPORTED_TEMPERATURE_F
+        maximum = MAX_SUPPORTED_TEMPERATURE_F
+    else:
+        material_key = _normalize_material_key(material)
+        _validate_standard_material(material_key, standard)
+        bands = _material_temperature_bands(material_key)
+        if not bands:
+            raise ValueError(
+                f"No allowable-stress temperature data exists for material "
+                f"'{material_key}'."
+            )
+        minimum = bands[0]
+        maximum = bands[-1]
 
-        for band in ASME_STRESS_TEMPERATURES_F:
-            if temperature_f <= band + TEMPERATURE_TOLERANCE_F:
-                return Temperature(band, "F")
-
-        raise ValueError(
-            "Design temperature exceeds the available allowable-stress "
-            "database. Maximum supported temperature is "
-            f"{MAX_SUPPORTED_TEMPERATURE_F:g}°F."
-        )
-
-    material_key = _normalize_material_key(material)
-    bands = _material_temperature_bands(material_key)
-
-    if not bands:
-        raise ValueError(
-            f"No allowable-stress temperature data exists for material "
-            f"'{material_key}'."
-        )
-
-    if temperature_f < bands[0] - TEMPERATURE_TOLERANCE_F:
+    if temperature_f < minimum - TEMPERATURE_TOLERANCE_F:
         raise ValueError(
             f"Design temperature is below the available allowable-stress "
-            f"database for material '{material_key}'. Minimum supported "
-            f"temperature is {bands[0]}°F."
+            f"database. Minimum supported temperature is {minimum:g}°F."
         )
 
     for band in bands:
@@ -658,9 +732,8 @@ def set_temperature_range(
             return Temperature(band, "F")
 
     raise ValueError(
-        f"Design temperature exceeds the available allowable-stress "
-        f"database for material '{material_key}'. Maximum supported "
-        f"temperature is {bands[-1]}°F."
+        "Design temperature exceeds the available allowable-stress "
+        f"database. Maximum supported temperature is {maximum:g}°F."
     )
 
 
@@ -671,44 +744,33 @@ def set_temperature_range(
 def get_allowable_stress(
     material: Any,
     temperature: Any = Temperature(20, "C"),
+    std: Any = "ASME",
 ) -> Pressure:
     """
     Return allowable stress as a ProcessPI Pressure in psi.
 
-    Numeric material values are accepted as an explicit allowable stress in
-    ksi for backward compatibility.
+    ``std`` explicitly selects the design standard. Numeric material values
+    remain supported as an explicit allowable stress in ksi for backward
+    compatibility; standard validation is not applicable to that form.
     """
 
     if isinstance(material, (int, float)):
         stress_ksi = float(material)
-
         if stress_ksi <= 0:
-            raise ValueError(
-                "Allowable stress must be greater than zero."
-            )
+            raise ValueError("Allowable stress must be greater than zero.")
+        return Pressure(stress_ksi * 1000.0, "psi")
 
-        return Pressure(
-            stress_ksi * 1000.0,
-            "psi",
-        )
-
+    standard = _normalize_standard(std)
     material_key = _normalize_material_key(material)
+    _validate_standard_material(material_key, standard)
 
     temperature_band = set_temperature_range(
         temperature,
         material_key,
+        standard,
     )
 
-    temperature_f = int(
-        round(
-            _value(
-                temperature_band,
-                "temperature band",
-                "F",
-            )
-        )
-    )
-
+    temperature_f = int(round(_value(temperature_band, "temperature band", "F")))
     stress_table = asme_material_stress_data[material_key]
 
     if temperature_f not in stress_table:
@@ -717,9 +779,7 @@ def get_allowable_stress(
             f"material '{material_key}' at {temperature_f}°F."
         )
 
-    stress_ksi = float(
-        stress_table[temperature_f]
-    )
+    stress_ksi = float(stress_table[temperature_f])
 
     if stress_ksi <= 0.0:
         raise ValueError(
@@ -727,10 +787,7 @@ def get_allowable_stress(
             f"'{material_key}' at {temperature_f}°F."
         )
 
-    return Pressure(
-        stress_ksi * 1000.0,
-        "psi",
-    )
+    return Pressure(stress_ksi * 1000.0, "psi")
 
 
 # ============================================================================
@@ -757,8 +814,10 @@ class PressureVesselResults:
 
 class PressureVessel(CalculationBase):
     """
-    Preliminary ASME VIII-1 pressure vessel with cylindrical or spherical
-    geometry.
+    Preliminary pressure vessel with explicit design-standard selection.
+
+    Use ``std="ASME"`` for the supplied ASME preliminary database or
+    ``std="IS2825"`` for the supplied IS 2825:1969 reference data.
 
     Plain numeric dimensions use SI:
         diameter -> m
@@ -889,16 +948,28 @@ class PressureVessel(CalculationBase):
                 "design_temperature must be a Temperature object."
             )
 
+        std = _normalize_standard(
+            inputs.get("std", "ASME")
+        )
+
         material = inputs.get(
             "material",
             "SA516-70",
         )
 
-        # This validates material and temperature-specific allowable stress,
-        # including zero-stress protection.
+        material_key = _normalize_material_key(material)
+
+        # Validate standard/material compatibility and the selected
+        # temperature-specific allowable stress now.
+        _validate_standard_material(
+            material_key,
+            std,
+        )
+
         get_allowable_stress(
-            material,
+            material_key,
             design_temperature,
+            std,
         )
 
         head_type = str(
@@ -971,6 +1042,13 @@ class PressureVessel(CalculationBase):
                 "material",
                 "SA516-70",
             )
+        )
+
+    @property
+    def std(self) -> str:
+        """Normalized design standard selected for this vessel."""
+        return _normalize_standard(
+            self.inputs.get("std", "ASME")
         )
 
     @property
@@ -1052,6 +1130,7 @@ class PressureVessel(CalculationBase):
         return get_allowable_stress(
             self.material,
             self.design_temperature,
+            self.std,
         )
 
     # ------------------------------------------------------------------------
@@ -1696,6 +1775,7 @@ class PressureVessel(CalculationBase):
         temperature_band = set_temperature_range(
             self.design_temperature,
             self.material,
+            self.std,
         )
 
         allowable_stress = self.allowable_stress()
@@ -1735,7 +1815,8 @@ class PressureVessel(CalculationBase):
         warnings = [
             "Preliminary pressure-vessel internal-pressure sizing only.",
             "Allowable stresses are taken from the supplied "
-            "temperature-specific preliminary material database.",
+            "temperature-specific preliminary material database for the "
+            f"selected standard ({self.std}).",
             "Verify allowable stresses against the applicable governing "
             "code/material tables before code-stamped design or fabrication.",
             "External pressure/vacuum, complete nozzle reinforcement, "
@@ -1755,13 +1836,23 @@ class PressureVessel(CalculationBase):
                 "Nozzle and manhole reinforcement calculations are not included."
             )
 
-        design_basis = (
-            "Preliminary ASME VIII-1 internal-pressure screening: "
-            "UG-27(c)(1), UG-32, UG-34, UG-99(b); "
-            "historical IS material data used where selected."
-        )
+        if self.std == "ASME":
+            design_basis = (
+                "Preliminary ASME VIII-1 internal-pressure screening: "
+                "UG-27(c)(1), UG-32, UG-34, UG-99(b)."
+            )
+        else:
+            design_basis = (
+                "Preliminary pressure-vessel internal-pressure screening "
+                "using the supplied IS 2825:1969 material allowable-stress "
+                "data. Geometry equations remain preliminary ProcessPI "
+                "screening equations and are not a complete IS 2825 code check."
+            )
 
         result = {
+            "std": self.std,
+            "design_standard": self.std,
+            "design_standard_reference": SUPPORTED_STANDARDS[self.std],
             "vessel_type": self.vessel_type,
             "head_type": head_type,
             "material": self.material,
@@ -1781,6 +1872,11 @@ class PressureVessel(CalculationBase):
 
             "allowable_stress_temperature_band": temperature_band,
             "allowable_stress_temperature_band_F": selected_temperature_band_f,
+            "allowable_stress_temperature_band_C": (
+                (selected_temperature_band_f - 32.0) * 5.0 / 9.0
+                if self.std == "IS2825"
+                else None
+            ),
 
             "allowable_stress": allowable_stress,
             "allowable_stress_ksi": allowable_stress_ksi,
@@ -1925,4 +2021,8 @@ __all__ = [
     "get_allowable_stress",
     "set_temperature_range",
     "KGF_MM2_TO_KSI",
+    "SUPPORTED_STANDARDS",
+    "STANDARD_ALIASES",
+    "MATERIAL_STANDARD",
+    "normalize_standard",
 ]
