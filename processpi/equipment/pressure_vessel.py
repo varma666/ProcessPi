@@ -998,6 +998,17 @@ class PressureVessel(CalculationBase):
                 f"Supported types: {sorted(self._HEADS)}"
             )
 
+        crown_radius = inputs.get("crown_radius")
+
+        if crown_radius is not None and _value(
+            crown_radius,
+            "crown_radius",
+            "m",
+        ) <= 0.0:
+            raise ValueError(
+                "crown_radius must be greater than zero."
+            )
+
         density = float(
             inputs.get(
                 "material_density",
@@ -1233,6 +1244,10 @@ class PressureVessel(CalculationBase):
         Hemispherical:
             t = P R / (2 S E - 0.2 P)
 
+        Torispherical, UG-32(e) standard flanged-and-dished head with a
+        knuckle radius r = 0.06 L:
+            t = 0.885 P L / (S E - 0.1 P)
+
         Flat:
             preliminary screening expression only.
         """
@@ -1363,12 +1378,26 @@ class PressureVessel(CalculationBase):
 
         elif normalized == "torispherical":
 
-            # Preliminary screening factor only.
+            # UG-32(e) standard ASME flanged-and-dished head, with a crown
+            # radius L and a knuckle radius r = 0.06 L:
+            #
+            #     t = 0.885 P L / (S E - 0.1 P)
+            #
+            # The crown radius defaults to the inside diameter, which is the
+            # geometry the preliminary equation already assumed.
+            crown_radius = _value(
+                self.inputs.get(
+                    "crown_radius",
+                    Length(diameter, "m"),
+                ),
+                "crown_radius",
+                "m",
+            )
+
             denominator = (
-                2.0
-                * allowable_stress_pa
+                allowable_stress_pa
                 * joint_efficiency
-                - 0.2 * pressure
+                - 0.1 * pressure
             )
 
             if denominator <= 0.0:
@@ -1380,7 +1409,7 @@ class PressureVessel(CalculationBase):
             pressure_thickness = (
                 0.885
                 * pressure
-                * diameter
+                * crown_radius
                 / denominator
             )
 
