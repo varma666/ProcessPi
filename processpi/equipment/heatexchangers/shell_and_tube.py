@@ -32,6 +32,11 @@ from .standards import (
     get_fouling_factor,
 )
 
+# Below this tolerance R is treated as exactly 1, where the 1/(R-1) factor of the
+# Bowman correction factor is a removable 0/0 singularity and the analytic limit
+# has to be used instead.
+_R_UNITY_TOL = 1e-6
+
 
 class ShellAndTubeHX(HeatExchanger):
     def __init__(self, *args: Any, method: str = "kern", **kwargs: Any):
@@ -117,6 +122,18 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _ft_1shell(self, r: float, s: float) -> float:
         try:
+            if abs(r - 1.0) < _R_UNITY_TOL:
+                # R = 1 limit (balanced duty). L'Hopital on the 1/(R-1) factor gives
+                #   F = S sqrt(2) / (1-S) / ln[(2 - S(2 - sqrt2)) / (2 - S(2 + sqrt2))]
+                sqrt2 = math.sqrt(2.0)
+                numerator = s * sqrt2
+                denominator = (1.0 - s) * self._safe_log_ratio(
+                    2.0 - s * (2.0 - sqrt2), 2.0 - s * (2.0 + sqrt2)
+                )
+                if abs(denominator) < 1e-12:
+                    return 0.0
+                return max(min(numerator / denominator, 1.0), 0.0)
+
             sqrt_term = math.sqrt(r**2 + 1.0)
 
             numerator = sqrt_term * self._safe_log_ratio(1.0 - s, 1.0 - r * s)
@@ -142,6 +159,19 @@ class ShellAndTubeHX(HeatExchanger):
         try:
             if s <= 0.0:
                 return 0.0
+            if abs(r - 1.0) < _R_UNITY_TOL:
+                # R = 1 limit (balanced duty). W collapses to 4/S - 4, and L'Hopital on
+                # the 1/(2(R-1)) factor gives
+                #   F = S sqrt(2) / (2(1-S)) / ln[(4 - S(4 - sqrt2)) / (4 - S(4 + sqrt2))]
+                sqrt2 = math.sqrt(2.0)
+                numerator = s * sqrt2
+                denominator = 2.0 * (1.0 - s) * self._safe_log_ratio(
+                    4.0 - s * (4.0 - sqrt2), 4.0 - s * (4.0 + sqrt2)
+                )
+                if abs(denominator) < 1e-12:
+                    return 0.0
+                return max(min(numerator / denominator, 1.0), 0.0)
+
             sqrt_term = math.sqrt(r**2 + 1.0)
 
             a_term = (2.0 / s) - 1.0 - r + (2.0 / s) * math.sqrt((1.0 - s) * (1.0 - r * s))
