@@ -27,5 +27,9 @@ class StringUnit(Variable):
     def __eq__(self, other):
         return isinstance(other, StringUnit) and self.value == other.value
 
+    def __format__(self, format_spec):
+        # The numeric formatting in Variable.__format__ does not apply to strings.
+        return format(self.value, format_spec)
+
     def __repr__(self):
         return f"{self.original_value} ({self.category})"
