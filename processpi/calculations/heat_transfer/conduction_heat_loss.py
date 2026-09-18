@@ -23,4 +23,4 @@ class ConductionHeatLoss(CalculationBase):
         L = self._get_value(self.inputs["thickness"], "thickness")                        # m
 
         Q = k * A * ΔT / L
-        return HeatFlux(Q, "W")
+        return HeatFlow(Q, "W")

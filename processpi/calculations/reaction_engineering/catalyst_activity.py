@@ -87,7 +87,7 @@ class CatalystActivity(CalculationBase):
         # Common pieces for models producing activity a(t)
         t = float(self.inputs["t"])
         a0 = float(self.inputs.get("a0", 1.0))
-        k_d = float(self.inputs.get("k_d", self._arrhenius_kd()))
+        k_d = float(self.inputs["k_d"]) if "k_d" in self.inputs else self._arrhenius_kd()
         if t < 0 or a0 <= 0 or k_d < 0:
             raise ValueError("Require t >= 0, a0 > 0, k_d >= 0.")
 
