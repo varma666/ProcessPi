@@ -11,7 +11,7 @@ The module supports:
 - Material-specific temperature grids.
 - Conservative selection of the first available temperature point at or above
   the design temperature.
-- Cylindrical shell sizing.
+- Cylindrical and spherical shell sizing.
 - Preliminary 2:1 ellipsoidal, hemispherical and flat-head sizing.
 - Volume and volume-check calculations.
 - Nozzle / manhole storage.
@@ -30,7 +30,7 @@ form before design/fabrication use.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import acos, pi, sqrt
+from math import acos, cos, pi, radians, sqrt
 from typing import Any, Dict, List, Optional
 
 from processpi.calculations.base import CalculationBase
@@ -574,6 +574,34 @@ def _value(
         ) from exc
 
 
+# UG-32(g) applies to a conical head or section whose half apex angle does
+# not exceed 30 degrees. Above that a toriconical transition or a special
+# analysis is required.
+MAX_CONE_HALF_ANGLE_DEG = 30.0
+
+
+def _cone_half_angle_degrees(angle: Any) -> float:
+    """Validate and return a conical-head half apex angle in degrees."""
+
+    if angle is None:
+        raise ValueError(
+            "cone_half_angle must be provided, in degrees, for a conical "
+            "head (ASME VIII-1 UG-32(g))."
+        )
+
+    alpha = _value(angle, "cone_half_angle")
+
+    if not 0.0 < alpha <= MAX_CONE_HALF_ANGLE_DEG:
+        raise ValueError(
+            "cone_half_angle must be greater than zero and no more than "
+            f"{MAX_CONE_HALF_ANGLE_DEG:g} degrees. UG-32(g) does not cover "
+            "a larger half apex angle: use a toriconical transition or a "
+            "special analysis."
+        )
+
+    return alpha
+
+
 def _normalize_standard(std: Any = "ASME") -> str:
     """Normalize a pressure-vessel design standard name."""
 
@@ -998,6 +1026,22 @@ class PressureVessel(CalculationBase):
                 f"Supported types: {sorted(self._HEADS)}"
             )
 
+        if normalized_head == "conical":
+            _cone_half_angle_degrees(
+                inputs.get("cone_half_angle")
+            )
+
+        crown_radius = inputs.get("crown_radius")
+
+        if crown_radius is not None and _value(
+            crown_radius,
+            "crown_radius",
+            "m",
+        ) <= 0.0:
+            raise ValueError(
+                "crown_radius must be greater than zero."
+            )
+
         density = float(
             inputs.get(
                 "material_density",
@@ -1219,6 +1263,93 @@ class PressureVessel(CalculationBase):
             "m",
         )
 
+    def spherical_shell_thickness(self) -> Length:
+        """
+        Preliminary spherical-shell internal-pressure thickness.
+
+        UG-27(d) form:
+
+            t = P R / (2 S E - 0.2 P)
+
+        A spherical vessel has no heads, so this governs the whole shell
+        and does not depend on head_type.
+
+        Corrosion allowance is added after pressure thickness.
+        """
+
+        pressure = _value(
+            self.inputs.get(
+                "design_pressure",
+                self.inputs.get("pressure"),
+            ),
+            "design_pressure",
+            "Pa",
+        )
+
+        diameter = _value(
+            self.inputs.get(
+                "diameter",
+                self.inputs.get("inside_diameter"),
+            ),
+            "diameter",
+            "m",
+        )
+
+        allowable_stress_psi = _value(
+            self.allowable_stress(),
+            "allowable stress",
+            "psi",
+        )
+
+        allowable_stress_pa = (
+            allowable_stress_psi
+            * 6894.757293168
+        )
+
+        joint_efficiency = float(
+            self.inputs.get(
+                "joint_efficiency",
+                1.0,
+            )
+        )
+
+        corrosion_allowance = _value(
+            self.inputs.get(
+                "corrosion_allowance",
+                Length(0, "mm"),
+            ),
+            "corrosion_allowance",
+            "m",
+        )
+
+        radius = diameter / 2.0
+
+        denominator = (
+            2.0
+            * allowable_stress_pa
+            * joint_efficiency
+            - 0.2 * pressure
+        )
+
+        if denominator <= 0.0:
+            raise ValueError(
+                "Spherical-shell thickness equation has a non-positive "
+                "denominator. Check pressure, allowable stress, and joint "
+                "efficiency."
+            )
+
+        pressure_thickness = (
+            pressure
+            * radius
+            / denominator
+        )
+
+        return Length(
+            pressure_thickness
+            + corrosion_allowance,
+            "m",
+        )
+
     # ------------------------------------------------------------------------
     # HEAD THICKNESS
     # ------------------------------------------------------------------------
@@ -1232,6 +1363,13 @@ class PressureVessel(CalculationBase):
 
         Hemispherical:
             t = P R / (2 S E - 0.2 P)
+
+        Torispherical, UG-32(e) standard flanged-and-dished head with a
+        knuckle radius r = 0.06 L:
+            t = 0.885 P L / (S E - 0.1 P)
+
+        Conical, UG-32(g), with alpha the half apex angle:
+            t = P D / (2 cos(alpha) (S E - 0.6 P))
 
         Flat:
             preliminary screening expression only.
@@ -1363,12 +1501,26 @@ class PressureVessel(CalculationBase):
 
         elif normalized == "torispherical":
 
-            # Preliminary screening factor only.
+            # UG-32(e) standard ASME flanged-and-dished head, with a crown
+            # radius L and a knuckle radius r = 0.06 L:
+            #
+            #     t = 0.885 P L / (S E - 0.1 P)
+            #
+            # The crown radius defaults to the inside diameter, which is the
+            # geometry the preliminary equation already assumed.
+            crown_radius = _value(
+                self.inputs.get(
+                    "crown_radius",
+                    Length(diameter, "m"),
+                ),
+                "crown_radius",
+                "m",
+            )
+
             denominator = (
-                2.0
-                * allowable_stress_pa
+                allowable_stress_pa
                 * joint_efficiency
-                - 0.2 * pressure
+                - 0.1 * pressure
             )
 
             if denominator <= 0.0:
@@ -1380,17 +1532,27 @@ class PressureVessel(CalculationBase):
             pressure_thickness = (
                 0.885
                 * pressure
-                * diameter
+                * crown_radius
                 / denominator
             )
 
         elif normalized == "conical":
 
+            # UG-32(g), with alpha the half apex angle of the cone:
+            #
+            #     t = P D / (2 cos(alpha) (S E - 0.6 P))
+            cone_half_angle = _cone_half_angle_degrees(
+                self.inputs.get("cone_half_angle")
+            )
+
             denominator = (
                 2.0
-                * allowable_stress_pa
-                * joint_efficiency
-                - 0.2 * pressure
+                * cos(radians(cone_half_angle))
+                * (
+                    allowable_stress_pa
+                    * joint_efficiency
+                    - 0.6 * pressure
+                )
             )
 
             if denominator <= 0.0:
@@ -1608,13 +1770,13 @@ class PressureVessel(CalculationBase):
 
     def design(self) -> Dict[str, Any]:
 
-        shell_required = (
-            self.shell_thickness()
-            if self.vessel_type != "spherical"
-            else self.head_thickness()
-        )
-
-        head_required = self.head_thickness()
+        if self.vessel_type == "spherical":
+            # A sphere has no heads: UG-27(d) governs the whole shell.
+            shell_required = self.spherical_shell_thickness()
+            head_required = shell_required
+        else:
+            shell_required = self.shell_thickness()
+            head_required = self.head_thickness()
 
         governing_required_mm = max(
             _value(

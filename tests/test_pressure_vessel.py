@@ -35,7 +35,9 @@ def test_designs_vessel_geometries(vessel_type):
 
 @pytest.mark.parametrize("head_type", ["flat", "ellipsoidal", "torispherical", "hemispherical", "conical"])
 def test_designs_supported_heads(head_type):
-    result = vessel(head_type=head_type).design()
+    # UG-32(g) needs the half apex angle, so a conical head must supply one.
+    extra = {"cone_half_angle": 30} if head_type == "conical" else {}
+    result = vessel(head_type=head_type, **extra).design()
     assert result["head_required_thickness"].value > 0
 
 
