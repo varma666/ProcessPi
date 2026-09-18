@@ -133,17 +133,23 @@ class ShellAndTubeHX(HeatExchanger):
             return 0.0
 
     def _ft_2shell(self, r: float, s: float) -> float:
+        # Bowman, Mueller and Nagle (1940) expression for 2 shell passes and 4 or
+        # more (a multiple of 4) tube passes, as tabulated in Perry's Chemical
+        # Engineers' Handbook, 8th ed., Table 11-3:
+        #   F = sqrt(R^2+1) / (2(R-1)) * ln[(1-S)/(1-RS)]
+        #       / ln[(W + sqrt(R^2+1)) / (W - sqrt(R^2+1))]
+        #   W = 2/S - 1 - R + (2/S) sqrt((1-S)(1-RS))
         try:
             if s <= 0.0:
                 return 0.0
             sqrt_term = math.sqrt(r**2 + 1.0)
 
-            a_term = (2.0 / s) * math.sqrt((1.0 - s) * (1.0 - r * s))
-            numerator = self._safe_log_ratio(1.0 - s, 1.0 - r * s)
+            a_term = (2.0 / s) - 1.0 - r + (2.0 / s) * math.sqrt((1.0 - s) * (1.0 - r * s))
+            numerator = sqrt_term * self._safe_log_ratio(1.0 - s, 1.0 - r * s)
 
-            den_a = a_term + sqrt_term - 1.0 - r
-            den_b = a_term - sqrt_term - 1.0 - r
-            denominator = self._safe_log_ratio(den_a, den_b)
+            den_a = a_term + sqrt_term
+            den_b = a_term - sqrt_term
+            denominator = 2.0 * (r - 1.0) * self._safe_log_ratio(den_a, den_b)
             if abs(denominator) < 1e-12:
                 return 0.0
 
