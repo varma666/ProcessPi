@@ -37,6 +37,14 @@ from .standards import (
 # has to be used instead.
 _R_UNITY_TOL = 1e-6
 
+# F is genuinely undefined, not merely hard to compute, when a temperature cross
+# makes the configuration infeasible: the Bowman log arguments turn non-positive
+# and math.sqrt/math.log raise. Callers such as _adjust_passes read F = 0.0 as
+# "this configuration is not usable, try more shell passes", so only these math
+# failures are converted to 0.0. Anything else is a programming error and must
+# propagate instead of being silently swallowed.
+_FT_MATH_ERRORS = (ValueError, ZeroDivisionError, OverflowError)
+
 
 class ShellAndTubeHX(HeatExchanger):
     def __init__(self, *args: Any, method: str = "kern", **kwargs: Any):
@@ -146,7 +154,7 @@ class ShellAndTubeHX(HeatExchanger):
 
             ft = numerator / denominator
             return max(min(ft, 1.0), 0.0)
-        except Exception:
+        except _FT_MATH_ERRORS:
             return 0.0
 
     def _ft_2shell(self, r: float, s: float) -> float:
@@ -185,7 +193,7 @@ class ShellAndTubeHX(HeatExchanger):
 
             ft = numerator / denominator
             return max(min(ft, 1.0), 0.0)
-        except Exception:
+        except _FT_MATH_ERRORS:
             return 0.0
 
     def _calculate_ft(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float,
