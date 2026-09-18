@@ -145,7 +145,7 @@ class MaterialStream:
             pressure=self.pressure,
             temperature=self.temperature,
             density=self.density,
-            cp=self.cp,
+            specific_heat=self.specific_heat,
             flow_rate=self.flow_rate,
             mass_flow=self._mass_flow,
             molar_flow=self._molar_flow,
