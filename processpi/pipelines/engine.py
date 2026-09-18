@@ -492,13 +492,13 @@ class PipelineEngine:
             dp_major = self._major_dp_pa(f, pipe.length or Length(1.0, "m"), d, v)
         elif method == "hazen_williams":
             hw_coeff = getattr(pipe, "hw_coefficient", None) or self.data.get("hw_coefficient", 130.0)
-            dp_major = PressureDropHazenWilliams({
-                "length": pipe.length or Length(1.0, "m"),
-                "flow_rate": q_used,
-                "coefficient": hw_coeff,
-                "diameter": d,
-                "density": self._get_density(),
-            }).calculate()
+            dp_major = PressureDropHazenWilliams(
+                length=pipe.length or Length(1.0, "m"),
+                flow_rate=q_used,
+                coefficient=hw_coeff,
+                diameter=d,
+                density=self._get_density(),
+            ).calculate()
             f = None
         else:
             #print(f"   Testing Diameter: {d.to('in')} ({d.value:.3f} m) → Pressure Drop: {dp_major.value:.2f} Pa")
@@ -1240,7 +1240,8 @@ class PipelineEngine:
 
             rho_val = _to_value(fluid.density(), prefer_unit="kg/m3")
             total_head_m = total_dp_pa / (rho_val * G) if rho_val else float("inf")
-            shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff)
+            pump_eff = self.data.get("pump_efficiency", DEFAULT_PUMP_EFFICIENCY)
+            shaft_power_kw = (total_dp_pa * q_in.value) / (1000.0 * pump_eff) if pump_eff else 0.0
             velocity_val = _to_value(calc.get("velocity"), prefer_unit="m/s")
 
             results_out.update({
