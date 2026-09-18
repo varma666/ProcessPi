@@ -92,3 +92,28 @@ def test_material_stream_copy():
     clone = stream.copy("S2")
     assert clone.name == "S2"
     assert clone.specific_heat == stream.specific_heat
+
+
+def test_reaction_rate_with_supplied_rate_constant():
+    # Used to raise ValueError: dict.get() evaluated the Arrhenius default eagerly.
+    from processpi.calculations.reaction_engineering.reaction_rate import ReactionRate
+
+    result = ReactionRate(
+        model="power_law", k=0.1, C={"A": 2.0, "B": 1.0}, exponents={"A": 1, "B": 1}
+    ).calculate()
+    assert 0.2 in [pytest.approx(v) for v in result.values() if isinstance(v, float)]
+
+
+def test_catalyst_activity_with_supplied_decay_constant():
+    # Same eager-default bug: used to raise KeyError: 'A_d'.
+    from processpi.calculations.reaction_engineering.catalyst_activity import CatalystActivity
+
+    result = CatalystActivity(model="first_order", k_d=0.01, t=100.0).calculate()
+    assert math.exp(-1.0) in [pytest.approx(v) for v in result.values() if isinstance(v, float)]
+
+
+def test_string_unit_supports_format():
+    # Used to raise AttributeError: StringUnit has no original_unit.
+    from processpi.units import StringUnit
+
+    assert f"{StringUnit('Laminar', 'flow_type')}" == "Laminar"
