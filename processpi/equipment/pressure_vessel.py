@@ -30,7 +30,7 @@ form before design/fabrication use.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import acos, pi, sqrt
+from math import acos, cos, pi, radians, sqrt
 from typing import Any, Dict, List, Optional
 
 from processpi.calculations.base import CalculationBase
@@ -574,6 +574,34 @@ def _value(
         ) from exc
 
 
+# UG-32(g) applies to a conical head or section whose half apex angle does
+# not exceed 30 degrees. Above that a toriconical transition or a special
+# analysis is required.
+MAX_CONE_HALF_ANGLE_DEG = 30.0
+
+
+def _cone_half_angle_degrees(angle: Any) -> float:
+    """Validate and return a conical-head half apex angle in degrees."""
+
+    if angle is None:
+        raise ValueError(
+            "cone_half_angle must be provided, in degrees, for a conical "
+            "head (ASME VIII-1 UG-32(g))."
+        )
+
+    alpha = _value(angle, "cone_half_angle")
+
+    if not 0.0 < alpha <= MAX_CONE_HALF_ANGLE_DEG:
+        raise ValueError(
+            "cone_half_angle must be greater than zero and no more than "
+            f"{MAX_CONE_HALF_ANGLE_DEG:g} degrees. UG-32(g) does not cover "
+            "a larger half apex angle: use a toriconical transition or a "
+            "special analysis."
+        )
+
+    return alpha
+
+
 def _normalize_standard(std: Any = "ASME") -> str:
     """Normalize a pressure-vessel design standard name."""
 
@@ -998,6 +1026,11 @@ class PressureVessel(CalculationBase):
                 f"Supported types: {sorted(self._HEADS)}"
             )
 
+        if normalized_head == "conical":
+            _cone_half_angle_degrees(
+                inputs.get("cone_half_angle")
+            )
+
         crown_radius = inputs.get("crown_radius")
 
         if crown_radius is not None and _value(
@@ -1248,6 +1281,9 @@ class PressureVessel(CalculationBase):
         knuckle radius r = 0.06 L:
             t = 0.885 P L / (S E - 0.1 P)
 
+        Conical, UG-32(g), with alpha the half apex angle:
+            t = P D / (2 cos(alpha) (S E - 0.6 P))
+
         Flat:
             preliminary screening expression only.
         """
@@ -1415,11 +1451,21 @@ class PressureVessel(CalculationBase):
 
         elif normalized == "conical":
 
+            # UG-32(g), with alpha the half apex angle of the cone:
+            #
+            #     t = P D / (2 cos(alpha) (S E - 0.6 P))
+            cone_half_angle = _cone_half_angle_degrees(
+                self.inputs.get("cone_half_angle")
+            )
+
             denominator = (
                 2.0
-                * allowable_stress_pa
-                * joint_efficiency
-                - 0.2 * pressure
+                * cos(radians(cone_half_angle))
+                * (
+                    allowable_stress_pa
+                    * joint_efficiency
+                    - 0.6 * pressure
+                )
             )
 
             if denominator <= 0.0:
