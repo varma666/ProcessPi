@@ -1,3 +1,5 @@
+import math
+
 from ..base import CalculationBase
 from ...units import *
 
