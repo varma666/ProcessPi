@@ -11,7 +11,7 @@ The module supports:
 - Material-specific temperature grids.
 - Conservative selection of the first available temperature point at or above
   the design temperature.
-- Cylindrical shell sizing.
+- Cylindrical and spherical shell sizing.
 - Preliminary 2:1 ellipsoidal, hemispherical and flat-head sizing.
 - Volume and volume-check calculations.
 - Nozzle / manhole storage.
@@ -1263,6 +1263,93 @@ class PressureVessel(CalculationBase):
             "m",
         )
 
+    def spherical_shell_thickness(self) -> Length:
+        """
+        Preliminary spherical-shell internal-pressure thickness.
+
+        UG-27(d) form:
+
+            t = P R / (2 S E - 0.2 P)
+
+        A spherical vessel has no heads, so this governs the whole shell
+        and does not depend on head_type.
+
+        Corrosion allowance is added after pressure thickness.
+        """
+
+        pressure = _value(
+            self.inputs.get(
+                "design_pressure",
+                self.inputs.get("pressure"),
+            ),
+            "design_pressure",
+            "Pa",
+        )
+
+        diameter = _value(
+            self.inputs.get(
+                "diameter",
+                self.inputs.get("inside_diameter"),
+            ),
+            "diameter",
+            "m",
+        )
+
+        allowable_stress_psi = _value(
+            self.allowable_stress(),
+            "allowable stress",
+            "psi",
+        )
+
+        allowable_stress_pa = (
+            allowable_stress_psi
+            * 6894.757293168
+        )
+
+        joint_efficiency = float(
+            self.inputs.get(
+                "joint_efficiency",
+                1.0,
+            )
+        )
+
+        corrosion_allowance = _value(
+            self.inputs.get(
+                "corrosion_allowance",
+                Length(0, "mm"),
+            ),
+            "corrosion_allowance",
+            "m",
+        )
+
+        radius = diameter / 2.0
+
+        denominator = (
+            2.0
+            * allowable_stress_pa
+            * joint_efficiency
+            - 0.2 * pressure
+        )
+
+        if denominator <= 0.0:
+            raise ValueError(
+                "Spherical-shell thickness equation has a non-positive "
+                "denominator. Check pressure, allowable stress, and joint "
+                "efficiency."
+            )
+
+        pressure_thickness = (
+            pressure
+            * radius
+            / denominator
+        )
+
+        return Length(
+            pressure_thickness
+            + corrosion_allowance,
+            "m",
+        )
+
     # ------------------------------------------------------------------------
     # HEAD THICKNESS
     # ------------------------------------------------------------------------
@@ -1683,13 +1770,13 @@ class PressureVessel(CalculationBase):
 
     def design(self) -> Dict[str, Any]:
 
-        shell_required = (
-            self.shell_thickness()
-            if self.vessel_type != "spherical"
-            else self.head_thickness()
-        )
-
-        head_required = self.head_thickness()
+        if self.vessel_type == "spherical":
+            # A sphere has no heads: UG-27(d) governs the whole shell.
+            shell_required = self.spherical_shell_thickness()
+            head_required = shell_required
+        else:
+            shell_required = self.shell_thickness()
+            head_required = self.head_thickness()
 
         governing_required_mm = max(
             _value(
