@@ -98,7 +98,7 @@ class ReactionRate(CalculationBase):
         if model == "power_law":
             C: Mapping[str, float] = self.inputs["C"]
             exps: Mapping[str, float] = self.inputs["exponents"]
-            k = float(self.inputs.get("k", self._arrhenius_k()))
+            k = float(self.inputs["k"]) if "k" in self.inputs else self._arrhenius_k()
             rate = k
             for sp, a in exps.items():
                 c = float(C.get(sp, 0.0))
@@ -110,7 +110,7 @@ class ReactionRate(CalculationBase):
         if model == "langmuir_hinshelwood":
             C: Mapping[str, float] = self.inputs["C"]
             K: Mapping[str, float] = self.inputs["K"]
-            k = float(self.inputs.get("k", self._arrhenius_k()))
+            k = float(self.inputs["k"]) if "k" in self.inputs else self._arrhenius_k()
             numerator = self.inputs.get("numerator", {"A": 1.0})
             denom_power = float(self.inputs.get("denom_power", 1.0))
 

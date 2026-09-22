@@ -1,6 +1,6 @@
 from .base import Component
 from processpi.units import *
-from CoolProp.CoolProp import PropsSI
+import CoolProp.CoolProp as CP
 from typing import Literal
 
 class Steam(Component):

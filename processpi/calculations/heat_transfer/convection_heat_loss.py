@@ -20,4 +20,4 @@ class ConvectionHeatLoss(CalculationBase):
         ΔT = self._get_value(self.inputs["temp_difference"], "temp_difference")         # K
 
         Q = h * A * ΔT
-        return HeatFlux(Q, "W")
+        return HeatFlow(Q, "W")
