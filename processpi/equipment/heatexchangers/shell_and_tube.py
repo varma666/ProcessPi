@@ -252,6 +252,72 @@ class ShellAndTubeHX(HeatExchanger):
     def _get_standard_layout(self) -> str:
         return str(self.specs.get("tube_layout", "triangular")).lower()
 
+    def _shell_equivalent_diameter(
+        self,
+        tube_pitch: float,
+        tube_od: float,
+        layout: str | None = None,
+    ) -> float:
+        """
+        Kern shell-side equivalent diameter for the bundle layout.
+
+        Square pitch:       De = 4 (Pt^2 - pi do^2 / 4) / (pi do)
+        Triangular pitch:   De = 4 (sqrt(3) Pt^2 / 4 - pi do^2 / 8) / (pi do / 2)
+
+        Args:
+            tube_pitch (float): Tube pitch [m].
+            tube_od (float): Tube outside diameter [m].
+            layout (str | None): "triangular" or "square"; the configured layout
+                when omitted.
+
+        Returns:
+            float: Equivalent diameter [m].
+        """
+        layout = (layout or self._get_standard_layout()).lower()
+        pitch = max(tube_pitch, 1e-9)
+        od = max(tube_od, 1e-9)
+
+        if layout.startswith("squ") or layout.startswith("rot"):
+            free_area = pitch ** 2 - math.pi * od ** 2 / 4.0
+            wetted = math.pi * od
+        else:
+            # 60 degree triangular pitch: half a pitch triangle per tube.
+            free_area = math.sqrt(3.0) / 4.0 * pitch ** 2 - math.pi * od ** 2 / 8.0
+            wetted = math.pi * od / 2.0
+
+        return max(4.0 * free_area / max(wetted, 1e-12), 1e-6)
+
+    def _shell_crossflow_area(
+        self,
+        shell_diameter: float,
+        baffle_spacing: float,
+        tube_pitch: float,
+        tube_od: float,
+    ) -> float:
+        """
+        Kern shell-side cross-flow area at the bundle centreline.
+
+            As = (Pt - do) Ds B / Pt
+
+        This is the one definition used by the velocity check, the heat transfer
+        correlation and the pressure drop routine, so that the velocity fed to a
+        correlation is the velocity that correlation assumes.
+
+        Args:
+            shell_diameter (float): Shell inside diameter [m].
+            baffle_spacing (float): Baffle spacing [m].
+            tube_pitch (float): Tube pitch [m].
+            tube_od (float): Tube outside diameter [m].
+
+        Returns:
+            float: Cross-flow area [m2].
+        """
+        pitch = max(tube_pitch, 1e-9)
+        return max(
+            (pitch - tube_od) * max(shell_diameter, 1e-9) * max(baffle_spacing, 1e-9) / pitch,
+            1e-12,
+        )
+
     def _get_nearest_shell_id(self, shell_id_in: float, shell_ids: List[float]) -> float:
         nearest = min(shell_ids, key=lambda x: abs(x - shell_id_in))
         if abs(nearest - shell_id_in) > 1e-9:
@@ -463,7 +529,26 @@ class ShellAndTubeHX(HeatExchanger):
             tube, shell = cold_name, hot_name
             reason=[f"Cold fluid tube-side score {cold_tube:.2f} > hot score {hot_tube:.2f}"]
         self._debug(f"Fluid assignment: tube={tube}, shell={shell}, reason={reason}")
-        return {"tube_side_fluid": tube, "shell_side_fluid": shell, "assignment_reason": reason}
+
+        # The thermal and hydraulic calculations model the hot stream in the
+        # tubes, whatever the scoring prefers, so the recommendation is reported
+        # as a recommendation and the modelled sides are reported separately.
+        modelled_tube, modelled_shell = hot_name, cold_name
+        if tube != modelled_tube:
+            self._warn_with_category(
+                "ASSIGNMENT_WARNING",
+                f"Scoring recommends {tube} in the tubes, but the calculation "
+                f"models {modelled_tube} in the tubes. Swap the streams, or set "
+                f"force_hot_in_tubes, to design the recommended arrangement.",
+            )
+
+        return {
+            "tube_side_fluid": modelled_tube,
+            "shell_side_fluid": modelled_shell,
+            "recommended_tube_side_fluid": tube,
+            "recommended_shell_side_fluid": shell,
+            "assignment_reason": reason,
+        }
 
     def _select_tube_geometry(self, area_required: float, hot: Dict[str, float], cold: Dict[str, float],
                               tube_passes: int) -> Dict[str, float]:
@@ -628,40 +713,42 @@ class ShellAndTubeHX(HeatExchanger):
     
         pitch = geometry["tube_pitch"]
     
-        porosity = 0.6
+        def _shell_velocity(diameter: float) -> float:
+            baffle_spacing = max(0.4 * diameter, 1e-6)
+            area = self._shell_crossflow_area(
+                diameter, baffle_spacing, pitch, geometry["tube_od"]
+            )
+            return q_vol_cold / area
+    
+        shell_v_min, shell_v_max = self._get_velocity_limits(
+            side="shell",
+            component=self.cold_in.component,
+        )
+    
+        v_shell = _shell_velocity(shell_diameter)
+        settled = False
     
         for _ in range(10):
     
-            baffle_spacing = max(
-                0.4 * shell_diameter,
-                1e-6,
-            )
-    
-            shell_flow_area = (
-                shell_diameter
-                * baffle_spacing
-                * porosity
-                * (pitch - geometry["tube_od"])
-                / max(pitch, 1e-12)
-            )
-    
-            v_shell = (
-                q_vol_cold
-                / max(shell_flow_area, 1e-12)
-            )
-    
-            shell_v_min, shell_v_max = self._get_velocity_limits(
-                side="shell",
-                component=self.cold_in.component,
-            )
-    
             if shell_v_min <= v_shell <= shell_v_max:
+                settled = True
                 break
     
             if v_shell < shell_v_min:
                 shell_diameter *= 0.90
             else:
                 shell_diameter *= 1.10
+    
+            # The returned velocity must belong to the returned shell diameter.
+            v_shell = _shell_velocity(shell_diameter)
+    
+        if not settled:
+            self._warn_with_category(
+                "HYDRAULIC_WARNING",
+                f"Shell velocity {v_shell:.3f} m/s is outside the "
+                f"{shell_v_min}-{shell_v_max} m/s target after 10 shell diameter "
+                f"adjustments; using shell diameter {shell_diameter:.4f} m",
+            )
     
         return (
             v_tube,
@@ -713,9 +800,13 @@ class ShellAndTubeHX(HeatExchanger):
             viscosity=hot["viscosity"],
         ).calculate()
         pr_t = max(hot["cp"] * 1000 * hot["viscosity"] / max(hot["k"], 1e-12), 1e-12)
-        nu_t = DittusBoelter(reynolds=max(re_t, 1.0), prandtl=pr_t, n=0.4).calculate()
+        # Dittus-Boelter: n = 0.4 when the tube fluid is heated, 0.3 when cooled.
+        # The tube side carries the hot stream, which is being cooled.
+        nu_t = DittusBoelter(reynolds=max(re_t, 1.0), prandtl=pr_t, n=0.3).calculate()
         self._debug(f"Tube Side Rey:{re_t}, Pra:{pr_t}, Nuss:{nu_t}")
-        de_shell = max(1.27 * (geometry["tube_pitch"] ** 2 - 0.785 * geometry["tube_od"] ** 2) / geometry["tube_od"], 1e-6)
+        de_shell = self._shell_equivalent_diameter(
+            geometry["tube_pitch"], geometry["tube_od"]
+        )
         re_s = Reynolds(
             density=cold["density"],
             velocity=v_shell,
@@ -762,16 +853,19 @@ class ShellAndTubeHX(HeatExchanger):
 
         tube_od = self._safe_float(tube_od, "tube_od")
         tube_id = self._safe_float(tube_id, "tube_id")
-        tube_wall_thickness = (tube_od - tube_id) / 2
-
         tube_material_k = self.specs.get(
             "tube_thermal_conductivity"
         )
 
         if tube_material_k is None:
             tube_material_k = 45
-        
-        R_wall = tube_wall_thickness / tube_material_k
+
+        # Cylindrical wall referred to the outside area, not the plane-wall form:
+        #   R_wall = do ln(do/di) / (2 k)
+        R_wall = (
+            tube_od * math.log(max(tube_od, 1e-12) / max(tube_id, 1e-12))
+            / (2.0 * tube_material_k)
+        )
 
         # ======================================================
         # COMPONENT VALIDATION
@@ -803,8 +897,10 @@ class ShellAndTubeHX(HeatExchanger):
         # FOULING KEYS & PARAMETERS
         # ======================================================
 
-        shell_key = hot_hx_data.get("fouling_key")
-        tube_key = cold_hx_data.get("fouling_key")
+        # The thermal calculation puts the hot stream in the tubes, so its fouling
+        # factor belongs on the tube side and the cold stream's on the shell side.
+        tube_key = hot_hx_data.get("fouling_key")
+        shell_key = cold_hx_data.get("fouling_key")
 
         if shell_key is None or tube_key is None:
             raise ValueError("Missing 'fouling_key' in component hx_data().")
@@ -812,8 +908,8 @@ class ShellAndTubeHX(HeatExchanger):
         shell_velocity = getattr(self, "shell_velocity", None)
         tube_velocity = getattr(self, "tube_velocity", None)
 
-        shell_temperature = self._safe_float(self.hot_in.temperature.to("C"), "shell_temperature")
-        tube_temperature = self._safe_float(self.cold_in.temperature.to("C"), "tube_temperature")
+        tube_temperature = self._safe_float(self.hot_in.temperature.to("C"), "tube_temperature")
+        shell_temperature = self._safe_float(self.cold_in.temperature.to("C"), "shell_temperature")
 
         # ======================================================
         # FOULING FACTORS (Rf)
@@ -839,9 +935,12 @@ class ShellAndTubeHX(HeatExchanger):
 
         if h_t <= 0 or h_s <= 0:
             raise ValueError("Invalid heat transfer coefficients (must be > 0).")
+        # Everything is referred to the tube outside area, so the tube-side film
+        # and its fouling both carry the do/di ratio.
         h_t = h_t * tube_id / tube_od
         R_tube = 1 / h_t
         R_shell = 1 / h_s
+        Rf_tube = Rf_tube * tube_od / max(tube_id, 1e-12)
 
         # ======================================================
         # TOTAL THERMAL RESISTANCES
@@ -1278,6 +1377,10 @@ class ShellAndTubeHX(HeatExchanger):
         else:
             f_tube = 0.079 / (re_tube ** 0.25)
     
+        velocity_head = hot["density"] * v_tube**2 / 2.0
+    
+        # Straight-length friction plus the 4 velocity heads per pass that Kern
+        # charges for the entry, exit and turns.
         tube_dp = (
             4.0
             * f_tube
@@ -1285,11 +1388,11 @@ class ShellAndTubeHX(HeatExchanger):
                 (tube_length * tube_passes)
                 / max(tube_id, 1e-9)
             )
-            * (
-                hot["density"]
-                * v_tube**2
-                / 2.0
-            )
+            * velocity_head
+        ) + (
+            4.0
+            * tube_passes
+            * velocity_head
         )
     
         # ==========================================================
@@ -1312,25 +1415,13 @@ class ShellAndTubeHX(HeatExchanger):
             max(0.4 * shell_diameter, 1e-6),
         )
     
-        # Crossflow area
-        as_cross = (
-            shell_diameter
-            * baffle_spacing
-            * (
-                (tube_pitch - tube_od)
-                / max(tube_pitch, 1e-9)
-            )
+        # Crossflow area and equivalent diameter, from the same definitions the
+        # velocity check and the heat transfer correlation use.
+        as_cross = self._shell_crossflow_area(
+            shell_diameter, baffle_spacing, tube_pitch, tube_od
         )
     
-        # Equivalent diameter
-        de_shell = (
-            1.27
-            * (
-                tube_pitch**2
-                - 0.785 * tube_od**2
-            )
-            / max(tube_od, 1e-9)
-        )
+        de_shell = self._shell_equivalent_diameter(tube_pitch, tube_od)
     
         # Shell Reynolds
         re_shell = Reynolds(
@@ -2558,7 +2649,7 @@ class ShellAndTubeHX(HeatExchanger):
         q_vol_hot = hot["m_dot"] / max(hot["density"], 1e-12)
         q_vol_cold = cold["m_dot"] / max(cold["density"], 1e-12)
         tube_flow_area = max((tube_count / max(tube_passes, 1)) * (math.pi * tube_id**2 / 4.0), 1e-12)
-        shell_flow_area = max(shell_diameter * baffle_spacing * ((tube_pitch - tube_od) / max(tube_pitch, 1e-12)) * 0.62, 1e-12)
+        shell_flow_area = self._shell_crossflow_area(shell_diameter, baffle_spacing, tube_pitch, tube_od)
         v_tube = q_vol_hot / tube_flow_area
         v_shell = q_vol_cold / shell_flow_area
 
