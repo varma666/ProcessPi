@@ -15,8 +15,15 @@ class ReboilerHX(EvaporatorHX):
         self.orientation = str(self.specs.get("orientation", "horizontal")).lower()
 
     def _estimate_circulation_ratio(self, results: Dict[str, Any]) -> float:
-        duty_kw = float(results.get("Q", 0.0))
-        area = max(float(results.get("Area", 1.0)), 1e-6)
+        def _number(key: str, default: float) -> float:
+            """Results carry unit objects; this estimate wants plain numbers."""
+            value = results.get(key, default)
+            if value is None:
+                return default
+            return float(getattr(value, "value", value))
+
+        duty_kw = _number("Q", 0.0)
+        area = max(_number("Area", 1.0), 1e-6)
         base = 3.0 + 0.002 * duty_kw + 0.01 * area
         if self.reboiler_type == "vertical_thermosyphon":
             base *= 1.2
@@ -53,16 +60,15 @@ class ReboilerHX(EvaporatorHX):
         shell_velocity = (
             shell_velocity
             if shell_velocity is not None
-            else float(kwargs.get("shell_velocity", 0.0))
+            else float(kwargs.get("shell_velocity", kwargs.get("v_shell", 0.0)))
         )
         tube_velocity = (
             tube_velocity
             if tube_velocity is not None
-            else float(kwargs.get("tube_velocity", 0.0))
+            else float(kwargs.get("tube_velocity", kwargs.get("v_tube", 0.0)))
         )
         kwargs.setdefault("shell_passes", int(kwargs.get("shell_passes", 1)))
         kwargs.setdefault("tube_passes", int(kwargs.get("tube_passes", 1)))
-        _shell_diameter = kwargs.get("shell_diameter")
         return super()._calculate_pressure_drop(
             geometry=geometry,
             hot=hot,
