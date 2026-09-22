@@ -34,369 +34,241 @@ ROUGHNESS: Dict[str, float] = {
 # --------------------------
 # Updated to a list of Diameter objects
 STANDARD_SIZES: List[Diameter] = [
-    Diameter(0.25,"in"), Diameter(0.5,"in"), Diameter(0.75,"in"), Diameter(1,"in"),
-    Diameter(1.5,"in"), Diameter(2,"in"), Diameter(2.5,"in"), Diameter(3,"in"),
-    Diameter(3.5,"in"), Diameter(4,"in"), Diameter(5,"in"), Diameter(6,"in"),
-    Diameter(8,"in"), Diameter(10,"in"), Diameter(12,"in"), Diameter(14,"in"),
-    Diameter(16,"in"), Diameter(18,"in"), Diameter(20,"in"), Diameter(22,"in"),
-    Diameter(24,"in"), Diameter(26,"in"), Diameter(28,"in"), Diameter(30,"in"),
-    Diameter(32,"in"), Diameter(34,"in"), Diameter(36,"in"), Diameter(50,"in")
+    Diameter(0.125, "in"), Diameter(0.25, "in"), Diameter(0.375, "in"), Diameter(0.5, "in"),
+    Diameter(0.75, "in"), Diameter(1, "in"), Diameter(1.25, "in"), Diameter(1.5, "in"),
+    Diameter(2, "in"), Diameter(2.5, "in"), Diameter(3, "in"), Diameter(3.5, "in"),
+    Diameter(4, "in"), Diameter(5, "in"), Diameter(6, "in"), Diameter(8, "in"),
+    Diameter(10, "in"), Diameter(12, "in"), Diameter(14, "in"), Diameter(16, "in"),
+    Diameter(18, "in"), Diameter(20, "in"), Diameter(22, "in"), Diameter(24, "in"),
+    Diameter(26, "in"), Diameter(28, "in"), Diameter(30, "in"), Diameter(32, "in"),
+    Diameter(34, "in"), Diameter(36, "in"), Diameter(38, "in"), Diameter(40, "in"),
+    Diameter(42, "in"), Diameter(44, "in"), Diameter(46, "in"), Diameter(48, "in"),
 ]
 
 # --------------------------
-# 🔹 Pipe Size Database (OD and ID)
-# Nominal Diameter (in) -> { Schedule -> (Wall Thickness mm, OD mm, ID mm) }
+# 🔹 Pipe Size Database (OD and wall thickness)
 # --------------------------
-# The pipe schedule database has been updated to include the OD explicitly
-PIPE_SCHEDULES: Dict[Diameter, Dict[str, Tuple[Length, Diameter, Diameter]]] = {
-    Diameter(0.125, "in"): {
-        "5S": (Length(1.2, "mm"), Diameter(10.29, "mm"), Diameter(10.29 - 2 * 1.2, "mm")),
-        "STD": (Length(1.73, "mm"), Diameter(10.29, "mm"), Diameter(10.29 - 2 * 1.73, "mm")),
-        "XS": (Length(2.41, "mm"), Diameter(10.29, "mm"), Diameter(10.29 - 2 * 2.41, "mm")),
-        "80S": (Length(2.41, "mm"), Diameter(10.29, "mm"), Diameter(10.29 - 2 * 2.41, "mm")),
-    },
-    # ... (rest of the database entries for other diameters)
-    # The full database from the user's prompt is a bit too long to include here,
-    # but the structure is shown above and should be replicated for all diameters.
-    # The key change is adding the outer diameter (OD) to the tuple.
-    Diameter(0.25, "in"): {
-        "5S": (Length(1.7, "mm"), Diameter(13.72, "mm"), Diameter(13.72 - 2 * 1.7, "mm")),
-        "STD": (Length(2.24, "mm"), Diameter(13.72, "mm"), Diameter(13.72 - 2 * 2.24, "mm")),
-        "XS": (Length(3.02, "mm"), Diameter(13.72, "mm"), Diameter(13.72 - 2 * 3.02, "mm")),
-        "80S": (Length(3.02, "mm"), Diameter(13.72, "mm"), Diameter(13.72 - 2 * 3.02, "mm")),
-    },
-    Diameter(0.375, "in"): {
-        "5S": (Length(1.7, "mm"), Diameter(17.15, "mm"), Diameter(17.15 - 2 * 1.7, "mm")),
-        "STD": (Length(2.31, "mm"), Diameter(17.15, "mm"), Diameter(17.15 - 2 * 2.31, "mm")),
-        "XS": (Length(3.2, "mm"), Diameter(17.15, "mm"), Diameter(17.15 - 2 * 3.2, "mm")),
-        "80S": (Length(3.2, "mm"), Diameter(17.15, "mm"), Diameter(17.15 - 2 * 3.2, "mm")),
-    },
-    Diameter(0.5, "in"): {
-        "STD": (Length(2.8, "mm"), Diameter(21.34, "mm"), Diameter(21.34 - 2 * 2.8, "mm")),
-        "5S": (Length(1.7, "mm"), Diameter(21.34, "mm"), Diameter(21.34 - 2 * 1.7, "mm")),
-        "10S": (Length(2.1, "mm"), Diameter(21.34, "mm"), Diameter(21.34 - 2 * 2.1, "mm")),
-        "S40": (Length(2.77, "mm"), Diameter(21.34, "mm"), Diameter(21.34 - 2 * 2.77, "mm")),
-        "XS": (Length(3.73, "mm"), Diameter(21.34, "mm"), Diameter(21.34 - 2 * 3.73, "mm")),
-        "80S": (Length(3.73, "mm"), Diameter(21.34, "mm"), Diameter(21.34 - 2 * 3.73, "mm")),
-        "S120": (Length(4.78, "mm"), Diameter(21.34, "mm"), Diameter(21.34 - 2 * 4.78, "mm")),
-        "XXS": (Length(7.47, "mm"), Diameter(21.34, "mm"), Diameter(21.34 - 2 * 7.47, "mm")),
-    },
-    Diameter(0.75, "in"): {
-        "STD": (Length(2.9, "mm"), Diameter(26.67, "mm"), Diameter(26.67 - 2 * 2.9, "mm")),
-        "5S": (Length(1.7, "mm"), Diameter(26.67, "mm"), Diameter(26.67 - 2 * 1.7, "mm")),
-        "10S": (Length(2.1, "mm"), Diameter(26.67, "mm"), Diameter(26.67 - 2 * 2.1, "mm")),
-        "S40": (Length(2.87, "mm"), Diameter(26.67, "mm"), Diameter(26.67 - 2 * 2.87, "mm")),
-        "XS": (Length(3.91, "mm"), Diameter(26.67, "mm"), Diameter(26.67 - 2 * 3.91, "mm")),
-        "80S": (Length(3.91, "mm"), Diameter(26.67, "mm"), Diameter(26.67 - 2 * 3.91, "mm")),
-        "S120": (Length(5.56, "mm"), Diameter(26.67, "mm"), Diameter(26.67 - 2 * 5.56, "mm")),
-        "XXS": (Length(7.82, "mm"), Diameter(26.67, "mm"), Diameter(26.67 - 2 * 7.82, "mm")),
-    },
-    Diameter(1.0, "in"): {
-        "STD": (Length(3.4, "mm"), Diameter(33.4, "mm"), Diameter(33.4 - 2 * 3.4, "mm")),
-        "5S": (Length(1.7, "mm"), Diameter(33.4, "mm"), Diameter(33.4 - 2 * 1.7, "mm")),
-        "10S": (Length(2.8, "mm"), Diameter(33.4, "mm"), Diameter(33.4 - 2 * 2.8, "mm")),
-        "S40": (Length(3.38, "mm"), Diameter(33.4, "mm"), Diameter(33.4 - 2 * 3.38, "mm")),
-        "XS": (Length(4.55, "mm"), Diameter(33.4, "mm"), Diameter(33.4 - 2 * 4.55, "mm")),
-        "80S": (Length(4.55, "mm"), Diameter(33.4, "mm"), Diameter(33.4 - 2 * 4.55, "mm")),
-        "S120": (Length(6.35, "mm"), Diameter(33.4, "mm"), Diameter(33.4 - 2 * 6.35, "mm")),
-        "XXS": (Length(9.09, "mm"), Diameter(33.4, "mm"), Diameter(33.4 - 2 * 9.09, "mm")),
-    },
-    Diameter(1.25, "in"): {
-        "STD": (Length(3.6, "mm"), Diameter(42.16, "mm"), Diameter(42.16 - 2 * 3.6, "mm")),
-        "5S": (Length(1.7, "mm"), Diameter(42.16, "mm"), Diameter(42.16 - 2 * 1.7, "mm")),
-        "10S": (Length(2.8, "mm"), Diameter(42.16, "mm"), Diameter(42.16 - 2 * 2.8, "mm")),
-        "S40": (Length(3.56, "mm"), Diameter(42.16, "mm"), Diameter(42.16 - 2 * 3.56, "mm")),
-        "XS": (Length(4.85, "mm"), Diameter(42.16, "mm"), Diameter(42.16 - 2 * 4.85, "mm")),
-        "80S": (Length(4.85, "mm"), Diameter(42.16, "mm"), Diameter(42.16 - 2 * 4.85, "mm")),
-        "S120": (Length(6.35, "mm"), Diameter(42.16, "mm"), Diameter(42.16 - 2 * 6.35, "mm")),
-        "XXS": (Length(9.7, "mm"), Diameter(42.16, "mm"), Diameter(42.16 - 2 * 9.7, "mm")),
-    },
-    Diameter(1.5, "in"): {
-        "STD": (Length(3.7, "mm"), Diameter(48.26, "mm"), Diameter(48.26 - 2 * 3.7, "mm")),
-        "5S": (Length(1.7, "mm"), Diameter(48.26, "mm"), Diameter(48.26 - 2 * 1.7, "mm")),
-        "10S": (Length(2.8, "mm"), Diameter(48.26, "mm"), Diameter(48.26 - 2 * 2.8, "mm")),
-        "S40": (Length(3.68, "mm"), Diameter(48.26, "mm"), Diameter(48.26 - 2 * 3.68, "mm")),
-        "XS": (Length(5.08, "mm"), Diameter(48.26, "mm"), Diameter(48.26 - 2 * 5.08, "mm")),
-        "80S": (Length(5.08, "mm"), Diameter(48.26, "mm"), Diameter(48.26 - 2 * 5.08, "mm")),
-        "S120": (Length(7.14, "mm"), Diameter(48.26, "mm"), Diameter(48.26 - 2 * 7.14, "mm")),
-        "XXS": (Length(10.2, "mm"), Diameter(48.26, "mm"), Diameter(48.26 - 2 * 10.2, "mm")),
-    },
-    Diameter(2.0, "in"): {
-        "STD": (Length(3.9, "mm"), Diameter(60.33, "mm"), Diameter(60.33 - 2 * 3.9, "mm")),
-        "5S": (Length(1.7, "mm"), Diameter(60.33, "mm"), Diameter(60.33 - 2 * 1.7, "mm")),
-        "10S": (Length(2.8, "mm"), Diameter(60.33, "mm"), Diameter(60.33 - 2 * 2.8, "mm")),
-        "S40": (Length(3.91, "mm"), Diameter(60.33, "mm"), Diameter(60.33 - 2 * 3.91, "mm")),
-        "XS": (Length(5.54, "mm"), Diameter(60.33, "mm"), Diameter(60.33 - 2 * 5.54, "mm")),
-        "80S": (Length(5.54, "mm"), Diameter(60.33, "mm"), Diameter(60.33 - 2 * 5.54, "mm")),
-        "S120": (Length(9.74, "mm"), Diameter(60.33, "mm"), Diameter(60.33 - 2 * 9.74, "mm")),
-        "XXS": (Length(11.1, "mm"), Diameter(60.33, "mm"), Diameter(60.33 - 2 * 11.1, "mm")),
-    },
-    Diameter(2.5, "in"): {
-        "STD": (Length(5.2, "mm"), Diameter(73.03, "mm"), Diameter(73.03 - 2 * 5.2, "mm")),
-        "5S": (Length(2.1, "mm"), Diameter(73.03, "mm"), Diameter(73.03 - 2 * 2.1, "mm")),
-        "10S": (Length(3.1, "mm"), Diameter(73.03, "mm"), Diameter(73.03 - 2 * 3.1, "mm")),
-        "S40": (Length(5.16, "mm"), Diameter(73.03, "mm"), Diameter(73.03 - 2 * 5.16, "mm")),
-        "XS": (Length(7.01, "mm"), Diameter(73.03, "mm"), Diameter(73.03 - 2 * 7.01, "mm")),
-        "80S": (Length(7.01, "mm"), Diameter(73.03, "mm"), Diameter(73.03 - 2 * 7.01, "mm")),
-        "S120": (Length(9.53, "mm"), Diameter(73.03, "mm"), Diameter(73.03 - 2 * 9.53, "mm")),
-        "XXS": (Length(14, "mm"), Diameter(73.03, "mm"), Diameter(73.03 - 2 * 14, "mm")),
-    },
-    Diameter(3.0, "in"): {
-        "STD": (Length(5.5, "mm"), Diameter(88.9, "mm"), Diameter(88.9 - 2 * 5.5, "mm")),
-        "5S": (Length(2.1, "mm"), Diameter(88.9, "mm"), Diameter(88.9 - 2 * 2.1, "mm")),
-        "10S": (Length(3.1, "mm"), Diameter(88.9, "mm"), Diameter(88.9 - 2 * 3.1, "mm")),
-        "S40": (Length(5.49, "mm"), Diameter(88.9, "mm"), Diameter(88.9 - 2 * 5.49, "mm")),
-        "XS": (Length(7.62, "mm"), Diameter(88.9, "mm"), Diameter(88.9 - 2 * 7.62, "mm")),
-        "80S": (Length(7.62, "mm"), Diameter(88.9, "mm"), Diameter(88.9 - 2 * 7.62, "mm")),
-        "S120": (Length(11.1, "mm"), Diameter(88.9, "mm"), Diameter(88.9 - 2 * 11.1, "mm")),
-        "XXS": (Length(15.2, "mm"), Diameter(88.9, "mm"), Diameter(88.9 - 2 * 15.2, "mm")),
-    },
-    Diameter(3.5, "in"): {
-        "STD": (Length(5.7, "mm"), Diameter(101.6, "mm"), Diameter(101.6 - 2 * 5.7, "mm")),
-        "5S": (Length(2.1, "mm"), Diameter(101.6, "mm"), Diameter(101.6 - 2 * 2.1, "mm")),
-        "10S": (Length(3.1, "mm"), Diameter(101.6, "mm"), Diameter(101.6 - 2 * 3.1, "mm")),
-        "S40": (Length(5.74, "mm"), Diameter(101.6, "mm"), Diameter(101.6 - 2 * 5.74, "mm")),
-        "XS": (Length(8.08, "mm"), Diameter(101.6, "mm"), Diameter(101.6 - 2 * 8.08, "mm")),
-        "80S": (Length(8.08, "mm"), Diameter(101.6, "mm"), Diameter(101.6 - 2 * 8.08, "mm")),
-    },
-    Diameter(4.0, "in"): {
-        "STD": (Length(6, "mm"), Diameter(114.3, "mm"), Diameter(114.3 - 2 * 6, "mm")),
-        "5S": (Length(2.1, "mm"), Diameter(114.3, "mm"), Diameter(114.3 - 2 * 2.1, "mm")),
-        "10S": (Length(3.1, "mm"), Diameter(114.3, "mm"), Diameter(114.3 - 2 * 3.1, "mm")),
-        "S40": (Length(6.02, "mm"), Diameter(114.3, "mm"), Diameter(114.3 - 2 * 6.02, "mm")),
-        "XS": (Length(8.56, "mm"), Diameter(114.3, "mm"), Diameter(114.3 - 2 * 8.56, "mm")),
-        "80S": (Length(8.56, "mm"), Diameter(114.3, "mm"), Diameter(114.3 - 2 * 8.56, "mm")),
-        "S100": (Length(11.1, "mm"), Diameter(114.3, "mm"), Diameter(114.3 - 2 * 11.1, "mm")),
-        "S120": (Length(13.5, "mm"), Diameter(114.3, "mm"), Diameter(114.3 - 2 * 13.5, "mm")),
-        "S160": (Length(17.1, "mm"), Diameter(114.3, "mm"), Diameter(114.3 - 2 * 17.1, "mm")),
-    },
-    Diameter(5.0, "in"): {
-        "STD": (Length(6.6, "mm"), Diameter(141.3, "mm"), Diameter(141.3 - 2 * 6.6, "mm")),
-        "5S": (Length(2.8, "mm"), Diameter(141.3, "mm"), Diameter(141.3 - 2 * 2.8, "mm")),
-        "10S": (Length(3.4, "mm"), Diameter(141.3, "mm"), Diameter(141.3 - 2 * 3.4, "mm")),
-        "S40": (Length(6.55, "mm"), Diameter(141.3, "mm"), Diameter(141.3 - 2 * 6.55, "mm")),
-        "XS": (Length(9.53, "mm"), Diameter(141.3, "mm"), Diameter(141.3 - 2 * 9.53, "mm")),
-        "80S": (Length(9.53, "mm"), Diameter(141.3, "mm"), Diameter(141.3 - 2 * 9.53, "mm")),
-        "S100": (Length(12.7, "mm"), Diameter(141.3, "mm"), Diameter(141.3 - 2 * 12.7, "mm")),
-        "S120": (Length(15.9, "mm"), Diameter(141.3, "mm"), Diameter(141.3 - 2 * 15.9, "mm")),
-        "S160": (Length(19.1, "mm"), Diameter(141.3, "mm"), Diameter(141.3 - 2 * 19.1, "mm")),
-    },
-    Diameter(6.0, "in"): {
-        "STD": (Length(7.1, "mm"), Diameter(168.3, "mm"), Diameter(168.3 - 2 * 7.1, "mm")),
-        "5S": (Length(2.8, "mm"), Diameter(168.3, "mm"), Diameter(168.3 - 2 * 2.8, "mm")),
-        "10S": (Length(3.4, "mm"), Diameter(168.3, "mm"), Diameter(168.3 - 2 * 3.4, "mm")),
-        "S40": (Length(7.11, "mm"), Diameter(168.3, "mm"), Diameter(168.3 - 2 * 7.11, "mm")),
-        "XS": (Length(10.97, "mm"), Diameter(168.3, "mm"), Diameter(168.3 - 2 * 10.97, "mm")),
-        "80S": (Length(11, "mm"), Diameter(168.3, "mm"), Diameter(168.3 - 2 * 11, "mm")),
-        "S100": (Length(14.3, "mm"), Diameter(168.3, "mm"), Diameter(168.3 - 2 * 14.3, "mm")),
-        "S120": (Length(18.3, "mm"), Diameter(168.3, "mm"), Diameter(168.3 - 2 * 18.3, "mm")),
-        "S160": (Length(22, "mm"), Diameter(168.3, "mm"), Diameter(168.3 - 2 * 22, "mm")),
-    },
-    Diameter(8.0, "in"): {
-        "STD": (Length(8.2, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 8.2, "mm")),
-        "5S": (Length(2.8, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 2.8, "mm")),
-        "10S": (Length(3.8, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 3.8, "mm")),
-        "S10": (Length(6.4, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 6.4, "mm")),
-        "S20": (Length(8.18, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 8.18, "mm")),
-        "S40": (Length(10.3, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 10.3, "mm")),
-        "S60": (Length(12.7, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 12.7, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 12.7, "mm")),
-        "S100": (Length(15.1, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 15.1, "mm")),
-        "S120": (Length(19.3, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 19.3, "mm")),
-        "S140": (Length(20.6, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 20.6, "mm")),
-        "S160": (Length(23, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 23, "mm")),
-        "XXS": (Length(22.2, "mm"), Diameter(219.1, "mm"), Diameter(219.1 - 2 * 22.2, "mm")),
-    },
-    Diameter(10.0, "in"): {
-        "STD": (Length(9.3, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 9.3, "mm")),
-        "5S": (Length(3.4, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 3.4, "mm")),
-        "10S": (Length(4.2, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 4.2, "mm")),
-        "S10": (Length(6.4, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 6.4, "mm")),
-        "S20": (Length(9.27, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 9.27, "mm")),
-        "S40": (Length(12.7, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 12.7, "mm")),
-        "S60": (Length(12.7, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 12.7, "mm")),
-        "XS": (Length(15.1, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 15.1, "mm")),
-        "80S": (Length(15.1, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 15.1, "mm")),
-        "S120": (Length(19.3, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 19.3, "mm")),
-        "S140": (Length(21.4, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 21.4, "mm")),
-        "S160": (Length(25.4, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 25.4, "mm")),
-        "XXS": (Length(28.6, "mm"), Diameter(273.1, "mm"), Diameter(273.1 - 2 * 28.6, "mm")),
-    },
-    Diameter(12.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 9.5, "mm")),
-        "5S": (Length(4, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 4, "mm")),
-        "10S": (Length(4.6, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 4.6, "mm")),
-        "S10": (Length(6.4, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 6.4, "mm")),
-        "S20": (Length(10.3, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 10.3, "mm")),
-        "S40": (Length(14.3, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 14.3, "mm")),
-        "S60": (Length(12.7, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 12.7, "mm")),
-        "XS": (Length(17.5, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 17.5, "mm")),
-        "80S": (Length(17.5, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 17.5, "mm")),
-        "S120": (Length(21.4, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 21.4, "mm")),
-        "S140": (Length(25.4, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 25.4, "mm")),
-        "S160": (Length(28.6, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 28.6, "mm")),
-        "XXS": (Length(33.3, "mm"), Diameter(323.9, "mm"), Diameter(323.9 - 2 * 33.3, "mm")),
-    },
-    Diameter(14.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 9.5, "mm")),
-        "5S": (Length(4, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 4, "mm")),
-        "10S": (Length(4.8, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 4.8, "mm")),
-        "S10": (Length(6.4, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 6.4, "mm")),
-        "S20": (Length(7.9, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 7.9, "mm")),
-        "S40": (Length(11.1, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 11.1, "mm")),
-        "S60": (Length(15.1, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 15.1, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 12.7, "mm")),
-        "S100": (Length(19.1, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 19.1, "mm")),
-        "S120": (Length(23.8, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 23.8, "mm")),
-        "S140": (Length(27.8, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 27.8, "mm")),
-        "S160": (Length(31.8, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 31.8, "mm")),
-        "XXS": (Length(35.7, "mm"), Diameter(355.6, "mm"), Diameter(355.6 - 2 * 35.7, "mm")),
-    },
-    Diameter(16.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 9.5, "mm")),
-        "5S": (Length(4.2, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 4.2, "mm")),
-        "10S": (Length(4.8, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 4.8, "mm")),
-        "S10": (Length(6.4, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 6.4, "mm")),
-        "S20": (Length(7.9, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 7.9, "mm")),
-        "S40": (Length(12.7, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 12.7, "mm")),
-        "S60": (Length(16.7, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 16.7, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 12.7, "mm")),
-        "S100": (Length(21.4, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 21.4, "mm")),
-        "S120": (Length(26.2, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 26.2, "mm")),
-        "S140": (Length(31, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 31, "mm")),
-        "S160": (Length(36.5, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 36.5, "mm")),
-        "XXS": (Length(40.5, "mm"), Diameter(406.4, "mm"), Diameter(406.4 - 2 * 40.5, "mm")),
-    },
-    Diameter(18.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 9.5, "mm")),
-        "5S": (Length(4.2, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 4.2, "mm")),
-        "10S": (Length(4.8, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 4.8, "mm")),
-        "S10": (Length(6.4, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 6.4, "mm")),
-        "S20": (Length(7.9, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 7.9, "mm")),
-        "S40": (Length(14.3, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 14.3, "mm")),
-        "S60": (Length(19.1, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 19.1, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 12.7, "mm")),
-        "S100": (Length(23.8, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 23.8, "mm")),
-        "S120": (Length(29.4, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 29.4, "mm")),
-        "S140": (Length(34.9, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 34.9, "mm")),
-        "S160": (Length(39.7, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 39.7, "mm")),
-        "XXS": (Length(45.2, "mm"), Diameter(457.2, "mm"), Diameter(457.2 - 2 * 45.2, "mm")),
-    },
-    Diameter(20.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 9.5, "mm")),
-        "5S": (Length(4.8, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 4.8, "mm")),
-        "10S": (Length(5.5, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 5.5, "mm")),
-        "S10": (Length(6.4, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 6.4, "mm")),
-        "S20": (Length(9.5, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 9.5, "mm")),
-        "S40": (Length(15.1, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 15.1, "mm")),
-        "S60": (Length(20.6, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 20.6, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 12.7, "mm")),
-        "S100": (Length(26.2, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 26.2, "mm")),
-        "S120": (Length(32.5, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 32.5, "mm")),
-        "S140": (Length(38.1, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 38.1, "mm")),
-        "S160": (Length(44.5, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 44.5, "mm")),
-        "XXS": (Length(50, "mm"), Diameter(508, "mm"), Diameter(508 - 2 * 50, "mm")),
-    },
-    Diameter(22.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 9.5, "mm")),
-        "5S": (Length(4.8, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 4.8, "mm")),
-        "10S": (Length(5.5, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 5.5, "mm")),
-        "S10": (Length(6.4, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 6.4, "mm")),
-        "S20": (Length(9.5, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 9.5, "mm")),
-        "S60": (Length(22.2, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 22.2, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 12.7, "mm")),
-        "S100": (Length(28.6, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 28.6, "mm")),
-        "S120": (Length(34.9, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 34.9, "mm")),
-        "S140": (Length(41.3, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 41.3, "mm")),
-        "S160": (Length(47.6, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 47.6, "mm")),
-        "XXS": (Length(54, "mm"), Diameter(558.8, "mm"), Diameter(558.8 - 2 * 54, "mm")),
-    },
-    Diameter(24.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 9.5, "mm")),
-        "5S": (Length(5.5, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 5.5, "mm")),
-        "10S": (Length(6.4, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 6.4, "mm")),
-        "S10": (Length(6.4, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 6.4, "mm")),
-        "S20": (Length(9.5, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 9.5, "mm")),
-        "S40": (Length(17.5, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 17.5, "mm")),
-        "S60": (Length(24.6, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 24.6, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 12.7, "mm")),
-        "S100": (Length(31, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 31, "mm")),
-        "S120": (Length(38.9, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 38.9, "mm")),
-        "S140": (Length(46, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 46, "mm")),
-        "S160": (Length(52.4, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 52.4, "mm")),
-        "XXS": (Length(59.5, "mm"), Diameter(609.6, "mm"), Diameter(609.6 - 2 * 59.5, "mm")),
-    },
-    Diameter(26.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(660.4, "mm"), Diameter(660.4 - 2 * 9.5, "mm")),
-        "S10": (Length(7.9, "mm"), Diameter(660.4, "mm"), Diameter(660.4 - 2 * 7.9, "mm")),
-        "S20": (Length(13, "mm"), Diameter(660.4, "mm"), Diameter(660.4 - 2 * 13, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(660.4, "mm"), Diameter(660.4 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(660.4, "mm"), Diameter(660.4 - 2 * 12.7, "mm")),
-    },
-    Diameter(28.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(711.2, "mm"), Diameter(711.2 - 2 * 9.5, "mm")),
-        "S10": (Length(7.9, "mm"), Diameter(711.2, "mm"), Diameter(711.2 - 2 * 7.9, "mm")),
-        "S20": (Length(13, "mm"), Diameter(711.2, "mm"), Diameter(711.2 - 2 * 13, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(711.2, "mm"), Diameter(711.2 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(711.2, "mm"), Diameter(711.2 - 2 * 12.7, "mm")),
-    },
-    Diameter(30.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(762, "mm"), Diameter(762 - 2 * 9.5, "mm")),
-        "5S": (Length(6.4, "mm"), Diameter(762, "mm"), Diameter(762 - 2 * 6.4, "mm")),
-        "10S": (Length(7.9, "mm"), Diameter(762, "mm"), Diameter(762 - 2 * 7.9, "mm")),
-        "S10": (Length(7.9, "mm"), Diameter(762, "mm"), Diameter(762 - 2 * 7.9, "mm")),
-        "S20": (Length(13, "mm"), Diameter(762, "mm"), Diameter(762 - 2 * 13, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(762, "mm"), Diameter(762 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(762, "mm"), Diameter(762 - 2 * 12.7, "mm")),
-    },
-    Diameter(32.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(812.8, "mm"), Diameter(812.8 - 2 * 9.5, "mm")),
-        "S10": (Length(7.9, "mm"), Diameter(812.8, "mm"), Diameter(812.8 - 2 * 7.9, "mm")),
-        "S20": (Length(13, "mm"), Diameter(812.8, "mm"), Diameter(812.8 - 2 * 13, "mm")),
-        "S40": (Length(17.5, "mm"), Diameter(812.8, "mm"), Diameter(812.8 - 2 * 17.5, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(812.8, "mm"), Diameter(812.8 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(812.8, "mm"), Diameter(812.8 - 2 * 12.7, "mm")),
-    },
-    Diameter(34.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(863.6, "mm"), Diameter(863.6 - 2 * 9.5, "mm")),
-        "S10": (Length(7.9, "mm"), Diameter(863.6, "mm"), Diameter(863.6 - 2 * 7.9, "mm")),
-        "S20": (Length(13, "mm"), Diameter(863.6, "mm"), Diameter(863.6 - 2 * 13, "mm")),
-        "S40": (Length(17.5, "mm"), Diameter(863.6, "mm"), Diameter(863.6 - 2 * 17.5, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(863.6, "mm"), Diameter(863.6 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(863.6, "mm"), Diameter(863.6 - 2 * 12.7, "mm")),
-    },
-    Diameter(36.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(914.4, "mm"), Diameter(914.4 - 2 * 9.5, "mm")),
-        "S10": (Length(7.9, "mm"), Diameter(914.4, "mm"), Diameter(914.4 - 2 * 7.9, "mm")),
-        "S20": (Length(13, "mm"), Diameter(914.4, "mm"), Diameter(914.4 - 2 * 13, "mm")),
-        "S40": (Length(19.1, "mm"), Diameter(914.4, "mm"), Diameter(914.4 - 2 * 19.1, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(914.4, "mm"), Diameter(914.4 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(914.4, "mm"), Diameter(914.4 - 2 * 12.7, "mm")),
-    },
-    Diameter(50.0, "in"): {
-        "STD": (Length(9.5, "mm"), Diameter(1270.0, "mm"), Diameter(1270.0 - 2 * 9.5, "mm")),
-        "5S": (Length(4.8, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 4.8, "mm")),
-        "10S": (Length(5.5, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 5.5, "mm")),
-        "S10": (Length(6.4, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 6.4, "mm")),
-        "S20": (Length(9.5, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 9.5, "mm")),
-        "S40": (Length(15.1, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 15.1, "mm")),
-        "S60": (Length(20.6, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 20.6, "mm")),
-        "XS": (Length(12.7, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 12.7, "mm")),
-        "80S": (Length(12.7, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 12.7, "mm")),
-        "S100": (Length(26.2, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 26.2, "mm")),
-        "S120": (Length(32.5, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 32.5, "mm")),
-        "S140": (Length(38.1, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 38.1, "mm")),
-        "S160": (Length(44.5, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 44.5, "mm")),
-        "XXS": (Length(50, "mm"), Diameter(1270, "mm"), Diameter(1270 - 2 * 50, "mm")),
-    }
+# Nominal Pipe Size (in) -> (outside diameter mm, {schedule: wall thickness mm})
+#
+# Carbon and alloy steel schedules (S5 ... S160, STD, XS, XXS) are Table 1 of
+# ASME B36.10M-2015. Stainless schedules (5S, 10S, 40S, 80S) are Table 1 of
+# ASME B36.19M-2004 (R2015) and are listed separately because 10S for NPS 14
+# through 22, 40S for NPS 12, and 80S for NPS 10 and 12 are NOT the same as the
+# matching B36.10M schedule. Both standards tabulate these values in
+# millimetres, so nothing here is a conversion from inches.
+#
+# Outside diameters are the B36.10M SI values; B36.19M rounds two of them
+# differently (NPS 10: 273.1 mm, NPS 12: 323.9 mm).
+_PIPE_DIMENSIONS_MM: Dict[float, Tuple[float, Dict[str, float]]] = {
+    0.125: (10.3, {  # NPS 1/8
+        "S10": 1.24, "10S": 1.24, "S30": 1.45, "S40": 1.73, "40S": 1.73,
+        "STD": 1.73, "S80": 2.41, "80S": 2.41, "XS": 2.41,
+    }),
+    0.25: (13.7, {  # NPS 1/4
+        "S10": 1.65, "10S": 1.65, "S30": 1.85, "S40": 2.24, "40S": 2.24,
+        "STD": 2.24, "S80": 3.02, "80S": 3.02, "XS": 3.02,
+    }),
+    0.375: (17.1, {  # NPS 3/8
+        "S10": 1.65, "10S": 1.65, "S30": 1.85, "S40": 2.31, "40S": 2.31,
+        "STD": 2.31, "S80": 3.2, "80S": 3.2, "XS": 3.2,
+    }),
+    0.5: (21.3, {  # NPS 1/2
+        "S5": 1.65, "5S": 1.65, "S10": 2.11, "10S": 2.11, "S30": 2.41,
+        "S40": 2.77, "40S": 2.77, "STD": 2.77, "S80": 3.73, "80S": 3.73,
+        "XS": 3.73, "S160": 4.78, "XXS": 7.47,
+    }),
+    0.75: (26.7, {  # NPS 3/4
+        "S5": 1.65, "5S": 1.65, "S10": 2.11, "10S": 2.11, "S30": 2.41,
+        "S40": 2.87, "40S": 2.87, "STD": 2.87, "S80": 3.91, "80S": 3.91,
+        "XS": 3.91, "S160": 5.56, "XXS": 7.82,
+    }),
+    1: (33.4, {  # NPS 1
+        "S5": 1.65, "5S": 1.65, "S10": 2.77, "10S": 2.77, "S30": 2.9,
+        "S40": 3.38, "40S": 3.38, "STD": 3.38, "S80": 4.55, "80S": 4.55,
+        "XS": 4.55, "S160": 6.35, "XXS": 9.09,
+    }),
+    1.25: (42.2, {  # NPS 1 1/4
+        "S5": 1.65, "5S": 1.65, "S10": 2.77, "10S": 2.77, "S30": 2.97,
+        "S40": 3.56, "40S": 3.56, "STD": 3.56, "S80": 4.85, "80S": 4.85,
+        "XS": 4.85, "S160": 6.35, "XXS": 9.7,
+    }),
+    1.5: (48.3, {  # NPS 1 1/2
+        "S5": 1.65, "5S": 1.65, "S10": 2.77, "10S": 2.77, "S30": 3.18,
+        "S40": 3.68, "40S": 3.68, "STD": 3.68, "S80": 5.08, "80S": 5.08,
+        "XS": 5.08, "S160": 7.14, "XXS": 10.15,
+    }),
+    2: (60.3, {  # NPS 2
+        "S5": 1.65, "5S": 1.65, "S10": 2.77, "10S": 2.77, "S30": 3.18,
+        "S40": 3.91, "40S": 3.91, "STD": 3.91, "S80": 5.54, "80S": 5.54,
+        "XS": 5.54, "S160": 8.74, "XXS": 11.07,
+    }),
+    2.5: (73, {  # NPS 2 1/2
+        "S5": 2.11, "5S": 2.11, "S10": 3.05, "10S": 3.05, "S30": 4.78,
+        "S40": 5.16, "40S": 5.16, "STD": 5.16, "S80": 7.01, "80S": 7.01,
+        "XS": 7.01, "S160": 9.53, "XXS": 14.02,
+    }),
+    3: (88.9, {  # NPS 3
+        "S5": 2.11, "5S": 2.11, "S10": 3.05, "10S": 3.05, "S30": 4.78,
+        "S40": 5.49, "40S": 5.49, "STD": 5.49, "S80": 7.62, "80S": 7.62,
+        "XS": 7.62, "S160": 11.13, "XXS": 15.24,
+    }),
+    3.5: (101.6, {  # NPS 3 1/2
+        "S5": 2.11, "5S": 2.11, "S10": 3.05, "10S": 3.05, "S30": 4.78,
+        "S40": 5.74, "40S": 5.74, "STD": 5.74, "S80": 8.08, "80S": 8.08,
+        "XS": 8.08,
+    }),
+    4: (114.3, {  # NPS 4
+        "S5": 2.11, "5S": 2.11, "S10": 3.05, "10S": 3.05, "S30": 4.78,
+        "S40": 6.02, "40S": 6.02, "STD": 6.02, "S80": 8.56, "80S": 8.56,
+        "XS": 8.56, "S120": 11.13, "S160": 13.49, "XXS": 17.12,
+    }),
+    5: (141.3, {  # NPS 5
+        "S5": 2.77, "5S": 2.77, "S10": 3.4, "10S": 3.4, "S40": 6.55,
+        "40S": 6.55, "STD": 6.55, "S80": 9.53, "80S": 9.53, "XS": 9.53,
+        "S120": 12.7, "S160": 15.88, "XXS": 19.05,
+    }),
+    6: (168.3, {  # NPS 6
+        "S5": 2.77, "5S": 2.77, "S10": 3.4, "10S": 3.4, "S40": 7.11,
+        "40S": 7.11, "STD": 7.11, "S80": 10.97, "80S": 10.97, "XS": 10.97,
+        "S120": 14.27, "S160": 18.26, "XXS": 21.95,
+    }),
+    8: (219.1, {  # NPS 8
+        "S5": 2.77, "5S": 2.77, "S10": 3.76, "10S": 3.76, "S20": 6.35,
+        "S30": 7.04, "S40": 8.18, "40S": 8.18, "STD": 8.18, "S60": 10.31,
+        "S80": 12.7, "80S": 12.7, "XS": 12.7, "S100": 15.09, "S120": 18.26,
+        "S140": 20.62, "S160": 23.01, "XXS": 22.23,
+    }),
+    10: (273, {  # NPS 10
+        "S5": 3.4, "5S": 3.4, "S10": 4.19, "10S": 4.19, "S20": 6.35,
+        "S30": 7.8, "S40": 9.27, "40S": 9.27, "STD": 9.27, "S60": 12.7,
+        "S80": 15.09, "80S": 12.7, "XS": 12.7, "S100": 18.26, "S120": 21.44,
+        "S140": 25.4, "S160": 28.58, "XXS": 25.4,
+    }),
+    12: (323.8, {  # NPS 12
+        "S5": 3.96, "5S": 3.96, "S10": 4.57, "10S": 4.57, "S20": 6.35,
+        "S30": 8.38, "S40": 10.31, "40S": 9.53, "STD": 9.53, "S60": 14.27,
+        "S80": 17.48, "80S": 12.7, "XS": 12.7, "S100": 21.44, "S120": 25.4,
+        "S140": 28.58, "S160": 33.32, "XXS": 25.4,
+    }),
+    14: (355.6, {  # NPS 14
+        "S5": 3.96, "5S": 3.96, "S10": 6.35, "10S": 4.78, "S20": 7.92,
+        "S30": 9.53, "S40": 11.13, "40S": 9.53, "STD": 9.53, "S60": 15.09,
+        "S80": 19.05, "80S": 12.7, "XS": 12.7, "S100": 23.83, "S120": 27.79,
+        "S140": 31.75, "S160": 35.71,
+    }),
+    16: (406.4, {  # NPS 16
+        "S5": 4.19, "5S": 4.19, "S10": 6.35, "10S": 4.78, "S20": 7.92,
+        "S30": 9.53, "S40": 12.7, "40S": 9.53, "STD": 9.53, "S60": 16.66,
+        "S80": 21.44, "80S": 12.7, "XS": 12.7, "S100": 26.19, "S120": 30.96,
+        "S140": 36.53, "S160": 40.49,
+    }),
+    18: (457, {  # NPS 18
+        "S5": 4.19, "5S": 4.19, "S10": 6.35, "10S": 4.78, "S20": 7.92,
+        "S30": 11.13, "S40": 14.27, "40S": 9.53, "STD": 9.53, "S60": 19.05,
+        "S80": 23.83, "80S": 12.7, "XS": 12.7, "S100": 29.36, "S120": 34.93,
+        "S140": 39.67, "S160": 45.24,
+    }),
+    20: (508, {  # NPS 20
+        "S5": 4.78, "5S": 4.78, "S10": 6.35, "10S": 5.54, "S20": 9.53,
+        "S30": 12.7, "S40": 15.09, "40S": 9.53, "STD": 9.53, "S60": 20.62,
+        "S80": 26.19, "80S": 12.7, "XS": 12.7, "S100": 32.54, "S120": 38.1,
+        "S140": 44.45, "S160": 50.01,
+    }),
+    22: (559, {  # NPS 22
+        "S5": 4.78, "5S": 4.78, "S10": 6.35, "10S": 5.54, "S20": 9.53,
+        "S30": 12.7, "STD": 9.53, "S60": 22.23, "S80": 28.58, "XS": 12.7,
+        "S100": 34.93, "S120": 41.28, "S140": 47.63, "S160": 53.98,
+    }),
+    24: (610, {  # NPS 24
+        "S5": 5.54, "5S": 5.54, "S10": 6.35, "10S": 6.35, "S20": 9.53,
+        "S30": 14.27, "S40": 17.48, "40S": 9.53, "STD": 9.53, "S60": 24.61,
+        "S80": 30.96, "80S": 12.7, "XS": 12.7, "S100": 38.89, "S120": 46.02,
+        "S140": 52.37, "S160": 59.54,
+    }),
+    26: (660, {  # NPS 26
+        "S10": 7.92, "S20": 12.7, "STD": 9.53, "XS": 12.7,
+    }),
+    28: (711, {  # NPS 28
+        "S10": 7.92, "S20": 12.7, "S30": 15.88, "STD": 9.53, "XS": 12.7,
+    }),
+    30: (762, {  # NPS 30
+        "S5": 6.35, "5S": 6.35, "S10": 7.92, "10S": 7.92, "S20": 12.7,
+        "S30": 15.88, "STD": 9.53, "XS": 12.7,
+    }),
+    32: (813, {  # NPS 32
+        "S10": 7.92, "S20": 12.7, "S30": 15.88, "S40": 17.48, "STD": 9.53,
+        "XS": 12.7,
+    }),
+    34: (864, {  # NPS 34
+        "S10": 7.92, "S20": 12.7, "S30": 15.88, "S40": 17.48, "STD": 9.53,
+        "XS": 12.7,
+    }),
+    36: (914, {  # NPS 36
+        "S10": 7.92, "S20": 12.7, "S30": 15.88, "S40": 19.05, "STD": 9.53,
+        "XS": 12.7,
+    }),
+    38: (965, {  # NPS 38
+        "STD": 9.53, "XS": 12.7,
+    }),
+    40: (1016, {  # NPS 40
+        "STD": 9.53, "XS": 12.7,
+    }),
+    42: (1067, {  # NPS 42
+        "STD": 9.53, "XS": 12.7,
+    }),
+    44: (1118, {  # NPS 44
+        "STD": 9.53, "XS": 12.7,
+    }),
+    46: (1168, {  # NPS 46
+        "STD": 9.53, "XS": 12.7,
+    }),
+    48: (1219, {  # NPS 48
+        "STD": 9.53, "XS": 12.7,
+    }),
 }
+
+# Nominal Diameter -> { Schedule -> (Wall Thickness, OD, ID) }
+PIPE_SCHEDULES: Dict[Diameter, Dict[str, Tuple[Length, Diameter, Diameter]]] = {
+    Diameter(nps, "in"): {
+        schedule: (
+            Length(thickness, "mm"),
+            Diameter(od, "mm"),
+            Diameter(od - 2 * thickness, "mm"),
+        )
+        for schedule, thickness in schedules.items()
+    }
+    for nps, (od, schedules) in _PIPE_DIMENSIONS_MM.items()
+}
+
+
+def _check_pipe_schedule_table() -> None:
+    """
+    Guards the two ways this table has gone wrong before: a thickness copied
+    into the neighbouring schedule column, and a bore that cannot exist.
+
+    Raises:
+        ValueError: If a nominal size has a non-increasing wall thickness across
+            the schedule sequence, or a wall thickness at or beyond the radius.
+    """
+    sequence = ("S5", "S10", "S20", "S30", "S40", "S60", "S80",
+                "S100", "S120", "S140", "S160")
+    for nps, (od, schedules) in _PIPE_DIMENSIONS_MM.items():
+        listed = [(s, schedules[s]) for s in sequence if s in schedules]
+        for (lower, t_lower), (upper, t_upper) in zip(listed, listed[1:]):
+            if t_upper <= t_lower:
+                raise ValueError(
+                    f"NPS {nps}: wall thickness does not increase from {lower} "
+                    f"({t_lower} mm) to {upper} ({t_upper} mm)"
+                )
+        for schedule, thickness in schedules.items():
+            if od - 2 * thickness <= 0:
+                raise ValueError(
+                    f"NPS {nps} schedule {schedule}: wall thickness {thickness} "
+                    f"mm leaves no bore in a {od} mm outside diameter"
+                )
+
+
+_check_pipe_schedule_table()
 
 # --------------------------
 # 🔹 Recommended Fluid Velocities (m/s)
