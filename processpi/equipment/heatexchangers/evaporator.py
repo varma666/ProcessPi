@@ -68,21 +68,29 @@ class EvaporatorHX(ShellAndTubeHX):
 
     def _validate_design_constraints(self, results: Dict[str, Any]) -> None:
         limits = self.design_limits
-        if results.get("Area", 0.0) > limits["max_area"]:
+
+        def _number(key: str, default: float = 0.0) -> float:
+            """Results carry unit objects; the limits are plain numbers."""
+            value = results.get(key, default)
+            if value is None:
+                return default
+            return float(getattr(value, "value", value))
+
+        if _number("Area") > limits["max_area"]:
             self._warn_with_category("GEOMETRY_WARNING", "Area exceeds configured evaporator design limit")
-        if results.get("tube_count", 0) > limits["max_tube_count"]:
+        if _number("tube_count") > limits["max_tube_count"]:
             self._warn_with_category("GEOMETRY_WARNING", "Tube count exceeds configured evaporator design limit")
-        if results.get("shell_diameter", 0.0) > limits["max_shell_diameter"]:
+        if _number("shell_diameter") > limits["max_shell_diameter"]:
             self._warn_with_category("GEOMETRY_WARNING", "Shell diameter exceeds configured evaporator design limit")
-        if results.get("tube_velocity", 0.0) < limits["min_tube_velocity"]:
+        if _number("tube_velocity") < limits["min_tube_velocity"]:
             self._warn_with_category("HYDRAULIC_WARNING", "Tube velocity below recommended minimum; hydraulic collapse risk")
-        if results.get("tube_velocity", 0.0) > limits["max_tube_velocity"]:
+        if _number("tube_velocity") > limits["max_tube_velocity"]:
             self._warn_with_category("HYDRAULIC_WARNING", "Tube velocity above recommended maximum")
-        if results.get("shell_velocity", 0.0) < limits["min_shell_velocity"]:
+        if _number("shell_velocity") < limits["min_shell_velocity"]:
             self._warn_with_category("HYDRAULIC_WARNING", "Shell velocity below recommended minimum")
-        if results.get("tube_velocity", 0.0) < limits["target_tube_velocity"]:
+        if _number("tube_velocity") < limits["target_tube_velocity"]:
             self._warn_with_category("HYDRAULIC_WARNING", "Tube velocity below target tube velocity")
-        if results.get("shell_velocity", 0.0) < limits["target_shell_velocity"]:
+        if _number("shell_velocity") < limits["target_shell_velocity"]:
             self._warn_with_category("HYDRAULIC_WARNING", "Shell velocity below target shell velocity")
 
     def _calculate_pressure_drop(
@@ -97,16 +105,24 @@ class EvaporatorHX(ShellAndTubeHX):
         shell_velocity = (
             shell_velocity
             if shell_velocity is not None
-            else float(kwargs.get("shell_velocity", 0.0))
+            else float(kwargs.get("shell_velocity", kwargs.get("v_shell", 0.0)))
         )
         tube_velocity = (
             tube_velocity
             if tube_velocity is not None
-            else float(kwargs.get("tube_velocity", 0.0))
+            else float(kwargs.get("tube_velocity", kwargs.get("v_tube", 0.0)))
         )
         shell_passes = int(kwargs.get("shell_passes", 1))
         tube_passes = int(kwargs.get("tube_passes", 1))
-        _shell_diameter = kwargs.get("shell_diameter")
+
+        # Everything else the base routine needs, chiefly the shell diameter that
+        # sets the baffle spacing. Dropping it left the base at a 1e-6 m spacing
+        # and so at a baffle count in the hundreds of thousands.
+        passthrough = {
+            key: kwargs[key]
+            for key in ("shell_diameter", "baffle_spacing", "tube_length", "tube_id")
+            if key in kwargs
+        }
 
         tube_dp, shell_dp = super()._calculate_pressure_drop(
             geometry=geometry,
@@ -116,9 +132,9 @@ class EvaporatorHX(ShellAndTubeHX):
             tube_velocity=tube_velocity,
             shell_passes=shell_passes,
             tube_passes=tube_passes,
+            **passthrough,
         )
         orientation = str(kwargs.get("orientation", self.orientation)).lower()
-        _ = kwargs.get("shell_diameter")
         if orientation == "vertical":
             rho = cold.get("density", 900.0) if self.boiling_side == "tube" else hot.get("density", 900.0)
             static_head = rho * 9.81 * max(float(geometry.get("tube_length", 6.0)), 0.0)

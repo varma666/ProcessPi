@@ -88,20 +88,39 @@ class ShellAndTubeHX(HeatExchanger):
         th_in = hot["t_k"]
         tc_in = cold["t_k"]
         #self._debug(f"Hot Cp: {hot["cp"]} Cold Cp {cold["cp"]}")
-        if self.hot_out and self.hot_out.temperature and self._safe_float(self.hot_out.temperature.to("C"), "hot_out.temperature") == 25 :
-            th_out = self._safe_float(self.hot_out.temperature.to("K"), "hot_out.temperature")
-        else:
-            th_out = th_in - (q_kw / max(hot["m_dot"] * hot["cp"], 1e-9))
+        # Both outlets follow from the duty and the side energy balances. The old
+        # code kept a supplied outlet only when `.to("C")` compared equal to 25,
+        # which cannot happen, so a supplied outlet was always dropped in silence.
+        # It is honoured as a check instead: the balance decides, and a value that
+        # disagrees with it is reported rather than swallowed.
+        th_out = th_in - (q_kw / max(hot["m_dot"] * hot["cp"], 1e-9))
+        tc_out = tc_in + (q_kw / max(cold["m_dot"] * cold["cp"], 1e-9))
 
-        if self.cold_out and self.cold_out.temperature and self._safe_float(self.cold_out.temperature.to("C"), "cold_out.temperature") == 25:
-            #self._debug("Hello World")
-            tc_out = self._safe_float(self.cold_out.temperature.to("K"), "cold_out.temperature")
-        else:
-            tc_out = tc_in + (q_kw / max(cold["m_dot"] * cold["cp"], 1e-9))
-            #self._debug(f"tc_out = {tc_in} + ({q_kw}/({cold["m_dot"]}*{cold["cp"]})")
-            #self._debug(f"cold_rate: {max(cold["m_dot"] * cold["cp"], 1e-9)}")
-        #self._debug(tc_out)
+        self._check_specified_outlet(self.hot_out, th_out, "hot")
+        self._check_specified_outlet(self.cold_out, tc_out, "cold")
+
         return q_kw * 1000.0, th_out, tc_out
+
+    def _check_specified_outlet(self, stream, t_balance_k: float, side: str) -> None:
+        """
+        Warn when a user-supplied outlet temperature disagrees with the energy
+        balance, which is what the design is actually built on.
+
+        Args:
+            stream: The outlet MaterialStream, or None.
+            t_balance_k (float): Outlet temperature from the energy balance [K].
+            side (str): "hot" or "cold", for the message.
+        """
+        if stream is None or getattr(stream, "temperature", None) is None:
+            return
+
+        t_specified = self._safe_float(stream.temperature.to("K"), f"{side}_out.temperature")
+        if abs(t_specified - t_balance_k) > 0.5:
+            self._warn_with_category(
+                "BALANCE_WARNING",
+                f"Specified {side} outlet {t_specified:.2f} K disagrees with the "
+                f"energy balance {t_balance_k:.2f} K; the balance value was used",
+            )
 
     def _calculate_lmtd(self, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
         eps = 1e-3
@@ -725,6 +744,14 @@ class ShellAndTubeHX(HeatExchanger):
             component=self.cold_in.component,
         )
     
+        # Shrinking the shell raises the velocity, but the shell can never be
+        # smaller than the bundle it has to hold.
+        bundle_diameter = geometry.get("bundle_diameter") or self._calculate_bundle_diameter(
+            geometry["tube_count"], geometry["tube_od"]
+        )
+        min_shell_diameter = self._calculate_shell_diameter(bundle_diameter)
+        shell_diameter = max(shell_diameter, min_shell_diameter)
+
         v_shell = _shell_velocity(shell_diameter)
         settled = False
     
@@ -735,7 +762,9 @@ class ShellAndTubeHX(HeatExchanger):
                 break
     
             if v_shell < shell_v_min:
-                shell_diameter *= 0.90
+                if shell_diameter <= min_shell_diameter:
+                    break
+                shell_diameter = max(shell_diameter * 0.90, min_shell_diameter)
             else:
                 shell_diameter *= 1.10
     
@@ -1096,9 +1125,29 @@ class ShellAndTubeHX(HeatExchanger):
             "geometry_history": [],
             "optimization_actions": [],
             "convergence_history": [],
+            "converged": False,
         }
     
-        max_iter = 15
+        # Relative change in U between iterations, in percent. The old test was
+        # `convergence_error < 30.0` on a signed error, which accepted a 29%
+        # rise and any fall at all as converged.
+        tolerance_pct = float(self.specs.get("u_tolerance_percent", 1.0))
+    
+        # Weight of the newly calculated U in the next assumed U.
+        relaxation = float(self.specs.get("u_relaxation", 0.8))
+        if not 0.0 < relaxation <= 1.0:
+            raise ValueError(f"u_relaxation must be in (0, 1], got {relaxation}")
+
+        max_iter = int(self.specs.get("max_u_iterations", 15))
+
+        # Everything one pass decides, kept so a cycle can be settled on the
+        # right pass rather than whichever one the loop stopped on.
+        pass_keys = (
+            "area_required", "geometry", "bundle_diameter",
+            "shell_diameter", "v_tube", "v_shell", "dimless", "h_t", "h_s",
+            "u_calculated", "u_clean", "re_shell", "tube_dp", "shell_dp",
+        )
+        passes: List[Dict[str, Any]] = []
         for i in range(1, max_iter + 1):
     
             self._debug(f"U Iteration = {i}")
@@ -1281,10 +1330,21 @@ class ShellAndTubeHX(HeatExchanger):
             # UPDATE ASSUMED U
             # ======================================================
     
-            state["u_assumed"] = 0.6 * u_old + 0.4 * u_new
+            # Relaxed update. When the geometry has come out the same as on the
+            # previous pass, U_calc can no longer move (it is a function of the
+            # geometry), so the assumed U goes straight to it and the next pass's
+            # convergence test decides. Before, three identical geometries were
+            # declared FAILED_CONVERGENCE while the error was still falling.
+            geometry_key = (geometry["tube_count"], round(geometry["tube_length"], 3), round(shell_diameter, 3), tube_passes)
+            if state["geometry_history"] and state["geometry_history"][-1] == geometry_key:
+                state["u_assumed"] = u_new
+            else:
+                state["u_assumed"] = (1.0 - relaxation) * u_old + relaxation * u_new
             state["u_history"].append(state["u_assumed"])
             state["area_history"].append(actual_area)
-            state["geometry_history"].append((geometry["tube_count"], round(geometry["tube_length"],3), round(shell_diameter,3), tube_passes))
+            state["geometry_history"].append(geometry_key)
+            passes.append({key: state[key] for key in pass_keys})
+            passes[-1]["u_assumed"] = u_old
             state["convergence_history"].append(convergence_error)
     
             # ======================================================
@@ -1299,44 +1359,78 @@ class ShellAndTubeHX(HeatExchanger):
     
                 state["warnings"] = list(dict.fromkeys(existing))
 
-            if "tube_velocity" in hard_violations or "shell_velocity" in hard_violations:
-                self._trace_step("OPTIMIZATION", "Geometry rejected", f"hydraulic violation {hard_violations}")
-                state["optimization_actions"].append(f"hydraulic_reject:{hard_violations}")
-                if not self.fixed_geometry.get("tube_length", False):
-                    geometry["tube_length"] = min(12.0, geometry["tube_length"] * 1.10)
-                    self._trace_step("OPTIMIZATION", "Action", "increase_tube_length")
-                elif tube_passes < 8 and not self.fixed_geometry.get("tube_passes", False):
-                    tube_passes = min(8, tube_passes * 2)
-                    self._trace_step("OPTIMIZATION", "Action", "increase_tube_passes")
-                elif not self.fixed_geometry.get("shell_diameter", False):
-                    geometry["shell_diameter"] = max(0.15, geometry["shell_diameter"] * 0.95)
-                    self._trace_step("OPTIMIZATION", "Action", "reduce_shell_diameter")
-                else:
-                    self._warn_with_category("FEASIBILITY_WARNING", "Fixed geometry is hydraulically infeasible")
-                    state["status_override"] = "FAILED_CONVERGENCE"
-                    break
-                continue
+            # A velocity outside its band is recorded here and reported as
+            # HYDRAULIC_LIMITED by `_finalize_results`. It must not skip the
+            # convergence test: `_check_velocities` has already moved the tube
+            # passes and shell diameter as far as they go, and the geometry is
+            # reselected from the area at the top of every pass, so a tube-length
+            # or shell-diameter change made here never reached the next pass.
+            # Skipping the test meant a U that had settled was reported as
+            # FAILED_CONVERGENCE.
+            hydraulic = [v for v in hard_violations if v in ("tube_velocity", "shell_velocity")]
+            if hydraulic:
+                self._trace_step("OPTIMIZATION", "Hydraulic violation", hydraulic)
+                state["optimization_actions"].append(f"hydraulic_violation:{hydraulic}")
     
-            if len(state["geometry_history"]) >= 3 and len(set(state["geometry_history"][-3:])) == 1:
-                self._warn_with_category("CONVERGENCE_WARNING", "Geometry stagnation detected")
-                state["status_override"] = "FAILED_CONVERGENCE"
-                break
-
             # ======================================================
             # CONVERGENCE CHECK
             # ======================================================
     
-            if (
-                convergence_error < 30.0
-                and not hard_violations
-            ):
+            # Convergence is about U alone. The hydraulic violations that call for
+            # a geometry change have already sent the loop round again above, and
+            # a pressure drop over its limit is a feasibility verdict, reported as
+            # PRESSURE_DROP_FAILURE, not a failure of the iteration.
+            if abs(convergence_error) < tolerance_pct:
     
                 self._debug(
                     f"U iteration converged "
                     f"(error={convergence_error:.2f}%)"
                 )
     
+                state["converged"] = True
                 break
+
+            # The tube count is a step function of the assumed U, so the loop can
+            # cycle between geometries that each call for the other. A geometry
+            # seen before (other than on the pass just gone, handled above) means
+            # it has; more passes cannot help. Settle on the smallest geometry in
+            # the cycle whose area covers what its own U requires, or the largest
+            # if none does.
+            earlier = [j for j, key in enumerate(state["geometry_history"][:-2]) if key == geometry_key]
+            if earlier:
+                cycle = passes[earlier[-1]:]
+                adequate = [p for p in cycle if p["geometry"]["area"] >= p["area_required"]]
+                chosen = (
+                    min(adequate, key=lambda p: p["geometry"]["area"])
+                    if adequate
+                    else max(cycle, key=lambda p: p["geometry"]["area"])
+                )
+                state.update(chosen)
+                state["converged"] = True
+                counts = sorted({p["geometry"]["tube_count"] for p in cycle})
+                self._warn_with_category(
+                    "CONVERGENCE_WARNING",
+                    f"U cycles between tube counts {counts}; settled on "
+                    f"{chosen['geometry']['tube_count']} tubes, the smallest whose "
+                    f"area covers its own U" if adequate else
+                    f"U cycles between tube counts {counts} and none has the area "
+                    f"its own U requires; settled on the largest, "
+                    f"{chosen['geometry']['tube_count']} tubes",
+                )
+                self._trace_step("THERMAL", "U cycle settled", chosen["geometry"]["tube_count"])
+                break
+
+        if not state.get("converged") and not state.get("status_override"):
+            history = state["convergence_history"]
+            if history:
+                detail = f"in {len(history)} iterations; last error {history[-1]:.2f}%"
+            else:
+                detail = f"every one of {max_iter} geometries was rejected before U was evaluated"
+            self._warn_with_category(
+                "CONVERGENCE_WARNING",
+                f"Overall U did not converge to {tolerance_pct}%: {detail}",
+            )
+            state["status_override"] = "FAILED_CONVERGENCE"
     
         return state
 
@@ -1627,6 +1721,27 @@ class ShellAndTubeHX(HeatExchanger):
             "UNKNOWN",
         )
     
+        if assessment in (None, "UNKNOWN"):
+            # Design mode does not set one, so derive it from the checks rather
+            # than reporting "UNKNOWN" for every design run.
+            oversize = payload.get("oversize_ratio")
+            if oversize is None:
+                area_value = self._safe_float(payload.get("area", 0.0) or 0.0, "area")
+                required = self._safe_float(
+                    payload.get("area_required", payload.get("required_area", 0.0)) or 0.0,
+                    "area_required",
+                )
+                oversize = area_value / required if required > 0 else None
+            if oversize is not None:
+                if oversize > 1.35:
+                    assessment = "OVERSIZED"
+                elif oversize < 1.0:
+                    assessment = "UNDERSIZED"
+                elif oversize < 1.05:
+                    assessment = "MARGINAL"
+                else:
+                    assessment = "OK"
+    
         thermal_ok = payload.get(
             "thermal_feasible",
             True,
@@ -1646,7 +1761,15 @@ class ShellAndTubeHX(HeatExchanger):
         # FINAL STATUS
         # ==========================================================
     
-        if not thermal_ok:
+        # A solver that gave up outranks every downstream check: the numbers the
+        # other checks are reading were never converged.
+        status_override = payload.get("status_override")
+    
+        if status_override:
+    
+            status = status_override
+    
+        elif not thermal_ok:
     
             status = "THERMAL_FAILURE"
     
@@ -1904,6 +2027,8 @@ class ShellAndTubeHX(HeatExchanger):
     
             "status": status,
     
+            "converged": payload.get("converged", True),
+    
         }
     
         # ==========================================================
@@ -2038,6 +2163,8 @@ class ShellAndTubeHX(HeatExchanger):
     
             "status": status,
     
+            "converged": payload.get("converged", True),
+    
             "warnings": warnings,
     
             "engineering_insights": engineering_insights,
@@ -2146,14 +2273,11 @@ class ShellAndTubeHX(HeatExchanger):
         self._trace_step("THERMAL", "Ft", ft)
         self._trace_step("GEOMETRY", "Shell passes", shell_passes)
         self._trace_step("GEOMETRY", "Tube passes", tube_passes)
-        warnings: List[str] = list(getattr(self, "_warnings", []))
-
         n_units = 1
         effective_q_watts = q_watts
         if ft < 0.78:
             n_units = int(math.ceil(0.78 / max(ft, 1e-6)))
             effective_q_watts = q_watts / n_units
-            warnings.append(f"Using {n_units} exchangers in series to satisfy Ft requirement")
 
         cltd = max(ft * lmtd, 1e-9)
         self._debug(cltd)
@@ -2167,6 +2291,15 @@ class ShellAndTubeHX(HeatExchanger):
         u_range = get_u_range("shell_and_tube", self.service_type, hot_hx.get("u_key", "generic"), cold_hx.get("u_key", "generic"))
 
         state = self._iterate_U(effective_q_watts, cltd, hot, cold, shell_passes, tube_passes, u_assumed, u_range)
+
+        # Taken after the iteration so that the hydraulic, tube-count and
+        # geometry-stagnation warnings raised inside it are not lost.
+        warnings: List[str] = list(getattr(self, "_warnings", []))
+        warnings.extend(state.get("warnings", []))
+        if n_units > 1:
+            warnings.append(
+                f"Using {n_units} exchangers in series to satisfy Ft requirement"
+            )
 
         if state["shell_diameter"] > 1.5:
             warnings.append("Shell diameter too large → consider multi-shell exchanger")
@@ -2203,9 +2336,25 @@ class ShellAndTubeHX(HeatExchanger):
         elif state["geometry"]["area"] < state["area_required"]:
             warnings.append("Area slightly undersized — acceptable")
 
+        # Design mode never reported these, so `_finalize_results` had nothing to
+        # build a status from and returned "UNKNOWN" for every design run.
+        area_designed = state["geometry"]["area"]
+        area_required = state["area_required"]
+        thermal_feasible = area_designed >= area_required
+        pressure_drop_feasible = tube_dp <= tube_limit and shell_dp <= shell_limit
+        hydraulic_feasible = not self._velocity_warnings(
+            state["v_tube"], state["v_shell"], hot, cold
+        )
+
         payload = {
             **state,
-            "warnings": warnings,
+            "warnings": list(dict.fromkeys(warnings)),
+            "status_override": state.get("status_override"),
+            "converged": state.get("converged", False),
+            "thermal_feasible": thermal_feasible,
+            "pressure_drop_feasible": pressure_drop_feasible,
+            "hydraulic_feasible": hydraulic_feasible,
+            "oversize_ratio": area_designed / max(area_required, 1e-12),
             "tube_side_fluid": assignment.get("tube_side_fluid"),
             "shell_side_fluid": assignment.get("shell_side_fluid"),
             "assignment_reason": assignment.get("assignment_reason", []),

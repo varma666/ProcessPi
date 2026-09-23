@@ -369,8 +369,16 @@ class HeatExchangerEngine:
         if not self._results:
             return None
         return self._results.summary()
+
     def results(self):
-        """Return design results"""
-        if not hasattr(self, "_results"):
+        """
+        Return the results of the last run.
+
+        Raises:
+            RuntimeError: If `run()` has not been called. `__init__` sets
+                `_results` to None, so testing for the attribute never fired and
+                the method returned None instead.
+        """
+        if self._results is None:
             raise RuntimeError("Run the model first using hx.run()")
         return self._results

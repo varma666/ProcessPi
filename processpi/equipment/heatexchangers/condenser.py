@@ -89,16 +89,24 @@ class CondenserHX(ShellAndTubeHX):
         shell_velocity = (
             shell_velocity
             if shell_velocity is not None
-            else float(kwargs.get("shell_velocity", 0.0))
+            else float(kwargs.get("shell_velocity", kwargs.get("v_shell", 0.0)))
         )
         tube_velocity = (
             tube_velocity
             if tube_velocity is not None
-            else float(kwargs.get("tube_velocity", 0.0))
+            else float(kwargs.get("tube_velocity", kwargs.get("v_tube", 0.0)))
         )
         shell_passes = int(kwargs.get("shell_passes", 1))
         tube_passes = int(kwargs.get("tube_passes", 1))
-        _shell_diameter = kwargs.get("shell_diameter")
+
+        # Everything else the base routine needs, chiefly the shell diameter that
+        # sets the baffle spacing. Dropping it left the base at a 1e-6 m spacing
+        # and so at a baffle count in the hundreds of thousands.
+        passthrough = {
+            key: kwargs[key]
+            for key in ("shell_diameter", "baffle_spacing", "tube_length", "tube_id")
+            if key in kwargs
+        }
 
         tube_dp, shell_dp = super()._calculate_pressure_drop(
             geometry=geometry,
@@ -108,9 +116,9 @@ class CondenserHX(ShellAndTubeHX):
             tube_velocity=tube_velocity,
             shell_passes=shell_passes,
             tube_passes=tube_passes,
+            **passthrough,
         )
         orientation = str(kwargs.get("orientation", self.orientation)).lower()
-        _ = kwargs.get("shell_diameter")
         if orientation == "vertical":
             static_head = float(self.specs.get("condensate_density", 850.0)) * 9.81 * max(float(geometry.get("tube_length", 6.0)), 0.0)
             if self.condensing_side == "tube":
