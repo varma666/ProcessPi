@@ -209,6 +209,11 @@ class HeatExchangerEngine:
                 "be MaterialStream objects"
             )
     
+        # An unknown type used to surface as a bare KeyError from `_map` in
+        # run(); say which types exist instead, and say it here.
+        if hx_type is not None:
+            hx_type = self._check_hx_type(hx_type)
+
         # ======================================================
         # UPDATE METHOD IF PROVIDED
         # ======================================================
@@ -244,6 +249,15 @@ class HeatExchangerEngine:
     
         return self
 
+    @classmethod
+    def _check_hx_type(cls, hx_type: str) -> str:
+        key = str(hx_type).lower()
+        if key not in cls._map:
+            raise ValueError(
+                f"Unknown hx_type {hx_type!r}; expected one of {sorted(cls._map)}"
+            )
+        return key
+
     def _select_hx_type(self) -> str:
         explicit = self.data.get("hx_type")
         if explicit:
@@ -277,7 +291,7 @@ class HeatExchangerEngine:
         ):
             hx_type = "bell_delaware"
     
-        cls = self._map[hx_type]
+        cls = self._map[self._check_hx_type(hx_type)]
     
         # ======================================================
         # CREATE HX OBJECT
