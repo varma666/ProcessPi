@@ -1,12 +1,12 @@
 from .base import Component
 from processpi.units import *
 
-class Cyclohexene(Component):
+class Ethylcyclohexane(Component):
     """
-    Represents the properties and constants for Cyclohexene(C6?H10?).
+    Represents the properties and constants for Ethylcyclohexane(C8?H16?).
 
     This class provides a comprehensive set of physical and thermodynamic properties
-    for Cyclohexene, which are essential for various process engineering calculations.
+    for Ethylcyclohexane, which are essential for various process engineering calculations.
     These properties are stored as class attributes and are available for use by other
     calculation modules within the ProcessPI library.
 
@@ -33,20 +33,20 @@ class Cyclohexene(Component):
       function of temperature using the Antoine equation or similar models.
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
-    name = "Cyclohexene"
-    formula = "C6?H10?"
-    molecular_weight = 82.144
+    name = "Ethylcyclohexane"
+    formula = "C8?H16?"
+    molecular_weight = 112.213
 
     # Critical properties
-    _critical_temperature = Temperature(560.4, "K")
-    _critical_pressure = Pressure(4.35, "MPa")
-    _critical_volume = Volume(0.291, "m3")
-    _critical_zc = 0.272
-    _critical_acentric_factor = 0.2123
+    _critical_temperature = Temperature(609.15, "K")
+    _critical_pressure = Pressure(3.04, "MPa")
+    _critical_volume = Volume(0.43, "m3")
+    _critical_zc = 0.258
+    _critical_acentric_factor = 0.2455
 
-    _density_constants = [0.92997, 0.27056, 560.4, 0.28943]
-    _specific_heat_constants = [0.0, -60.0, 0.68, 0.0, 0.0, 1.1525, 1.7072]
-    _viscosity_constants = [-11.641, 1154.3, 0.066511]
-    _thermal_conductivity_constants = [0.20926, -0.00026037]
-    _vapor_pressure_constants = [88.184, 0.0, -10.059, 8.26e-06, 2.0]
-    _enthalpy_constants = [4.4405, 0.37479]
+    _density_constants = [0.61587, 0.26477, 609.15, 0.28054]
+    _specific_heat_constants = [0.0, 72.74, 0.64738, 0.0, 0.0, 1.6109, 2.6798]
+    _viscosity_constants = [-22.11, 1673.0, 1.641]
+    _thermal_conductivity_constants = [0.17662, -0.0002014]
+    _vapor_pressure_constants = [80.208, 0.0, -8.6023, 4.59e-06, 2.0]
+    _enthalpy_constants = [5.3832, 0.41763]
