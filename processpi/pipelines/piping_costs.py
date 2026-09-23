@@ -39,6 +39,6 @@ class PipeCostModel:
         pipes = network.get_all_pipes()
         for pipe in pipes:
             if pipe.nominal_diameter:
-                cost_per_m = self.get_pipe_cost(pipe.nominal_diameter.to('in').value, pipe.material)
+                cost_per_m = self.get_pipe_cost(pipe.nominal_diameter.to('in').original_value, pipe.material)
                 total_cost += cost_per_m * pipe.length.to('m').value
         return total_cost

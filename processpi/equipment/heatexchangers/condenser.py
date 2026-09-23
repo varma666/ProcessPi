@@ -31,7 +31,7 @@ class CondenserHX(ShellAndTubeHX):
 
         # Near-isothermal condensing side temperature
         th_out = th_in - float(self.specs.get("subcooling", 0.0))
-        tc_out = tc_in + q_watts / max(cold["m_dot"] * cold["cp"] * 1000.0, 1e-12)
+        tc_out = tc_in + q_watts / max(cold["m_dot"] * cold["cp"], 1e-12)
 
         if tc_out >= th_in:
             self._warn("Condenser cold outlet approaches/exceeds condensing temperature; clipping to feasible approach")

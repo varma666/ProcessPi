@@ -35,12 +35,12 @@ class EvaporatorHX(ShellAndTubeHX):
             hot_latent = self._resolve_phase_change_latent_heat(hot, cold) or self._lookup_steam_latent_heat(hot.get("p_bar", 1.0))
             q_max = hot["m_dot"] * hot_latent
         else:
-            q_max = hot["m_dot"] * hot["cp"] * 1000.0 * max(hot["t_k"] - cold["t_k"], 0.5)
+            q_max = hot["m_dot"] * hot["cp"] * max(hot["t_k"] - cold["t_k"], 0.5)
         if q_watts > 0.98 * q_max:
             self._warn_with_category("FEASIBILITY_WARNING", "Requested evaporator duty exceeds hot-side available thermal capacity (latent/sensible); clipping to feasible duty")
             q_watts = 0.98 * q_max
 
-        th_out = hot["t_k"] - q_watts / max(hot["m_dot"] * hot["cp"] * 1000.0, 1e-12)
+        th_out = hot["t_k"] - q_watts / max(hot["m_dot"] * hot["cp"], 1e-12)
         tc_out = cold["t_k"]  # near-isothermal boiling
         return q_watts, th_out, tc_out
 

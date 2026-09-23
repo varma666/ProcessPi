@@ -66,7 +66,7 @@ class Fitting:
         return {
             "fitting_type": self.fitting_type,
             "quantity": self.quantity,
-            "diameter_in": self.diameter.to("in").value if self.diameter else None,
+            "diameter_in": self.diameter.to("in").original_value if self.diameter else None,
             "diameter_m": self.diameter.to("m").value if self.diameter else None,
             "equivalent_length_m": le.to("m").value if le else None,
             "k_factor": k,

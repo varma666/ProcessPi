@@ -77,7 +77,7 @@ class HeatExchanger(HeatExchangerBaseMixin, ABC):
             "cp": self._safe_float(s.specific_heat.to("J/kgK"), "cp") if s.specific_heat else self._safe_float(self.specs.get("cp", 4180.0), "cp"),
             "k": self._safe_float(s.component.thermal_conductivity().to("W/mK"), "k") if s.component and hasattr(s.component, "thermal_conductivity") else self._safe_float(self.specs.get("thermal_conductivity", 0.6), "k"),
             "m_dot": self._safe_float(s.mass_flow().to("kg/s"), "m_dot") if s.mass_flow() else self._safe_float(self.specs.get("mass_flow_rate", 1.0), "m_dot"),
-            "p_bar": self._safe_float(s.pressure.to("bar"), "p_bar") if s.pressure else 1.0,
+            "p_bar": self._to_float(s.pressure, "Pa") / 1e5 if s.pressure else 1.0,
             "phase": (s.phase or "liquid").lower(),
             "t_k": self._safe_float(s.temperature.to("K"), "t_k") if s.temperature else None,
         }
@@ -181,11 +181,12 @@ class HeatExchanger(HeatExchangerBaseMixin, ABC):
             if latent is None:
                 latent = 2257000.0
             return inlet["m_dot"] * latent
-        return inlet["m_dot"] * inlet["cp"] * 1000.0 * max(inlet["t_k"] - other_inlet_tk, 0.5)
+        return inlet["m_dot"] * inlet["cp"] * max(inlet["t_k"] - other_inlet_tk, 0.5)
 
     def heat_duty(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
+        """Heat duty in W. A `Q` spec may be a HeatFlow or a number in W."""
         if self.specs.get("Q") is not None:
-            return float(self.specs["Q"])
+            return self._to_float(self.specs["Q"], "W")
         latent_heat = self._resolve_phase_change_latent_heat(hot, cold)
         if latent_heat is not None:
             latent_side = str(self.specs.get("latent_side", "hot")).lower()
