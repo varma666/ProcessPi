@@ -1,12 +1,12 @@
 from .base import Component
 from processpi.units import *
 
-class Acetonitrile(Component):
+class _3Heptanone(Component):
     """
-    Represents the properties and constants for Acetonitrile(C2?H3?N).
+    Represents the properties and constants for 3Heptanone(C7?H14?O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
-    for Acetonitrile, which are essential for various process engineering calculations.
+    for 3Heptanone, which are essential for various process engineering calculations.
     These properties are stored as class attributes and are available for use by other
     calculation modules within the ProcessPI library.
 
@@ -33,20 +33,20 @@ class Acetonitrile(Component):
       function of temperature using the Antoine equation or similar models.
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
-    name = "Acetonitrile"
-    formula = "C2?H3?N"
-    molecular_weight = 41.052
+    name = "3Heptanone"
+    formula = "C7?H14?O"
+    molecular_weight = 114.185
 
     # Critical properties
-    _critical_temperature = Temperature(545.5, "K")
-    _critical_pressure = Pressure(4.83, "MPa")
-    _critical_volume = Volume(0.173, "m3")
-    _critical_zc = 0.184
-    _critical_acentric_factor = 0.3379
+    _critical_temperature = Temperature(606.6, "K")
+    _critical_pressure = Pressure(2.92, "MPa")
+    _critical_volume = Volume(0.433, "m3")
+    _critical_zc = 0.251
+    _critical_acentric_factor = 0.4076
 
-    _density_constants = [1.3064, 0.22597, 545.5, 0.28678]
-    _specific_heat_constants = [0.0, -122.2, 0.34085, 0.0, 0.0, 0.8748, 0.9713]
-    _viscosity_constants = [-10.906, 872.02]
-    _thermal_conductivity_constants = [0.33192, -0.00043243]
-    _vapor_pressure_constants = [58.302, 0.0, -5.4954, 5.36e-06, 2.0]
-    _enthalpy_constants = [4.3511, 0.34765]
+    _density_constants = [0.59268, 0.25663, 606.6, 0.27766]
+    _specific_heat_constants = [0.0, -399.89, 1.0601, 0.0, 0.0, 2.3522, 3.2303]
+    _viscosity_constants = [-9.3874, 1204.9, -0.32618]
+    _thermal_conductivity_constants = [0.2026, -0.0002234]
+    _vapor_pressure_constants = [78.463, 0.0, -7.9062, 8.05e-18, 6.0]
+    _enthalpy_constants = [6.3357, 0.42167]
