@@ -23,7 +23,7 @@ class Density(Variable):
             raise ValueError("Density must be a non-negative value")
         if units not in self._conversion:
             raise ValueError(f"{units} is not a valid unit for Density")
-        base_value = round(value * self._conversion[units], 6)
+        base_value = value * self._conversion[units]
         super().__init__(base_value, "kg/m3")  # Always store as base unit (kg/m³)
         self.original_value = value
         self.original_unit = units

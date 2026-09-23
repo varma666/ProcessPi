@@ -27,7 +27,7 @@ class MolarFlowRate(Variable):
             raise ValueError("Molar flow rate must be non-negative")
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for MolarFlowRate")
-        base_value = round(value * self._conversion[units], 6)
+        base_value = value * self._conversion[units]
         super().__init__(base_value, "mol/s")
         self.original_value = value
         self.original_unit = units
@@ -36,13 +36,13 @@ class MolarFlowRate(Variable):
         if target_unit not in self._conversion:
             raise TypeError(f"{target_unit} is not a valid unit for MolarFlowRate")
         converted_value = self.value / self._conversion[target_unit]
-        return MolarFlowRate(round(converted_value, 6), target_unit)
+        return MolarFlowRate(converted_value, target_unit)
 
     def __add__(self, other):
         if not isinstance(other, MolarFlowRate):
             raise TypeError("Addition only supported between MolarFlowRate instances")
         total = self.value + other.value
-        return MolarFlowRate(round(total, 6), "mol/s")
+        return MolarFlowRate(total, "mol/s")
 
     def __eq__(self, other):
         return isinstance(other, MolarFlowRate) and self.value == other.value

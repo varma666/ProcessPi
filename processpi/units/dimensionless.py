@@ -25,13 +25,13 @@ class Dimensionless(Variable):
     def __add__(self, other):
         if not isinstance(other, Dimensionless):
             raise TypeError("Addition only supported between Dimensionless instances")
-        return Dimensionless(round(self.value + other.value, 6))
+        return Dimensionless(self.value + other.value)
 
     def __mul__(self, other):
         if isinstance(other, Dimensionless):
-            return Dimensionless(round(self.value * other.value, 6))
+            return Dimensionless(self.value * other.value)
         elif isinstance(other, (int, float)):
-            return Dimensionless(round(self.value * other, 6))
+            return Dimensionless(self.value * other)
         else:
             raise TypeError("Multiplication only supported with Dimensionless or numeric types")
 

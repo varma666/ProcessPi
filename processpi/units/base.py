@@ -82,9 +82,15 @@ class Variable:
         """
         # Get the value to be formatted.
         value = self.original_value
-        
-        # Apply the format specifier to the numeric value.
-        formatted_value = format(value, format_spec)
+
+        # Apply the format specifier to the numeric value. With no specifier,
+        # round for display as __str__ does; stored values are never rounded.
+        if format_spec:
+            formatted_value = format(value, format_spec)
+        elif value and round(value, 6) == 0:
+            formatted_value = format(value, ".6g")
+        else:
+            formatted_value = format(round(value, 6))
         
         # Combine the formatted value and the unit.
         return f"{formatted_value} {self.original_unit}"

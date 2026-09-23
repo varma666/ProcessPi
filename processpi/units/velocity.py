@@ -18,10 +18,10 @@ class Velocity(Variable):
         if units not in self._conversion:
             raise ValueError(f"{units} is not a valid unit for Velocity")
 
-        base_value = round(value * self._conversion[units], 9)
+        base_value = value * self._conversion[units]
         super().__init__(base_value, "m/s")
 
-        self.original_value = round(value, 9)
+        self.original_value = value
         self.original_unit = units
 
     # ---------------------------

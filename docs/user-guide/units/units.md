@@ -164,6 +164,15 @@ Every unit is a class (e.g., Length, Pressure, Viscosity).
 
 Values can be converted with .to("<unit>").
 
+`.value` always holds the quantity in its SI base unit (Pa, J/kgK, m, kg/s, ...), whatever unit it was created in, and it is stored unrounded. `.to("<unit>")` returns a new object; the number in that unit is its `.original_value`, and printing it shows that unit:
+
+```python
+p = Pressure(2.5, "bar")
+p.value                      # 250000.0 (Pa)
+p.to("kPa").original_value   # 250.0
+print(p.to("kPa"))           # 250.0 kPa
+```
+
 The system supports engineering-friendly units across SI, Imperial, and practical process units.
 
 Use this module as the foundation for all your chemical/process engineering calculations in ProcessPI.

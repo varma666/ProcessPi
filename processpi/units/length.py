@@ -24,7 +24,7 @@ class Length(Variable):
             raise ValueError("Length must be positive")
         elif units not in self._conversion:
             raise ValueError(f"{units} is not a valid unit for Length")
-        base_value = round(value * self._conversion[units], 6)
+        base_value = value * self._conversion[units]
         super().__init__(base_value, "m")  # Always store as base unit (meters)
         self.original_value = value
         self.original_unit = units

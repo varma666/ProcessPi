@@ -31,11 +31,11 @@ class Viscosity(Variable):
         
         if units in self._dynamic_conversion:
             self.viscosity_type = "dynamic"
-            base_value = round(value * self._dynamic_conversion[units], 10)
+            base_value = value * self._dynamic_conversion[units]
             base_unit = "Pa·s"
         elif units in self._kinematic_conversion:
             self.viscosity_type = "kinematic"
-            base_value = round(value * self._kinematic_conversion[units], 10)
+            base_value = value * self._kinematic_conversion[units]
             base_unit = "m2/s"
         else:
             raise ValueError(f"{units} is not a valid unit for Viscosity")

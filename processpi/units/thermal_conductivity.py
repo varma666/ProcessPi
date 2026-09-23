@@ -21,7 +21,7 @@ class ThermalConductivity(Variable):
             raise ValueError("Thermal conductivity cannot be negative.")
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for ThermalConductivity")
-        base_value = round(value * self._conversion[units], 6)
+        base_value = value * self._conversion[units]
         super().__init__(base_value, "W/mK")
         self.original_value = value
         self.original_unit = units
@@ -30,13 +30,13 @@ class ThermalConductivity(Variable):
         if target_unit not in self._conversion:
             raise TypeError(f"{target_unit} is not a valid unit for ThermalConductivity")
         converted_value = self.value / self._conversion[target_unit]
-        return ThermalConductivity(round(converted_value, 6), target_unit)
+        return ThermalConductivity(converted_value, target_unit)
 
     def __add__(self, other):
         if not isinstance(other, ThermalConductivity):
             raise TypeError("Addition only supported between ThermalConductivity instances")
         total = self.value + other.value
-        return ThermalConductivity(round(total, 6), "W/mK")
+        return ThermalConductivity(total, "W/mK")
 
     def __eq__(self, other):
         return isinstance(other, ThermalConductivity) and self.value == other.value
