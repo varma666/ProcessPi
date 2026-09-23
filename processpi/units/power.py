@@ -25,7 +25,7 @@ class Power(Variable):
             raise ValueError("Power must be a non-negative value")
         if units not in self._conversion:
             raise ValueError(f"{units} is not a valid unit for Power")
-        base_value = round(value * self._conversion[units], 6)
+        base_value = value * self._conversion[units]
         super().__init__(base_value, "W")  # Always store as base unit (watt)
         self.original_value = value
         self.original_unit = units

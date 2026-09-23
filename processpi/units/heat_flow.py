@@ -25,7 +25,7 @@ class HeatFlow(Variable):
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for HeatFlow")
 
-        base_value = round(value * self._conversion[units], 6)
+        base_value = value * self._conversion[units]
         super().__init__(base_value, "W")
 
         self.original_value = value
@@ -35,13 +35,13 @@ class HeatFlow(Variable):
         if target_unit not in self._conversion:
             raise TypeError(f"{target_unit} is not a valid unit for HeatFlow")
         converted_value = self.value / self._conversion[target_unit]
-        return HeatFlow(round(converted_value, 6), target_unit)
+        return HeatFlow(converted_value, target_unit)
 
     def __add__(self, other):
         if not isinstance(other, HeatFlow):
             raise TypeError("Addition only supported between HeatFlow instances")
         total = self.value + other.value
-        return HeatFlow(round(total, 6), "W")
+        return HeatFlow(total, "W")
 
     def __eq__(self, other):
         return isinstance(other, HeatFlow) and self.value == other.value

@@ -4,6 +4,7 @@ import math
 
 from typing import Any, Dict
 
+from ...units import HeatFlow
 from .base import HeatExchanger
 
 
@@ -49,7 +50,6 @@ class DoublePipeHX(HeatExchanger):
                 - q / (
                     hot["m_dot"]
                     * hot["cp"]
-                    * 1000.0
                 )
             )
         )
@@ -65,7 +65,6 @@ class DoublePipeHX(HeatExchanger):
                 + q / (
                     cold["m_dot"]
                     * cold["cp"]
-                    * 1000.0
                 )
             )
         )
@@ -93,7 +92,7 @@ class DoublePipeHX(HeatExchanger):
         # ======================================================
 
         area_required = self.area(
-            q * 1000.0,
+            q,
             u_assumed,
             lmtd,
         )
@@ -194,7 +193,7 @@ class DoublePipeHX(HeatExchanger):
         return {
             "hx_type": "double_pipe",
             "method": "basic",
-            "Q": q,
+            "Q": HeatFlow(q / 1000.0, "kW"),
             "Area": area,
             "U_assumed": u_assumed,
             "U_clean": u_assumed,
@@ -317,7 +316,6 @@ class DoublePipeHX(HeatExchanger):
 
         pr_tube = (
             cold["cp"]
-            * 1000.0
             * cold["viscosity"]
             / cold["k"]
         )
@@ -348,7 +346,6 @@ class DoublePipeHX(HeatExchanger):
 
         pr_annulus = (
             hot["cp"]
-            * 1000.0
             * hot["viscosity"]
             / hot["k"]
         )
@@ -392,13 +389,11 @@ class DoublePipeHX(HeatExchanger):
         Ch = (
             hot["m_dot"]
             * hot["cp"]
-            * 1000.0
         )
 
         Cc = (
             cold["m_dot"]
             * cold["cp"]
-            * 1000.0
         )
 
         Cmin = min(Ch, Cc)
@@ -481,7 +476,7 @@ class DoublePipeHX(HeatExchanger):
         return {
             "hx_type": "double_pipe",
             "method": "basic",
-            "Q": q_actual,
+            "Q": HeatFlow(q_actual / 1000.0, "kW"),
             "Area": area,
             "U_assumed": u_dirty,
             "U_calculated": u_dirty,

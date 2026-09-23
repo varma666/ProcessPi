@@ -27,7 +27,7 @@ class Area(Variable):
             raise ValueError("Area must be non-negative")
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for Area")
-        base_value = round(value * self._conversion[units], 6)
+        base_value = value * self._conversion[units]
         super().__init__(base_value, "m2")
         self.original_value = value
         self.original_unit = units
@@ -36,13 +36,13 @@ class Area(Variable):
         if target_unit not in self._conversion:
             raise TypeError(f"{target_unit} is not a valid unit for Area")
         converted_value = self.value / self._conversion[target_unit]
-        return Area(round(converted_value, 6), target_unit)
+        return Area(converted_value, target_unit)
 
     def __add__(self, other):
         if not isinstance(other, Area):
             raise TypeError("Addition only supported between Area instances")
         total = self.value + other.value
-        return Area(round(total, 6), "m2")
+        return Area(total, "m2")
 
     def __eq__(self, other):
         return isinstance(other, Area) and self.value == other.value

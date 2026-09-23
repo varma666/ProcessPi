@@ -68,7 +68,7 @@ def test_reference_case_inputs_are_what_the_hand_calculation_assumes():
     assert item.design().get("design_pressure").to("Pa").value == pytest.approx(P_PA)
 
     # 150 C selects the 400 F allowable-stress band, which is 20.0 ksi.
-    assert item.allowable_stress().to("psi").value == pytest.approx(20.0 * 1000.0)
+    assert item.allowable_stress().to("psi").original_value == pytest.approx(20.0 * 1000.0)
     assert S_PA / 1.0e6 == pytest.approx(137.895, abs=5e-4)
 
 

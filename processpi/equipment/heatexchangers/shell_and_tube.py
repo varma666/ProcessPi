@@ -84,7 +84,7 @@ class ShellAndTubeHX(HeatExchanger):
             raise ValueError(f"Missing or invalid stream properties for shell-and-tube design: {', '.join(missing)}")
 
     def _calculate_heat_duty(self, hot: Dict[str, float], cold: Dict[str, float]) -> Tuple[float, float, float]:
-        q_kw = self.heat_duty(hot, cold)
+        q_watts = self.heat_duty(hot, cold)
         th_in = hot["t_k"]
         tc_in = cold["t_k"]
         #self._debug(f"Hot Cp: {hot["cp"]} Cold Cp {cold["cp"]}")
@@ -93,13 +93,13 @@ class ShellAndTubeHX(HeatExchanger):
         # which cannot happen, so a supplied outlet was always dropped in silence.
         # It is honoured as a check instead: the balance decides, and a value that
         # disagrees with it is reported rather than swallowed.
-        th_out = th_in - (q_kw / max(hot["m_dot"] * hot["cp"], 1e-9))
-        tc_out = tc_in + (q_kw / max(cold["m_dot"] * cold["cp"], 1e-9))
+        th_out = th_in - (q_watts / max(hot["m_dot"] * hot["cp"], 1e-9))
+        tc_out = tc_in + (q_watts / max(cold["m_dot"] * cold["cp"], 1e-9))
 
         self._check_specified_outlet(self.hot_out, th_out, "hot")
         self._check_specified_outlet(self.cold_out, tc_out, "cold")
 
-        return q_kw * 1000.0, th_out, tc_out
+        return q_watts, th_out, tc_out
 
     def _check_specified_outlet(self, stream, t_balance_k: float, side: str) -> None:
         """
@@ -828,7 +828,7 @@ class ShellAndTubeHX(HeatExchanger):
             diameter=geometry["tube_id"],
             viscosity=hot["viscosity"],
         ).calculate()
-        pr_t = max(hot["cp"] * 1000 * hot["viscosity"] / max(hot["k"], 1e-12), 1e-12)
+        pr_t = max(hot["cp"] * hot["viscosity"] / max(hot["k"], 1e-12), 1e-12)
         # Dittus-Boelter: n = 0.4 when the tube fluid is heated, 0.3 when cooled.
         # The tube side carries the hot stream, which is being cooled.
         nu_t = DittusBoelter(reynolds=max(re_t, 1.0), prandtl=pr_t, n=0.3).calculate()
@@ -842,7 +842,7 @@ class ShellAndTubeHX(HeatExchanger):
             diameter=de_shell,
             viscosity=cold["viscosity"],
         ).calculate()
-        pr_s = max(cold["cp"] * 1000 * cold["viscosity"] / max(cold["k"], 1e-12), 1e-12)
+        pr_s = max(cold["cp"] * cold["viscosity"] / max(cold["k"], 1e-12), 1e-12)
         nu_s = KernShellNu(reynolds=max(re_s, 1.0), prandtl=pr_s).calculate()
         self._debug(f"Shell Side Rey:{re_s}, Pra:{pr_s}, Nuss:{nu_s}")
         return {"re_t": re_t, "pr_t": pr_t, "nu_t": nu_t, "de_shell": de_shell, "re_s": re_s, "pr_s": pr_s, "nu_s": nu_s}
@@ -2766,8 +2766,8 @@ class ShellAndTubeHX(HeatExchanger):
             latent_heat_jkg = self._safe_float(latent_heat.to("J/kg"), "latent_heat") if hasattr(latent_heat, "to") else self._safe_float(latent_heat, "latent_heat")
             q_actual = cold["m_dot"] * latent_heat_jkg
         else:
-            q_hot = hot["m_dot"] * hot["cp"] * 1000.0 * max(hot["t_k"] - th_out, 0.0)
-            q_cold = cold["m_dot"] * cold["cp"] * 1000.0 * max(tc_out - cold["t_k"], 0.0)
+            q_hot = hot["m_dot"] * hot["cp"] * max(hot["t_k"] - th_out, 0.0)
+            q_cold = cold["m_dot"] * cold["cp"] * max(tc_out - cold["t_k"], 0.0)
             q_actual = min(max(q_hot, 0.0), max(q_cold, 0.0))
 
         lmtd = self._calculate_service_lmtd(service, hot, cold, th_out, tc_out)

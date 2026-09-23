@@ -22,7 +22,8 @@ class ReboilerHX(EvaporatorHX):
                 return default
             return float(getattr(value, "value", value))
 
-        duty_kw = _number("Q", 0.0)
+        # "Q" is a HeatFlow, whose value is in W.
+        duty_kw = _number("Q", 0.0) / 1000.0
         area = max(_number("Area", 1.0), 1e-6)
         base = 3.0 + 0.002 * duty_kw + 0.01 * area
         if self.reboiler_type == "vertical_thermosyphon":

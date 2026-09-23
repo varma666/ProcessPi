@@ -26,7 +26,7 @@ class Mass(Variable):
             raise ValueError("Mass must be non-negative")
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for Mass")
-        base_value = round(value * self._conversion[units], 6)
+        base_value = value * self._conversion[units]
         super().__init__(base_value, "kg")
         self.original_value = value
         self.original_unit = units
@@ -35,13 +35,13 @@ class Mass(Variable):
         if target_unit not in self._conversion:
             raise TypeError(f"{target_unit} is not a valid unit for Mass")
         converted_value = self.value / self._conversion[target_unit]
-        return Mass(round(converted_value, 6), target_unit)
+        return Mass(converted_value, target_unit)
 
     def __add__(self, other):
         if not isinstance(other, Mass):
             raise TypeError("Addition only supported between Mass instances")
         total = self.value + other.value
-        return Mass(round(total, 6), "kg")
+        return Mass(total, "kg")
 
     def __eq__(self, other):
         return isinstance(other, Mass) and self.value == other.value

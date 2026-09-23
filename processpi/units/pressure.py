@@ -26,28 +26,39 @@ class Pressure(Variable):
             raise ValueError("Pressure must be non-negative")
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for Pressure")
-        super().__init__(value, units)
+        # Stored in Pa, like every other unit class stores its SI base, so that
+        # `.value` means the same thing whatever unit the pressure was given in.
+        super().__init__(value * self._conversion[units], "Pa")
         self.original_value = value
         self.original_unit = units
 
     def to_base(self):
-        """Convert to base SI unit (Pa)."""
-        return self.value * self._conversion[self.units]
+        """Return the value in the base SI unit (Pa)."""
+        return self.value
 
     def from_base(self, base_value: float, target_units: str):
         """Convert from Pa to target units and return a Pressure object."""
         if target_units not in self._conversion:
             raise TypeError(f"{target_units} is not a valid unit for Pressure")
         converted_value = base_value / self._conversion[target_units]
-        return Pressure(round(converted_value, 6), target_units)
+        return Pressure(converted_value, target_units)
 
     def to(self, target_unit):
         """Return new Pressure in target units."""
-        base_value = self.to_base()
-        return self.from_base(base_value, target_unit)
+        return self.from_base(self.value, target_unit)
+
+    def __add__(self, other):
+        if not isinstance(other, Pressure):
+            raise TypeError("Addition is only supported between Pressure objects")
+        return self.from_base(self.value + other.value, self.original_unit)
+
+    def __sub__(self, other):
+        if not isinstance(other, Pressure):
+            raise TypeError("Subtraction is only supported between Pressure objects")
+        return self.from_base(self.value - other.value, self.original_unit)
 
     def __repr__(self):
-        return f"{self.value} {self.units}"
+        return f"{self.original_value} {self.original_unit}"
 
     def __str__(self):
         # Ensure print() uses the same human-friendly format

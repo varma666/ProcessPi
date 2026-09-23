@@ -19,7 +19,7 @@ class Diameter(Variable):
             raise ValueError("Diameter must be non-negative")
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for Diameter")
-        base_value = round(value * self._conversion[units], 6)
+        base_value = value * self._conversion[units]
         super().__init__(base_value, "m")
         self.original_value = value
         self.original_unit = units
@@ -33,13 +33,13 @@ class Diameter(Variable):
             raise TypeError(f"{target_unit} is not a valid unit for Diameter")
         converted_value = self.value / self._conversion[target_unit]
         # Return a NEW Diameter object with the converted value and unit
-        return Diameter(round(converted_value, 6), target_unit)
+        return Diameter(converted_value, target_unit)
 
     def __add__(self, other):
         if not isinstance(other, Diameter):
             raise TypeError("Addition only supported between Diameter instances")
         total = self.value + other.value
-        return Diameter(round(total, 6), "m")
+        return Diameter(total, "m")
 
     def __eq__(self, other):
         return (
@@ -58,6 +58,6 @@ class Diameter(Variable):
     def __str__(self):
         # Human-friendly format for printing
         # This will use the original_value and original_unit set by `to()`
-        return f"{self.original_value} {self.original_unit}"
+        return f"{round(self.original_value, 6)} {self.original_unit}"
     
 

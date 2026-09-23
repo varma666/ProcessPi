@@ -47,7 +47,7 @@ def test_nozzles_manhole_weight_hydrotest_and_level():
     item.add_manhole("access", Diameter(450, "mm"))
     result = item.design()
     assert result["estimated_weight_kg"] > 0
-    assert result["hydrotest_pressure"].to("bar").value == pytest.approx(13)
+    assert result["hydrotest_pressure"].to("bar").original_value == pytest.approx(13)
     assert result["nozzles"]["feed"]["location"] == "top"
     assert item.volume(Length(0.6)).value < result["internal_volume"].value
 

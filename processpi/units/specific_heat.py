@@ -3,7 +3,7 @@ from .base import Variable
 class SpecificHeat(Variable):
     """
     Represents Specific Heat Capacity.
-    Default SI unit: kJ/kgK
+    Default SI unit: J/kgK
 
     Example:
     cp1 = SpecificHeat(4.186, "kJ/kgK")
@@ -11,11 +11,11 @@ class SpecificHeat(Variable):
     """
 
     _conversion = {
-        "J/kgK": 1/1000,
-        "kJ/kgK": 1,
-        "cal/gK": 4.1868 * 1,   # 1 cal/g.K = 4.1868 kJ/kg.K
-        "BTU/lbF": 4.1868 * 1,  # approx conversion to kJ/kg.K
-        "kcal/kgK": 4.1868 * 1  # 1 kcal/kg.K = 4.1868 kJ/kg.K
+        "J/kgK": 1,
+        "kJ/kgK": 1000,
+        "cal/gK": 4186.8,    # 1 cal/g.K = 4186.8 J/kg.K
+        "BTU/lbF": 4186.8,   # 1 BTU/lb.F = 4186.8 J/kg.K
+        "kcal/kgK": 4186.8,  # 1 kcal/kg.K = 4186.8 J/kg.K
     }
 
     def __init__(self, value, units="kJ/kgK"):
@@ -23,8 +23,8 @@ class SpecificHeat(Variable):
             raise ValueError("Specific heat must be positive.")
         if units not in self._conversion:
             raise TypeError(f"{units} is not a valid unit for SpecificHeat")
-        base_value = round(value * self._conversion[units], 6)
-        super().__init__(base_value, "kJ/kgK")
+        base_value = value * self._conversion[units]
+        super().__init__(base_value, "J/kgK")
         self.original_value = value
         self.original_unit = units
 
@@ -32,13 +32,13 @@ class SpecificHeat(Variable):
         if target_unit not in self._conversion:
             raise TypeError(f"{target_unit} is not a valid unit for SpecificHeat")
         converted_value = self.value / self._conversion[target_unit]
-        return SpecificHeat(round(converted_value, 6), target_unit)
+        return SpecificHeat(converted_value, target_unit)
 
     def __add__(self, other):
         if not isinstance(other, SpecificHeat):
             raise TypeError("Addition only supported between SpecificHeat instances")
         total = self.value + other.value
-        return SpecificHeat(round(total, 6), "kJ/kgK")
+        return SpecificHeat(total, "J/kgK")
 
     def __eq__(self, other):
         return isinstance(other, SpecificHeat) and self.value == other.value
