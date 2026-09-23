@@ -74,19 +74,22 @@ def test_results_after_run_are_returned():
 
 
 def test_convergence_tolerance_is_honoured():
-    """The first U step is 26% out; only a tolerance above it may accept it."""
-    loose = _quiet(_benzene_cooler(u_tolerance_percent=30.0).run).data
+    """The first U step is about 10% out; only a tolerance above it may accept it."""
+    loose = _quiet(_benzene_cooler(u_tolerance_percent=15.0).run).data
     assert loose["converged"] is True
     assert len(loose["convergence_history"]) == 1
-    assert loose["convergence_history"][0] > 20.0
+    assert 5.0 < loose["convergence_history"][0] < 15.0
 
     tight = _quiet(_benzene_cooler(u_tolerance_percent=1.0).run).data
-    assert tight["converged"] is False
+    assert tight["converged"] is True
     assert len(tight["convergence_history"]) > 1
+    assert tight["convergence_history"][-1] < 1.0
+    assert tight["status"] == "OK"
 
 
 def test_failed_convergence_reaches_the_status():
-    data = _quiet(_benzene_cooler(u_tolerance_percent=1.0).run).data
+    data = _quiet(_benzene_cooler(u_tolerance_percent=1.0, max_u_iterations=2).run).data
+    assert data["converged"] is False
     assert data["status"] == "FAILED_CONVERGENCE"
     assert any("CONVERGENCE_WARNING" in w for w in data["warnings"])
 
@@ -99,8 +102,8 @@ def test_design_status_is_never_unknown():
 
 
 def test_warnings_raised_inside_the_iteration_survive():
-    """The hydraulic and stagnation warnings are raised during _iterate_U."""
-    data = _quiet(_benzene_cooler(u_tolerance_percent=1.0).run).data
+    """The hydraulic and convergence warnings are raised during _iterate_U."""
+    data = _quiet(_benzene_cooler(u_tolerance_percent=1.0, max_u_iterations=2).run).data
     categories = {w.split("]")[0].lstrip("[") for w in data["warnings"] if w.startswith("[")}
     assert "HYDRAULIC_WARNING" in categories
     assert "CONVERGENCE_WARNING" in categories
@@ -175,3 +178,92 @@ def test_specified_outlet_that_breaks_the_balance_is_reported():
 
     data = _quiet(engine.run).data
     assert any("BALANCE_WARNING" in w for w in data["warnings"])
+
+
+def _benzene_condenser(**extra):
+    """The benzene condenser from docs/examples/equipment/heatexchanger."""
+    hot_in = MaterialStream("benzene_vapor_in", component=Benzene(), phase="vapor",
+                            temperature=Temperature(95, "C"), pressure=Pressure(1.2, "bar"),
+                            mass_flow=MassFlowRate(12000, "kg/h"))
+    hot_out = MaterialStream("benzene_liquid_out", component=Benzene(), phase="liquid",
+                             temperature=Temperature(95, "C"))
+    cold_in = MaterialStream("cw_in", component=Water(), phase="liquid",
+                             temperature=Temperature(30, "C"), pressure=Pressure(1, "bar"),
+                             mass_flow=MassFlowRate(50000, "kg/h"))
+    cold_out = MaterialStream("cw_out", component=Water())
+    engine = HeatExchangerEngine(method="bell_delaware")
+    engine.fit(hx_type="condenser", hot_in=hot_in, hot_out=hot_out, cold_in=cold_in,
+               cold_out=cold_out, latent_heat=394000,
+               shell_dp=Pressure(0.5, "bar"), tube_dp=Pressure(0.5, "bar"),
+               orientation="horizontal", mode="design", **extra)
+    return engine
+
+
+def test_a_cycle_between_tube_counts_settles_on_the_smallest_adequate_one():
+    """The tube count is a step function of U, so this case alternates between
+    192 and 280 tubes for ever; it used to run out of iterations."""
+    data = _quiet(_benzene_condenser().run).data
+    assert data["converged"] is True
+    assert data["status"] != "FAILED_CONVERGENCE"
+    assert any("cycles between tube counts" in w for w in data["warnings"])
+    # It settled on one of the cycling counts, and one with the area its own U
+    # requires.
+    assert data["tube_count"] in {key[0] for key in data["geometry_history"]}
+    assert data["feasibility_summary"]["thermal_ok"] is True
+
+
+def test_hydraulic_violation_does_not_block_convergence():
+    """This condenser sits outside its velocity band on every pass. The loop used
+    to `continue` past the convergence test and report FAILED_CONVERGENCE while
+    the U error fell to 0.26%."""
+    data = _quiet(_phase_change_engine(
+        "condenser", condensation_mode="total", condensing_side="shell",
+        latent_heat=2.1e6).run).data
+    assert data["converged"] is True
+    assert data["convergence_history"][-1] < 1.0
+    assert data["status"] != "FAILED_CONVERGENCE"
+
+
+def test_shell_is_never_smaller_than_the_bundle():
+    """Shrinking the shell to raise the shell velocity had no floor, so this
+    condenser got a 0.58 m shell round a 0.69 m bundle and every geometry was
+    then rejected for tube packing."""
+    data = _quiet(_phase_change_engine(
+        "condenser", condensation_mode="total", condensing_side="shell",
+        latent_heat=2.1e6).run).data
+    from types import SimpleNamespace
+
+    from processpi.equipment.heatexchangers.shell_and_tube import ShellAndTubeHX
+
+    tube_od = float(getattr(data["tube_od"], "value", data["tube_od"]))
+    shell = float(getattr(data["shell_diameter"], "value", data["shell_diameter"]))
+    bundle = ShellAndTubeHX._calculate_bundle_diameter(
+        SimpleNamespace(specs={}), data["tube_count"], tube_od
+    )
+    assert shell > bundle
+
+
+def test_every_geometry_rejected_reports_failed_convergence(monkeypatch):
+    """With no pass reaching the U test, the warning used to index an empty
+    history and raise IndexError."""
+    from processpi.equipment.heatexchangers.shell_and_tube import ShellAndTubeHX
+
+    monkeypatch.setattr(ShellAndTubeHX, "_validate_bundle_geometry",
+                        lambda self, geometry: (False, "rejected for the test"))
+    engine = _benzene_cooler(max_u_iterations=3)
+    with pytest.raises(Exception) as excinfo:
+        _quiet(engine.run)
+    assert not isinstance(excinfo.value, IndexError)
+
+
+@pytest.mark.parametrize("relaxation", [0.0, -0.5, 1.5])
+def test_relaxation_outside_its_range_is_rejected(relaxation):
+    with pytest.raises(ValueError, match="u_relaxation"):
+        _quiet(_benzene_cooler(u_relaxation=relaxation).run)
+
+
+def test_relaxation_is_configurable():
+    fast = _quiet(_benzene_cooler(u_relaxation=0.8).run).data
+    slow = _quiet(_benzene_cooler(u_relaxation=0.4).run).data
+    assert fast["converged"] and slow["converged"]
+    assert len(fast["convergence_history"]) < len(slow["convergence_history"])

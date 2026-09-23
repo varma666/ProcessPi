@@ -744,6 +744,14 @@ class ShellAndTubeHX(HeatExchanger):
             component=self.cold_in.component,
         )
     
+        # Shrinking the shell raises the velocity, but the shell can never be
+        # smaller than the bundle it has to hold.
+        bundle_diameter = geometry.get("bundle_diameter") or self._calculate_bundle_diameter(
+            geometry["tube_count"], geometry["tube_od"]
+        )
+        min_shell_diameter = self._calculate_shell_diameter(bundle_diameter)
+        shell_diameter = max(shell_diameter, min_shell_diameter)
+
         v_shell = _shell_velocity(shell_diameter)
         settled = False
     
@@ -754,7 +762,9 @@ class ShellAndTubeHX(HeatExchanger):
                 break
     
             if v_shell < shell_v_min:
-                shell_diameter *= 0.90
+                if shell_diameter <= min_shell_diameter:
+                    break
+                shell_diameter = max(shell_diameter * 0.90, min_shell_diameter)
             else:
                 shell_diameter *= 1.10
     
@@ -1123,7 +1133,21 @@ class ShellAndTubeHX(HeatExchanger):
         # rise and any fall at all as converged.
         tolerance_pct = float(self.specs.get("u_tolerance_percent", 1.0))
     
+        # Weight of the newly calculated U in the next assumed U.
+        relaxation = float(self.specs.get("u_relaxation", 0.8))
+        if not 0.0 < relaxation <= 1.0:
+            raise ValueError(f"u_relaxation must be in (0, 1], got {relaxation}")
+
         max_iter = int(self.specs.get("max_u_iterations", 15))
+
+        # Everything one pass decides, kept so a cycle can be settled on the
+        # right pass rather than whichever one the loop stopped on.
+        pass_keys = (
+            "area_required", "geometry", "bundle_diameter",
+            "shell_diameter", "v_tube", "v_shell", "dimless", "h_t", "h_s",
+            "u_calculated", "u_clean", "re_shell", "tube_dp", "shell_dp",
+        )
+        passes: List[Dict[str, Any]] = []
         for i in range(1, max_iter + 1):
     
             self._debug(f"U Iteration = {i}")
@@ -1306,10 +1330,21 @@ class ShellAndTubeHX(HeatExchanger):
             # UPDATE ASSUMED U
             # ======================================================
     
-            state["u_assumed"] = 0.6 * u_old + 0.4 * u_new
+            # Relaxed update. When the geometry has come out the same as on the
+            # previous pass, U_calc can no longer move (it is a function of the
+            # geometry), so the assumed U goes straight to it and the next pass's
+            # convergence test decides. Before, three identical geometries were
+            # declared FAILED_CONVERGENCE while the error was still falling.
+            geometry_key = (geometry["tube_count"], round(geometry["tube_length"], 3), round(shell_diameter, 3), tube_passes)
+            if state["geometry_history"] and state["geometry_history"][-1] == geometry_key:
+                state["u_assumed"] = u_new
+            else:
+                state["u_assumed"] = (1.0 - relaxation) * u_old + relaxation * u_new
             state["u_history"].append(state["u_assumed"])
             state["area_history"].append(actual_area)
-            state["geometry_history"].append((geometry["tube_count"], round(geometry["tube_length"],3), round(shell_diameter,3), tube_passes))
+            state["geometry_history"].append(geometry_key)
+            passes.append({key: state[key] for key in pass_keys})
+            passes[-1]["u_assumed"] = u_old
             state["convergence_history"].append(convergence_error)
     
             # ======================================================
@@ -1324,23 +1359,18 @@ class ShellAndTubeHX(HeatExchanger):
     
                 state["warnings"] = list(dict.fromkeys(existing))
 
-            if "tube_velocity" in hard_violations or "shell_velocity" in hard_violations:
-                self._trace_step("OPTIMIZATION", "Geometry rejected", f"hydraulic violation {hard_violations}")
-                state["optimization_actions"].append(f"hydraulic_reject:{hard_violations}")
-                if not self.fixed_geometry.get("tube_length", False):
-                    geometry["tube_length"] = min(12.0, geometry["tube_length"] * 1.10)
-                    self._trace_step("OPTIMIZATION", "Action", "increase_tube_length")
-                elif tube_passes < 8 and not self.fixed_geometry.get("tube_passes", False):
-                    tube_passes = min(8, tube_passes * 2)
-                    self._trace_step("OPTIMIZATION", "Action", "increase_tube_passes")
-                elif not self.fixed_geometry.get("shell_diameter", False):
-                    geometry["shell_diameter"] = max(0.15, geometry["shell_diameter"] * 0.95)
-                    self._trace_step("OPTIMIZATION", "Action", "reduce_shell_diameter")
-                else:
-                    self._warn_with_category("FEASIBILITY_WARNING", "Fixed geometry is hydraulically infeasible")
-                    state["status_override"] = "FAILED_CONVERGENCE"
-                    break
-                continue
+            # A velocity outside its band is recorded here and reported as
+            # HYDRAULIC_LIMITED by `_finalize_results`. It must not skip the
+            # convergence test: `_check_velocities` has already moved the tube
+            # passes and shell diameter as far as they go, and the geometry is
+            # reselected from the area at the top of every pass, so a tube-length
+            # or shell-diameter change made here never reached the next pass.
+            # Skipping the test meant a U that had settled was reported as
+            # FAILED_CONVERGENCE.
+            hydraulic = [v for v in hard_violations if v in ("tube_velocity", "shell_velocity")]
+            if hydraulic:
+                self._trace_step("OPTIMIZATION", "Hydraulic violation", hydraulic)
+                state["optimization_actions"].append(f"hydraulic_violation:{hydraulic}")
     
             # ======================================================
             # CONVERGENCE CHECK
@@ -1359,18 +1389,46 @@ class ShellAndTubeHX(HeatExchanger):
     
                 state["converged"] = True
                 break
-    
-            if len(state["geometry_history"]) >= 3 and len(set(state["geometry_history"][-3:])) == 1:
-                self._warn_with_category("CONVERGENCE_WARNING", "Geometry stagnation detected")
-                state["status_override"] = "FAILED_CONVERGENCE"
+
+            # The tube count is a step function of the assumed U, so the loop can
+            # cycle between geometries that each call for the other. A geometry
+            # seen before (other than on the pass just gone, handled above) means
+            # it has; more passes cannot help. Settle on the smallest geometry in
+            # the cycle whose area covers what its own U requires, or the largest
+            # if none does.
+            earlier = [j for j, key in enumerate(state["geometry_history"][:-2]) if key == geometry_key]
+            if earlier:
+                cycle = passes[earlier[-1]:]
+                adequate = [p for p in cycle if p["geometry"]["area"] >= p["area_required"]]
+                chosen = (
+                    min(adequate, key=lambda p: p["geometry"]["area"])
+                    if adequate
+                    else max(cycle, key=lambda p: p["geometry"]["area"])
+                )
+                state.update(chosen)
+                state["converged"] = True
+                counts = sorted({p["geometry"]["tube_count"] for p in cycle})
+                self._warn_with_category(
+                    "CONVERGENCE_WARNING",
+                    f"U cycles between tube counts {counts}; settled on "
+                    f"{chosen['geometry']['tube_count']} tubes, the smallest whose "
+                    f"area covers its own U" if adequate else
+                    f"U cycles between tube counts {counts} and none has the area "
+                    f"its own U requires; settled on the largest, "
+                    f"{chosen['geometry']['tube_count']} tubes",
+                )
+                self._trace_step("THERMAL", "U cycle settled", chosen["geometry"]["tube_count"])
                 break
 
         if not state.get("converged") and not state.get("status_override"):
+            history = state["convergence_history"]
+            if history:
+                detail = f"in {len(history)} iterations; last error {history[-1]:.2f}%"
+            else:
+                detail = f"every one of {max_iter} geometries was rejected before U was evaluated"
             self._warn_with_category(
                 "CONVERGENCE_WARNING",
-                f"Overall U did not converge to {tolerance_pct}% in "
-                f"{len(state.get('convergence_history', []))} iterations; last "
-                f"error {state.get('convergence_history', [float('nan')])[-1]:.2f}%",
+                f"Overall U did not converge to {tolerance_pct}%: {detail}",
             )
             state["status_override"] = "FAILED_CONVERGENCE"
     
