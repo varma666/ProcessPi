@@ -17,6 +17,8 @@ from .standards import (
     get_recommended_velocity, get_next_standard_nominal, get_next_next_standard_nominal, get_previous_standard_nominal,get_equivalent_length,get_internal_diameter,get_nominal_dia_from_internal_dia
 )
 from .pipes import Pipe
+from .pumps import Pump
+from .vessel import Vessel
 from .fittings import Fitting
 from .equipment import Equipment
 from .network import PipelineNetwork
@@ -33,6 +35,8 @@ DEFAULT_PUMP_EFFICIENCY = 0.70
 DEFAULT_FLOW_TOL = 1e-6  # m3/s, Absolute flow tolerance for solvers
 MAX_HC_ITER = 200  # Max iterations for Hardy-Cross solver
 MAX_MATRIX_ITER = 100 # Max iterations for matrix solver
+# Element types that can sit inline in a branch and be evaluated by the engine.
+INLINE_ELEMENTS = (Pipe, Pump, Equipment, Vessel, Fitting)
 
 # ------------------------------- Helpers -----------------------------------
 
@@ -640,98 +644,320 @@ class PipelineEngine:
         """
         Compute total pressure drop for a network, including major, minor, and elevation losses.
 
+        Series blocks add their element pressure drops. Parallel blocks share a
+        single pressure drop: the flow is split between the branches until every
+        branch sees the same drop, and that common value is the block's drop.
+
         Args:
-            network (Any): Pipe, list of Pipes (series branch), list of branches (each branch is list of Pipes),
-                        or a PipelineNetwork object.
-            flow_rate (Optional[VolumetricFlowRate]): The flow rate for the network.
+            network (Any): An inline element (see ``INLINE_ELEMENTS``), a list of
+                        elements (series branch), a list of branches (each branch a
+                        list, treated as parallel), or a PipelineNetwork object.
+            flow_rate (Optional[VolumetricFlowRate]): The flow rate entering the network.
 
         Returns:
             Tuple[Pressure, List[Dict[str, Any]], Dict[str, Any]]:
-                - total network pressure drop
+                - total network pressure drop (clamped at zero, see the summary key
+                  ``total_pressure_drop_Pa`` for the signed value)
                 - element reports (major + minor + elevation)
                 - network summary
         """
+        q = flow_rate if flow_rate is not None else self._infer_flowrate()
+        total_dp_pa, element_reports, meta = self._evaluate_block(network, q)
 
-        # ---------------------------
-        # Normalize input to branches
-        # ---------------------------
-        if isinstance(network, Pipe):
-            branches = [[network]]
-        elif isinstance(network, list):
-            # series branch or multiple branches
-            if all(isinstance(p, Pipe) for p in network):
-                branches = [network]
-            elif all(isinstance(b, list) for b in network):
-                branches = []
-                for b in network:
-                    if all(isinstance(p, Pipe) for p in b):
-                        branches.append(b)
-                    else:
-                        raise TypeError("Each branch must be a list of Pipe objects")
-            else:
-                raise TypeError("Network list must contain Pipes or branches (lists of Pipes)")
-        elif hasattr(network, "branches") and isinstance(network.branches, list):
-            branches = []
-            for b in network.branches:
-                if isinstance(b, Pipe):
-                    branches.append([b])
-                elif isinstance(b, list) and all(isinstance(p, Pipe) for p in b):
-                    branches.append(b)
-                else:
-                    raise TypeError("PipelineNetwork branches must contain Pipes or lists of Pipes")
-        else:
-            raise TypeError("Network must be Pipe, list of Pipes/branches, or PipelineNetwork object")
+        # `Pressure` rejects negative values, so a network whose pumps more than
+        # cover its friction is clamped to zero in the returned object. The signed
+        # value is always available as `total_pressure_drop_Pa` in the summary.
+        total_dp_obj = Pressure(max(total_dp_pa, 0.0), "Pa")
 
-        # ---------------------------
-        # Compute network
-        # ---------------------------
-        total_network_dp = 0.0
-        all_element_reports: List[Dict[str, Any]] = []
-
-        for branch_idx, branch in enumerate(branches):
-            branch_dp = 0.0
-            branch_element_reports = []
-
-            for pipe in branch:
-                # compute all losses for this pipe
-                calc = self._pipe_calculation(pipe, flow_rate)
-
-                dp_value = getattr(calc["pressure_drop"], "value", calc["pressure_drop"])
-                branch_dp += dp_value
-
-                # build element-level report
-                report = {
-                    "name": getattr(pipe, "name", f"Pipe_{id(pipe)}"),
-                    "diameter": calc["diameter"],
-                    "velocity": calc["velocity"],
-                    "reynolds": calc["reynolds"],
-                    "friction_factor": calc["friction_factor"],
-                    "major_dp": calc["major_dp"],
-                    "minor_dp": calc["minor_dp"],
-                    "elevation_dp": calc["elevation_dp"],
-                    "total_dp": calc["pressure_drop"],
-                }
-
-                branch_element_reports.append(report)
-
-            # tag branch index
-            for el in branch_element_reports:
-                el["branch_index"] = branch_idx
-
-            all_element_reports.extend(branch_element_reports)
-            total_network_dp += branch_dp
-
-        # ---------------------------
-        # Network summary
-        # ---------------------------
         network_summary = {
-            "total_pressure_drop": Pressure(total_network_dp, "Pa"),
-            "number_of_branches": len(branches),
-            "number_of_elements": len(all_element_reports),
-            "elements": all_element_reports
+            "total_pressure_drop": total_dp_obj,
+            "total_pressure_drop_Pa": total_dp_pa,
+            "number_of_branches": meta.get("number_of_branches", 1),
+            "number_of_elements": len(element_reports),
+            "converged": meta.get("converged", True),
+            "iterations": meta.get("iterations", 0),
+            "branch_flows": meta.get("branch_flows"),
+            "elements": element_reports,
         }
 
-        return Pressure(total_network_dp, "Pa"), all_element_reports, network_summary
+        return total_dp_obj, element_reports, network_summary
+
+    def _evaluate_block(
+        self,
+        block: Any,
+        flow_rate: VolumetricFlowRate,
+        branch_index: int = 0,
+    ) -> Tuple[float, List[Dict[str, Any]], Dict[str, Any]]:
+        """
+        Recursively evaluate a network block at a given flow rate.
+
+        Args:
+            block (Any): An inline element (see ``INLINE_ELEMENTS``), a list, or
+                a PipelineNetwork.
+            flow_rate (VolumetricFlowRate): Flow entering the block.
+            branch_index (int): Index tagged onto the element reports produced here.
+
+        Returns:
+            Tuple[float, List[Dict[str, Any]], Dict[str, Any]]:
+                - pressure drop across the block in Pa (negative for a net gain)
+                - element reports
+                - meta: ``converged``, ``iterations``, ``number_of_branches`` and,
+                  for a parallel block, the resolved ``branch_flows`` in m3/s
+        """
+        series_meta = {"converged": True, "iterations": 0, "number_of_branches": 1,
+                       "branch_flows": None}
+
+        # --- single elements ---------------------------------------------
+        if isinstance(block, Pipe):
+            calc = self._pipe_calculation(block, flow_rate)
+            dp_pa = getattr(calc["pressure_drop"], "value", calc["pressure_drop"])
+            report = {
+                "name": getattr(block, "name", f"Pipe_{id(block)}"),
+                "type": "pipe",
+                "diameter": calc["diameter"],
+                "velocity": calc["velocity"],
+                "reynolds": calc["reynolds"],
+                "friction_factor": calc["friction_factor"],
+                "major_dp": calc["major_dp"],
+                "minor_dp": calc["minor_dp"],
+                "elevation_dp": calc["elevation_dp"],
+                "total_dp": calc["pressure_drop"],
+                "pressure_drop_Pa": dp_pa,
+                "flow_m3s": getattr(flow_rate, "value", flow_rate),
+                "branch_index": branch_index,
+            }
+            return dp_pa, [report], series_meta
+
+        if isinstance(block, Pump):
+            gain_pa = self._pump_gain_pa(block).to("Pa").value
+            head = getattr(block, "head", None)
+            report = {
+                "name": getattr(block, "name", f"Pump_{id(block)}"),
+                "type": "pump",
+                # A pump raises the pressure, so its contribution to the network
+                # drop is negative. `Pressure` cannot hold that, so the signed
+                # value is a plain float in Pa.
+                "pressure_gain": Pressure(max(gain_pa, 0.0), "Pa"),
+                "pressure_drop_Pa": -gain_pa,
+                "head_m": head.to("m").value if hasattr(head, "to") else head,
+                "flow_m3s": getattr(flow_rate, "value", flow_rate),
+                "branch_index": branch_index,
+            }
+            return -gain_pa, [report], series_meta
+
+        if isinstance(block, Equipment):
+            dp_pa = self._equipment_dp_pa(block).to("Pa").value
+            report = {
+                "name": getattr(block, "name", f"Equipment_{id(block)}"),
+                "type": "equipment",
+                "total_dp": Pressure(dp_pa, "Pa"),
+                "pressure_drop_Pa": dp_pa,
+                "flow_m3s": getattr(flow_rate, "value", flow_rate),
+                "branch_index": branch_index,
+            }
+            return dp_pa, [report], series_meta
+
+        if isinstance(block, Vessel):
+            # A vessel is a hold-up point, not an inline resistance.
+            report = {
+                "name": getattr(block, "name", f"Vessel_{id(block)}"),
+                "type": "vessel",
+                "total_dp": Pressure(0.0, "Pa"),
+                "pressure_drop_Pa": 0.0,
+                "flow_m3s": getattr(flow_rate, "value", flow_rate),
+                "branch_index": branch_index,
+            }
+            return 0.0, [report], series_meta
+
+        if isinstance(block, Fitting):
+            # A fitting added at a node has no pipe to take its velocity and
+            # friction factor from, so its loss is not modelled here. Put it in the
+            # `fittings` list of the pipe it belongs to and it is counted as a
+            # minor loss of that pipe.
+            report = {
+                "name": getattr(block, "fitting_type", f"Fitting_{id(block)}"),
+                "type": "fitting",
+                "total_dp": Pressure(0.0, "Pa"),
+                "pressure_drop_Pa": 0.0,
+                "flow_m3s": getattr(flow_rate, "value", flow_rate),
+                "branch_index": branch_index,
+                "warnings": [
+                    "Node-level fitting is not modelled inline; add it to the "
+                    "`fittings` list of the adjoining pipe to include its loss."
+                ],
+            }
+            return 0.0, [report], series_meta
+
+        # --- plain lists --------------------------------------------------
+        if isinstance(block, list):
+            if not block:
+                return 0.0, [], series_meta
+            if all(isinstance(b, list) for b in block):
+                # A list of branches is a parallel set.
+                return self._evaluate_parallel(block, flow_rate, branch_index)
+            if any(isinstance(b, list) for b in block):
+                raise TypeError(
+                    "Network list must contain either elements (a series branch) "
+                    "or lists of elements (parallel branches), not a mix"
+                )
+            return self._evaluate_series(block, flow_rate, branch_index)
+
+        # --- networks -----------------------------------------------------
+        if isinstance(block, PipelineNetwork):
+            if block.connection_type == "parallel":
+                return self._evaluate_parallel(
+                    block.elements, flow_rate, branch_index, net_name=block.name
+                )
+            return self._evaluate_series(block.elements, flow_rate, branch_index)
+
+        raise TypeError(
+            "Network must be a Pipe, Pump, Equipment, Vessel, Fitting, list of "
+            f"elements/branches, or PipelineNetwork object, not {type(block).__name__}"
+        )
+
+    def _evaluate_series(
+        self,
+        elements: List[Any],
+        flow_rate: VolumetricFlowRate,
+        branch_index: int = 0,
+    ) -> Tuple[float, List[Dict[str, Any]], Dict[str, Any]]:
+        """
+        Evaluate elements in series: same flow through each, pressure drops add.
+        """
+        total_dp_pa = 0.0
+        reports: List[Dict[str, Any]] = []
+        converged = True
+        iterations = 0
+
+        for element in elements:
+            dp_pa, el_reports, meta = self._evaluate_block(element, flow_rate, branch_index)
+            total_dp_pa += dp_pa
+            reports.extend(el_reports)
+            converged = converged and meta.get("converged", True)
+            iterations = max(iterations, meta.get("iterations", 0))
+
+        return total_dp_pa, reports, {
+            "converged": converged,
+            "iterations": iterations,
+            "number_of_branches": 1,
+            "branch_flows": None,
+        }
+
+    def _evaluate_parallel(
+        self,
+        branches: List[Any],
+        flow_rate: VolumetricFlowRate,
+        branch_index: int = 0,
+        net_name: Optional[str] = None,
+    ) -> Tuple[float, List[Dict[str, Any]], Dict[str, Any]]:
+        """
+        Evaluate branches in parallel: the flow splits, the pressure drop is shared.
+
+        The split is resolved by :meth:`_balance_parallel_flows`; the block drop is
+        the mean of the balanced branch drops, which is the common drop once the
+        iteration has converged.
+        """
+        if not branches:
+            return 0.0, [], {"converged": True, "iterations": 0,
+                             "number_of_branches": 0, "branch_flows": []}
+        if len(branches) == 1:
+            dp_pa, reports, meta = self._evaluate_block(branches[0], flow_rate, branch_index)
+            meta = dict(meta)
+            meta["number_of_branches"] = 1
+            meta["branch_flows"] = [getattr(flow_rate, "value", flow_rate)]
+            return dp_pa, reports, meta
+
+        flows, dps, converged, iterations = self._balance_parallel_flows(
+            branches, flow_rate, net_name=net_name
+        )
+
+        reports: List[Dict[str, Any]] = []
+        for idx, (branch, q_branch) in enumerate(zip(branches, flows)):
+            _, br_reports, _ = self._evaluate_block(
+                branch, VolumetricFlowRate(q_branch, "m3/s"), branch_index + idx
+            )
+            reports.extend(br_reports)
+
+        # Parallel branches share one pressure drop, they do not add up.
+        block_dp_pa = sum(dps) / len(dps)
+
+        return block_dp_pa, reports, {
+            "converged": converged,
+            "iterations": iterations,
+            "number_of_branches": len(branches),
+            "branch_flows": flows,
+        }
+
+    def _balance_parallel_flows(
+        self,
+        branches: List[Any],
+        q_total: VolumetricFlowRate,
+        net_name: Optional[str] = None,
+        tol: float = 1e-4,
+        max_iter: int = 100,
+    ) -> Tuple[List[float], List[float], bool, int]:
+        """
+        Split a total flow between parallel branches so that every branch sees the
+        same pressure drop.
+
+        Turbulent branch drop scales roughly as q^2, so the update is
+        ``q_i <- q_i * sqrt(dp_mean / dp_i)`` followed by a rescale to ``q_total``,
+        which conserves mass on every iteration. Convergence is measured on the
+        spread of the branch drops, not on the size of the flow correction.
+
+        Args:
+            branches (List[Any]): The parallel branches.
+            q_total (VolumetricFlowRate): Total flow entering the block.
+            net_name (Optional[str]): Name of the parallel network, used to look up
+                a user-supplied split in ``self.data["flow_split"]``.
+            tol (float): Relative tolerance on the branch pressure drop spread.
+            max_iter (int): Maximum number of iterations.
+
+        Returns:
+            Tuple[List[float], List[float], bool, int]:
+                branch flows (m3/s), branch pressure drops (Pa), whether the
+                iteration converged, and the number of iterations used.
+        """
+        n = len(branches)
+        q_total_val = float(getattr(q_total, "value", q_total))
+        flows = [q_total_val / n] * n
+
+        # A user-supplied split fixes the flows; only the drops are then computed.
+        split_cfg = (self.data.get("flow_split") or {}).get(net_name) if net_name else None
+        if split_cfg and len(split_cfg) == n:
+            vals = [float(x) for x in split_cfg]
+            s = sum(vals) or 1.0
+            flows = [q_total_val * (v / s) for v in vals]
+            dps = [
+                self._evaluate_block(branch, VolumetricFlowRate(q, "m3/s"))[0]
+                for branch, q in zip(branches, flows)
+            ]
+            return flows, dps, True, 0
+
+        dps = [0.0] * n
+        iterations = 0
+        for iterations in range(1, max_iter + 1):
+            dps = [
+                self._evaluate_block(branch, VolumetricFlowRate(q, "m3/s"))[0]
+                for branch, q in zip(branches, flows)
+            ]
+            dp_mean = sum(dps) / n
+            scale = max(abs(dp_mean), 1e-9)
+            if max(abs(dp - dp_mean) for dp in dps) / scale < tol:
+                return flows, dps, True, iterations
+
+            # Only positive drops can be balanced by the q^2 law; a branch with a
+            # net gain (a pump) or no loss at all is left at its current flow.
+            if dp_mean <= 0 or any(dp <= 0 for dp in dps):
+                return flows, dps, False, iterations
+
+            updated = [q * math.sqrt(dp_mean / dp) for q, dp in zip(flows, dps)]
+            s = sum(updated)
+            if s <= 0:
+                return flows, dps, False, iterations
+            flows = [q * q_total_val / s for q in updated]
+
+        return flows, dps, False, iterations
 
 
     def _resolve_parallel_flows(
@@ -739,6 +965,9 @@ class PipelineEngine:
     ) -> list:
         """
         Resolves flow in parallel branches using iterative ΔP balancing.
+
+        Thin wrapper over :meth:`_balance_parallel_flows`, which keeps the branch
+        flows summing to ``q_total`` on every iteration.
         
         Args:
             net (PipelineNetwork): The parallel network object.
@@ -750,43 +979,14 @@ class PipelineEngine:
         Returns:
             List[float]: A list of flow rates (m3/s) for each branch.
         """
-        n = len(branches)
-        # --- Initial guess: equal split ---
-        q_branches = [q_total.value / n] * n
-
-        # Check for user-defined split ratios
-        split_cfg = (self.data.get("flow_split") or {}).get(net.name)
-        if split_cfg:
-            vals = [float(x) for x in split_cfg]
-            if sum(vals) > 1.5 * q_total.value:  # absolute flows
-                return vals
-            s = sum(vals)  # ratios
-            return [q_total.value * (v / s) for v in vals]
-
-        # --- Iterative ΔP balancing ---
-        for iteration in range(max_iter):
-            dps = []
-            for i, branch in enumerate(branches):
-                flow_i = VolumetricFlowRate(q_branches[i], "m3/s")
-                dp, _, _ = self._compute_network(branch, flow_i)
-                dps.append(dp.to("Pa").value)
-
-            dp_avg = sum(dps) / n
-            # Convergence: all ΔPs within tolerance
-            if max(abs(dp - dp_avg) for dp in dps) / (dp_avg + 1e-6) < tol:
-                break
-
-            # Adjust flows proportionally: higher ΔP → reduce flow, lower ΔP → increase flow
-            for i in range(n):
-                if dps[i] == 0:  # avoid division by zero
-                    continue
-                factor = dp_avg / dps[i]
-                q_branches[i] *= factor
-            # Normalize total flow
-            q_sum = sum(q_branches)
-            q_branches = [q * q_total.value / q_sum for q in q_branches]
-
-        return q_branches
+        flows, _, _, _ = self._balance_parallel_flows(
+            branches,
+            q_total,
+            net_name=getattr(net, "name", None),
+            tol=tol,
+            max_iter=max_iter,
+        )
+        return flows
 
 
 
@@ -916,60 +1116,40 @@ class PipelineEngine:
         """
         Top-level solver for networks with multiple branches.
 
-        Iteratively balances flows across parallel branches,
-        ensuring all minor losses are included.
+        Balances flows across parallel branches and adds drops along series
+        branches, so that the returned ``total_dp_Pa`` is the drop from the network
+        inlet to its outlet rather than a sum over every element.
         """
-        branches = self._normalize_branches(network)
-        n_branches = len(branches)
-        branch_flows = [q_total.value / n_branches for _ in range(n_branches)]
-        max_iter = 50
-        converged = False
-
-        for iteration in range(max_iter):
-            dp_values = []
-            for idx, branch in enumerate(branches):
-                dp, _, _ = self._compute_network(branch, branch_flows[idx])
-                dp_values.append(getattr(dp, "value", dp))
-
-            dp_mean = sum(dp_values) / len(dp_values)
-            corrections = [bf * dp_mean / max(dpv, 1e-12) for bf, dpv in zip(branch_flows, dp_values)]
-            max_change = max(abs(c - bf) for c, bf in zip(corrections, branch_flows))
-            branch_flows = corrections
-
-            if max_change < tol:
-                converged = True
-                break
-
-        # Generate final component-level reports including minor losses
-        final_reports = []
-        for idx, branch in enumerate(branches):
-            _, el_reports, _ = self._compute_network(branch, branch_flows[idx])
-            for el in el_reports:
-                el["branch_index"] = idx
-                # Ensure minor losses are included for each element
-                if "minor_dp" not in el:
-                    el["minor_dp"] = getattr(el.get("pressure_drop", 0), "value", 0) - getattr(el.get("major_dp", 0), "value", 0)
-            final_reports.extend(el_reports)
+        _, reports, summary = self._compute_network(network, q_total)
+        branch_flows = summary.get("branch_flows")
+        if not branch_flows:
+            branch_flows = [float(getattr(q_total, "value", q_total))]
 
         return {
-            "success": converged,
+            "success": summary.get("converged", True),
             "branch_flows": branch_flows,
-            "reports": final_reports,
-            "iterations": iteration + 1,
+            "reports": reports,
+            "total_dp_Pa": summary.get("total_pressure_drop_Pa", 0.0),
+            "iterations": summary.get("iterations", 0),
         }, None
 
-    def _normalize_branches(self, network) -> list[list[Pipe]]:
+    def _normalize_branches(self, network) -> list[list[Any]]:
         """
         Converts any PipelineNetwork or list of branches into a flat list of
-        branches, where each branch is a list of Pipe objects.
+        branches, where each branch is a list of inline elements (see
+        ``INLINE_ELEMENTS``).
 
         Args:
-            network (Any): The network or list of pipes to normalize.
+            network (Any): The network or list of elements to normalize.
 
         Returns:
-            list[list[Pipe]]: A flattened list of branches.
+            list[list[Any]]: A flattened list of branches.
+
+        Raises:
+            TypeError: If the network contains an element type that cannot be
+                placed in a branch.
         """
-        if isinstance(network, Pipe):
+        if isinstance(network, INLINE_ELEMENTS):
             return [[network]]
         elif isinstance(network, list):
             # Flatten each branch recursively
@@ -983,7 +1163,7 @@ class PipelineEngine:
                 # Treat entire series network as a single branch
                 series_branch = []
                 for el in network.elements:
-                    if isinstance(el, Pipe):
+                    if isinstance(el, INLINE_ELEMENTS):
                         series_branch.append(el)
                     elif isinstance(el, PipelineNetwork):
                         # Flatten nested series inside this branch
@@ -991,18 +1171,31 @@ class PipelineEngine:
                         # For series, nested branch is appended to current branch
                         if nested_branches:
                             series_branch.extend(nested_branches[0])
+                    else:
+                        raise TypeError(
+                            f"Element '{getattr(el, 'name', el)}' of type "
+                            f"{type(el).__name__} cannot be part of a branch"
+                        )
                 branches.append(series_branch)
             elif network.connection_type == "parallel":
                 # Each element is a separate branch
                 for el in network.elements:
-                    if isinstance(el, Pipe):
+                    if isinstance(el, INLINE_ELEMENTS):
                         branches.append([el])
                     elif isinstance(el, PipelineNetwork):
                         nested = self._normalize_branches(el)
                         branches.extend(nested)
+                    else:
+                        raise TypeError(
+                            f"Element '{getattr(el, 'name', el)}' of type "
+                            f"{type(el).__name__} cannot be part of a branch"
+                        )
             return branches
         else:
-            raise TypeError("Network must be Pipe, list of Pipes/branches, or PipelineNetwork-like object")
+            raise TypeError(
+                "Network must be an inline element, a list of elements/branches, "
+                "or a PipelineNetwork-like object"
+            )
 
 
 
@@ -1045,14 +1238,32 @@ class PipelineEngine:
         Converts pump object head/pressure to Pa.
         Accepts `head` (m) or inlet/outlet pressures.
         """
-        rho = getattr(pump, "density", None) or self._get_density().value
+        rho_obj = getattr(pump, "density", None)
+        if rho_obj is None:
+            rho = self._get_density().to("kg/m3").value
+        elif hasattr(rho_obj, "to"):
+            rho = rho_obj.to("kg/m3").value
+        else:
+            rho = float(rho_obj)
+
         pin = getattr(pump, "inlet_pressure", None)
         pout = getattr(pump, "outlet_pressure", None)
         if pin is not None and pout is not None:
-            return self._as_pressure(pout).to("Pa") - self._as_pressure(pin).to("Pa")
+            gain_pa = (
+                self._as_pressure(pout).to("Pa").value
+                - self._as_pressure(pin).to("Pa").value
+            )
+            if gain_pa < 0:
+                raise ValueError(
+                    f"Pump '{getattr(pump, 'name', '?')}' has an outlet pressure "
+                    "below its inlet pressure"
+                )
+            return Pressure(gain_pa, "Pa")
+
         head = getattr(pump, "head", None)
         if head is not None:
-            return Pressure(rho * G * float(head), "Pa")
+            head_m = head.to("m").value if hasattr(head, "to") else float(head)
+            return Pressure(rho * G * head_m, "Pa")
         return Pressure(0.0, "Pa")
 
     def _equipment_dp_pa(self, eq: Any) -> Pressure:
@@ -1182,12 +1393,10 @@ class PipelineEngine:
                             "elevation_dp": _to_value(getattr(r, "elevation_dp", 0.0))
                         })
 
-            # Sum all pressure drops
-            total_dp_pa = 0.0
-            for r in comp_list:
-                total_dp_pa += _to_value(r.get("pressure_drop_Pa", r.get("pressure_drop", 0.0)), prefer_unit="Pa")
-                total_dp_pa += _to_value(r.get("minor_dp", 0.0), prefer_unit="Pa")
-                total_dp_pa += _to_value(r.get("elevation_dp", 0.0), prefer_unit="Pa")
+            # Inlet-to-outlet drop from the solver. Element drops already include
+            # their major, minor and elevation terms, and parallel branches share
+            # one drop, so they must not be summed here.
+            total_dp_pa = _to_value(solved_dict.get("total_dp_Pa", 0.0), prefer_unit="Pa")
 
             # Fluid density
             rho_obj = self._get_density() if hasattr(self, "_get_density") else getattr(fluid, "density", 1000.0)
@@ -1234,9 +1443,8 @@ class PipelineEngine:
             calc = self._pipe_calculation(pipe_instance, q_in)
 
             D_final = self._resolve_internal_diameter(pipe_instance)
+            # "pressure_drop" is already major + minor + elevation.
             total_dp_pa = _to_value(calc.get("pressure_drop", 0.0), prefer_unit="Pa")
-            total_dp_pa += _to_value(calc.get("minor_dp", 0.0), prefer_unit="Pa")
-            total_dp_pa += _to_value(calc.get("elevation_dp", 0.0), prefer_unit="Pa")
 
             rho_val = _to_value(fluid.density(), prefer_unit="kg/m3")
             total_head_m = total_dp_pa / (rho_val * G) if rho_val else float("inf")
@@ -1627,11 +1835,14 @@ class PipelineEngine:
     
         all_results = []
     
-        for pipe in getattr(network, "pipes", []):
-            flow_rate = self._infer_flowrate(pipe)
-            if not flow_rate:
+        pipes = network.get_all_pipes() if hasattr(network, "get_all_pipes") else \
+            [p for branch in self._normalize_branches(network) for p in branch if isinstance(p, Pipe)]
+
+        for pipe in pipes:
+            flow_rate = getattr(pipe, "flow_rate", None) or self._infer_flowrate()
+            if flow_rate is None or float(getattr(flow_rate, "value", flow_rate)) <= 0:
                 continue
-    
+
             q_val = float(flow_rate.value)
     
             # Recommended velocity range
@@ -1647,12 +1858,17 @@ class PipelineEngine:
             v_start = 0.5 * (v_min + v_max)
             D_initial = math.sqrt(max(1e-20, 4.0 * q_val / (math.pi * v_start)))
     
-            # Standard diameters list
+            # Standard sizes are nominal; the hydraulics need the internal diameter
+            # for that nominal size and schedule.
+            schedule = getattr(pipe, "schedule", "STD") or "STD"
+
+            def _internal(nominal):
+                return get_internal_diameter(nominal, schedule) or nominal
+
             std_diams = list_available_pipe_diameters()
             D_candidates = []
             for idx, d in enumerate(std_diams):
-                d_m = d.to("m").value
-                if d_m >= D_initial:
+                if _internal(d).to("m").value >= D_initial:
                     D_candidates = [
                         std_diams[idx - 1] if idx > 0 else None,
                         d,
@@ -1666,11 +1882,13 @@ class PipelineEngine:
     
             results_list = []
             for D_test in D_candidates:
-                pipe.internal_diameter = D_test
+                id_test = _internal(D_test)
+                pipe.internal_diameter = id_test
                 calc = self._pipe_calculation(pipe, flow_rate)
                 results_list.append({
-                    "diameter": D_test,
-                    "diameter_m": D_test.to("m").value,
+                    "nominal_diameter": D_test,
+                    "diameter": id_test,
+                    "diameter_m": id_test.to("m").value,
                     "calc": calc,
                     "pressure_drop_Pa": calc["pressure_drop"].to("Pa").value if hasattr(calc["pressure_drop"], "to") else calc["pressure_drop"],
                     "velocity_m_s": calc["velocity"].to("m/s").value if hasattr(calc["velocity"], "to") else calc["velocity"],
@@ -1687,9 +1905,10 @@ class PipelineEngine:
             else:
                 print(f"🔍 Pipe {pipe.name}: No available DP provided. Showing candidates:")
                 for r in results_list:
-                    print(f"  {r['diameter'].to('in')} -> {r['velocity_m_s']:.2f} m/s, {r['pressure_drop_Pa']:.2f} Pa")
+                    print(f"  {r['nominal_diameter'].to('in')} -> {r['velocity_m_s']:.2f} m/s, {r['pressure_drop_Pa']:.2f} Pa")
                 best_result = results_list[len(results_list)//2]
     
+            pipe.nominal_diameter = best_result["nominal_diameter"]
             pipe.internal_diameter = best_result["diameter"]
             final_calc = best_result["calc"]
             total_dp_pa = best_result["pressure_drop_Pa"]
@@ -1717,12 +1936,14 @@ class PipelineEngine:
                     "reynolds": final_calc.get("reynolds"),
                     "friction_factor": final_calc.get("friction_factor"),
                     "calculated_diameter_m": best_result["diameter"].to("m").value,
+                    "nominal_diameter": best_result["nominal_diameter"],
                 },
                 "components": [{
                     "type": "pipe",
                     "name": pipe.name,
                     "length": pipe.length,
                     "diameter": best_result["diameter"],
+                    "nominal_diameter": best_result["nominal_diameter"],
                     "velocity": v_final,
                     "reynolds": final_calc.get("reynolds"),
                     "friction_factor": final_calc.get("friction_factor"),

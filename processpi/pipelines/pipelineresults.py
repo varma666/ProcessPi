@@ -48,9 +48,15 @@ class PipelineResults:
         # Units with safe numeric conversion
         self.inlet_flow = VolumetricFlowRate(_to_number(first_summary.get("flow_m3s", 0.0)), "m3/s")
         self.outlet_flow = VolumetricFlowRate(_to_number(first_summary.get("flow_m3s", 0.0)), "m3/s")
-        self.total_pressure_drop = Pressure(_to_number(first_summary.get("total_pressure_drop_Pa", 0.0)), "Pa")
-        self.total_head_loss = Length(_to_number(first_summary.get("total_head_m", 0.0)), "m")
-        self.total_power_required = Power(_to_number(first_summary.get("pump_shaft_power_kW", 0.0)), "kW")
+        # A network whose pumps more than cover its friction has a net pressure
+        # rise. Pressure, Length and Power all reject negative values, so the unit
+        # objects are clamped at zero and the signed numbers kept beside them.
+        self.total_pressure_drop_Pa = _to_number(first_summary.get("total_pressure_drop_Pa", 0.0))
+        self.total_head_m = _to_number(first_summary.get("total_head_m", 0.0))
+        self.total_power_kW = _to_number(first_summary.get("pump_shaft_power_kW", 0.0))
+        self.total_pressure_drop = Pressure(max(self.total_pressure_drop_Pa, 0.0), "Pa")
+        self.total_head_loss = Length(max(self.total_head_m, 0.0), "m")
+        self.total_power_required = Power(max(self.total_power_kW, 0.0), "kW")
         self.velocity = Velocity(_to_number(first_summary.get("velocity", 0.0)), "m/s")
         self.reynolds = Dimensionless(_to_number(first_summary.get("reynolds", 0.0)))
         self.friction_factor = Dimensionless(_to_number(first_summary.get("friction_factor", 0.0)))
