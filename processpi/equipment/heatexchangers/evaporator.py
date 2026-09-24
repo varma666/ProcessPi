@@ -8,6 +8,10 @@ from .shell_and_tube import ShellAndTubeHX
 
 
 class EvaporatorHX(ShellAndTubeHX):
+    # The boiling-side model has not been reworked to follow the fluid
+    # assignment, so the hot stream stays in the tubes as it always has been.
+    _FIXED_TUBE_SIDE = "hot"
+
     def __init__(self, *args: Any, method: str = "kern", **kwargs: Any):
         super().__init__(*args, method=method, **kwargs)
         self.service_type = "evaporator"
@@ -53,8 +57,9 @@ class EvaporatorHX(ShellAndTubeHX):
         orientation_factor = 1.1 if self.orientation == "vertical" else 1.0
         return max(1500.0, min(h_boil * orientation_factor, 18000.0))
 
-    def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float], **kwargs: Any):
-        h_tube, h_shell = super()._calculate_htc(dimless, geometry, hot, cold)
+    def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], tube: Dict[str, float], shell: Dict[str, float], **kwargs: Any):
+        h_tube, h_shell = super()._calculate_htc(dimless, geometry, tube, shell)
+        _, cold = self._hot_cold_props(tube, shell)
         q_flux = max(float(self.specs.get("Q", 1e6)) / max(geometry.get("area", 1.0), 1e-9), 1e3)
         h_boil = self._calculate_boiling_htc(cold, q_flux)
 
@@ -96,8 +101,8 @@ class EvaporatorHX(ShellAndTubeHX):
     def _calculate_pressure_drop(
         self,
         geometry: Dict[str, float],
-        hot: Dict[str, float],
-        cold: Dict[str, float],
+        tube: Dict[str, float],
+        shell: Dict[str, float],
         shell_velocity: float | None = None,
         tube_velocity: float | None = None,
         **kwargs: Any,
@@ -126,8 +131,8 @@ class EvaporatorHX(ShellAndTubeHX):
 
         tube_dp, shell_dp = super()._calculate_pressure_drop(
             geometry=geometry,
-            hot=hot,
-            cold=cold,
+            tube=tube,
+            shell=shell,
             shell_velocity=shell_velocity,
             tube_velocity=tube_velocity,
             shell_passes=shell_passes,
@@ -136,6 +141,7 @@ class EvaporatorHX(ShellAndTubeHX):
         )
         orientation = str(kwargs.get("orientation", self.orientation)).lower()
         if orientation == "vertical":
+            hot, cold = self._hot_cold_props(tube, shell)
             rho = cold.get("density", 900.0) if self.boiling_side == "tube" else hot.get("density", 900.0)
             static_head = rho * 9.81 * max(float(geometry.get("tube_length", 6.0)), 0.0)
             if self.boiling_side == "tube":

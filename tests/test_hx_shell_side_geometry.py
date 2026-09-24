@@ -225,7 +225,7 @@ def test_tube_side_pressure_drop_includes_the_return_losses():
 
     tube_dp, _ = _quiet(
         hx._calculate_pressure_drop,
-        geometry=GEOMETRY, hot=hot, cold=hx._stream_props(hx.cold_in),
+        geometry=GEOMETRY, tube=hot, shell=hx._stream_props(hx.cold_in),
         shell_velocity=1.0, tube_velocity=v_tube, tube_passes=tube_passes,
         shell_diameter=0.5, tube_length=3.0, tube_id=TUBE_ID,
     )
@@ -256,13 +256,19 @@ def test_dittus_boelter_exponent_is_the_cooling_one():
 
 
 def test_reported_sides_are_the_sides_that_were_modelled():
-    """The report must not name a tube-side fluid the calculation did not use."""
+    """The report must not name a tube-side fluid the calculation did not use.
+
+    The scoring puts the water in the tubes here, and the assignment now drives
+    the calculation, so the water is both the reported and the modelled
+    tube-side fluid and there is no disagreement to warn about.
+    """
     hx = _hx()
-    assignment = _quiet(
-        hx._assign_fluids_to_sides, hx._stream_props(hx.hot_in), hx._stream_props(hx.cold_in)
-    )
-    assert assignment["tube_side_fluid"] == hx.hot_in.component.name
-    assert assignment["shell_side_fluid"] == hx.cold_in.component.name
-    assert "recommended_tube_side_fluid" in assignment
-    if assignment["recommended_tube_side_fluid"] != assignment["tube_side_fluid"]:
-        assert any("ASSIGNMENT_WARNING" in w for w in hx._warnings)
+    hot = hx._stream_props(hx.hot_in)
+    cold = hx._stream_props(hx.cold_in)
+    assignment = _quiet(hx._assign_fluids_to_sides, hot, cold)
+    assert assignment["tube_side_fluid"] == hx.cold_in.component.name
+    assert assignment["shell_side_fluid"] == hx.hot_in.component.name
+    assert assignment["recommended_tube_side_fluid"] == assignment["tube_side_fluid"]
+    tube, shell = hx._side_props(hot, cold)
+    assert tube is cold and shell is hot
+    assert not any("ASSIGNMENT_WARNING" in w for w in hx._warnings)

@@ -40,8 +40,8 @@ class ReboilerHX(EvaporatorHX):
         }
         return factors.get(self.reboiler_type, 1.00)
 
-    def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], hot: Dict[str, float], cold: Dict[str, float], **kwargs: Any):
-        h_tube, h_shell = super()._calculate_htc(dimless, geometry, hot, cold)
+    def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], tube: Dict[str, float], shell: Dict[str, float], **kwargs: Any):
+        h_tube, h_shell = super()._calculate_htc(dimless, geometry, tube, shell)
         boost = self._circulation_factor()
         if self.boiling_side == "tube":
             h_tube *= boost
@@ -52,8 +52,8 @@ class ReboilerHX(EvaporatorHX):
     def _calculate_pressure_drop(
         self,
         geometry: Dict[str, float],
-        hot: Dict[str, float],
-        cold: Dict[str, float],
+        tube: Dict[str, float],
+        shell: Dict[str, float],
         shell_velocity: float | None = None,
         tube_velocity: float | None = None,
         **kwargs: Any,
@@ -72,8 +72,8 @@ class ReboilerHX(EvaporatorHX):
         kwargs.setdefault("tube_passes", int(kwargs.get("tube_passes", 1)))
         return super()._calculate_pressure_drop(
             geometry=geometry,
-            hot=hot,
-            cold=cold,
+            tube=tube,
+            shell=shell,
             shell_velocity=shell_velocity,
             tube_velocity=tube_velocity,
             **kwargs,
