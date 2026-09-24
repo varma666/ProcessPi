@@ -2946,12 +2946,15 @@ class ShellAndTubeHX(HeatExchanger):
     
         data["h_shell"] = h_shell_corrected
     
-        data["U_calculated"] = (
-            u_results["U_dirty"]
+        # Unit-wrapped like the Kern result this replaces; these were bare floats.
+        data["U_calculated"] = HeatTransferCoefficient(
+            u_results["U_dirty"],
+            "W/m2K",
         )
     
-        data["U_clean"] = (
-            u_results["U_clean"]
+        data["U_clean"] = HeatTransferCoefficient(
+            u_results["U_clean"],
+            "W/m2K",
         )
     
         data["bell_factors"] = {
