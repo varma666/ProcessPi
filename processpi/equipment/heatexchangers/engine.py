@@ -51,7 +51,12 @@ class HeatExchangerResults:
             f"Heat Exchanger Summary\n"
             f"------------------------------\n"
             f"Type                  : {self.data.get('hx_type')}\n"
-            f"Method                : {self.data.get('method')}\n"
+            + (
+                f"Type Selection        : auto, {self.data['hx_type_selection']['reason']}\n"
+                if self.data.get("hx_type_selection")
+                else ""
+            )
+            + f"Method                : {self.data.get('method')}\n"
             f"Heat Duty             : {q.to('kW') if hasattr(q, 'to') else q}\n"
             f"Area                  : {area if hasattr(area, 'to') else area}\n"
             f"U Calculated          : {ucalc if hasattr(ucalc, 'to') else ucalc}\n"
@@ -171,6 +176,15 @@ class HeatExchangerResults:
 
 
 class HeatExchangerEngine:
+    # Automatic type selection, used only when no hx_type is given and the
+    # streams show no phase change: the larger of the two inlet mass flows is
+    # compared with this limit, and a flow at or below it gives a double pipe,
+    # anything above it a shell and tube. 1 kg/s is the value the engine has
+    # always used; it is a rule of thumb carried over from the original code, not
+    # a sourced design criterion. Override it per run with the
+    # `double_pipe_max_mass_flow` spec (MassFlowRate, or a number in kg/s).
+    DOUBLE_PIPE_MAX_MASS_FLOW_KG_S = 1.0
+
     _map: Dict[str, Type[HeatExchanger]] = {
         "shell_and_tube": ShellAndTubeHX,
         "double_pipe": DoublePipeHX,
@@ -187,6 +201,7 @@ class HeatExchangerEngine:
             raise ValueError("method must be 'kern' or 'bell_delaware'")
         self.data: Dict[str, Any] = {}
         self._results: Optional[HeatExchangerResults] = None
+        self._hx_type_selection: Optional[Dict[str, Any]] = None
         if kwargs:
             self.fit(**kwargs)
 
@@ -258,7 +273,25 @@ class HeatExchangerEngine:
             )
         return key
 
+    def _double_pipe_max_mass_flow(self) -> float:
+        """The double pipe flow limit in kg/s: the spec if given, else the class default."""
+        raw = self.data.get("specs", {}).get("double_pipe_max_mass_flow")
+        if raw is None:
+            return self.DOUBLE_PIPE_MAX_MASS_FLOW_KG_S
+        value = float(getattr(raw.to("kg/s"), "value", raw.to("kg/s"))) if hasattr(raw, "to") else float(raw)
+        if not value > 0.0:
+            raise ValueError(
+                f"double_pipe_max_mass_flow must be a positive mass flow, got {raw!r}"
+            )
+        return value
+
     def _select_hx_type(self) -> str:
+        """
+        Return the exchanger type to run, and record in `_hx_type_selection`
+        whether it was chosen automatically and on what grounds (None when an
+        explicit hx_type was given).
+        """
+        self._hx_type_selection = None
         explicit = self.data.get("hx_type")
         if explicit:
             return explicit
@@ -267,15 +300,42 @@ class HeatExchangerEngine:
         cold_out = self.data.get("cold_out")
 
         if hot_in.phase == "vapor" and hot_out and hot_out.phase == "liquid":
+            self._hx_type_selection = {
+                "auto_selected": True,
+                "hx_type": "condenser",
+                "criterion": "phase_change",
+                "reason": "hot inlet is vapor and hot outlet is liquid",
+            }
             return "condenser"
         if cold_out and cold_out.phase == "vapor":
+            self._hx_type_selection = {
+                "auto_selected": True,
+                "hx_type": "reboiler",
+                "criterion": "phase_change",
+                "reason": "cold outlet is vapor",
+            }
             return "reboiler"
 
         hot_m = float(getattr(hot_in.mass_flow().to("kg/s"), "value", hot_in.mass_flow().to("kg/s"))) if hot_in.mass_flow() else 0.0
         cold_m = float(getattr(self.data["cold_in"].mass_flow().to("kg/s"), "value", self.data["cold_in"].mass_flow().to("kg/s"))) if self.data["cold_in"].mass_flow() else 0.0
-        if max(hot_m, cold_m) <= 1.0:
-            return "double_pipe"
-        return "shell_and_tube"
+        threshold = self._double_pipe_max_mass_flow()
+        flow = max(hot_m, cold_m)
+        selected = "double_pipe" if flow <= threshold else "shell_and_tube"
+        relation = "<=" if selected == "double_pipe" else ">"
+        self._hx_type_selection = {
+            "auto_selected": True,
+            "hx_type": selected,
+            "criterion": "max_stream_mass_flow",
+            "hot_mass_flow_kg_s": hot_m,
+            "cold_mass_flow_kg_s": cold_m,
+            "max_stream_mass_flow_kg_s": flow,
+            "double_pipe_max_mass_flow_kg_s": threshold,
+            "reason": (
+                f"no hx_type given; larger inlet mass flow {flow:.4g} kg/s "
+                f"{relation} double pipe limit {threshold:.4g} kg/s"
+            ),
+        }
+        return selected
 
     def run(self) -> HeatExchangerResults:
     
@@ -300,6 +360,8 @@ class HeatExchangerEngine:
         
         # Prevent duplicate keyword issue
         specs.pop("method", None)
+        # An engine-level setting, read by `_select_hx_type`, not an exchanger spec.
+        specs.pop("double_pipe_max_mass_flow", None)
         
         hx = cls(
             hot_in=self.data["hot_in"],
@@ -374,6 +436,11 @@ class HeatExchangerEngine:
         # ======================================================
         # STORE RESULTS
         # ======================================================
+    
+        # Say that the type was picked automatically, and why; an explicit
+        # hx_type leaves the results as the exchanger returned them.
+        if self._hx_type_selection is not None:
+            results["hx_type_selection"] = dict(self._hx_type_selection)
     
         self._results = HeatExchangerResults(results)
     
