@@ -300,3 +300,80 @@ def test_tube_friction_model_is_reported():
     assert smooth["tube_friction_model"].startswith("Blasius")
     assert rough["tube_friction_model"].startswith("Colebrook-White")
     assert _value(rough["tube_dp"]) > _value(smooth["tube_dp"])
+
+
+# ----------------------------------------------------------------------------
+# Sieder-Tate viscosity correction
+# ----------------------------------------------------------------------------
+
+_RATE_GEOMETRY = dict(tube_od=0.01905, tube_id=0.016, tube_length=4.88, tube_count=200,
+                      tube_passes=2, shell_diameter=0.45, baffle_spacing=0.18)
+
+
+def _rating(**specs):
+    streams = _benzene_cooler()
+    streams["cold_out"] = MaterialStream("cold_out", component=Water(),
+                                         temperature=Temperature(25, "C"))
+    return _run(streams, mode="rate", **dict(_RATE_GEOMETRY, **specs))
+
+
+def test_without_a_wall_viscosity_phi_is_one_and_says_so():
+    data = _rating()
+    correction = data["viscosity_correction"]
+    assert correction["tube"]["phi"] == 1.0
+    assert correction["shell"]["phi"] == 1.0
+    assert correction["tube"]["mu_wall"] is None
+    assert "assumed" in correction["shell"]["basis"]
+    assumptions = [w for w in data["warnings"] if w.startswith("[ASSUMPTION_WARNING]")]
+    # Water (cold) is in the tubes and benzene (hot) in the shell here.
+    assert any("tube side: no cold_wall_viscosity" in w for w in assumptions)
+    assert any("shell side: no hot_wall_viscosity" in w for w in assumptions)
+
+
+def test_wall_viscosity_corrects_the_kern_shell_film_and_both_pressure_drops():
+    """Fixed geometry, so only phi changes between the two ratings.
+
+    Water in the tubes, mu = 9.1253e-4 Pa.s, given mu_w = 6.0e-4:
+      phi_t = (9.1253e-4 / 6.0e-4)^0.14 = 1.0605
+    Benzene in the shell, mu = 5.9973e-4 Pa.s, given mu_w = 7.0e-4:
+      phi_s = (5.9973e-4 / 7.0e-4)^0.14 = 0.97859
+
+    Kern: h_s carries phi_s, the shell dP is divided by phi_s, and the tube
+    friction (not the 4 Np return losses) is divided by phi_t.
+    """
+    plain = _rating()
+    corrected = _rating(cold_wall_viscosity=6.0e-4, hot_wall_viscosity=7.0e-4)
+
+    streams = _benzene_cooler()
+    hx = _hx(streams)
+    water = hx._stream_props(streams["cold_in"])
+    benzene = hx._stream_props(streams["hot_in"])
+    phi_t = (water["viscosity"] / 6.0e-4) ** 0.14
+    phi_s = (benzene["viscosity"] / 7.0e-4) ** 0.14
+    assert phi_t == pytest.approx(1.0605, abs=1e-4)
+    assert phi_s == pytest.approx(0.97859, abs=1e-5)
+    assert corrected["viscosity_correction"]["tube"]["phi"] == pytest.approx(phi_t)
+    assert corrected["viscosity_correction"]["shell"]["phi"] == pytest.approx(phi_s)
+    assert not any(w.startswith("[ASSUMPTION_WARNING]") for w in corrected["warnings"])
+
+    assert _value(corrected["h_shell"]) == pytest.approx(_value(plain["h_shell"]) * phi_s, rel=1e-9)
+    assert _value(corrected["h_tube"]) == pytest.approx(_value(plain["h_tube"]), rel=1e-12)
+    assert _value(corrected["shell_dp"]) == pytest.approx(_value(plain["shell_dp"]) / phi_s, rel=1e-9)
+
+    v = _value(plain["tube_velocity"])
+    returns = 4.0 * 2 * water["density"] * v ** 2 / 2.0
+    friction = _value(plain["tube_dp"]) - returns
+    assert _value(corrected["tube_dp"]) == pytest.approx(friction / phi_t + returns, rel=1e-9)
+
+
+def test_wall_viscosity_follows_its_stream_to_its_side():
+    """The spec is per stream, so it lands on whichever side the stream is on."""
+    data = _run(_benzene_cooler(), force_hot_in_tubes=True, hot_wall_viscosity=7.0e-4)
+    correction = data["viscosity_correction"]
+    assert correction["tube"]["mu_wall"] == pytest.approx(7.0e-4)
+    assert correction["shell"]["mu_wall"] is None
+
+
+def test_non_positive_wall_viscosity_is_refused():
+    with pytest.raises(ValueError, match="hot_wall_viscosity"):
+        _rating(hot_wall_viscosity=0.0)

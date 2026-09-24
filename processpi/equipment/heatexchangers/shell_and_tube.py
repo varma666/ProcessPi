@@ -52,6 +52,11 @@ _FT_MATH_ERRORS = (ValueError, ZeroDivisionError, OverflowError)
 _DITTUS_BOELTER_N_HEATED = 0.4
 _DITTUS_BOELTER_N_COOLED = 0.3
 
+# Sieder-Tate viscosity correction exponent, phi = (mu / mu_w)^0.14 (Sieder and
+# Tate 1936), as it enters Kern's shell-side Nusselt correlation and Kern's
+# shell- and tube-side pressure drops (Kern 1950).
+_SIEDER_TATE_EXPONENT = 0.14
+
 # Tube-side laminar/turbulent switch for the friction factor, the value the code
 # has always used; Kern (1950) takes tube flow as laminar below Re = 2100.
 _TUBE_LAMINAR_RE = 2100.0
@@ -989,9 +994,11 @@ class ShellAndTubeHX(HeatExchanger):
             viscosity=shell["viscosity"],
         ).calculate()
         pr_s = max(shell["cp"] * shell["viscosity"] / max(shell["k"], 1e-12), 1e-12)
-        nu_s = KernShellNu(reynolds=max(re_s, 1.0), prandtl=pr_s).calculate()
+        # Kern: Nu = 0.36 Re^0.55 Pr^(1/3) (mu/mu_w)^0.14.
+        phi_s = self._sieder_tate_phi("shell", shell)
+        nu_s = KernShellNu(reynolds=max(re_s, 1.0), prandtl=pr_s).calculate() * phi_s
         self._debug(f"Shell Side Rey:{re_s}, Pra:{pr_s}, Nuss:{nu_s}")
-        return {"re_t": re_t, "pr_t": pr_t, "nu_t": nu_t, "de_shell": de_shell, "re_s": re_s, "pr_s": pr_s, "nu_s": nu_s}
+        return {"re_t": re_t, "pr_t": pr_t, "nu_t": nu_t, "de_shell": de_shell, "re_s": re_s, "pr_s": pr_s, "nu_s": nu_s, "phi_s": phi_s}
 
     def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], tube: Dict[str, float], shell: Dict[str, float]) -> Tuple[float, float]:
         h_t = self._safe_float(ConvectiveH(nusselt=dimless["nu_t"], k=tube["k"], diameter=geometry["tube_id"]).calculate().to("W/m2K"), "h_t")
@@ -1623,6 +1630,8 @@ class ShellAndTubeHX(HeatExchanger):
         f_tube = self._tube_fanning_friction(re_tube, tube_id)
     
         velocity_head = tube["density"] * v_tube**2 / 2.0
+        # Kern divides the straight-tube friction by phi_t = (mu/mu_w)^0.14.
+        phi_t = self._sieder_tate_phi("tube", tube)
     
         # Straight-length friction plus the 4 velocity heads per pass that Kern
         # charges for the entry, exit and turns.
@@ -1634,6 +1643,7 @@ class ShellAndTubeHX(HeatExchanger):
                 / max(tube_id, 1e-9)
             )
             * velocity_head
+            / phi_t
         ) + (
             4.0
             * tube_passes
@@ -1671,6 +1681,78 @@ class ShellAndTubeHX(HeatExchanger):
         )
     
         return tube_dp, shell_dp
+
+    def _sieder_tate_phi(self, side: str, props: Dict[str, float]) -> float:
+        """
+        Sieder-Tate viscosity correction phi = (mu / mu_w)^0.14 for one side.
+
+        mu_w is the viscosity of that side's fluid at the wall temperature. It
+        is not estimated here: the component property model evaluates a
+        property at the component's own temperature (25 C unless the component
+        was built with another), not at a temperature the caller passes, and it
+        switches phase on vapour pressure (benzene at 90 C and 1 atm comes back
+        as a gas, 2.1e-5 Pa.s), so a wall viscosity taken from it would be made
+        up. It is read instead from the `hot_wall_viscosity` /
+        `cold_wall_viscosity` spec of the stream on that side (a Viscosity, or
+        a number in Pa.s). Without one, phi = 1 is assumed and an
+        ASSUMPTION_WARNING says so.
+
+        Args:
+            side (str): "tube" or "shell".
+            props (Dict[str, float]): That side's stream properties.
+
+        Returns:
+            float: phi.
+        """
+        mu_wall = self._wall_viscosity(side)
+        if mu_wall is None:
+            stream = self._side_stream_name(side)
+            self._warn_with_category(
+                "ASSUMPTION_WARNING",
+                f"Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the {side} side: "
+                f"no {stream}_wall_viscosity given",
+            )
+            return 1.0
+        return (props["viscosity"] / mu_wall) ** _SIEDER_TATE_EXPONENT
+
+    def _side_stream_name(self, side: str) -> str:
+        """"hot" or "cold": the stream the assignment put on `side`."""
+        if side == "tube":
+            return self._tube_side
+        return "cold" if self._tube_side == "hot" else "hot"
+
+    def _wall_viscosity(self, side: str) -> float | None:
+        """The wall viscosity spec of the stream on `side` [Pa.s], or None."""
+        stream = self._side_stream_name(side)
+        spec = self.specs.get(f"{stream}_wall_viscosity")
+        if spec is None:
+            return None
+        mu_wall = self._to_float(spec, "Pa·s")
+        if mu_wall <= 0.0:
+            raise ValueError(f"{stream}_wall_viscosity must be positive, got {mu_wall} Pa.s")
+        return mu_wall
+
+    def _viscosity_correction_report(self, tube: Dict[str, float], shell: Dict[str, float]) -> Dict[str, Any]:
+        """phi and its basis on each side, for the result."""
+        report = {}
+        for side, props in (("tube", tube), ("shell", shell)):
+            mu_wall = self._wall_viscosity(side)
+            report[side] = {
+                "phi": self._sieder_tate_phi(side, props),
+                "mu_bulk": props["viscosity"],
+                "mu_wall": mu_wall,
+                "basis": (
+                    f"{self._side_stream_name(side)}_wall_viscosity"
+                    if mu_wall is not None
+                    else "assumed phi = 1 (no wall viscosity given)"
+                ),
+            }
+        report["applied_to"] = [
+            "Kern shell-side Nusselt number",
+            "Kern shell-side pressure drop",
+            "tube-side friction pressure drop",
+        ]
+        return report
 
     def _tube_roughness_m(self) -> float | None:
         """The `tube_roughness` spec in metres (a Length, or a number in m), or None."""
@@ -1758,8 +1840,8 @@ class ShellAndTubeHX(HeatExchanger):
         diverging below it (Re_s = 100: 0.742 against 0.926), so a warning is
         raised outside that range.
 
-        phi_s = (mu / mu_w)^0.14 is the Sieder-Tate viscosity correction; it
-        is taken as 1 here.
+        phi_s = (mu / mu_w)^0.14 is the Sieder-Tate viscosity correction, from
+        `_sieder_tate_phi`.
 
         Returns:
             float: Shell-side pressure drop [Pa].
@@ -1790,7 +1872,7 @@ class ShellAndTubeHX(HeatExchanger):
         # Whole baffles that fit in the tube length; the shell fluid crosses
         # the bundle once more than there are baffles.
         n_baffles = max(int(math.floor(tube_length / max(baffle_spacing, 1e-9) + 1e-9)) - 1, 0)
-        phi_s = 1.0
+        phi_s = self._sieder_tate_phi("shell", shell)
         self._debug(
             f"Kern shell dP: As={as_cross:.6g} m2, G={g_shell:.6g}, Re={re_shell:.6g}, "
             f"f={f_shell:.6g}, Nb={n_baffles}"
@@ -2313,6 +2395,8 @@ class ShellAndTubeHX(HeatExchanger):
             ),
 
             "tube_friction_model": self._tube_friction_model(),
+
+            "viscosity_correction": payload.get("viscosity_correction"),
     
             # ======================================================
             # THERMAL
@@ -2545,6 +2629,7 @@ class ShellAndTubeHX(HeatExchanger):
             "n_units": n_units,
             "shell_passes": shell_passes,
             "tube_passes": tube_passes,
+            "viscosity_correction": self._viscosity_correction_report(tube, shell),
             "method": "kern",
             "tube_dp": tube_dp,
             "shell_dp": shell_dp,
@@ -3008,7 +3093,7 @@ class ShellAndTubeHX(HeatExchanger):
         else:
             assessment = "OK"
 
-        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "tube_passes": tube_passes, "shell_passes": int(self.specs.get("shell_passes", 1)), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "warnings": list(dict.fromkeys(self._velocity_warnings(v_tube, v_shell, tube, shell))), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
+        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "tube_passes": tube_passes, "shell_passes": int(self.specs.get("shell_passes", 1)), "viscosity_correction": self._viscosity_correction_report(tube, shell), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
 
         return self._finalize_results(payload)
     def design(self) -> Dict[str, Any]:
