@@ -235,3 +235,68 @@ def test_bell_shell_pressure_drop_is_the_kern_one_without_an_uplift():
         tube_od=od, tube_length=_value(data["tube_length"]),
     )
     assert _value(data["shell_dp"]) == pytest.approx(expected, rel=1e-9)
+
+
+# ----------------------------------------------------------------------------
+# Tube-side friction factor
+# ----------------------------------------------------------------------------
+
+def _tube_dp(hx, v=1.5, rho=995.0, mu=8.0e-4):
+    water = {"density": rho, "viscosity": mu}
+    geometry = {"tube_od": 0.019, "tube_pitch": 0.02375, "baffle_spacing": 0.2, "tube_count": 100}
+    tube_dp, _ = hx._calculate_pressure_drop(
+        geometry=geometry, tube=water, shell=water, shell_velocity=0.5, tube_velocity=v,
+        shell_diameter=0.5, tube_length=4.88, tube_id=0.016, tube_passes=2,
+    )
+    return tube_dp
+
+
+def test_tube_roughness_uses_colebrook_white():
+    """Water at 1.5 m/s in 16 mm tubes, 4.88 m, 2 passes, roughness 0.046 mm.
+
+      Re        = 995 x 1.5 x 0.016 / 8e-4                  = 29 850
+      Colebrook 1/sqrt(f) = -2 log10(e/3.7d + 2.51/(Re sqrt f)), e/d = 0.002875
+                f_Darcy                                     = 0.029765  (Fanning 0.0074413)
+      head      = 995 x 1.5^2 / 2                           = 1119.375 Pa
+      dP        = f_D (L Np / di) head + 4 Np head
+                = 0.029765 x 610 x 1119.375 + 8 x 1119.375  = 29 279 Pa
+
+    The smooth-tube Blasius factor gives 25 371 Pa for the same tube.
+    """
+    rough = _tube_dp(_hx(_benzene_cooler(), tube_roughness=4.6e-5))
+    smooth = _tube_dp(_hx(_benzene_cooler()))
+    assert rough == pytest.approx(29_279.3, rel=1e-4)
+    assert smooth == pytest.approx(25_370.6, rel=1e-4)
+
+
+def test_tube_roughness_accepts_a_length():
+    from processpi.units import Length
+
+    as_length = _tube_dp(_hx(_benzene_cooler(), tube_roughness=Length(0.046, "mm")))
+    as_metres = _tube_dp(_hx(_benzene_cooler(), tube_roughness=4.6e-5))
+    assert as_length == pytest.approx(as_metres, rel=1e-9)
+
+
+def test_negative_tube_roughness_is_refused():
+    with pytest.raises(ValueError, match="tube_roughness"):
+        _tube_dp(_hx(_benzene_cooler(), tube_roughness=-1e-5))
+
+
+def test_laminar_tube_friction_is_hagen_poiseuille():
+    """Re < 2100 keeps the Fanning 16/Re, which with the Fanning form
+    4 f (L/d) rho v^2/2 is Hagen-Poiseuille, dP = 32 mu v L / d^2, whatever the
+    roughness. A guard: this held before as well."""
+    rho, mu, v = 900.0, 0.05, 1.0
+    re = rho * v * 0.016 / mu
+    assert re < 2100
+    expected = 32.0 * mu * v * 4.88 * 2 / 0.016 ** 2 + 4 * 2 * rho * v ** 2 / 2.0
+    for hx in (_hx(_benzene_cooler()), _hx(_benzene_cooler(), tube_roughness=4.6e-5)):
+        assert _tube_dp(hx, v=v, rho=rho, mu=mu) == pytest.approx(expected, rel=1e-9)
+
+
+def test_tube_friction_model_is_reported():
+    smooth = _run(_benzene_cooler())
+    rough = _run(_benzene_cooler(), tube_roughness=4.6e-5)
+    assert smooth["tube_friction_model"].startswith("Blasius")
+    assert rough["tube_friction_model"].startswith("Colebrook-White")
+    assert _value(rough["tube_dp"]) > _value(smooth["tube_dp"])

@@ -10,6 +10,7 @@ from processpi.units.heat_transfer_coefficient import HeatTransferCoefficient
 from processpi.units.length import Length
 from processpi.units.pressure import Pressure
 from processpi.units.velocity import Velocity
+from processpi.calculations.fluids.friction_factor_colebrookwhite import ColebrookWhite
 from processpi.calculations.heat_transfer.hx_kern import (
     ConvectiveH,
     DarcyDrop,
@@ -50,6 +51,10 @@ _FT_MATH_ERRORS = (ValueError, ZeroDivisionError, OverflowError)
 # Mass Transfer, Eq. 8.60).
 _DITTUS_BOELTER_N_HEATED = 0.4
 _DITTUS_BOELTER_N_COOLED = 0.3
+
+# Tube-side laminar/turbulent switch for the friction factor, the value the code
+# has always used; Kern (1950) takes tube flow as laminar below Re = 2100.
+_TUBE_LAMINAR_RE = 2100.0
 
 # Shell Reynolds range over which the Kern shell-side friction factor fit
 # f = exp(0.576 - 0.19 ln Re) was checked against Kern's chart; see
@@ -1615,10 +1620,7 @@ class ShellAndTubeHX(HeatExchanger):
             viscosity=tube["viscosity"],
         ).calculate()
     
-        if re_tube < 2100:
-            f_tube = 16.0 / max(re_tube, 1e-9)
-        else:
-            f_tube = 0.079 / (re_tube ** 0.25)
+        f_tube = self._tube_fanning_friction(re_tube, tube_id)
     
         velocity_head = tube["density"] * v_tube**2 / 2.0
     
@@ -1669,6 +1671,60 @@ class ShellAndTubeHX(HeatExchanger):
         )
     
         return tube_dp, shell_dp
+
+    def _tube_roughness_m(self) -> float | None:
+        """The `tube_roughness` spec in metres (a Length, or a number in m), or None."""
+        spec = self.specs.get("tube_roughness")
+        if spec is None:
+            return None
+        roughness = self._to_float(spec, "m")
+        if roughness < 0.0:
+            raise ValueError(f"tube_roughness must not be negative, got {roughness} m")
+        return roughness
+
+    def _tube_friction_model(self) -> str:
+        """Name of the turbulent tube-side friction factor in use, for the report."""
+        roughness = self._tube_roughness_m()
+        if roughness is None:
+            return "Blasius, smooth tube (no tube_roughness given)"
+        return f"Colebrook-White, roughness {roughness:.3g} m"
+
+    def _tube_fanning_friction(self, re_tube: float, tube_id: float) -> float:
+        """
+        Fanning friction factor for the tube side.
+
+        The tube-side pressure drop is written with the Fanning factor,
+        dP = 4 f (L Np / di) rho v^2 / 2, so every branch returns a Fanning
+        factor:
+
+        - laminar, Re < 2100: f = 16 / Re (Hagen-Poiseuille);
+        - turbulent, no `tube_roughness`: Blasius smooth tube, f = 0.079 Re^-0.25;
+        - turbulent with `tube_roughness`: the Colebrook-White Darcy factor of
+          `processpi.calculations.fluids.ColebrookWhite`, divided by 4.
+
+        Args:
+            re_tube (float): Tube-side Reynolds number.
+            tube_id (float): Tube inside diameter [m].
+
+        Returns:
+            float: Fanning friction factor.
+        """
+        if re_tube < _TUBE_LAMINAR_RE:
+            return 16.0 / max(re_tube, 1e-9)
+        roughness = self._tube_roughness_m()
+        if roughness is None:
+            return 0.079 / (re_tube ** 0.25)
+        # ColebrookWhite takes the roughness in mm and returns the Darcy factor.
+        # Its own laminar branch (Re < 2000) is never reached from here.
+        darcy = self._safe_float(
+            ColebrookWhite(
+                reynolds_number=re_tube,
+                diameter=tube_id,
+                roughness=roughness * 1000.0,
+            ).calculate(),
+            "darcy_friction_factor",
+        )
+        return darcy / 4.0
 
     def _kern_shell_pressure_drop(
         self,
@@ -2255,6 +2311,8 @@ class ShellAndTubeHX(HeatExchanger):
                 payload["shell_dp"],
                 "Pa",
             ),
+
+            "tube_friction_model": self._tube_friction_model(),
     
             # ======================================================
             # THERMAL
