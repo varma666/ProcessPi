@@ -275,6 +275,7 @@ def test_tube_roughness_accepts_a_length():
     as_length = _tube_dp(_hx(_benzene_cooler(), tube_roughness=Length(0.046, "mm")))
     as_metres = _tube_dp(_hx(_benzene_cooler(), tube_roughness=4.6e-5))
     assert as_length == pytest.approx(as_metres, rel=1e-9)
+    assert as_metres > _tube_dp(_hx(_benzene_cooler()))
 
 
 def test_negative_tube_roughness_is_refused():
