@@ -107,8 +107,22 @@ _MASTER_BENZENE_COOLER_KERN = {
 }
 
 
-def _assert_matches(data, reference):
-    for key, expected in reference.items():
+# Values that have moved since 3e8a241 because the physics under them was
+# corrected in a later change, not because of the side assignment. Each entry
+# names the change. The hot-in-tubes runs must match master in everything else.
+_SINCE_MASTER_WATER_HEATS_BENZENE_KERN = {
+    # The final pressure drop now uses the tube passes the velocity check settled
+    # on (4) instead of the ones chosen before it (2): 35201.061 Pa on master.
+    "tube_dp": 70402.12219804985,
+}
+_SINCE_MASTER_BENZENE_COOLER_KERN = {
+    # As above, 6 settled passes instead of 2: 9900.281 Pa on master.
+    "tube_dp": 29700.842952696094,
+}
+
+
+def _assert_matches(data, reference, since_master=None):
+    for key, expected in {**reference, **(since_master or {})}.items():
         assert _value(data[key]) == pytest.approx(expected, rel=1e-12), key
 
 
@@ -117,7 +131,8 @@ def test_scoring_hot_in_tubes_gives_the_master_numbers():
     assert data["assignment"]["tube_side"] == "hot"
     assert data["tube_side_fluid"] == "Water"
     assert data["shell_side_fluid"] == "Benzene"
-    _assert_matches(data, _MASTER_WATER_HEATS_BENZENE_KERN)
+    _assert_matches(data, _MASTER_WATER_HEATS_BENZENE_KERN,
+                    _SINCE_MASTER_WATER_HEATS_BENZENE_KERN)
     assert not any("ASSIGNMENT_WARNING" in w for w in data["warnings"])
 
 
@@ -137,7 +152,7 @@ def test_force_hot_in_tubes_overrides_the_scoring_and_gives_the_master_numbers()
     # The scoring's own pick is still reported, and the reason says who decided.
     assert data["assignment"]["recommended_tube_side_fluid"] == "Water"
     assert data["assignment_reason"][0] == "Forced by user: hot in tubes"
-    _assert_matches(data, _MASTER_BENZENE_COOLER_KERN)
+    _assert_matches(data, _MASTER_BENZENE_COOLER_KERN, _SINCE_MASTER_BENZENE_COOLER_KERN)
 
 
 # ----------------------------------------------------------------------------

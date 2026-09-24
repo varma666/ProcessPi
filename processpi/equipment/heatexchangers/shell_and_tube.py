@@ -1203,6 +1203,7 @@ class ShellAndTubeHX(HeatExchanger):
             "area_required", "geometry", "bundle_diameter",
             "shell_diameter", "v_tube", "v_shell", "dimless", "h_t", "h_s",
             "u_calculated", "u_clean", "re_shell", "tube_dp", "shell_dp",
+            "tube_passes",
         )
         passes: List[Dict[str, Any]] = []
         for i in range(1, max_iter + 1):
@@ -1301,6 +1302,7 @@ class ShellAndTubeHX(HeatExchanger):
                 "geometry": geometry,
                 "bundle_diameter": bundle_diameter,
                 "shell_diameter": shell_diameter,
+                "tube_passes": tube_passes,
                 "v_tube": v_tube,
                 "v_shell": v_shell,
                 "dimless": dimless,
@@ -2142,6 +2144,10 @@ class ShellAndTubeHX(HeatExchanger):
             # ======================================================
     
             "tube_count": payload["geometry"]["tube_count"],
+
+            "tube_passes": payload.get("tube_passes"),
+
+            "shell_passes": payload.get("shell_passes"),
     
             "tube_od": Length(
                 payload["geometry"]["tube_od"],
@@ -2352,6 +2358,9 @@ class ShellAndTubeHX(HeatExchanger):
         u_range = get_u_range("shell_and_tube", self.service_type, hot_hx.get("u_key", "generic"), cold_hx.get("u_key", "generic"))
 
         state = self._iterate_U(effective_q_watts, cltd, tube, shell, shell_passes, tube_passes, u_assumed, u_range)
+        # `_check_velocities` may have moved the tube passes inside the
+        # iteration; everything after it uses the passes of the settled geometry.
+        tube_passes = state.get("tube_passes", tube_passes)
 
         # Taken after the iteration so that the hydraulic, tube-count and
         # geometry-stagnation warnings raised inside it are not lost.
@@ -2426,6 +2435,8 @@ class ShellAndTubeHX(HeatExchanger):
             "cltd": cltd,
             "ft": ft,
             "n_units": n_units,
+            "shell_passes": shell_passes,
+            "tube_passes": tube_passes,
             "method": "kern",
             "tube_dp": tube_dp,
             "shell_dp": shell_dp,
@@ -2892,7 +2903,7 @@ class ShellAndTubeHX(HeatExchanger):
         else:
             assessment = "OK"
 
-        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "warnings": list(dict.fromkeys(self._velocity_warnings(v_tube, v_shell, tube, shell))), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
+        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "tube_passes": tube_passes, "shell_passes": int(self.specs.get("shell_passes", 1)), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "warnings": list(dict.fromkeys(self._velocity_warnings(v_tube, v_shell, tube, shell))), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
 
         return self._finalize_results(payload)
     def design(self) -> Dict[str, Any]:
