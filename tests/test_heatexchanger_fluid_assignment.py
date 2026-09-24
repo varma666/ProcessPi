@@ -121,7 +121,9 @@ _SINCE_MASTER_WATER_HEATS_BENZENE_KERN = {
     "tube_count": 344, "Area": 61.60034875158866, "U_calculated": 683.0794571965115,
     "h_tube": 4595.376905482573, "h_shell": 1323.5966895421316,
     "tube_velocity": 1.292040797257991, "shell_velocity": 0.6403822470290648,
-    "tube_dp": 58687.81131173749, "shell_dp": 9661.292426714626,
+    "tube_dp": 58687.81131173749,
+    # Textbook Kern shell-side pressure drop in place of the Kern/Bell hybrid.
+    "shell_dp": 28159.587927023906,
     "re_shell": 12803.655778380571,
 }
 _SINCE_MASTER_BENZENE_COOLER_KERN = {
@@ -131,7 +133,9 @@ _SINCE_MASTER_BENZENE_COOLER_KERN = {
     "tube_count": 168, "Area": 30.083891250775856, "U_calculated": 664.3626466565012,
     "h_tube": 1337.608280910971, "h_shell": 6110.828556840333,
     "tube_velocity": 1.186885306658964, "shell_velocity": 1.0971447749938399,
-    "tube_dp": 31710.83428017723, "shell_dp": 34630.48192274946,
+    "tube_dp": 31710.83428017723,
+    # Textbook Kern shell-side pressure drop in place of the Kern/Bell hybrid.
+    "shell_dp": 91454.82574918722,
     "re_shell": 16426.04005958439,
 }
 
@@ -156,10 +160,11 @@ def test_scoring_hot_in_tubes_gives_the_master_numbers_on_the_bell_path():
     assert data["assignment"]["tube_side"] == "hot"
     # Bell-Delaware design of the same case. 3e8a241 gave U 460.1777828989243,
     # h_shell 673.8324876931076 and shell_dp 23266.861493659602; these moved with
-    # the Kern geometry under them (see _SINCE_MASTER_WATER_HEATS_BENZENE_KERN).
+    # the Kern geometry under them (see _SINCE_MASTER_WATER_HEATS_BENZENE_KERN),
+    # and the shell dP is now the Kern one with no 1.15 uplift.
     assert _value(data["U_calculated"]) == pytest.approx(416.87097088356177, rel=1e-12)
     assert _value(data["h_shell"]) == pytest.approx(591.5821168422973, rel=1e-12)
-    assert _value(data["shell_dp"]) == pytest.approx(11110.48629072182, rel=1e-12)
+    assert _value(data["shell_dp"]) == pytest.approx(28159.587927023906, rel=1e-12)
 
 
 def test_force_hot_in_tubes_overrides_the_scoring_and_gives_the_master_numbers():

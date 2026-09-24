@@ -51,6 +51,12 @@ _FT_MATH_ERRORS = (ValueError, ZeroDivisionError, OverflowError)
 _DITTUS_BOELTER_N_HEATED = 0.4
 _DITTUS_BOELTER_N_COOLED = 0.3
 
+# Shell Reynolds range over which the Kern shell-side friction factor fit
+# f = exp(0.576 - 0.19 ln Re) was checked against Kern's chart; see
+# `_kern_shell_pressure_drop`.
+_KERN_SHELL_F_RE_MIN = 200.0
+_KERN_SHELL_F_RE_MAX = 1.0e6
+
 # Bundle diameter constants K1, n1 in Db = do (Nt / K1)^(1/n1), keyed by the
 # number of tube passes, for a tube pitch of 1.25 do. R. K. Sinnott, Coulson and
 # Richardson's Chemical Engineering Vol. 6, Chemical Engineering Design, 4th ed.
@@ -1633,7 +1639,7 @@ class ShellAndTubeHX(HeatExchanger):
         )
     
         # ==========================================================
-        # SHELL SIDE DP
+        # SHELL SIDE DP (Kern)
         # ==========================================================
     
         if geometry is None:
@@ -1652,131 +1658,91 @@ class ShellAndTubeHX(HeatExchanger):
             max(0.4 * shell_diameter, 1e-6),
         )
     
-        # Crossflow area and equivalent diameter, from the same definitions the
-        # velocity check and the heat transfer correlation use.
+        shell_dp = self._kern_shell_pressure_drop(
+            shell=shell,
+            v_shell=v_shell,
+            shell_diameter=shell_diameter,
+            baffle_spacing=baffle_spacing,
+            tube_pitch=tube_pitch,
+            tube_od=tube_od,
+            tube_length=tube_length,
+        )
+    
+        return tube_dp, shell_dp
+
+    def _kern_shell_pressure_drop(
+        self,
+        shell: Dict[str, float],
+        v_shell: float,
+        shell_diameter: float,
+        baffle_spacing: float,
+        tube_pitch: float,
+        tube_od: float,
+        tube_length: float,
+    ) -> float:
+        """
+        Kern shell-side pressure drop across the baffled bundle, nozzles excluded.
+
+            dP_s = f G_s^2 Ds (N_b + 1) / (2 rho De phi_s)
+            f    = exp(0.576 - 0.19 ln Re_s)
+
+        with G_s = rho v_s the mass velocity on the Kern cross-flow area
+        (`_shell_crossflow_area`), De the Kern equivalent diameter for the
+        layout (`_shell_equivalent_diameter`), Re_s = De G_s / mu, N_b the
+        number of baffles and N_b + 1 the number of bundle crossings.
+
+        Source: D. Q. Kern, Process Heat Transfer (McGraw-Hill, 1950), the
+        shell-side pressure drop and its friction factor chart (Fig. 29), in
+        the SI form and curve fit given by S. Kakac, H. Liu and
+        A. Pramuanjaroenkij, Heat Exchangers: Selection, Rating, and Thermal
+        Design, 3rd ed. (CRC Press, 2012), Chapter 8, Kern method. f is the
+        dimensionless friction factor of that form, not a Fanning or Darcy
+        factor. The fit was checked here against a digitisation of Kern's chart
+        (`Kern_f_Re` in the `ht` library): within 11% for 200 <= Re_s <= 1e6,
+        diverging below it (Re_s = 100: 0.742 against 0.926), so a warning is
+        raised outside that range.
+
+        phi_s = (mu / mu_w)^0.14 is the Sieder-Tate viscosity correction; it
+        is taken as 1 here.
+
+        Returns:
+            float: Shell-side pressure drop [Pa].
+        """
+        rho = shell["density"]
+        de_shell = self._shell_equivalent_diameter(tube_pitch, tube_od)
         as_cross = self._shell_crossflow_area(
             shell_diameter, baffle_spacing, tube_pitch, tube_od
         )
-    
-        de_shell = self._shell_equivalent_diameter(tube_pitch, tube_od)
-    
-        # Shell Reynolds
+        g_shell = rho * v_shell
         re_shell = Reynolds(
-            density=shell["density"],
+            density=rho,
             velocity=v_shell,
             diameter=de_shell,
             viscosity=shell["viscosity"],
         ).calculate()
-    
-        # ==========================================================
-        # IDEAL CROSSFLOW DP
-        # ==========================================================
-    
-        if re_shell < 100:
-            j_f = 0.25
-        else:
-            j_f = 0.0045 + 0.395 / (re_shell ** 0.15)
-    
-        ncv = max(
-            shell_diameter / tube_pitch,
-            1.0,
-        )
-    
-        dp_ideal = (
-            8.0
-            * j_f
-            * ncv
-            * (
-                shell["density"]
-                * v_shell**2
-                / 2.0
+        if re_shell <= 0.0:
+            return 0.0
+        if not (_KERN_SHELL_F_RE_MIN <= re_shell <= _KERN_SHELL_F_RE_MAX):
+            self._warn_with_category(
+                "HYDRAULIC_WARNING",
+                f"Shell Re {re_shell:.0f} is outside {_KERN_SHELL_F_RE_MIN:.0f} to "
+                f"{_KERN_SHELL_F_RE_MAX:.0e}, where the Kern shell-side friction "
+                "factor fit was checked; the shell pressure drop is extrapolated",
             )
+        f_shell = math.exp(0.576 - 0.19 * math.log(re_shell))
+
+        # Whole baffles that fit in the tube length; the shell fluid crosses
+        # the bundle once more than there are baffles.
+        n_baffles = max(int(math.floor(tube_length / max(baffle_spacing, 1e-9) + 1e-9)) - 1, 0)
+        phi_s = 1.0
+        self._debug(
+            f"Kern shell dP: As={as_cross:.6g} m2, G={g_shell:.6g}, Re={re_shell:.6g}, "
+            f"f={f_shell:.6g}, Nb={n_baffles}"
         )
-    
-        # ==========================================================
-        # BELL CORRECTION FACTORS
-        # ==========================================================
-    
-        ab = (
-            baffle_spacing
-            * max(
-                shell_diameter
-                - 0.95 * shell_diameter,
-                1e-6,
-            )
+        return (
+            f_shell * g_shell ** 2 * shell_diameter * (n_baffles + 1)
+            / (2.0 * rho * de_shell * phi_s)
         )
-    
-        atb = (
-            0.0008
-            * math.pi
-            * tube_od
-            * geometry.get("tube_count", 100)
-        )
-    
-        asb = (
-            0.003
-            * shell_diameter
-        )
-    
-        al = atb + asb
-    
-        # Bypass factor
-        alpha = 5.0 if re_shell < 100 else 4.0
-    
-        fb = math.exp(
-            -alpha
-            * (ab / max(as_cross, 1e-9))
-        )
-    
-        # Leakage factor
-        if al > 0:
-    
-            fl = 1.0 - (
-                0.44
-                * (
-                    (atb + 2.0 * asb)
-                    / al
-                )
-            )
-    
-        else:
-    
-            fl = 1.0
-    
-        fl = max(0.4, min(fl, 1.0))
-    
-        # ==========================================================
-        # WINDOW DP
-        # ==========================================================
-    
-        dp_window = (
-            0.5
-            * shell["density"]
-            * v_shell**2
-        )
-    
-        # ==========================================================
-        # TOTAL SHELL DP
-        # ==========================================================
-    
-        nbaffles = max(
-            int(
-                tube_length / baffle_spacing
-            ) - 1,
-            1,
-        )
-    
-        shell_dp = (
-            dp_ideal
-            * fb
-            * fl
-            * nbaffles
-        ) + (
-            nbaffles
-            * dp_window
-        )
-    
-        return tube_dp, shell_dp
 
     def _dp_limit(self, props: Dict[str, float]) -> float:
         mu_cp = props["viscosity"] * 1000.0
@@ -2837,12 +2803,9 @@ class ShellAndTubeHX(HeatExchanger):
             "Fs": fs,
         }
     
-        # ======================================================
-        # OPTIONAL:
-        # Increase shell DP slightly for Bell realism
-        # ======================================================
-    
-        data["shell_dp"] = self._get_value(data["shell_dp"], name="shell_dp") * 1.15
+        # The shell pressure drop is the Kern one: no Bell-Delaware pressure
+        # drop correlation is implemented, and the undocumented 15% uplift that
+        # stood in for one is gone.
     
         return data
     def _infer_service_type(self, hot: Dict[str, float], cold: Dict[str, float]) -> str:
