@@ -51,6 +51,27 @@ _FT_MATH_ERRORS = (ValueError, ZeroDivisionError, OverflowError)
 _DITTUS_BOELTER_N_HEATED = 0.4
 _DITTUS_BOELTER_N_COOLED = 0.3
 
+# Bundle diameter constants K1, n1 in Db = do (Nt / K1)^(1/n1), keyed by the
+# number of tube passes, for a tube pitch of 1.25 do. R. K. Sinnott, Coulson and
+# Richardson's Chemical Engineering Vol. 6, Chemical Engineering Design, 4th ed.
+# (Elsevier, 2005), Eq. 12.3 and Table 12.4.
+_BUNDLE_CONSTANTS = {
+    "triangular": {
+        1: (0.319, 2.142),
+        2: (0.249, 2.207),
+        4: (0.175, 2.285),
+        6: (0.0743, 2.499),
+        8: (0.0365, 2.675),
+    },
+    "square": {
+        1: (0.215, 2.207),
+        2: (0.156, 2.291),
+        4: (0.158, 2.263),
+        6: (0.0402, 2.617),
+        8: (0.0331, 2.643),
+    },
+}
+
 
 class ShellAndTubeHX(HeatExchanger):
     # Which stream the model puts in the tubes regardless of the fluid-assignment
@@ -475,7 +496,7 @@ class ShellAndTubeHX(HeatExchanger):
         geometry["area"] = geometry["tube_count"] * area_per_tube
         geometry["area_per_tube"] = area_per_tube
         geometry["tube_pitch"] = self._to_float(self.specs.get("tube_pitch"), "m") if self.specs.get("tube_pitch") is not None else (1.25 * geometry["tube_od"])
-        geometry["bundle_diameter"] = self._calculate_bundle_diameter(geometry["tube_count"], geometry["tube_od"])
+        geometry["bundle_diameter"] = self._calculate_bundle_diameter(geometry["tube_count"], geometry["tube_od"], tube_passes)
         if "shell_diameter" not in geometry:
             geometry["shell_diameter"] = self._calculate_shell_diameter(geometry["bundle_diameter"])
         area_per_tube_flow = math.pi * geometry["tube_id"] ** 2 / 4.0
@@ -687,11 +708,71 @@ class ShellAndTubeHX(HeatExchanger):
             "area": area,
         }
 
-    def _calculate_bundle_diameter(self, tube_count: int , tube_od: float) -> float:
-        k1 = float(self.specs.get("bundle_k1", 0.249))
-        n1 = float(self.specs.get("bundle_n1", 2.207))
-        Db = tube_od * math.pow((tube_count/k1),(1/n1))
-        return Db
+    def _calculate_bundle_diameter(
+        self,
+        tube_count: int,
+        tube_od: float,
+        tube_passes: int,
+        layout: str | None = None,
+    ) -> float:
+        """
+        Tube bundle diameter, Db = do (Nt / K1)^(1/n1).
+
+        K1 and n1 come from `_BUNDLE_CONSTANTS` (Sinnott, Coulson & Richardson
+        Vol. 6, Table 12.4) for the layout and the number of tube passes. The
+        table is for a pitch of 1.25 do. A user may override the pair with the
+        `bundle_k1` and `bundle_n1` specs, which must then be given together.
+
+        Args:
+            tube_count (int): Number of tubes Nt.
+            tube_od (float): Tube outside diameter [m].
+            tube_passes (int): Number of tube passes (1, 2, 4, 6 or 8).
+            layout (str | None): "triangular" or "square"; the configured
+                layout when omitted.
+
+        Returns:
+            float: Bundle diameter [m].
+
+        Raises:
+            ValueError: For a layout or pass count the table does not cover, or
+                when only one of bundle_k1 / bundle_n1 is given.
+        """
+        k1_spec = self.specs.get("bundle_k1")
+        n1_spec = self.specs.get("bundle_n1")
+        if (k1_spec is None) != (n1_spec is None):
+            raise ValueError("bundle_k1 and bundle_n1 must be given together")
+        if k1_spec is not None:
+            k1, n1 = float(k1_spec), float(n1_spec)
+        else:
+            layout = (layout or self._get_standard_layout()).lower()
+            if layout.startswith("tri"):
+                table = _BUNDLE_CONSTANTS["triangular"]
+            elif layout.startswith("squ"):
+                table = _BUNDLE_CONSTANTS["square"]
+            else:
+                raise ValueError(
+                    f"No bundle diameter constants for tube layout {layout!r}; "
+                    "Sinnott Table 12.4 covers 'triangular' and 'square' pitch "
+                    "(give bundle_k1 and bundle_n1 to use other constants)"
+                )
+            passes = int(tube_passes)
+            if passes not in table:
+                raise ValueError(
+                    f"No bundle diameter constants for {passes} tube passes; "
+                    f"Sinnott Table 12.4 covers {sorted(table)} passes "
+                    "(give bundle_k1 and bundle_n1 to use other constants)"
+                )
+            k1, n1 = table[passes]
+            pitch_spec = self.specs.get("tube_pitch")
+            if pitch_spec is not None:
+                pitch_ratio = self._to_float(pitch_spec, "m") / max(tube_od, 1e-12)
+                if abs(pitch_ratio - 1.25) > 0.0125:
+                    self._warn_with_category(
+                        "GEOMETRY_WARNING",
+                        f"Bundle diameter uses Sinnott Table 12.4, which is for a "
+                        f"pitch of 1.25 do; the pitch here is {pitch_ratio:.3f} do",
+                    )
+        return tube_od * math.pow(tube_count / k1, 1.0 / n1)
 
     def _calculate_shell_diameter(self, bundle_diameter: float) -> float:
         clearance = float(self.specs.get("bundle_clearance", max(0.02, 0.05 * bundle_diameter)))
@@ -797,8 +878,10 @@ class ShellAndTubeHX(HeatExchanger):
     
         # Shrinking the shell raises the velocity, but the shell can never be
         # smaller than the bundle it has to hold.
-        bundle_diameter = geometry.get("bundle_diameter") or self._calculate_bundle_diameter(
-            geometry["tube_count"], geometry["tube_od"]
+        # With the pass count the tube side has just settled on: the bundle of
+        # 8 passes is larger than the bundle of 2 for the same tube count.
+        bundle_diameter = self._calculate_bundle_diameter(
+            geometry["tube_count"], geometry["tube_od"], tube_passes
         )
         min_shell_diameter = self._calculate_shell_diameter(bundle_diameter)
         shell_diameter = max(shell_diameter, min_shell_diameter)
@@ -1260,6 +1343,7 @@ class ShellAndTubeHX(HeatExchanger):
             bundle_diameter = self._calculate_bundle_diameter(
                 geometry["tube_count"],
                 geometry["tube_od"],
+                tube_passes,
             )
             shell_diameter = geometry["shell_diameter"]
     
@@ -2863,7 +2947,7 @@ class ShellAndTubeHX(HeatExchanger):
         tube_pitch = self._safe_float(self.specs.get("tube_pitch", 1.25 * tube_od), "tube_pitch")
         area_per_tube = math.pi * tube_od * tube_length
         tube_count = int(self.specs.get("tube_count", max(1, math.ceil(area / max(area_per_tube, 1e-12)))))
-        shell_diameter = self._safe_float(self.specs.get("shell_diameter", max(0.2, self._calculate_shell_diameter(self._calculate_bundle_diameter(tube_count, tube_od)))), "shell_diameter")
+        shell_diameter = self._safe_float(self.specs.get("shell_diameter", max(0.2, self._calculate_shell_diameter(self._calculate_bundle_diameter(tube_count, tube_od, tube_passes)))), "shell_diameter")
         baffle_spacing = self._safe_float(self.specs.get("baffle_spacing", max(0.2 * shell_diameter, 0.4 * shell_diameter)), "baffle_spacing")
 
         actual_area = tube_count * area_per_tube

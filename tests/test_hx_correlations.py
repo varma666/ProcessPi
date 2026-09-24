@@ -85,3 +85,63 @@ def test_design_pressure_drop_uses_the_settled_tube_passes():
     f_fanning = 0.079 * re ** -0.25
     expected = 4.0 * f_fanning * length * passes / di * head + 4.0 * passes * head
     assert _value(data["tube_dp"]) == pytest.approx(expected, rel=1e-9)
+
+
+# ----------------------------------------------------------------------------
+# Bundle diameter: Sinnott, Coulson & Richardson Vol. 6, 4th ed., Table 12.4
+# ----------------------------------------------------------------------------
+
+# (layout, passes, K1, n1), typed in from the table, pitch 1.25 do.
+_SINNOTT_TABLE_12_4 = [
+    ("triangular", 1, 0.319, 2.142),
+    ("triangular", 2, 0.249, 2.207),
+    ("triangular", 4, 0.175, 2.285),
+    ("triangular", 6, 0.0743, 2.499),
+    ("triangular", 8, 0.0365, 2.675),
+    ("square", 1, 0.215, 2.207),
+    ("square", 2, 0.156, 2.291),
+    ("square", 4, 0.158, 2.263),
+    ("square", 6, 0.0402, 2.617),
+    ("square", 8, 0.0331, 2.643),
+]
+
+
+@pytest.mark.parametrize("layout,passes,k1,n1", _SINNOTT_TABLE_12_4)
+def test_bundle_diameter_follows_the_layout_and_the_passes(layout, passes, k1, n1):
+    hx = _hx(_benzene_cooler(), tube_layout=layout)
+    tube_count, tube_od = 500, 0.019
+    expected = tube_od * (tube_count / k1) ** (1.0 / n1)
+    assert hx._calculate_bundle_diameter(tube_count, tube_od, passes) == pytest.approx(expected, rel=1e-12)
+
+
+def test_bundle_diameter_at_eight_passes_by_hand():
+    """500 tubes of 19 mm, triangular pitch, 8 passes:
+    Db = 0.019 (500 / 0.0365)^(1/2.675) = 0.019 x 35.19 = 0.6686 m,
+    against 0.019 (500 / 0.249)^(1/2.207) = 0.5960 m from the 2-pass constants
+    the code used for every layout (-10.9%)."""
+    hx = _hx(_benzene_cooler())
+    assert hx._calculate_bundle_diameter(500, 0.019, 8) == pytest.approx(0.6686, abs=1e-4)
+    assert hx._calculate_bundle_diameter(500, 0.019, 2) == pytest.approx(0.5960, abs=1e-4)
+
+
+@pytest.mark.parametrize("layout,passes", [("rotated_square", 2), ("triangular", 3), ("square", 12)])
+def test_bundle_diameter_refuses_what_the_table_does_not_cover(layout, passes):
+    hx = _hx(_benzene_cooler(), tube_layout=layout)
+    with pytest.raises(ValueError, match="Table 12.4"):
+        hx._calculate_bundle_diameter(500, 0.019, passes)
+
+
+def test_bundle_constants_can_be_overridden_as_a_pair_only():
+    hx = _hx(_benzene_cooler(), bundle_k1=0.2, bundle_n1=2.2)
+    assert hx._calculate_bundle_diameter(500, 0.019, 8) == pytest.approx(0.019 * (500 / 0.2) ** (1 / 2.2))
+    with pytest.raises(ValueError, match="together"):
+        _hx(_benzene_cooler(), bundle_k1=0.2)._calculate_bundle_diameter(500, 0.019, 2)
+
+
+def test_design_shell_holds_the_bundle_of_the_settled_passes():
+    data = _run(_benzene_cooler(), force_hot_in_tubes=True)
+    hx = _hx(_benzene_cooler())
+    bundle = hx._calculate_bundle_diameter(
+        data["tube_count"], _value(data["tube_od"]), data["tube_passes"]
+    )
+    assert _value(data["shell_diameter"]) > bundle

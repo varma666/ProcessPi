@@ -111,13 +111,28 @@ _MASTER_BENZENE_COOLER_KERN = {
 # corrected in a later change, not because of the side assignment. Each entry
 # names the change. The hot-in-tubes runs must match master in everything else.
 _SINCE_MASTER_WATER_HEATS_BENZENE_KERN = {
-    # The final pressure drop now uses the tube passes the velocity check settled
-    # on (4) instead of the ones chosen before it (2): 35201.061 Pa on master.
-    "tube_dp": 70402.12219804985,
+    # Settled tube passes in the final pressure drop: 35201.061 Pa on master
+    # at 4 passes counted as 2.
+    # Bundle diameter from Sinnott Table 12.4 for the 4 settled passes instead
+    # of the 2-pass constants: a larger bundle and shell, a lower shell velocity,
+    # and so a new geometry. Master: 312 tubes, 55.870 m2, U 767.56,
+    # h_tube 4968.7, h_shell 1629.2, v_tube 1.4246, v_shell 0.93425,
+    # shell_dp 20232, Re_s 18679.
+    "tube_count": 344, "Area": 61.60034875158866, "U_calculated": 683.0794571965115,
+    "h_tube": 4595.376905482573, "h_shell": 1323.5966895421316,
+    "tube_velocity": 1.292040797257991, "shell_velocity": 0.6403822470290648,
+    "tube_dp": 58687.81131173749, "shell_dp": 9661.292426714626,
+    "re_shell": 12803.655778380571,
 }
 _SINCE_MASTER_BENZENE_COOLER_KERN = {
-    # As above, 6 settled passes instead of 2: 9900.281 Pa on master.
-    "tube_dp": 29700.842952696094,
+    # As above, 6 settled passes. Master: 174 tubes, 31.158 m2, U 662.09,
+    # h_tube 1300.6, h_shell 6967.1, v_tube 1.1460, v_shell 1.3925,
+    # tube_dp 9900.3 (6 passes counted as 2), shell_dp 56918, Re_s 20849.
+    "tube_count": 168, "Area": 30.083891250775856, "U_calculated": 664.3626466565012,
+    "h_tube": 1337.608280910971, "h_shell": 6110.828556840333,
+    "tube_velocity": 1.186885306658964, "shell_velocity": 1.0971447749938399,
+    "tube_dp": 31710.83428017723, "shell_dp": 34630.48192274946,
+    "re_shell": 16426.04005958439,
 }
 
 
@@ -139,10 +154,12 @@ def test_scoring_hot_in_tubes_gives_the_master_numbers():
 def test_scoring_hot_in_tubes_gives_the_master_numbers_on_the_bell_path():
     data = _run(_water_heats_benzene(), method="bell_delaware")
     assert data["assignment"]["tube_side"] == "hot"
-    # 3e8a241, Bell-Delaware design of the same case.
-    assert _value(data["U_calculated"]) == pytest.approx(460.1777828989243, rel=1e-12)
-    assert _value(data["h_shell"]) == pytest.approx(673.8324876931076, rel=1e-12)
-    assert _value(data["shell_dp"]) == pytest.approx(23266.861493659602, rel=1e-12)
+    # Bell-Delaware design of the same case. 3e8a241 gave U 460.1777828989243,
+    # h_shell 673.8324876931076 and shell_dp 23266.861493659602; these moved with
+    # the Kern geometry under them (see _SINCE_MASTER_WATER_HEATS_BENZENE_KERN).
+    assert _value(data["U_calculated"]) == pytest.approx(416.87097088356177, rel=1e-12)
+    assert _value(data["h_shell"]) == pytest.approx(591.5821168422973, rel=1e-12)
+    assert _value(data["shell_dp"]) == pytest.approx(11110.48629072182, rel=1e-12)
 
 
 def test_force_hot_in_tubes_overrides_the_scoring_and_gives_the_master_numbers():
