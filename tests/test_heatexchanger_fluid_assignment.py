@@ -113,8 +113,8 @@ _MASTER_BENZENE_COOLER_KERN = {
 _SINCE_MASTER_WATER_HEATS_BENZENE_KERN = {
     # Settled tube passes in the final pressure drop: 35201.061 Pa on master
     # at 4 passes counted as 2.
-    # Bundle diameter from Sinnott Table 12.4 for the 4 settled passes instead
-    # of the 2-pass constants: a larger bundle and shell, a lower shell velocity,
+    # Bundle diameter from Sinnott Table 12.4 for the settled passes (8 here)
+    # instead of the 2-pass constants: a larger bundle and shell, a lower shell velocity,
     # and so a new geometry. Master: 312 tubes, 55.870 m2, U 767.56,
     # h_tube 4968.7, h_shell 1629.2, v_tube 1.4246, v_shell 0.93425,
     # shell_dp 20232, Re_s 18679.
