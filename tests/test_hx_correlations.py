@@ -377,3 +377,58 @@ def test_wall_viscosity_follows_its_stream_to_its_side():
 def test_non_positive_wall_viscosity_is_refused():
     with pytest.raises(ValueError, match="hot_wall_viscosity"):
         _rating(hot_wall_viscosity=0.0)
+
+
+# ----------------------------------------------------------------------------
+# rate() applies the LMTD correction factor
+# ----------------------------------------------------------------------------
+
+def test_rating_applies_the_lmtd_correction_factor():
+    """Benzene 90 to 30 C against water 15 to 25 C, 1 shell pass, 2 tube passes.
+
+      LMTD = (65 - 15) / ln(65 / 15)                       = 34.0986 K
+      R    = (90 - 30) / (25 - 15) = 6,  S = 10 / 75        = 0.13333
+      F    = sqrt(R^2+1) ln[(1-S)/(1-RS)]
+             / ((R-1) ln[(2 - S(R+1-sqrt(R^2+1))) / (2 - S(R+1+sqrt(R^2+1)))])
+                                                            = 0.894592
+    rate() used the bare LMTD; design() has always used F x LMTD. The area the
+    duty needs is Q / (U F LMTD).
+    """
+    data = _rating()
+    lmtd = (65.0 - 15.0) / math.log(65.0 / 15.0)
+    assert data["LMTD"] == pytest.approx(lmtd, rel=1e-4)
+    assert data["ft"] == pytest.approx(0.894592, abs=1e-6)
+    assert data["corrected_lmtd"] == pytest.approx(data["ft"] * data["LMTD"], rel=1e-12)
+    q = _value(data["Q"])
+    assert _value(data["Area_required"]) == pytest.approx(q / (575.0 * data["corrected_lmtd"]), rel=1e-9)
+
+
+def test_rating_ft_matches_the_review_kerosene_case():
+    """#86 scenario 16: 200 to 90 C against 30 to 40 C gives R = 11,
+    S = 0.0588 and F = 0.9812; the rating reported no F at all."""
+    hot_in = MaterialStream("hot_in", component=Benzene(), temperature=Temperature(200, "C"),
+                            mass_flow=MassFlowRate(5000, "kg/h"))
+    hot_out = MaterialStream("hot_out", component=Benzene(), temperature=Temperature(90, "C"))
+    cold_in = MaterialStream("cold_in", component=Water(), temperature=Temperature(30, "C"),
+                             mass_flow=MassFlowRate(50000, "kg/h"))
+    cold_out = MaterialStream("cold_out", component=Water(), temperature=Temperature(40, "C"))
+    data = _run(dict(hot_in=hot_in, hot_out=hot_out, cold_in=cold_in, cold_out=cold_out),
+                mode="rate", **_RATE_GEOMETRY)
+    assert data["ft"] == pytest.approx(0.981201, abs=1e-6)
+
+
+def test_rating_one_tube_pass_is_counter_current():
+    data = _rating(tube_passes=1)
+    assert data["ft"] == 1.0
+    assert data["corrected_lmtd"] == pytest.approx(data["LMTD"])
+
+
+def test_rating_refuses_shell_passes_without_an_ft_expression():
+    with pytest.raises(ValueError, match="1 and 2 shell"):
+        _rating(shell_passes=3, tube_passes=6)
+
+
+def test_rating_refuses_an_undefined_ft(monkeypatch):
+    monkeypatch.setattr(ShellAndTubeHX, "_calculate_ft", lambda self, *args: 0.0)
+    with pytest.raises(ValueError, match="temperature cross"):
+        _rating()

@@ -2302,6 +2302,16 @@ class ShellAndTubeHX(HeatExchanger):
                 "m2",
             ),
     
+            # The area the duty needs at the reported U and corrected LMTD.
+            "Area_required": (
+                Area(
+                    payload.get("area_required", payload.get("required_area")),
+                    "m2",
+                )
+                if payload.get("area_required", payload.get("required_area")) is not None
+                else None
+            ),
+
             "U_assumed": HeatTransferCoefficient(
                 payload["u_assumed"],
                 "W/m2K",
@@ -2326,6 +2336,12 @@ class ShellAndTubeHX(HeatExchanger):
             ),
     
             "LMTD": payload["lmtd"],
+
+            # The LMTD correction factor and the corrected mean temperature
+            # difference F x LMTD that the area is sized or rated on.
+            "ft": payload.get("ft"),
+
+            "corrected_lmtd": payload.get("cltd"),
     
             # ======================================================
             # GEOMETRY
@@ -3036,6 +3052,32 @@ class ShellAndTubeHX(HeatExchanger):
 
         lmtd = self._calculate_service_lmtd(service, hot, cold, th_out, tc_out)
 
+        # The same LMTD correction design() applies. The LMTD above is the
+        # counter-current one; a shell with 2 or more tube passes is not
+        # counter-current and needs F (Bowman, Mueller and Nagle 1940).
+        tube_passes = int(self.specs.get("tube_passes", 2))
+        shell_passes = int(self.specs.get("shell_passes", 1))
+        if service in condenser_services or service in reboiler_services:
+            # One stream at constant temperature: F = 1 for any pass arrangement.
+            ft = 1.0
+        elif shell_passes == 1 and tube_passes == 1:
+            # 1-1: pure counter-current flow, which the LMTD already describes.
+            ft = 1.0
+        else:
+            if shell_passes not in (1, 2):
+                raise ValueError(
+                    f"The LMTD correction factor is implemented for 1 and 2 shell "
+                    f"passes, not {shell_passes}"
+                )
+            ft = self._calculate_ft(hot, cold, th_out, tc_out, shell_passes, tube_passes)
+            if ft <= 0.0:
+                raise ValueError(
+                    f"Thermally infeasible outlet targets for {shell_passes} shell "
+                    f"pass(es) and {tube_passes} tube passes: the LMTD correction "
+                    f"factor is undefined (temperature cross)"
+                )
+        cltd = ft * lmtd
+
         user_u = self.specs.get("U")
         u_assumed = self._assume_u(hot, cold) if user_u is None else self._safe_float(user_u.to("W/m2K"), "U")
         area_spec = self.specs.get("area") or self.specs.get("Area")
@@ -3044,12 +3086,11 @@ class ShellAndTubeHX(HeatExchanger):
             if area <= 0:
                 raise ValueError("Provided exchanger area must be positive")
         else:
-            area = q_actual / max(u_assumed * lmtd, 1e-12)
+            area = q_actual / max(u_assumed * cltd, 1e-12)
 
         tube_od = self._safe_float(self.specs.get("tube_od", 0.01905), "tube_od")
         tube_id = self._safe_float(self.specs.get("tube_id", 0.016), "tube_id")
         tube_length = self._safe_float(self.specs.get("tube_length", 6.0), "tube_length")
-        tube_passes = int(self.specs.get("tube_passes", 2))
         tube_pitch = self._safe_float(self.specs.get("tube_pitch", 1.25 * tube_od), "tube_pitch")
         area_per_tube = math.pi * tube_od * tube_length
         tube_count = int(self.specs.get("tube_count", max(1, math.ceil(area / max(area_per_tube, 1e-12)))))
@@ -3070,7 +3111,7 @@ class ShellAndTubeHX(HeatExchanger):
         h_t, h_s = self._calculate_htc(dimless, geometry, tube, shell)
         u_calc = self._calculate_overall_U(h_t=h_t, h_s=h_s, geometry=geometry)["U_dirty"]
 
-        tube_dp, shell_dp = self._calculate_pressure_drop(geometry=geometry, tube=tube, shell=shell, shell_velocity=v_shell, tube_velocity=v_tube, shell_passes=int(self.specs.get("shell_passes", 1)), tube_passes=tube_passes, shell_diameter=shell_diameter, tube_length=tube_length, tube_id=tube_id)
+        tube_dp, shell_dp = self._calculate_pressure_drop(geometry=geometry, tube=tube, shell=shell, shell_velocity=v_shell, tube_velocity=v_tube, shell_passes=shell_passes, tube_passes=tube_passes, shell_diameter=shell_diameter, tube_length=tube_length, tube_id=tube_id)
         tube_dp_limit = self._pressure_limit_pa("tube_dp", 70000.0)
         shell_dp_limit = self._pressure_limit_pa("shell_dp", 14000.0)
 
@@ -3093,7 +3134,7 @@ class ShellAndTubeHX(HeatExchanger):
         else:
             assessment = "OK"
 
-        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "tube_passes": tube_passes, "shell_passes": int(self.specs.get("shell_passes", 1)), "viscosity_correction": self._viscosity_correction_report(tube, shell), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
+        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "ft": ft, "cltd": cltd, "tube_passes": tube_passes, "shell_passes": shell_passes, "viscosity_correction": self._viscosity_correction_report(tube, shell), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
 
         return self._finalize_results(payload)
     def design(self) -> Dict[str, Any]:
