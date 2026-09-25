@@ -13,6 +13,7 @@ import pytest
 
 from processpi.components import Benzene, Water
 from processpi.equipment.heatexchangers import HeatExchangerEngine
+from processpi.equipment.heatexchangers.shell_and_tube import ShellAndTubeHX
 from processpi.streams import MaterialStream
 from processpi.units import (
     HeatTransferCoefficient,
@@ -114,11 +115,24 @@ def test_design_status_is_never_unknown():
         assert data["status"] is not None
 
 
-def test_warnings_raised_inside_the_iteration_survive():
-    """The hydraulic and convergence warnings are raised during _iterate_U."""
+def test_warnings_raised_inside_the_iteration_survive(monkeypatch):
+    """The hydraulic and convergence warnings are raised during _iterate_U.
+
+    The cooler's own HYDRAULIC_WARNING came from its first pass (shell velocity
+    0.462 m/s, where the reported one is 0.503 m/s) and is no longer carried
+    once warnings are kept per pass, so a probe raised by `_check_velocities`
+    on every pass stands in for a hydraulic warning of the final geometry.
+    """
+    original = ShellAndTubeHX._check_velocities
+
+    def probed(self, *args, **kwargs):
+        self._warn_with_category("HYDRAULIC_WARNING", "probe raised on the final pass")
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(ShellAndTubeHX, "_check_velocities", probed)
     data = _quiet(_benzene_cooler(u_tolerance_percent=1.0, max_u_iterations=2).run).data
     categories = {w.split("]")[0].lstrip("[") for w in data["warnings"] if w.startswith("[")}
-    assert "HYDRAULIC_WARNING" in categories
+    assert "[HYDRAULIC_WARNING] probe raised on the final pass" in data["warnings"]
     assert "CONVERGENCE_WARNING" in categories
 
 
