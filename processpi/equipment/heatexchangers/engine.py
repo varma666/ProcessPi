@@ -24,50 +24,236 @@ class HeatExchangerResults:
     data: Dict[str, Any]
 
     def summary(self) -> str:
+        """
+        Return a formatted engineering summary of the heat exchanger results.
     
-        q = self.data.get("Q")
-        area = self.data.get("Area")
-        ucalc = self.data.get("U_calculated")
+        The summary presents:
+        - exchanger type and selection logic
+        - calculation method
+        - heat duty
+        - heat-transfer area
+        - overall heat-transfer coefficient
+        - velocities
+        - pressure drops
+        - geometry
+        - engineering status
+        - engineering assessment
+        - insights
+        - warnings
+        - recommendations
+        """
     
-        tv = self.data.get("tube_velocity")
-        sv = self.data.get("shell_velocity")
+        data = self.data
     
-        tdp = self.data.get("tube_dp")
-        sdp = self.data.get("shell_dp")
+        # ==========================================================
+        # HELPERS
+        # ==========================================================
     
-        tl = self.data.get("tube_length")
+        def format_value(value, unit=None, decimals=3):
+            """Format ProcessPI unit objects or numeric values safely."""
     
-        status = self.data.get("status", "UNKNOWN")
+            if value is None:
+                return "N/A"
     
-        warnings = self.data.get("warnings", [])
+            try:
+                if unit and hasattr(value, "to"):
+                    converted = value.to(unit)
     
-        insights = self.data.get("engineering_insights", [])
+                    raw = getattr(converted, "value", converted)
     
-        assessment = self.data.get("engineering_assessment")
+                    if isinstance(raw, (int, float)):
+                        return f"{raw:.{decimals}f} {unit}"
     
-        recommendations = self.data.get("recommendations", [])
+                    return f"{raw} {unit}"
+    
+                if isinstance(value, (int, float)):
+                    return f"{value:.{decimals}f}"
+    
+                return str(value)
+    
+            except Exception:
+                return str(value)
+    
+        def format_pressure(value):
+            """Display pressure in kPa."""
+    
+            return format_value(value, "kPa", 3)
+    
+        def format_area(value):
+            """Display area in m²."""
+    
+            return format_value(value, "m2", 3)
+    
+        def format_length(value):
+            """Display length in m."""
+    
+            return format_value(value, "m", 3)
+    
+        # ==========================================================
+        # BASIC RESULTS
+        # ==========================================================
+    
+        hx_type = data.get("hx_type", "UNKNOWN")
+        method = data.get("method", "UNKNOWN")
+    
+        q = data.get("Q")
+        area = data.get("Area")
+        ucalc = data.get("U_calculated")
+    
+        tube_velocity = data.get("tube_velocity")
+        shell_velocity = data.get("shell_velocity")
+    
+        tube_dp = data.get("tube_dp")
+        shell_dp = data.get("shell_dp")
+    
+        tube_count = data.get("tube_count")
+        tube_length = data.get("tube_length")
+    
+        status = data.get("status", "UNKNOWN")
+    
+        warnings = data.get("warnings") or []
+        insights = data.get("engineering_insights") or []
+        recommendations = data.get("recommendations") or []
+    
+        assessment = data.get("engineering_assessment")
+    
+        # ==========================================================
+        # AUTOMATIC TYPE SELECTION
+        # ==========================================================
+    
+        selection = data.get("hx_type_selection")
+    
+        if selection:
+            selection_reason = selection.get("reason", "Automatic selection")
+    
+            type_selection = (
+                f"auto\n"
+                f"Reason                : {selection_reason}"
+            )
+        else:
+            type_selection = "explicit"
+    
+        # ==========================================================
+        # PRESSURE DROP LIMITS
+        # ==========================================================
+    
+        specs = data.get("specs", {}) or {}
+    
+        tube_dp_limit = specs.get("tube_dp")
+        shell_dp_limit = specs.get("shell_dp")
+    
+        # ==========================================================
+        # STATUS CLASSIFICATION
+        # ==========================================================
+    
+        thermal_ok = data.get("thermal_ok")
+        hydraulic_ok = data.get("hydraulic_ok")
+        pressure_drop_ok = data.get("pressure_drop_ok")
+    
+        feasibility = data.get("feasibility_summary")
+    
+        if isinstance(feasibility, dict):
+            thermal_ok = feasibility.get("thermal_ok", thermal_ok)
+            hydraulic_ok = feasibility.get("hydraulic_ok", hydraulic_ok)
+            pressure_drop_ok = feasibility.get(
+                "pressure_drop_ok",
+                pressure_drop_ok,
+            )
+    
+        # ==========================================================
+        # SUMMARY HEADER
+        # ==========================================================
     
         output = (
-            f"Heat Exchanger Summary\n"
-            f"------------------------------\n"
-            f"Type                  : {self.data.get('hx_type')}\n"
-            + (
-                f"Type Selection        : auto, {self.data['hx_type_selection']['reason']}\n"
-                if self.data.get("hx_type_selection")
-                else ""
-            )
-            + f"Method                : {self.data.get('method')}\n"
-            f"Heat Duty             : {q.to('kW') if hasattr(q, 'to') else q}\n"
-            f"Area                  : {area if hasattr(area, 'to') else area}\n"
-            f"U Calculated          : {ucalc if hasattr(ucalc, 'to') else ucalc}\n"
-            f"Tube Velocity         : {tv if hasattr(tv, 'to') else tv}\n"
-            f"Shell Velocity        : {sv if hasattr(sv, 'to') else sv}\n"
-            f"Tube Pressure Drop    : {(tdp.to('psi') if hasattr(tdp, 'to') else tdp)}\n"
-            f"Shell Pressure Drop   : {(sdp.to('psi') if hasattr(sdp, 'to') else sdp)}\n"
-            f"Tube Count            : {self.data.get('tube_count')}\n"
-            f"Tube Length           : {tl if hasattr(tl, 'to') else tl}\n"
+            "Heat Exchanger Summary\n"
+            "==============================\n"
+            f"Type                  : {hx_type}\n"
+            f"Type Selection        : {type_selection}\n"
+            f"Method                : {method}\n"
+            f"Heat Duty             : {format_value(q, 'kW', 3)}\n"
+            f"Area                  : {format_area(area)}\n"
+            f"U Calculated          : {format_value(ucalc, 'W/m2K', 3)}\n"
+            f"Tube Velocity         : {format_value(tube_velocity, 'm/s', 3)}\n"
+            f"Shell Velocity        : {format_value(shell_velocity, 'm/s', 3)}\n"
+            f"Tube Pressure Drop    : {format_pressure(tube_dp)}\n"
+            f"Shell Pressure Drop   : {format_pressure(shell_dp)}\n"
+            f"Tube Count            : {tube_count if tube_count is not None else 'N/A'}\n"
+            f"Tube Length           : {format_length(tube_length)}\n"
             f"Status                : {status}\n"
         )
+    
+        # ==========================================================
+        # PRESSURE DROP ASSESSMENT
+        # ==========================================================
+    
+        if tube_dp_limit is not None or shell_dp_limit is not None:
+    
+            output += (
+                "\n"
+                "Pressure Drop Assessment\n"
+                "------------------------------\n"
+            )
+    
+            if tube_dp_limit is not None:
+                output += (
+                    f"Tube ΔP Limit        : "
+                    f"{format_pressure(tube_dp_limit)}\n"
+                )
+    
+                if tube_dp is not None:
+                    output += (
+                        f"Tube ΔP Actual       : "
+                        f"{format_pressure(tube_dp)}\n"
+                    )
+    
+            if shell_dp_limit is not None:
+                output += (
+                    f"Shell ΔP Limit       : "
+                    f"{format_pressure(shell_dp_limit)}\n"
+                )
+    
+                if shell_dp is not None:
+                    output += (
+                        f"Shell ΔP Actual      : "
+                        f"{format_pressure(shell_dp)}\n"
+                    )
+    
+        # ==========================================================
+        # FEASIBILITY
+        # ==========================================================
+    
+        if any(
+            value is not None
+            for value in (
+                thermal_ok,
+                hydraulic_ok,
+                pressure_drop_ok,
+            )
+        ):
+    
+            output += (
+                "\n"
+                "Engineering Feasibility\n"
+                "------------------------------\n"
+            )
+    
+            if thermal_ok is not None:
+                output += (
+                    f"Thermal Performance  : "
+                    f"{'PASS' if thermal_ok else 'FAIL'}\n"
+                )
+    
+            if hydraulic_ok is not None:
+                output += (
+                    f"Hydraulic Performance: "
+                    f"{'PASS' if hydraulic_ok else 'FAIL'}\n"
+                )
+    
+            if pressure_drop_ok is not None:
+                output += (
+                    f"Pressure Drop        : "
+                    f"{'PASS' if pressure_drop_ok else 'FAIL'}\n"
+                )
     
         # ==========================================================
         # ENGINEERING ASSESSMENT
@@ -95,7 +281,6 @@ class HeatExchangerResults:
             )
     
             for item in insights:
-    
                 output += f"• {item}\n"
     
         # ==========================================================
@@ -110,9 +295,8 @@ class HeatExchangerResults:
                 "------------------------------\n"
             )
     
-            for w in warnings:
-    
-                output += f"• {w}\n"
+            for warning in warnings:
+                output += f"• {warning}\n"
     
         # ==========================================================
         # RECOMMENDATIONS
@@ -126,9 +310,8 @@ class HeatExchangerResults:
                 "------------------------------\n"
             )
     
-            for r in recommendations:
-    
-                output += f"• {r}\n"
+            for recommendation in recommendations:
+                output += f"• {recommendation}\n"
     
         return output
     def detailed_summary(self) -> Dict[str, Any]:
