@@ -74,13 +74,19 @@ def test_results_after_run_are_returned():
 
 
 def test_convergence_tolerance_is_honoured():
-    """The first U step is about 10% out; only a tolerance above it may accept it."""
-    loose = _quiet(_benzene_cooler(u_tolerance_percent=15.0).run).data
+    """The first U step is about 10% out; only a tolerance above it may accept it.
+
+    That step size belongs to the benzene-in-tubes arrangement, which the fluid
+    assignment no longer picks by default for this case (it puts the water in
+    the tubes), so the arrangement is forced to keep the test on the case it
+    was calibrated for.
+    """
+    loose = _quiet(_benzene_cooler(u_tolerance_percent=15.0, force_hot_in_tubes=True).run).data
     assert loose["converged"] is True
     assert len(loose["convergence_history"]) == 1
     assert 5.0 < loose["convergence_history"][0] < 15.0
 
-    tight = _quiet(_benzene_cooler(u_tolerance_percent=1.0).run).data
+    tight = _quiet(_benzene_cooler(u_tolerance_percent=1.0, force_hot_in_tubes=True).run).data
     assert tight["converged"] is True
     assert len(tight["convergence_history"]) > 1
     assert tight["convergence_history"][-1] < 1.0
