@@ -107,8 +107,41 @@ _MASTER_BENZENE_COOLER_KERN = {
 }
 
 
-def _assert_matches(data, reference):
-    for key, expected in reference.items():
+# Values that have moved since 3e8a241 because the physics under them was
+# corrected in a later change, not because of the side assignment. Each entry
+# names the change. The hot-in-tubes runs must match master in everything else.
+_SINCE_MASTER_WATER_HEATS_BENZENE_KERN = {
+    # Settled tube passes in the final pressure drop: 35201.061 Pa on master
+    # at 4 passes counted as 2.
+    # Bundle diameter from Sinnott Table 12.4 for the settled passes (8 here)
+    # instead of the 2-pass constants: a larger bundle and shell, a lower shell velocity,
+    # and so a new geometry. Master: 312 tubes, 55.870 m2, U 767.56,
+    # h_tube 4968.7, h_shell 1629.2, v_tube 1.4246, v_shell 0.93425,
+    # shell_dp 20232, Re_s 18679.
+    "tube_count": 344, "Area": 61.60034875158866, "U_calculated": 683.0794571965115,
+    "h_tube": 4595.376905482573, "h_shell": 1323.5966895421316,
+    "tube_velocity": 1.292040797257991, "shell_velocity": 0.6403822470290648,
+    "tube_dp": 58687.81131173749,
+    # Textbook Kern shell-side pressure drop in place of the Kern/Bell hybrid.
+    "shell_dp": 28159.587927023906,
+    "re_shell": 12803.655778380571,
+}
+_SINCE_MASTER_BENZENE_COOLER_KERN = {
+    # As above, 6 settled passes. Master: 174 tubes, 31.158 m2, U 662.09,
+    # h_tube 1300.6, h_shell 6967.1, v_tube 1.1460, v_shell 1.3925,
+    # tube_dp 9900.3 (6 passes counted as 2), shell_dp 56918, Re_s 20849.
+    "tube_count": 168, "Area": 30.083891250775856, "U_calculated": 664.3626466565012,
+    "h_tube": 1337.608280910971, "h_shell": 6110.828556840333,
+    "tube_velocity": 1.186885306658964, "shell_velocity": 1.0971447749938399,
+    "tube_dp": 31710.83428017723,
+    # Textbook Kern shell-side pressure drop in place of the Kern/Bell hybrid.
+    "shell_dp": 91454.82574918722,
+    "re_shell": 16426.04005958439,
+}
+
+
+def _assert_matches(data, reference, since_master=None):
+    for key, expected in {**reference, **(since_master or {})}.items():
         assert _value(data[key]) == pytest.approx(expected, rel=1e-12), key
 
 
@@ -117,17 +150,21 @@ def test_scoring_hot_in_tubes_gives_the_master_numbers():
     assert data["assignment"]["tube_side"] == "hot"
     assert data["tube_side_fluid"] == "Water"
     assert data["shell_side_fluid"] == "Benzene"
-    _assert_matches(data, _MASTER_WATER_HEATS_BENZENE_KERN)
+    _assert_matches(data, _MASTER_WATER_HEATS_BENZENE_KERN,
+                    _SINCE_MASTER_WATER_HEATS_BENZENE_KERN)
     assert not any("ASSIGNMENT_WARNING" in w for w in data["warnings"])
 
 
 def test_scoring_hot_in_tubes_gives_the_master_numbers_on_the_bell_path():
     data = _run(_water_heats_benzene(), method="bell_delaware")
     assert data["assignment"]["tube_side"] == "hot"
-    # 3e8a241, Bell-Delaware design of the same case.
-    assert _value(data["U_calculated"]) == pytest.approx(460.1777828989243, rel=1e-12)
-    assert _value(data["h_shell"]) == pytest.approx(673.8324876931076, rel=1e-12)
-    assert _value(data["shell_dp"]) == pytest.approx(23266.861493659602, rel=1e-12)
+    # Bell-Delaware design of the same case. 3e8a241 gave U 460.1777828989243,
+    # h_shell 673.8324876931076 and shell_dp 23266.861493659602; these moved with
+    # the Kern geometry under them (see _SINCE_MASTER_WATER_HEATS_BENZENE_KERN),
+    # and the shell dP is now the Kern one with no 1.15 uplift.
+    assert _value(data["U_calculated"]) == pytest.approx(416.87097088356177, rel=1e-12)
+    assert _value(data["h_shell"]) == pytest.approx(591.5821168422973, rel=1e-12)
+    assert _value(data["shell_dp"]) == pytest.approx(28159.587927023906, rel=1e-12)
 
 
 def test_force_hot_in_tubes_overrides_the_scoring_and_gives_the_master_numbers():
@@ -137,7 +174,7 @@ def test_force_hot_in_tubes_overrides_the_scoring_and_gives_the_master_numbers()
     # The scoring's own pick is still reported, and the reason says who decided.
     assert data["assignment"]["recommended_tube_side_fluid"] == "Water"
     assert data["assignment_reason"][0] == "Forced by user: hot in tubes"
-    _assert_matches(data, _MASTER_BENZENE_COOLER_KERN)
+    _assert_matches(data, _MASTER_BENZENE_COOLER_KERN, _SINCE_MASTER_BENZENE_COOLER_KERN)
 
 
 # ----------------------------------------------------------------------------

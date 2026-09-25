@@ -86,11 +86,18 @@ def test_convergence_tolerance_is_honoured():
     assert len(loose["convergence_history"]) == 1
     assert 5.0 < loose["convergence_history"][0] < 15.0
 
-    tight = _quiet(_benzene_cooler(u_tolerance_percent=1.0, force_hot_in_tubes=True).run).data
+    # With the bundle diameter for the settled pass count, the default 0.8
+    # relaxation walks this case into a 168/174 tube cycle, which the cycle rule
+    # settles (tested below) before the 1% test is reached. Plain successive
+    # substitution (relaxation 1.0) reaches the tolerance test.
+    tight = _quiet(_benzene_cooler(u_tolerance_percent=1.0, force_hot_in_tubes=True,
+                                   u_relaxation=1.0).run).data
     assert tight["converged"] is True
     assert len(tight["convergence_history"]) > 1
     assert tight["convergence_history"][-1] < 1.0
-    assert tight["status"] == "OK"
+    assert not any("cycles between tube counts" in w for w in tight["warnings"])
+    # The settled area is within 5% of what its own U requires.
+    assert tight["status"] == "MARGINAL"
 
 
 def test_failed_convergence_reaches_the_status():
@@ -244,7 +251,7 @@ def test_shell_is_never_smaller_than_the_bundle():
     tube_od = float(getattr(data["tube_od"], "value", data["tube_od"]))
     shell = float(getattr(data["shell_diameter"], "value", data["shell_diameter"]))
     bundle = ShellAndTubeHX._calculate_bundle_diameter(
-        SimpleNamespace(specs={}), data["tube_count"], tube_od
+        SimpleNamespace(specs={}), data["tube_count"], tube_od, data["tube_passes"], "triangular"
     )
     assert shell > bundle
 

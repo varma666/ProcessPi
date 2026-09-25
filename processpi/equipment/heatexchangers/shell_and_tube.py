@@ -10,6 +10,7 @@ from processpi.units.heat_transfer_coefficient import HeatTransferCoefficient
 from processpi.units.length import Length
 from processpi.units.pressure import Pressure
 from processpi.units.velocity import Velocity
+from processpi.calculations.fluids.friction_factor_colebrookwhite import ColebrookWhite
 from processpi.calculations.heat_transfer.hx_kern import (
     ConvectiveH,
     DarcyDrop,
@@ -50,6 +51,42 @@ _FT_MATH_ERRORS = (ValueError, ZeroDivisionError, OverflowError)
 # Mass Transfer, Eq. 8.60).
 _DITTUS_BOELTER_N_HEATED = 0.4
 _DITTUS_BOELTER_N_COOLED = 0.3
+
+# Sieder-Tate viscosity correction exponent, phi = (mu / mu_w)^0.14 (Sieder and
+# Tate 1936), as it enters Kern's shell-side Nusselt correlation and Kern's
+# shell- and tube-side pressure drops (Kern 1950).
+_SIEDER_TATE_EXPONENT = 0.14
+
+# Tube-side laminar/turbulent switch for the friction factor, the value the code
+# has always used; Kern (1950) takes tube flow as laminar below Re = 2100.
+_TUBE_LAMINAR_RE = 2100.0
+
+# Shell Reynolds range over which the Kern shell-side friction factor fit
+# f = exp(0.576 - 0.19 ln Re) was checked against Kern's chart; see
+# `_kern_shell_pressure_drop`.
+_KERN_SHELL_F_RE_MIN = 200.0
+_KERN_SHELL_F_RE_MAX = 1.0e6
+
+# Bundle diameter constants K1, n1 in Db = do (Nt / K1)^(1/n1), keyed by the
+# number of tube passes, for a tube pitch of 1.25 do. R. K. Sinnott, Coulson and
+# Richardson's Chemical Engineering Vol. 6, Chemical Engineering Design, 4th ed.
+# (Elsevier, 2005), Eq. 12.3 and Table 12.4.
+_BUNDLE_CONSTANTS = {
+    "triangular": {
+        1: (0.319, 2.142),
+        2: (0.249, 2.207),
+        4: (0.175, 2.285),
+        6: (0.0743, 2.499),
+        8: (0.0365, 2.675),
+    },
+    "square": {
+        1: (0.215, 2.207),
+        2: (0.156, 2.291),
+        4: (0.158, 2.263),
+        6: (0.0402, 2.617),
+        8: (0.0331, 2.643),
+    },
+}
 
 
 class ShellAndTubeHX(HeatExchanger):
@@ -475,7 +512,7 @@ class ShellAndTubeHX(HeatExchanger):
         geometry["area"] = geometry["tube_count"] * area_per_tube
         geometry["area_per_tube"] = area_per_tube
         geometry["tube_pitch"] = self._to_float(self.specs.get("tube_pitch"), "m") if self.specs.get("tube_pitch") is not None else (1.25 * geometry["tube_od"])
-        geometry["bundle_diameter"] = self._calculate_bundle_diameter(geometry["tube_count"], geometry["tube_od"])
+        geometry["bundle_diameter"] = self._calculate_bundle_diameter(geometry["tube_count"], geometry["tube_od"], tube_passes)
         if "shell_diameter" not in geometry:
             geometry["shell_diameter"] = self._calculate_shell_diameter(geometry["bundle_diameter"])
         area_per_tube_flow = math.pi * geometry["tube_id"] ** 2 / 4.0
@@ -687,11 +724,71 @@ class ShellAndTubeHX(HeatExchanger):
             "area": area,
         }
 
-    def _calculate_bundle_diameter(self, tube_count: int , tube_od: float) -> float:
-        k1 = float(self.specs.get("bundle_k1", 0.249))
-        n1 = float(self.specs.get("bundle_n1", 2.207))
-        Db = tube_od * math.pow((tube_count/k1),(1/n1))
-        return Db
+    def _calculate_bundle_diameter(
+        self,
+        tube_count: int,
+        tube_od: float,
+        tube_passes: int,
+        layout: str | None = None,
+    ) -> float:
+        """
+        Tube bundle diameter, Db = do (Nt / K1)^(1/n1).
+
+        K1 and n1 come from `_BUNDLE_CONSTANTS` (Sinnott, Coulson & Richardson
+        Vol. 6, Table 12.4) for the layout and the number of tube passes. The
+        table is for a pitch of 1.25 do. A user may override the pair with the
+        `bundle_k1` and `bundle_n1` specs, which must then be given together.
+
+        Args:
+            tube_count (int): Number of tubes Nt.
+            tube_od (float): Tube outside diameter [m].
+            tube_passes (int): Number of tube passes (1, 2, 4, 6 or 8).
+            layout (str | None): "triangular" or "square"; the configured
+                layout when omitted.
+
+        Returns:
+            float: Bundle diameter [m].
+
+        Raises:
+            ValueError: For a layout or pass count the table does not cover, or
+                when only one of bundle_k1 / bundle_n1 is given.
+        """
+        k1_spec = self.specs.get("bundle_k1")
+        n1_spec = self.specs.get("bundle_n1")
+        if (k1_spec is None) != (n1_spec is None):
+            raise ValueError("bundle_k1 and bundle_n1 must be given together")
+        if k1_spec is not None:
+            k1, n1 = float(k1_spec), float(n1_spec)
+        else:
+            layout = (layout or self._get_standard_layout()).lower()
+            if layout.startswith("tri"):
+                table = _BUNDLE_CONSTANTS["triangular"]
+            elif layout.startswith("squ"):
+                table = _BUNDLE_CONSTANTS["square"]
+            else:
+                raise ValueError(
+                    f"No bundle diameter constants for tube layout {layout!r}; "
+                    "Sinnott Table 12.4 covers 'triangular' and 'square' pitch "
+                    "(give bundle_k1 and bundle_n1 to use other constants)"
+                )
+            passes = int(tube_passes)
+            if passes not in table:
+                raise ValueError(
+                    f"No bundle diameter constants for {passes} tube passes; "
+                    f"Sinnott Table 12.4 covers {sorted(table)} passes "
+                    "(give bundle_k1 and bundle_n1 to use other constants)"
+                )
+            k1, n1 = table[passes]
+            pitch_spec = self.specs.get("tube_pitch")
+            if pitch_spec is not None:
+                pitch_ratio = self._to_float(pitch_spec, "m") / max(tube_od, 1e-12)
+                if abs(pitch_ratio - 1.25) > 0.0125:
+                    self._warn_with_category(
+                        "GEOMETRY_WARNING",
+                        f"Bundle diameter uses Sinnott Table 12.4, which is for a "
+                        f"pitch of 1.25 do; the pitch here is {pitch_ratio:.3f} do",
+                    )
+        return tube_od * math.pow(tube_count / k1, 1.0 / n1)
 
     def _calculate_shell_diameter(self, bundle_diameter: float) -> float:
         clearance = float(self.specs.get("bundle_clearance", max(0.02, 0.05 * bundle_diameter)))
@@ -797,8 +894,10 @@ class ShellAndTubeHX(HeatExchanger):
     
         # Shrinking the shell raises the velocity, but the shell can never be
         # smaller than the bundle it has to hold.
-        bundle_diameter = geometry.get("bundle_diameter") or self._calculate_bundle_diameter(
-            geometry["tube_count"], geometry["tube_od"]
+        # With the pass count the tube side has just settled on: the bundle of
+        # 8 passes is larger than the bundle of 2 for the same tube count.
+        bundle_diameter = self._calculate_bundle_diameter(
+            geometry["tube_count"], geometry["tube_od"], tube_passes
         )
         min_shell_diameter = self._calculate_shell_diameter(bundle_diameter)
         shell_diameter = max(shell_diameter, min_shell_diameter)
@@ -895,9 +994,11 @@ class ShellAndTubeHX(HeatExchanger):
             viscosity=shell["viscosity"],
         ).calculate()
         pr_s = max(shell["cp"] * shell["viscosity"] / max(shell["k"], 1e-12), 1e-12)
-        nu_s = KernShellNu(reynolds=max(re_s, 1.0), prandtl=pr_s).calculate()
+        # Kern: Nu = 0.36 Re^0.55 Pr^(1/3) (mu/mu_w)^0.14.
+        phi_s = self._sieder_tate_phi("shell", shell)
+        nu_s = KernShellNu(reynolds=max(re_s, 1.0), prandtl=pr_s).calculate() * phi_s
         self._debug(f"Shell Side Rey:{re_s}, Pra:{pr_s}, Nuss:{nu_s}")
-        return {"re_t": re_t, "pr_t": pr_t, "nu_t": nu_t, "de_shell": de_shell, "re_s": re_s, "pr_s": pr_s, "nu_s": nu_s}
+        return {"re_t": re_t, "pr_t": pr_t, "nu_t": nu_t, "de_shell": de_shell, "re_s": re_s, "pr_s": pr_s, "nu_s": nu_s, "phi_s": phi_s}
 
     def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], tube: Dict[str, float], shell: Dict[str, float]) -> Tuple[float, float]:
         h_t = self._safe_float(ConvectiveH(nusselt=dimless["nu_t"], k=tube["k"], diameter=geometry["tube_id"]).calculate().to("W/m2K"), "h_t")
@@ -1203,6 +1304,7 @@ class ShellAndTubeHX(HeatExchanger):
             "area_required", "geometry", "bundle_diameter",
             "shell_diameter", "v_tube", "v_shell", "dimless", "h_t", "h_s",
             "u_calculated", "u_clean", "re_shell", "tube_dp", "shell_dp",
+            "tube_passes",
         )
         passes: List[Dict[str, Any]] = []
         for i in range(1, max_iter + 1):
@@ -1259,6 +1361,7 @@ class ShellAndTubeHX(HeatExchanger):
             bundle_diameter = self._calculate_bundle_diameter(
                 geometry["tube_count"],
                 geometry["tube_od"],
+                tube_passes,
             )
             shell_diameter = geometry["shell_diameter"]
     
@@ -1301,6 +1404,7 @@ class ShellAndTubeHX(HeatExchanger):
                 "geometry": geometry,
                 "bundle_diameter": bundle_diameter,
                 "shell_diameter": shell_diameter,
+                "tube_passes": tube_passes,
                 "v_tube": v_tube,
                 "v_shell": v_shell,
                 "dimless": dimless,
@@ -1523,12 +1627,11 @@ class ShellAndTubeHX(HeatExchanger):
             viscosity=tube["viscosity"],
         ).calculate()
     
-        if re_tube < 2100:
-            f_tube = 16.0 / max(re_tube, 1e-9)
-        else:
-            f_tube = 0.079 / (re_tube ** 0.25)
+        f_tube = self._tube_fanning_friction(re_tube, tube_id)
     
         velocity_head = tube["density"] * v_tube**2 / 2.0
+        # Kern divides the straight-tube friction by phi_t = (mu/mu_w)^0.14.
+        phi_t = self._sieder_tate_phi("tube", tube)
     
         # Straight-length friction plus the 4 velocity heads per pass that Kern
         # charges for the entry, exit and turns.
@@ -1540,6 +1643,7 @@ class ShellAndTubeHX(HeatExchanger):
                 / max(tube_id, 1e-9)
             )
             * velocity_head
+            / phi_t
         ) + (
             4.0
             * tube_passes
@@ -1547,7 +1651,7 @@ class ShellAndTubeHX(HeatExchanger):
         )
     
         # ==========================================================
-        # SHELL SIDE DP
+        # SHELL SIDE DP (Kern)
         # ==========================================================
     
         if geometry is None:
@@ -1566,131 +1670,217 @@ class ShellAndTubeHX(HeatExchanger):
             max(0.4 * shell_diameter, 1e-6),
         )
     
-        # Crossflow area and equivalent diameter, from the same definitions the
-        # velocity check and the heat transfer correlation use.
+        shell_dp = self._kern_shell_pressure_drop(
+            shell=shell,
+            v_shell=v_shell,
+            shell_diameter=shell_diameter,
+            baffle_spacing=baffle_spacing,
+            tube_pitch=tube_pitch,
+            tube_od=tube_od,
+            tube_length=tube_length,
+        )
+    
+        return tube_dp, shell_dp
+
+    def _sieder_tate_phi(self, side: str, props: Dict[str, float]) -> float:
+        """
+        Sieder-Tate viscosity correction phi = (mu / mu_w)^0.14 for one side.
+
+        mu_w is the viscosity of that side's fluid at the wall temperature. It
+        is not estimated here: the component property model evaluates a
+        property at the component's own temperature (25 C unless the component
+        was built with another), not at a temperature the caller passes, and it
+        switches phase on vapour pressure (benzene at 90 C and 1 atm comes back
+        as a gas, 2.1e-5 Pa.s), so a wall viscosity taken from it would be made
+        up. It is read instead from the `hot_wall_viscosity` /
+        `cold_wall_viscosity` spec of the stream on that side (a Viscosity, or
+        a number in Pa.s). Without one, phi = 1 is assumed and an
+        ASSUMPTION_WARNING says so.
+
+        Args:
+            side (str): "tube" or "shell".
+            props (Dict[str, float]): That side's stream properties.
+
+        Returns:
+            float: phi.
+        """
+        mu_wall = self._wall_viscosity(side)
+        if mu_wall is None:
+            stream = self._side_stream_name(side)
+            self._warn_with_category(
+                "ASSUMPTION_WARNING",
+                f"Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the {side} side: "
+                f"no {stream}_wall_viscosity given",
+            )
+            return 1.0
+        return (props["viscosity"] / mu_wall) ** _SIEDER_TATE_EXPONENT
+
+    def _side_stream_name(self, side: str) -> str:
+        """"hot" or "cold": the stream the assignment put on `side`."""
+        if side == "tube":
+            return self._tube_side
+        return "cold" if self._tube_side == "hot" else "hot"
+
+    def _wall_viscosity(self, side: str) -> float | None:
+        """The wall viscosity spec of the stream on `side` [Pa.s], or None."""
+        stream = self._side_stream_name(side)
+        spec = self.specs.get(f"{stream}_wall_viscosity")
+        if spec is None:
+            return None
+        mu_wall = self._to_float(spec, "Pa·s")
+        if mu_wall <= 0.0:
+            raise ValueError(f"{stream}_wall_viscosity must be positive, got {mu_wall} Pa.s")
+        return mu_wall
+
+    def _viscosity_correction_report(self, tube: Dict[str, float], shell: Dict[str, float]) -> Dict[str, Any]:
+        """phi and its basis on each side, for the result."""
+        report = {}
+        for side, props in (("tube", tube), ("shell", shell)):
+            mu_wall = self._wall_viscosity(side)
+            report[side] = {
+                "phi": self._sieder_tate_phi(side, props),
+                "mu_bulk": props["viscosity"],
+                "mu_wall": mu_wall,
+                "basis": (
+                    f"{self._side_stream_name(side)}_wall_viscosity"
+                    if mu_wall is not None
+                    else "assumed phi = 1 (no wall viscosity given)"
+                ),
+            }
+        report["applied_to"] = [
+            "Kern shell-side Nusselt number",
+            "Kern shell-side pressure drop",
+            "tube-side friction pressure drop",
+        ]
+        return report
+
+    def _tube_roughness_m(self) -> float | None:
+        """The `tube_roughness` spec in metres (a Length, or a number in m), or None."""
+        spec = self.specs.get("tube_roughness")
+        if spec is None:
+            return None
+        roughness = self._to_float(spec, "m")
+        if roughness < 0.0:
+            raise ValueError(f"tube_roughness must not be negative, got {roughness} m")
+        return roughness
+
+    def _tube_friction_model(self) -> str:
+        """Name of the turbulent tube-side friction factor in use, for the report."""
+        roughness = self._tube_roughness_m()
+        if roughness is None:
+            return "Blasius, smooth tube (no tube_roughness given)"
+        return f"Colebrook-White, roughness {roughness:.3g} m"
+
+    def _tube_fanning_friction(self, re_tube: float, tube_id: float) -> float:
+        """
+        Fanning friction factor for the tube side.
+
+        The tube-side pressure drop is written with the Fanning factor,
+        dP = 4 f (L Np / di) rho v^2 / 2, so every branch returns a Fanning
+        factor:
+
+        - laminar, Re < 2100: f = 16 / Re (Hagen-Poiseuille);
+        - turbulent, no `tube_roughness`: Blasius smooth tube, f = 0.079 Re^-0.25;
+        - turbulent with `tube_roughness`: the Colebrook-White Darcy factor of
+          `processpi.calculations.fluids.ColebrookWhite`, divided by 4.
+
+        Args:
+            re_tube (float): Tube-side Reynolds number.
+            tube_id (float): Tube inside diameter [m].
+
+        Returns:
+            float: Fanning friction factor.
+        """
+        if re_tube < _TUBE_LAMINAR_RE:
+            return 16.0 / max(re_tube, 1e-9)
+        roughness = self._tube_roughness_m()
+        if roughness is None:
+            return 0.079 / (re_tube ** 0.25)
+        # ColebrookWhite takes the roughness in mm and returns the Darcy factor.
+        # Its own laminar branch (Re < 2000) is never reached from here.
+        darcy = self._safe_float(
+            ColebrookWhite(
+                reynolds_number=re_tube,
+                diameter=tube_id,
+                roughness=roughness * 1000.0,
+            ).calculate(),
+            "darcy_friction_factor",
+        )
+        return darcy / 4.0
+
+    def _kern_shell_pressure_drop(
+        self,
+        shell: Dict[str, float],
+        v_shell: float,
+        shell_diameter: float,
+        baffle_spacing: float,
+        tube_pitch: float,
+        tube_od: float,
+        tube_length: float,
+    ) -> float:
+        """
+        Kern shell-side pressure drop across the baffled bundle, nozzles excluded.
+
+            dP_s = f G_s^2 Ds (N_b + 1) / (2 rho De phi_s)
+            f    = exp(0.576 - 0.19 ln Re_s)
+
+        with G_s = rho v_s the mass velocity on the Kern cross-flow area
+        (`_shell_crossflow_area`), De the Kern equivalent diameter for the
+        layout (`_shell_equivalent_diameter`), Re_s = De G_s / mu, N_b the
+        number of baffles and N_b + 1 the number of bundle crossings.
+
+        Source: D. Q. Kern, Process Heat Transfer (McGraw-Hill, 1950), the
+        shell-side pressure drop and its friction factor chart (Fig. 29), in
+        the SI form and curve fit given by S. Kakac, H. Liu and
+        A. Pramuanjaroenkij, Heat Exchangers: Selection, Rating, and Thermal
+        Design, 3rd ed. (CRC Press, 2012), Chapter 8, Kern method. f is the
+        dimensionless friction factor of that form, not a Fanning or Darcy
+        factor. The fit was checked here against a digitisation of Kern's chart
+        (`Kern_f_Re` in the `ht` library): within 11% for 200 <= Re_s <= 1e6,
+        diverging below it (Re_s = 100: 0.742 against 0.926), so a warning is
+        raised outside that range.
+
+        phi_s = (mu / mu_w)^0.14 is the Sieder-Tate viscosity correction, from
+        `_sieder_tate_phi`.
+
+        Returns:
+            float: Shell-side pressure drop [Pa].
+        """
+        rho = shell["density"]
+        de_shell = self._shell_equivalent_diameter(tube_pitch, tube_od)
         as_cross = self._shell_crossflow_area(
             shell_diameter, baffle_spacing, tube_pitch, tube_od
         )
-    
-        de_shell = self._shell_equivalent_diameter(tube_pitch, tube_od)
-    
-        # Shell Reynolds
+        g_shell = rho * v_shell
         re_shell = Reynolds(
-            density=shell["density"],
+            density=rho,
             velocity=v_shell,
             diameter=de_shell,
             viscosity=shell["viscosity"],
         ).calculate()
-    
-        # ==========================================================
-        # IDEAL CROSSFLOW DP
-        # ==========================================================
-    
-        if re_shell < 100:
-            j_f = 0.25
-        else:
-            j_f = 0.0045 + 0.395 / (re_shell ** 0.15)
-    
-        ncv = max(
-            shell_diameter / tube_pitch,
-            1.0,
-        )
-    
-        dp_ideal = (
-            8.0
-            * j_f
-            * ncv
-            * (
-                shell["density"]
-                * v_shell**2
-                / 2.0
+        if re_shell <= 0.0:
+            return 0.0
+        if not (_KERN_SHELL_F_RE_MIN <= re_shell <= _KERN_SHELL_F_RE_MAX):
+            self._warn_with_category(
+                "HYDRAULIC_WARNING",
+                f"Shell Re {re_shell:.0f} is outside {_KERN_SHELL_F_RE_MIN:.0f} to "
+                f"{_KERN_SHELL_F_RE_MAX:.0e}, where the Kern shell-side friction "
+                "factor fit was checked; the shell pressure drop is extrapolated",
             )
+        f_shell = math.exp(0.576 - 0.19 * math.log(re_shell))
+
+        # Whole baffles that fit in the tube length; the shell fluid crosses
+        # the bundle once more than there are baffles.
+        n_baffles = max(int(math.floor(tube_length / max(baffle_spacing, 1e-9) + 1e-9)) - 1, 0)
+        phi_s = self._sieder_tate_phi("shell", shell)
+        self._debug(
+            f"Kern shell dP: As={as_cross:.6g} m2, G={g_shell:.6g}, Re={re_shell:.6g}, "
+            f"f={f_shell:.6g}, Nb={n_baffles}"
         )
-    
-        # ==========================================================
-        # BELL CORRECTION FACTORS
-        # ==========================================================
-    
-        ab = (
-            baffle_spacing
-            * max(
-                shell_diameter
-                - 0.95 * shell_diameter,
-                1e-6,
-            )
+        return (
+            f_shell * g_shell ** 2 * shell_diameter * (n_baffles + 1)
+            / (2.0 * rho * de_shell * phi_s)
         )
-    
-        atb = (
-            0.0008
-            * math.pi
-            * tube_od
-            * geometry.get("tube_count", 100)
-        )
-    
-        asb = (
-            0.003
-            * shell_diameter
-        )
-    
-        al = atb + asb
-    
-        # Bypass factor
-        alpha = 5.0 if re_shell < 100 else 4.0
-    
-        fb = math.exp(
-            -alpha
-            * (ab / max(as_cross, 1e-9))
-        )
-    
-        # Leakage factor
-        if al > 0:
-    
-            fl = 1.0 - (
-                0.44
-                * (
-                    (atb + 2.0 * asb)
-                    / al
-                )
-            )
-    
-        else:
-    
-            fl = 1.0
-    
-        fl = max(0.4, min(fl, 1.0))
-    
-        # ==========================================================
-        # WINDOW DP
-        # ==========================================================
-    
-        dp_window = (
-            0.5
-            * shell["density"]
-            * v_shell**2
-        )
-    
-        # ==========================================================
-        # TOTAL SHELL DP
-        # ==========================================================
-    
-        nbaffles = max(
-            int(
-                tube_length / baffle_spacing
-            ) - 1,
-            1,
-        )
-    
-        shell_dp = (
-            dp_ideal
-            * fb
-            * fl
-            * nbaffles
-        ) + (
-            nbaffles
-            * dp_window
-        )
-    
-        return tube_dp, shell_dp
 
     def _dp_limit(self, props: Dict[str, float]) -> float:
         mu_cp = props["viscosity"] * 1000.0
@@ -2112,6 +2302,16 @@ class ShellAndTubeHX(HeatExchanger):
                 "m2",
             ),
     
+            # The area the duty needs at the reported U and corrected LMTD.
+            "Area_required": (
+                Area(
+                    payload.get("area_required", payload.get("required_area")),
+                    "m2",
+                )
+                if payload.get("area_required", payload.get("required_area")) is not None
+                else None
+            ),
+
             "U_assumed": HeatTransferCoefficient(
                 payload["u_assumed"],
                 "W/m2K",
@@ -2136,12 +2336,22 @@ class ShellAndTubeHX(HeatExchanger):
             ),
     
             "LMTD": payload["lmtd"],
+
+            # The LMTD correction factor and the corrected mean temperature
+            # difference F x LMTD that the area is sized or rated on.
+            "ft": payload.get("ft"),
+
+            "corrected_lmtd": payload.get("cltd"),
     
             # ======================================================
             # GEOMETRY
             # ======================================================
     
             "tube_count": payload["geometry"]["tube_count"],
+
+            "tube_passes": payload.get("tube_passes"),
+
+            "shell_passes": payload.get("shell_passes"),
     
             "tube_od": Length(
                 payload["geometry"]["tube_od"],
@@ -2199,6 +2409,10 @@ class ShellAndTubeHX(HeatExchanger):
                 payload["shell_dp"],
                 "Pa",
             ),
+
+            "tube_friction_model": self._tube_friction_model(),
+
+            "viscosity_correction": payload.get("viscosity_correction"),
     
             # ======================================================
             # THERMAL
@@ -2352,6 +2566,9 @@ class ShellAndTubeHX(HeatExchanger):
         u_range = get_u_range("shell_and_tube", self.service_type, hot_hx.get("u_key", "generic"), cold_hx.get("u_key", "generic"))
 
         state = self._iterate_U(effective_q_watts, cltd, tube, shell, shell_passes, tube_passes, u_assumed, u_range)
+        # `_check_velocities` may have moved the tube passes inside the
+        # iteration; everything after it uses the passes of the settled geometry.
+        tube_passes = state.get("tube_passes", tube_passes)
 
         # Taken after the iteration so that the hydraulic, tube-count and
         # geometry-stagnation warnings raised inside it are not lost.
@@ -2426,6 +2643,9 @@ class ShellAndTubeHX(HeatExchanger):
             "cltd": cltd,
             "ft": ft,
             "n_units": n_units,
+            "shell_passes": shell_passes,
+            "tube_passes": tube_passes,
+            "viscosity_correction": self._viscosity_correction_report(tube, shell),
             "method": "kern",
             "tube_dp": tube_dp,
             "shell_dp": shell_dp,
@@ -2726,12 +2946,15 @@ class ShellAndTubeHX(HeatExchanger):
     
         data["h_shell"] = h_shell_corrected
     
-        data["U_calculated"] = (
-            u_results["U_dirty"]
+        # Unit-wrapped like the Kern result this replaces; these were bare floats.
+        data["U_calculated"] = HeatTransferCoefficient(
+            u_results["U_dirty"],
+            "W/m2K",
         )
     
-        data["U_clean"] = (
-            u_results["U_clean"]
+        data["U_clean"] = HeatTransferCoefficient(
+            u_results["U_clean"],
+            "W/m2K",
         )
     
         data["bell_factors"] = {
@@ -2742,12 +2965,9 @@ class ShellAndTubeHX(HeatExchanger):
             "Fs": fs,
         }
     
-        # ======================================================
-        # OPTIONAL:
-        # Increase shell DP slightly for Bell realism
-        # ======================================================
-    
-        data["shell_dp"] = self._get_value(data["shell_dp"], name="shell_dp") * 1.15
+        # The shell pressure drop is the Kern one: no Bell-Delaware pressure
+        # drop correlation is implemented, and the undocumented 15% uplift that
+        # stood in for one is gone.
     
         return data
     def _infer_service_type(self, hot: Dict[str, float], cold: Dict[str, float]) -> str:
@@ -2835,6 +3055,32 @@ class ShellAndTubeHX(HeatExchanger):
 
         lmtd = self._calculate_service_lmtd(service, hot, cold, th_out, tc_out)
 
+        # The same LMTD correction design() applies. The LMTD above is the
+        # counter-current one; a shell with 2 or more tube passes is not
+        # counter-current and needs F (Bowman, Mueller and Nagle 1940).
+        tube_passes = int(self.specs.get("tube_passes", 2))
+        shell_passes = int(self.specs.get("shell_passes", 1))
+        if service in condenser_services or service in reboiler_services:
+            # One stream at constant temperature: F = 1 for any pass arrangement.
+            ft = 1.0
+        elif shell_passes == 1 and tube_passes == 1:
+            # 1-1: pure counter-current flow, which the LMTD already describes.
+            ft = 1.0
+        else:
+            if shell_passes not in (1, 2):
+                raise ValueError(
+                    f"The LMTD correction factor is implemented for 1 and 2 shell "
+                    f"passes, not {shell_passes}"
+                )
+            ft = self._calculate_ft(hot, cold, th_out, tc_out, shell_passes, tube_passes)
+            if ft <= 0.0:
+                raise ValueError(
+                    f"Thermally infeasible outlet targets for {shell_passes} shell "
+                    f"pass(es) and {tube_passes} tube passes: the LMTD correction "
+                    f"factor is undefined (temperature cross)"
+                )
+        cltd = ft * lmtd
+
         user_u = self.specs.get("U")
         u_assumed = self._assume_u(hot, cold) if user_u is None else self._safe_float(user_u.to("W/m2K"), "U")
         area_spec = self.specs.get("area") or self.specs.get("Area")
@@ -2843,16 +3089,15 @@ class ShellAndTubeHX(HeatExchanger):
             if area <= 0:
                 raise ValueError("Provided exchanger area must be positive")
         else:
-            area = q_actual / max(u_assumed * lmtd, 1e-12)
+            area = q_actual / max(u_assumed * cltd, 1e-12)
 
         tube_od = self._safe_float(self.specs.get("tube_od", 0.01905), "tube_od")
         tube_id = self._safe_float(self.specs.get("tube_id", 0.016), "tube_id")
         tube_length = self._safe_float(self.specs.get("tube_length", 6.0), "tube_length")
-        tube_passes = int(self.specs.get("tube_passes", 2))
         tube_pitch = self._safe_float(self.specs.get("tube_pitch", 1.25 * tube_od), "tube_pitch")
         area_per_tube = math.pi * tube_od * tube_length
         tube_count = int(self.specs.get("tube_count", max(1, math.ceil(area / max(area_per_tube, 1e-12)))))
-        shell_diameter = self._safe_float(self.specs.get("shell_diameter", max(0.2, self._calculate_shell_diameter(self._calculate_bundle_diameter(tube_count, tube_od)))), "shell_diameter")
+        shell_diameter = self._safe_float(self.specs.get("shell_diameter", max(0.2, self._calculate_shell_diameter(self._calculate_bundle_diameter(tube_count, tube_od, tube_passes)))), "shell_diameter")
         baffle_spacing = self._safe_float(self.specs.get("baffle_spacing", max(0.2 * shell_diameter, 0.4 * shell_diameter)), "baffle_spacing")
 
         actual_area = tube_count * area_per_tube
@@ -2869,7 +3114,7 @@ class ShellAndTubeHX(HeatExchanger):
         h_t, h_s = self._calculate_htc(dimless, geometry, tube, shell)
         u_calc = self._calculate_overall_U(h_t=h_t, h_s=h_s, geometry=geometry)["U_dirty"]
 
-        tube_dp, shell_dp = self._calculate_pressure_drop(geometry=geometry, tube=tube, shell=shell, shell_velocity=v_shell, tube_velocity=v_tube, shell_passes=int(self.specs.get("shell_passes", 1)), tube_passes=tube_passes, shell_diameter=shell_diameter, tube_length=tube_length, tube_id=tube_id)
+        tube_dp, shell_dp = self._calculate_pressure_drop(geometry=geometry, tube=tube, shell=shell, shell_velocity=v_shell, tube_velocity=v_tube, shell_passes=shell_passes, tube_passes=tube_passes, shell_diameter=shell_diameter, tube_length=tube_length, tube_id=tube_id)
         tube_dp_limit = self._pressure_limit_pa("tube_dp", 70000.0)
         shell_dp_limit = self._pressure_limit_pa("shell_dp", 14000.0)
 
@@ -2892,7 +3137,7 @@ class ShellAndTubeHX(HeatExchanger):
         else:
             assessment = "OK"
 
-        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "warnings": list(dict.fromkeys(self._velocity_warnings(v_tube, v_shell, tube, shell))), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
+        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "ft": ft, "cltd": cltd, "tube_passes": tube_passes, "shell_passes": shell_passes, "viscosity_correction": self._viscosity_correction_report(tube, shell), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
 
         return self._finalize_results(payload)
     def design(self) -> Dict[str, Any]:
