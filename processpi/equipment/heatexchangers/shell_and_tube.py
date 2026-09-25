@@ -166,6 +166,12 @@ class ShellAndTubeHX(HeatExchanger):
         """
         if stream is None or getattr(stream, "temperature", None) is None:
             return
+        # A stream built without a temperature carries its component's
+        # temperature object (25 C by default); that is not an outlet the user
+        # specified, so there is nothing to check.
+        component = getattr(stream, "component", None)
+        if component is not None and stream.temperature is getattr(component, "temperature", None):
+            return
 
         t_specified = self._safe_float(stream.temperature.to("K"), f"{side}_out.temperature")
         if abs(t_specified - t_balance_k) > 0.5:
@@ -1307,7 +1313,13 @@ class ShellAndTubeHX(HeatExchanger):
             "tube_passes",
         )
         passes: List[Dict[str, Any]] = []
+        # A pass's hydraulic and tube-count warnings describe that pass's
+        # geometry. Each pass starts again from the warnings raised before the
+        # loop, so the results carry the warnings of the geometry reported and
+        # not those of every geometry tried on the way to it.
+        base_warnings = list(self._warnings)
         for i in range(1, max_iter + 1):
+            self._warnings = list(base_warnings)
     
             self._debug(f"U Iteration = {i}")
     
@@ -1506,19 +1518,16 @@ class ShellAndTubeHX(HeatExchanger):
             state["geometry_history"].append(geometry_key)
             passes.append({key: state[key] for key in pass_keys})
             passes[-1]["u_assumed"] = u_old
+            passes[-1]["pass_warnings"] = list(self._warnings)
+            passes[-1]["warnings"] = list(soft_warnings)
             state["convergence_history"].append(convergence_error)
     
             # ======================================================
             # STORE WARNINGS
             # ======================================================
     
-            if soft_warnings:
-    
-                existing = state.get("warnings", [])
-    
-                existing.extend(soft_warnings)
-    
-                state["warnings"] = list(dict.fromkeys(existing))
+            # This pass's soft warnings replace the previous pass's.
+            state["warnings"] = list(dict.fromkeys(soft_warnings))
 
             # A velocity outside its band is recorded here and reported as
             # HYDRAULIC_LIMITED by `_finalize_results`. It must not skip the
@@ -1566,7 +1575,8 @@ class ShellAndTubeHX(HeatExchanger):
                     if adequate
                     else max(cycle, key=lambda p: p["geometry"]["area"])
                 )
-                state.update(chosen)
+                state.update({k: v for k, v in chosen.items() if k != "pass_warnings"})
+                self._warnings = list(chosen["pass_warnings"])
                 state["converged"] = True
                 counts = sorted({p["geometry"]["tube_count"] for p in cycle})
                 self._warn_with_category(
