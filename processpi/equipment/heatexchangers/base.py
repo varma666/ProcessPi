@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 import logging
 from typing import Any, Dict, Optional
 
 from processpi.calculations.heat_transfer import HeatExchangerArea, LMTD, OverallHeatTransferCoefficient
 from processpi.calculations.heat_transfer.hx_kern import LatentDuty, SensibleDuty
+from processpi.equipment.base import Equipment
 from processpi.streams.material import MaterialStream
 
 
@@ -38,14 +38,70 @@ class HeatExchangerBaseMixin:
             self.logger.debug(f"[{section}] {name}: {value}")
 
 
-class HeatExchanger(HeatExchangerBaseMixin, ABC):
-    def __init__(self, hot_in: MaterialStream, cold_in: MaterialStream, hot_out: Optional[MaterialStream] = None, cold_out: Optional[MaterialStream] = None, **specs: Any):
+class HeatExchanger(HeatExchangerBaseMixin, Equipment):
+    """
+    Two-stream heat exchanger with named ports ``hot_in``, ``cold_in``,
+    ``hot_out`` and ``cold_out``, usable as a ``Flowsheet`` unit.
+
+    ``simulate()`` closes the energy balance for the flowsheet solve.
+    Sizing (``design()``/``rate()``) lives in the subclasses and is
+    dispatched by ``HeatExchangerEngine``.
+    """
+
+    DUTY_SPECS = ("Q", "hot_out_temperature", "cold_out_temperature")
+
+    def __init__(self, hot_in: Optional[MaterialStream] = None, cold_in: Optional[MaterialStream] = None, hot_out: Optional[MaterialStream] = None, cold_out: Optional[MaterialStream] = None, name: str = "HeatExchanger", **specs: Any):
+        Equipment.__init__(
+            self,
+            name,
+            inlet_ports=2,
+            outlet_ports=2,
+            inlet_names=["hot_in", "cold_in"],
+            outlet_names=["hot_out", "cold_out"],
+        )
         self.hot_in = hot_in
         self.cold_in = cold_in
         self.hot_out = hot_out
         self.cold_out = cold_out
         self.specs = specs
         self._init_runtime()
+
+    # ------------------------
+    # Named ports
+    # ------------------------
+    # The streams live in the Equipment port maps, so a stream connected
+    # through Flowsheet.connect() is the same object design() reads.
+    @property
+    def hot_in(self) -> Optional[MaterialStream]:
+        return self.inlets["hot_in"]
+
+    @hot_in.setter
+    def hot_in(self, stream: Optional[MaterialStream]) -> None:
+        self.inlets["hot_in"] = stream
+
+    @property
+    def cold_in(self) -> Optional[MaterialStream]:
+        return self.inlets["cold_in"]
+
+    @cold_in.setter
+    def cold_in(self, stream: Optional[MaterialStream]) -> None:
+        self.inlets["cold_in"] = stream
+
+    @property
+    def hot_out(self) -> Optional[MaterialStream]:
+        return self.outlets["hot_out"]
+
+    @hot_out.setter
+    def hot_out(self, stream: Optional[MaterialStream]) -> None:
+        self.outlets["hot_out"] = stream
+
+    @property
+    def cold_out(self) -> Optional[MaterialStream]:
+        return self.outlets["cold_out"]
+
+    @cold_out.setter
+    def cold_out(self, stream: Optional[MaterialStream]) -> None:
+        self.outlets["cold_out"] = stream
 
     @staticmethod
     def _get_value(x, name):
@@ -71,6 +127,8 @@ class HeatExchanger(HeatExchangerBaseMixin, ABC):
         return value if abs(value) > eps else eps
 
     def _stream_props(self, s: MaterialStream) -> Dict[str, float]:
+        if s is None:
+            raise ValueError(f"{self.name}: connect the hot_in and cold_in streams before sizing the exchanger.")
         return {
             "density": self._safe_float(s.density.to("kg/m3"), "density"),
             "viscosity": self._safe_float(s.component.viscosity().to("Pa·s"), "viscosity") if s.component and hasattr(s.component, "viscosity") else self._safe_float(self.specs.get("viscosity", 1e-3), "viscosity"),
@@ -210,6 +268,123 @@ class HeatExchanger(HeatExchangerBaseMixin, ABC):
         u = OverallHeatTransferCoefficient(resistances=[1.0 / h_tube, fouling_factor, 1.0 / h_shell]).calculate()
         return self._safe_float(u.to("W/m2K"), "overall_u")
 
-    @abstractmethod
     def design(self) -> Dict[str, Any]:
-        raise NotImplementedError
+        raise NotImplementedError(
+            f"{type(self).__name__} has no sizing method; use ShellAndTubeHX, DoublePipeHX, "
+            "CondenserHX, ReboilerHX, EvaporatorHX or HeatExchangerEngine to design an exchanger."
+        )
+
+    # ------------------------
+    # Flowsheet simulation
+    # ------------------------
+    def _wrap_temperature(self, value: float, unit: str = "K"):
+        from processpi.units.temperature import Temperature
+        return Temperature(float(value), unit)
+
+    def _inlet_state(self, port: str) -> Dict[str, float]:
+        """Temperature [K], mass flow [kg/s] and cp [J/kgK] of an inlet, all required."""
+        stream = self.inlets[port]
+        if stream is None:
+            raise ValueError(f"{self.name}: inlet port '{port}' is not connected.")
+        missing = []
+        if stream.temperature is None:
+            missing.append("temperature")
+        if stream.mass_flow() is None:
+            missing.append("mass flow")
+        if stream.specific_heat is None:
+            missing.append("specific heat")
+        if missing:
+            raise ValueError(f"{self.name}: inlet '{port}' (stream {stream.name!r}) has no {', '.join(missing)}.")
+        state = {
+            "t_k": self._to_float(stream.temperature, "K"),
+            "m_dot": self._to_float(stream.mass_flow(), "kg/s"),
+            "cp": self._to_float(stream.specific_heat, "J/kgK"),
+        }
+        if state["m_dot"] <= 0.0 or state["cp"] <= 0.0:
+            raise ValueError(f"{self.name}: inlet '{port}' needs a positive mass flow and specific heat.")
+        return state
+
+    def _has_phase_change(self) -> bool:
+        if self._is_phase_change_service() or self.specs.get("latent_heat") is not None:
+            return True
+        for side, stream in (("hot", self.hot_in), ("cold", self.cold_in)):
+            in_phase = str(stream.phase or "liquid").lower()
+            out_phase = self.specs.get(f"{side}_out_phase")
+            if out_phase is not None and str(out_phase).lower() != in_phase:
+                return True
+        return False
+
+    def _write_outlet(self, port: str, inlet: MaterialStream, t_out_k: float) -> MaterialStream:
+        """
+        Copy the inlet onto the outlet stream at the new temperature.
+
+        Mass, composition, phase and pressure carry over unchanged: simulate()
+        is a sensible-heat energy balance with no pressure-drop model.
+        """
+        outlet = self.outlets[port]
+        outlet.component = inlet.component
+        outlet.components = dict(inlet.components)
+        outlet.molecular_weights = dict(inlet.molecular_weights)
+        outlet.basis = inlet.basis
+        outlet.phase = inlet.phase
+        outlet.pressure = inlet.pressure
+        outlet.temperature = self._wrap_temperature(t_out_k, "K")
+        outlet.specific_heat = inlet.specific_heat
+        outlet.density = inlet.density
+        outlet._mass_flow = inlet.mass_flow()
+        outlet._molar_flow = inlet._molar_flow
+        # The inlet volumetric flow does not hold at the outlet temperature.
+        outlet.flow_rate = None
+        return outlet
+
+    def simulate(self) -> Dict[str, Any]:
+        """
+        Solve the exchanger as a flowsheet unit.
+
+        Exactly one duty spec is required: ``Q`` (HeatFlow or W),
+        ``hot_out_temperature`` or ``cold_out_temperature`` (Temperature or K).
+        Both sides then follow from Q = m_h cp_h (Th_in - Th_out)
+        = m_c cp_c (Tc_out - Tc_in), and the results are written to the
+        streams on the ``hot_out`` and ``cold_out`` ports.
+        """
+        given = [key for key in self.DUTY_SPECS if self.specs.get(key) is not None]
+        if len(given) != 1:
+            raise ValueError(f"{self.name}: simulate() needs exactly one of {list(self.DUTY_SPECS)}, got {given}.")
+        hot = self._inlet_state("hot_in")
+        cold = self._inlet_state("cold_in")
+        # Check both outlets before writing either, so a failed solve leaves no half-updated streams.
+        for port in ("hot_out", "cold_out"):
+            if self.outlets[port] is None:
+                raise ValueError(f"{self.name}: outlet port '{port}' is not connected.")
+        if self._has_phase_change():
+            raise NotImplementedError(f"{self.name}: simulate() handles sensible heat only; phase change is not supported yet.")
+        if hot["t_k"] <= cold["t_k"]:
+            raise ValueError(f"{self.name}: hot inlet ({hot['t_k']} K) must be hotter than cold inlet ({cold['t_k']} K).")
+        c_hot = hot["m_dot"] * hot["cp"]
+        c_cold = cold["m_dot"] * cold["cp"]
+
+        spec = given[0]
+        if spec == "Q":
+            q_w = self._to_float(self.specs["Q"], "W")
+        elif spec == "hot_out_temperature":
+            q_w = c_hot * (hot["t_k"] - self._to_float(self.specs[spec], "K"))
+        else:
+            q_w = c_cold * (self._to_float(self.specs[spec], "K") - cold["t_k"])
+
+        # Second law: no exchanger can move more than C_min (Th_in - Tc_in).
+        q_max = min(c_hot, c_cold) * (hot["t_k"] - cold["t_k"])
+        if q_w < 0.0 or q_w > q_max:
+            raise ValueError(f"{self.name}: duty {q_w:.6g} W from {spec} is outside the feasible range 0 to {q_max:.6g} W.")
+
+        th_out = hot["t_k"] - q_w / c_hot
+        tc_out = cold["t_k"] + q_w / c_cold
+        self._write_outlet("hot_out", self.hot_in, th_out)
+        self._write_outlet("cold_out", self.cold_in, tc_out)
+        self._trace_step("THERMAL", "flowsheet_duty_W", q_w)
+
+        return {
+            "Q": self._wrap_heat(q_w, "W"),
+            "hot_out_temperature": self.hot_out.temperature,
+            "cold_out_temperature": self.cold_out.temperature,
+            "effectiveness": q_w / q_max,
+        }
