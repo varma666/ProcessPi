@@ -7,6 +7,8 @@ from ...units import HeatFlow, HeatTransferCoefficient, Pressure
 
 
 class SensibleDuty(CalculationBase):
+    """Q = m * Cp * |Tin - Tout|. Replaces the deprecated ``SensibleHeatDuty``."""
+
     def validate_inputs(self):
         for key in ("m_dot", "cp", "t_in", "t_out"):
             if key not in self.inputs:
@@ -21,6 +23,8 @@ class SensibleDuty(CalculationBase):
 
 
 class LatentDuty(CalculationBase):
+    """Q = m * lambda. Replaces the deprecated ``LatentHeatDuty``."""
+
     def validate_inputs(self):
         for key in ("m_dot", "latent_heat"):
             if key not in self.inputs:
@@ -33,6 +37,8 @@ class LatentDuty(CalculationBase):
 
 
 class Reynolds(CalculationBase):
+    """Re = rho * v * D / mu. Replaces the deprecated ``ReynoldsFromProperties``."""
+
     def validate_inputs(self):
         for key in ("density", "velocity", "diameter", "viscosity"):
             if key not in self.inputs:
@@ -47,6 +53,11 @@ class Reynolds(CalculationBase):
 
 
 class DittusBoelter(CalculationBase):
+    """Dittus-Boelter: Nu = 0.023 * Re^0.8 * Pr^n, n = 0.4 heating (default), 0.3 cooling.
+
+    Replaces the deprecated ``KernNusselt``, which was this same formula.
+    """
+
     def validate_inputs(self):
         for key in ("reynolds", "prandtl"):
             if key not in self.inputs:
@@ -71,6 +82,8 @@ class KernShellNu(CalculationBase):
 
 
 class ConvectiveH(CalculationBase):
+    """h = Nu * k / D. Replaces the deprecated ``ConvectiveCoefficient``."""
+
     def validate_inputs(self):
         for key in ("nusselt", "k", "diameter"):
             if key not in self.inputs:
@@ -109,6 +122,12 @@ class ShellDiameterEstimate(CalculationBase):
 
 
 class DarcyDrop(CalculationBase):
+    """Darcy-Weisbach: dP = f * (L / D) * rho * v^2 / 2.
+
+    ``f`` is the Darcy friction factor (4 times the Fanning factor).
+    Replaces the deprecated ``DarcyPressureDrop``.
+    """
+
     def validate_inputs(self):
         for key in ("f", "length", "diameter", "density", "velocity"):
             if key not in self.inputs:
