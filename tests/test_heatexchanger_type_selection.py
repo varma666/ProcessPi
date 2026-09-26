@@ -131,5 +131,10 @@ def test_summary_reports_an_automatic_selection():
         "hx_type_selection": {"reason": "no hx_type given; larger inlet mass flow "
                                         "0.8 kg/s <= double pipe limit 1 kg/s"},
     })
-    assert "Type Selection        : auto, no hx_type given" in results.summary()
-    assert "Type Selection" not in HeatExchangerResults({"hx_type": "double_pipe"}).summary()
+    # 11e8f41 put the reason on its own line and labels an explicit type.
+    summary = results.summary()
+    assert "Type Selection        : auto\n" in summary
+    assert "Reason                : no hx_type given; larger inlet mass flow" in summary
+    explicit = HeatExchangerResults({"hx_type": "double_pipe"}).summary()
+    assert "Type Selection        : explicit\n" in explicit
+    assert "Reason" not in explicit

@@ -59,7 +59,13 @@ class HeatExchangerResults:
                 if unit and hasattr(value, "to"):
                     converted = value.to(unit)
     
-                    raw = getattr(converted, "value", converted)
+                    # `.value` is the stored SI base value; `.original_value`
+                    # is the number in the unit just asked for.
+                    raw = getattr(
+                        converted,
+                        "original_value",
+                        getattr(converted, "value", converted),
+                    )
     
                     if isinstance(raw, (int, float)):
                         return f"{raw:.{decimals}f} {unit}"
@@ -137,10 +143,12 @@ class HeatExchangerResults:
         # PRESSURE DROP LIMITS
         # ==========================================================
     
+        # The exchanger reports the limits it actually checked against: the
+        # user's tube_dp / shell_dp spec, or its own default when none was given.
         specs = data.get("specs", {}) or {}
     
-        tube_dp_limit = specs.get("tube_dp")
-        shell_dp_limit = specs.get("shell_dp")
+        tube_dp_limit = data.get("tube_dp_limit", specs.get("tube_dp"))
+        shell_dp_limit = data.get("shell_dp_limit", specs.get("shell_dp"))
     
         # ==========================================================
         # STATUS CLASSIFICATION
