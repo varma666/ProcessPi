@@ -29,7 +29,12 @@ class HeatExchangerBaseMixin:
         if tagged in self._warnings:
             return
         self._warnings.append(tagged)
-        self.logger.warning(tagged)
+        # The design loop clears per-pass warnings on every pass; a warning
+        # raised again on a later pass is not logged a second time.
+        logged = self.__dict__.setdefault("_logged_warnings", set())
+        if tagged not in logged:
+            logged.add(tagged)
+            self.logger.warning(tagged)
 
     def _trace_step(self, section: str, name: str, value: Any) -> None:
         entry = {"section": section, "name": name, "value": value}
