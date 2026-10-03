@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Acrolein(Component):
     """
-    Represents the properties and constants for Acrolein(C3?H4?O).
+    Represents the properties and constants for Acrolein(C3H4O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Acrolein, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Acrolein(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Acrolein"
-    formula = "C3?H4?O"
+    formula = "C3H4O"
     molecular_weight = 56.063
 
     # Critical properties
@@ -45,8 +45,8 @@ class Acrolein(Component):
     _critical_acentric_factor = 0.3198
 
     _density_constants = [1.3261, 0.26124, 506.0, 0.2489]
-    _specific_heat_constants = [0.0, -247.8, 1.0343, 0.0, 0.0, 1.066, 1.5801]
-    _viscosity_constants = [-12.032, 867.34, 0.19534]
-    _thermal_conductivity_constants = [0.2703, -0.0003764]
-    _vapor_pressure_constants = [138.4, 0.0, -19.638, 0.0264, 1.0]
-    _enthalpy_constants = [3.8736, 0.29335]
+    _specific_heat_constants = [103090,-247.8,1.0343,0,0]
+    _viscosity_constants = [-12.032, 867.34, 0.19534,0,0]
+    _thermal_conductivity_constants = [0.2703, -0.0003764,0,0,0]
+    _vapor_pressure_constants = [138.4, -7122.70, -19.638, 0.0264, 1.0]
+    _enthalpy_constants = [3.8736e-7, 0.29335,0,0,0]
