@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Acetylene(Component):
     """
-    Represents the properties and constants for Acetylene(C2?H2?).
+    Represents the properties and constants for Acetylene(C2H2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Acetylene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Acetylene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Acetylene"
-    formula = "C2?H2?"
+    formula = "C2H2"
     molecular_weight = 26.037
 
     # Critical properties
@@ -45,8 +45,8 @@ class Acetylene(Component):
     _critical_acentric_factor = 0.1912
 
     _density_constants = [2.4507, 0.27448, 308.3, 0.28752]
-    _specific_heat_constants = [0.0, 0.0, -15.895, 0.027732, 0.0, 0.8021, 0.8853]
-    _viscosity_constants = [6.224, -151.8, -2.6554]
-    _thermal_conductivity_constants = [0.33363, -0.00083655]
-    _vapor_pressure_constants = [39.63, 0.0, -2.78, 2.39e-16, 6.0]
-    _enthalpy_constants = [2.3214, 0.35938]
+    _specific_heat_constants = [-122020,3082.70,-15.894,0.02773,0]
+    _viscosity_constants = [6.224, -151.8, -2.6554,0,0]
+    _thermal_conductivity_constants = [0.33363, -0.00083655,0,0,0]
+    _vapor_pressure_constants = [39.63,-2552.20,-2.78, 2.39e-16, 6.0]
+    _enthalpy_constants = [2.3214e-07, 0.35938,0,0,0]
