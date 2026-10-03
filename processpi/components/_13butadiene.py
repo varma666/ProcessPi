@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _13Butadiene(Component):
     """
-    Represents the properties and constants for 13Butadiene(C4?H6?).
+    Represents the properties and constants for 13Butadiene(C4H6).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 13Butadiene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _13Butadiene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "13Butadiene"
-    formula = "C4?H6?"
+    formula = "C4H6"
     molecular_weight = 54.09
 
     # Critical properties
@@ -45,8 +45,8 @@ class _13Butadiene(Component):
     _critical_acentric_factor = 0.195
 
     _density_constants = [1.2346, 0.27216, 425.0, 0.28707]
-    _specific_heat_constants = [0.0, -323.1, 1.015, 3.2e-05, 0.0, 1.0333, 1.4148]
-    _viscosity_constants = [17.844, -310.2, -4.5058]
-    _thermal_conductivity_constants = [0.22231, -0.0003664]
-    _vapor_pressure_constants = [75.572, 0.0, -8.5323, 1.23e-05, 2.0]
-    _enthalpy_constants = [3.2632, 0.3701]
+    _specific_heat_constants = [128860,-323.1,1.015,0.000032,0]
+    _viscosity_constants = [17.844, -310.2, -4.5058,0,0]
+    _thermal_conductivity_constants = [0.22231, -0.0003664,0,0,0]
+    _vapor_pressure_constants = [75.572, -4621.90, -8.5323, 1.23e-05, 2.0]
+    _enthalpy_constants = [3.2632e-7, 0.3701,0,0,0]
