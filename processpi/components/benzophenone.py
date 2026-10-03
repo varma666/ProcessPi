@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Benzophenone(Component):
     """
-    Represents the properties and constants for Benzophenone(C13?H10?O).
+    Represents the properties and constants for Benzophenone(C13H10O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Benzophenone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Benzophenone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Benzophenone"
-    formula = "C13?H10?O"
+    formula = "C13H10O"
     molecular_weight = 182.218
 
     # Critical properties
@@ -45,8 +45,8 @@ class Benzophenone(Component):
     _critical_acentric_factor = 0.5019
 
     _density_constants = [0.43743, 0.24833, 830.0, 0.27555]
-    _specific_heat_constants = [0.0, 454.49, 0.0, 0.0, 0.0, 3.0218, 4.47]
+    _specific_heat_constants = [156130,454.49,0,0,0]
     _viscosity_constants = [13.354, -232.91, -3.2685, 1.75e+20, -8.052]
-    _thermal_conductivity_constants = [0.25867, -0.00022516]
-    _vapor_pressure_constants = [88.404, 0.0, -8.9014, 1.93e-18, 6.0]
-    _enthalpy_constants = [10.523, 0.87091, -0.45568]
+    _thermal_conductivity_constants = [0.25867, -0.00022516,0,0,0]
+    _vapor_pressure_constants = [88.404, -11769, -8.9014, 1.93e-18, 6.0]
+    _enthalpy_constants = [10.523e-7, 0.87091, -0.45568,0,0]
