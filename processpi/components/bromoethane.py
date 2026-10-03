@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Bromoethane(Component):
     """
-    Represents the properties and constants for Bromoethane(C2?H5?Br).
+    Represents the properties and constants for Bromoethane(C2H5Br).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Bromoethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Bromoethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Bromoethane"
-    formula = "C2?H5?Br"
+    formula = "C2H5Br"
     molecular_weight = 108.965
 
     # Critical properties
@@ -45,8 +45,8 @@ class Bromoethane(Component):
     _critical_acentric_factor = 0.2548
 
     _density_constants = [1.1908, 0.25595, 503.8, 0.29152]
-    _specific_heat_constants = [0.0, -109.12, 0.44032, 0.0, 0.0, 0.8818, 1.0453]
-    _viscosity_constants = [-10.015, 823.43, -0.11122]
-    _thermal_conductivity_constants = [0.1799, -0.000262]
-    _vapor_pressure_constants = [62.217, 0.0, -5.9761, 4.72e-17, 6.0]
-    _enthalpy_constants = [3.9004, 0.38012]
+    _specific_heat_constants = [94364,-109.12,0.44032,0,0]
+    _viscosity_constants = [-10.015, 823.43, -0.11122,0,0]
+    _thermal_conductivity_constants = [0.1799, -0.000262,0,0,0]
+    _vapor_pressure_constants = [62.217, -5113.30, -5.9761, 4.72e-17, 6.0]
+    _enthalpy_constants = [3.9004e-7, 0.38012,0,0,0]
