@@ -50,3 +50,15 @@ class _13Butanediol(Component):
     _thermal_conductivity_constants = [-0.0032865, 0.0011463, -1.55e-06,0,0]
     _vapor_pressure_constants = [123.22, -12620, -13.986, 3.93e-06, 2.0]
     _enthalpy_constants = [9.2247e-7, 0.42442,0,0,0]
+
+
+    #@PropertyMethod
+    def specific_heat(self) -> SpecificHeat:
+        if self._specific_heat is not None:
+            return self._specific_heat
+        T = self.temperature.value
+        Tr = T / self._critical_temperature.value
+        t = 1 - Tr
+        cp = (self._specific_heat_constants[0] / t ) + (self._specific_heat_constants[1]) - ( 2 * self._specific_heat_constants[0] * self._specific_heat_constants[2] * t) - (self._specific_heat_constants[0] * self._specific_heat_constants[3] * (t**2)) - ((self._specific_heat_constants[2]**2)*(t**3)/3) - ((self._specific_heat_constants[2] * self._specific_heat_constants[3] * (t**4))/2) - ((self._specific_heat_constants[0]**2) * (t**5)/5) 
+        return SpecificHeat(cp, "J/kgK")
+
