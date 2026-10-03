@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Benzamide(Component):
     """
-    Represents the properties and constants for Benzamide(C7?H7?NO).
+    Represents the properties and constants for Benzamide(C7H7NO).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Benzamide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Benzamide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Benzamide"
-    formula = "C7?H7?NO"
+    formula = "C7H7NO"
     molecular_weight = 121.137
 
     # Critical properties
@@ -45,8 +45,8 @@ class Benzamide(Component):
     _critical_acentric_factor = 0.5585
 
     _density_constants = [0.7371, 0.25487, 824.0, 0.28571]
-    _specific_heat_constants = [0.0, 260.66, 0.0, 0.0, 0.0, 2.6649, 3.0823]
-    _viscosity_constants = [-12.632, 2668.2]
-    _thermal_conductivity_constants = [0.28485, -0.00025225]
-    _vapor_pressure_constants = [85.474, 0.0, -8.3348, 1.29e-18, 6.0]
-    _enthalpy_constants = [8.7809, 0.1933, 0.30877, -0.14162]
+    _specific_heat_constants = [161440,260.66,0,0,0]
+    _viscosity_constants = [-12.632, 2668.2,0,0,0]
+    _thermal_conductivity_constants = [0.28485, -0.00025225,0,0,0]
+    _vapor_pressure_constants = [85.474, -11.932, -8.3348, 1.29e-18, 6.0]
+    _enthalpy_constants = [8.7809e-7, 0.1933, 0.30877, -0.14162,0]
