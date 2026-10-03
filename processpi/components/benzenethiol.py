@@ -49,4 +49,4 @@ class Benzenethiol(Component):
     _viscosity_constants = [-8.4562, 1024.4, -0.30635,0,0]
     _thermal_conductivity_constants = [0.20996, -0.0002146,0,0,0]
     _vapor_pressure_constants = [77.765, -8455.10, -7.7404, 4.31e-18, 6.0]
-    _enthalpy_constants = [6.225, 0.4412,0,0,0]
+    _enthalpy_constants = [6.225e-7, 0.4412,0,0,0]
