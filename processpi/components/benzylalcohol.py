@@ -3,7 +3,7 @@ from processpi.units import *
 
 class BenzylAlcohol(Component):
     """
-    Represents the properties and constants for Benzyl alcohol(C7?H8?O).
+    Represents the properties and constants for Benzyl alcohol(C7H8O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Benzyl alcohol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class BenzylAlcohol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Benzyl alcohol"
-    formula = "C7?H8?O"
+    formula = "C7H8O"
     molecular_weight = 108.138
 
     # Critical properties
@@ -45,8 +45,8 @@ class BenzylAlcohol(Component):
     _critical_acentric_factor = 0.3631
 
     _density_constants = [0.59867, 0.22849, 720.15, 0.23567]
-    _specific_heat_constants = [0.0, 0.0, -7.77514, 0.00591102, 0.0, 1.8905, 2.7617]
-    _viscosity_constants = [-14.152, 2652.0]
-    _thermal_conductivity_constants = [0.17847, -6.5843e-05]
-    _vapor_pressure_constants = [100.68, 0.0, -10.709, 3.06e-18, 6.0]
-    _enthalpy_constants = [8.4762, 0.35251, 0.43853, -0.3026]
+    _specific_heat_constants = [-334997,3644.21,-7.77514,0.00591102,0]
+    _viscosity_constants = [-14.152, 2652.0,0,0,0]
+    _thermal_conductivity_constants = [0.17847, -6.5843e-05,0,0,0]
+    _vapor_pressure_constants = [100.68, -11059, -10.709, 3.06e-18, 6.0]
+    _enthalpy_constants = [8.4762e-7, 0.35251, 0.43853, -0.3026,0]
