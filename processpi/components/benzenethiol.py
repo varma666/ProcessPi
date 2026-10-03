@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Benzenethiol(Component):
     """
-    Represents the properties and constants for Benzenethiol(C6?H6?S).
+    Represents the properties and constants for Benzenethiol(C6H6S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Benzenethiol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Benzenethiol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Benzenethiol"
-    formula = "C6?H6?S"
+    formula = "C6H6S"
     molecular_weight = 110.177
 
     # Critical properties
@@ -45,8 +45,8 @@ class Benzenethiol(Component):
     _critical_acentric_factor = 0.2628
 
     _density_constants = [0.83573, 0.26326, 689.0, 0.30798]
-    _specific_heat_constants = [0.0, 180.34, 0.0, 0.0, 0.0, 1.6636, 1.9954]
-    _viscosity_constants = [-8.4562, 1024.4, -0.30635]
-    _thermal_conductivity_constants = [0.20996, -0.0002146]
-    _vapor_pressure_constants = [77.765, 0.0, -7.7404, 4.31e-18, 6.0]
-    _enthalpy_constants = [6.225, 0.4412]
+    _specific_heat_constants = [119780,180.34,0,0,0]
+    _viscosity_constants = [-8.4562, 1024.4, -0.30635,0,0]
+    _thermal_conductivity_constants = [0.20996, -0.0002146,0,0,0]
+    _vapor_pressure_constants = [77.765, -8455.10, -7.7404, 4.31e-18, 6.0]
+    _enthalpy_constants = [6.225, 0.4412,0,0,0]
