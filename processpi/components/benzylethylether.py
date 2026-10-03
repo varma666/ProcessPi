@@ -3,7 +3,7 @@ from processpi.units import *
 
 class BenzylEthylEther(Component):
     """
-    Represents the properties and constants for Benzyl ethyl ether(C9?H12?O).
+    Represents the properties and constants for Benzyl ethyl ether(C9H12O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Benzyl ethyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class BenzylEthylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Benzyl ethyl ether"
-    formula = "C9?H12?O"
+    formula = "C9H12O"
     molecular_weight = 136.191
 
     # Critical properties
@@ -45,8 +45,8 @@ class BenzylEthylEther(Component):
     _critical_acentric_factor = 0.4332
 
     _density_constants = [0.60917, 0.26925, 662.0, 0.2632]
-    _specific_heat_constants = [0.0, 480.0, 0.0, 0.0, 0.0, 2.1981, 3.0741]
-    _viscosity_constants = [-11.46, 1497.0, -0.043397]
-    _thermal_conductivity_constants = [0.2029, -0.0002226]
-    _vapor_pressure_constants = [68.541, 0.0, -6.5804, 2.43e-06, 2.0]
-    _enthalpy_constants = [6.228, 0.3411]
+    _specific_heat_constants = [87500,480,0,0,0]
+    _viscosity_constants = [-11.46, 1497.0, -0.043397,0,0]
+    _thermal_conductivity_constants = [0.2029, -0.0002226,0,0,0]
+    _vapor_pressure_constants = [68.541, -7886.20, -6.5804, 2.43e-06, 2.0]
+    _enthalpy_constants = [6.228e-7, 0.3411,0,0,0]
