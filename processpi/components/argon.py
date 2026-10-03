@@ -45,8 +45,8 @@ class Argon(Component):
     _critical_acentric_factor = 0.0
 
     _density_constants = [3.8469, 0.2881, 150.86, 0.29783]
-    _specific_heat_constants = [0.0, 0.0, 11.043, 0.0, 0.0, 0.4523, 0.6708]
+    _specific_heat_constants = [134390,-1989.40,11.043,0,0]
     _viscosity_constants = [-8.8685, 204.29, -0.38305, -1.29e-22, 10.0]
-    _thermal_conductivity_constants = [0.1819, -0.0003176, -4.11e-06]
-    _vapor_pressure_constants = [42.127, 0.0, -4.1425, 5.73e-05, 2.0]
-    _enthalpy_constants = [0.87308, 0.3526]
+    _thermal_conductivity_constants = [0.1819, -0.0003176, -4.11e-06,0,0]
+    _vapor_pressure_constants = [42.127, -1093.10, -4.1425, 5.73e-05, 2.0]
+    _enthalpy_constants = [0.87308e-7, 0.3526,0,0,0]
