@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Biphenyl(Component):
     """
-    Represents the properties and constants for Biphenyl(C12?H10?).
+    Represents the properties and constants for Biphenyl(C12H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Biphenyl, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Biphenyl(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Biphenyl"
-    formula = "C12?H10?"
+    formula = "C12H10"
     molecular_weight = 154.208
 
     # Critical properties
@@ -45,8 +45,8 @@ class Biphenyl(Component):
     _critical_acentric_factor = 0.4029
 
     _density_constants = [0.52257, 0.25833, 773.0, 0.27026]
-    _specific_heat_constants = [0.0, 429.3, 0.0, 0.0, 0.0, 2.6868, 3.5075]
-    _viscosity_constants = [-9.9265, 1576.3, -0.21119]
-    _thermal_conductivity_constants = [0.19053, -0.00015145]
-    _vapor_pressure_constants = [77.314, 0.0, -7.5079, 2.24e-18, 6.0]
-    _enthalpy_constants = [7.635, 0.39182]
+    _specific_heat_constants = [121770,429.3,0,0,0]
+    _viscosity_constants = [-9.9265, 1576.3, -0.21119,0,0]
+    _thermal_conductivity_constants = [0.19053, -0.00015145,0,0,0]
+    _vapor_pressure_constants = [77.314, -9910.4, -7.5079, 2.24e-18, 6.0]
+    _enthalpy_constants = [7.635e-7, 0.39182,0,0,0]
