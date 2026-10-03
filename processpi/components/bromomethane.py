@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Bromomethane(Component):
     """
-    Represents the properties and constants for Bromomethane(CH3?Br).
+    Represents the properties and constants for Bromomethane(CH3Br).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Bromomethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Bromomethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Bromomethane"
-    formula = "CH3?Br"
+    formula = "CH3Br"
     molecular_weight = 94.939
 
     # Critical properties
@@ -45,8 +45,8 @@ class Bromomethane(Component):
     _critical_acentric_factor = 0.1922
 
     _density_constants = [1.6762, 0.26141, 467.0, 0.28402]
-    _specific_heat_constants = [0.0, -596.54, 2.16, -0.0024234, 0.0, 0.7798, 0.787]
-    _viscosity_constants = [-8.103, 570.8, -0.32958]
-    _thermal_conductivity_constants = [0.1912, -0.000299]
-    _vapor_pressure_constants = [72.586, 0.0, -7.9966, 1.16e-05, 2.0]
-    _enthalpy_constants = [3.169, 0.3015]
+    _specific_heat_constants = [129730,-596.54,2.16,-0.0024234,0]
+    _viscosity_constants = [-8.103, 570.8, -0.32958,0,0]
+    _thermal_conductivity_constants = [0.1912, -0.000299,0,0,0]
+    _vapor_pressure_constants = [72.586, -4698.60, -7.9966, 1.16e-05, 2.0]
+    _enthalpy_constants = [3.169e-7, 0.3015,0,0,0]
