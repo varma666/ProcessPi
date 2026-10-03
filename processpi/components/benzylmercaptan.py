@@ -3,7 +3,7 @@ from processpi.units import *
 
 class BenzylMercaptan(Component):
     """
-    Represents the properties and constants for Benzyl mercaptan(C7?H8?S).
+    Represents the properties and constants for Benzyl mercaptan(C7H8S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Benzyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class BenzylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Benzyl mercaptan"
-    formula = "C7?H8?S"
+    formula = "C7H8S"
     molecular_weight = 124.203
 
     # Critical properties
@@ -45,8 +45,8 @@ class BenzylMercaptan(Component):
     _critical_acentric_factor = 0.3126
 
     _density_constants = [0.70797, 0.25982, 718.0, 0.32144]
-    _specific_heat_constants = [0.0, 346.89, 0.0, 0.0, 0.0, 1.8494, 2.6406]
-    _viscosity_constants = [-11.459, 1334.4, 0.00049694]
-    _thermal_conductivity_constants = [0.20316, -0.00019912]
-    _vapor_pressure_constants = [118.02, 0.0, -13.91, 6.48e-06, 2.0]
-    _enthalpy_constants = [6.9642, 0.44354]
+    _specific_heat_constants = [1000320,346.89,0,0,0]
+    _viscosity_constants = [-11.459, 1334.4, 0.00049694,0,0,0]
+    _thermal_conductivity_constants = [0.20316, -0.00019912,0,0,0]
+    _vapor_pressure_constants = [118.02, -10527, -13.91, 6.48e-06, 2.0]
+    _enthalpy_constants = [6.9642e-7, 0.44354,0,0,0]
