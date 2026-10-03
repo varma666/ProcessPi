@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Benzonitrile(Component):
     """
-    Represents the properties and constants for Benzonitrile(C7?H5?N).
+    Represents the properties and constants for Benzonitrile(C7H5N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Benzonitrile, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Benzonitrile(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Benzonitrile"
-    formula = "C7?H5?N"
+    formula = "C7H5N"
     molecular_weight = 103.121
 
     # Critical properties
@@ -45,8 +45,8 @@ class Benzonitrile(Component):
     _critical_acentric_factor = 0.3662
 
     _density_constants = [0.8552, 0.26785, 699.35, 0.30523]
-    _specific_heat_constants = [0.0, 242.61, 0.0, 0.0, 0.0, 1.5656, 2.0599]
-    _viscosity_constants = [-20.236, 1737.4, 1.3531]
-    _thermal_conductivity_constants = [0.21284, -0.00021587]
-    _vapor_pressure_constants = [138.5, 0.0, -17.085, 9.56e-06, 2.0]
-    _enthalpy_constants = [6.8077, 0.63344, -0.27365]
+    _specific_heat_constants = [93383,242.61,0,0,0]
+    _viscosity_constants = [-20.236, 1737.4, 1.3531,0,0]
+    _thermal_conductivity_constants = [0.21284, -0.00021587,0,0,0]
+    _vapor_pressure_constants = [138.5, -11195, -17.085, 9.56e-06, 2.0]
+    _enthalpy_constants = [6.8077, 0.63344, -0.27365,0,0]
