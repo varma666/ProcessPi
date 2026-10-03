@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Anisole(Component):
     """
-    Represents the properties and constants for Anisole(C7?H8?O).
+    Represents the properties and constants for Anisole(C7H8O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Anisole, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Anisole(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Anisole"
-    formula = "C7?H8?O"
+    formula = "C7H8O"
     molecular_weight = 108.138
 
     # Critical properties
@@ -45,8 +45,8 @@ class Anisole(Component):
     _critical_acentric_factor = 0.3502
 
     _density_constants = [0.77488, 0.26114, 645.6, 0.28234]
-    _specific_heat_constants = [0.0, 93.455, 0.23602, 0.0, 0.0, 1.9978, 2.5153]
-    _viscosity_constants = [-15.407, 1518.7, 0.60172]
-    _thermal_conductivity_constants = [0.23494, -0.00026477]
-    _vapor_pressure_constants = [128.06, 0.0, -16.693, 0.0149, 1.0]
-    _enthalpy_constants = [5.8662, 0.37127]
+    _specific_heat_constants = [150940,93.455,0.23602,0,0]
+    _viscosity_constants = [-15.407, 1518.7, 0.60172,0,0]
+    _thermal_conductivity_constants = [0.23494, -0.00026477,0,0,0]
+    _vapor_pressure_constants = [128.06, -9307.70, -16.693, 0.0149, 1.0]
+    _enthalpy_constants = [5.8662e-7, 0.37127,0,0,0]
