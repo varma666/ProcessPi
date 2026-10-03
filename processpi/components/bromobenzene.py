@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Bromobenzene(Component):
     """
-    Represents the properties and constants for Bromobenzene(C6?H5?Br).
+    Represents the properties and constants for Bromobenzene(C6H5Br).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Bromobenzene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Bromobenzene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Bromobenzene"
-    formula = "C6?H5?Br"
+    formula = "C6H5Br"
     molecular_weight = 157.008
 
     # Critical properties
@@ -45,8 +45,8 @@ class Bromobenzene(Component):
     _critical_acentric_factor = 0.2506
 
     _density_constants = [0.8226, 0.26632, 670.15, 0.2821]
-    _specific_heat_constants = [0.0, -9.45, 0.358, 0.0, 0.0, 1.496, 2.0467]
-    _viscosity_constants = [-20.611, 1656.5, 1.4415]
-    _thermal_conductivity_constants = [0.16983, -0.0001981]
-    _vapor_pressure_constants = [63.749, 0.0, -5.879, 5.21e-18, 6.0]
-    _enthalpy_constants = [5.552, 0.37694]
+    _specific_heat_constants = [121600,-9.45,0.358,0,0]
+    _viscosity_constants = [-20.611, 1656.5, 1.4415,0,0]
+    _thermal_conductivity_constants = [0.16983, -0.0001981,0,0,0]
+    _vapor_pressure_constants = [63.749,-7130.20, -5.879, 5.21e-18, 6.0]
+    _enthalpy_constants = [5.552e-7, 0.37694,0,0,0]
