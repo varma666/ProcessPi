@@ -49,4 +49,4 @@ class Benzonitrile(Component):
     _viscosity_constants = [-20.236, 1737.4, 1.3531,0,0]
     _thermal_conductivity_constants = [0.21284, -0.00021587,0,0,0]
     _vapor_pressure_constants = [138.5, -11195, -17.085, 9.56e-06, 2.0]
-    _enthalpy_constants = [6.8077, 0.63344, -0.27365,0,0]
+    _enthalpy_constants = [6.8077e-7, 0.63344, -0.27365,0,0]
