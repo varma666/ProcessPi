@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Butanol(Component):
     """
-    Represents the properties and constants for 2Butanol(C4?H10?O).
+    Represents the properties and constants for 2Butanol(C4H10O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Butanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Butanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Butanol"
-    formula = "C4?H10?O"
+    formula = "C4H10O"
     molecular_weight = 74.122
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Butanol(Component):
     _critical_acentric_factor = 0.5692
 
     _density_constants = [0.9682, 0.26244, 535.9, 0.26749]
-    _specific_heat_constants = [0.0, 0.0, 13.828, -0.0135, 0.0, 1.3485, 2.719]
-    _viscosity_constants = [-16.323, 3141.7]
-    _thermal_conductivity_constants = [0.22787, -0.00030727]
-    _vapor_pressure_constants = [114.68, 0.0, -12.963, 1.87e-17, 6.0]
-    _enthalpy_constants = [7.9227, 0.58361, 0.02016, -0.08654]
+    _specific_heat_constants = [426790,-3694.30,13.828,-0.0135,0]
+    _viscosity_constants = [-16.323, 3141.7,0,0,0]
+    _thermal_conductivity_constants = [0.22787, -0.00030727,0,0,0]
+    _vapor_pressure_constants = [114.68, -9850.20, -12.963, 1.87e-17, 6.0]
+    _enthalpy_constants = [7.9227e-7, 0.58361, 0.02016, -0.08654,0]
