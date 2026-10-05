@@ -3,7 +3,7 @@ from processpi.units import *
 
 class SeButylmercaptan(Component):
     """
-    Represents the properties and constants for se-Butylmercaptan(C4?H10?S).
+    Represents the properties and constants for se-Butylmercaptan(C4H10S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for se-Butylmercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class SeButylmercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "se-Butylmercaptan"
-    formula = "C4?H10?S"
+    formula = "C4H10S"
     molecular_weight = 90.187
 
     # Critical properties
@@ -45,8 +45,8 @@ class SeButylmercaptan(Component):
     _critical_acentric_factor = 0.2506
 
     _density_constants = [0.89137, 0.27365, 554.0, 0.2953]
-    _specific_heat_constants = [0.0, -491.54, 1.7219, -0.0012499, 0.0, 1.6003, 1.8844]
-    _viscosity_constants = [-10.903, 932.82, 0.023034]
-    _thermal_conductivity_constants = [0.2069, -0.0002568]
-    _vapor_pressure_constants = [60.649, 0.0, -5.6113, 1.59e-17, 6.0]
-    _enthalpy_constants = [4.6432, 0.399]
+    _specific_heat_constants = [197890,-491.54,1.7219,-0.0012499,0]
+    _viscosity_constants = [-10.903, 932.82, 0.023034,0,0]
+    _thermal_conductivity_constants = [0.2069, -0.0002568,0,0,0]
+    _vapor_pressure_constants = [60.649, -5785.90, -5.6113, 1.59e-17, 6.0]
+    _enthalpy_constants = [4.6432e-7, 0.399,0,0,0]
