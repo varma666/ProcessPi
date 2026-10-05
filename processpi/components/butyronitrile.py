@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Butyronitrile(Component):
     """
-    Represents the properties and constants for Butyronitrile(C4?H7?N).
+    Represents the properties and constants for Butyronitrile(C4H7N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Butyronitrile, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Butyronitrile(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Butyronitrile"
-    formula = "C4?H7?N"
+    formula = "C4H7N"
     molecular_weight = 69.105
 
     # Critical properties
@@ -45,8 +45,8 @@ class Butyronitrile(Component):
     _critical_acentric_factor = 0.3714
 
     _density_constants = [0.87533, 0.24331, 582.25, 0.28586]
-    _specific_heat_constants = [0.0, 174.0, 0.0, 0.0, 0.0, 1.3206, 1.7199]
-    _viscosity_constants = [-10.136, 1006.4, -0.1337]
-    _thermal_conductivity_constants = [0.2597, -0.00031]
-    _vapor_pressure_constants = [66.32, 0.0, -6.3087, 1.35e-17, 6.0]
-    _enthalpy_constants = [5.22, 0.165, 0.6692, -0.539]
+    _specific_heat_constants = [104000,174,0,0,0]
+    _viscosity_constants = [-10.136, 1006.4, -0.1337,0,0]
+    _thermal_conductivity_constants = [0.2597, -0.00031,0,0,0]
+    _vapor_pressure_constants = [66.32, -6714.90, -6.3087, 1.35e-17, 6.0]
+    _enthalpy_constants = [5.22e-7, 0.165, 0.6692, -0.539,0]
