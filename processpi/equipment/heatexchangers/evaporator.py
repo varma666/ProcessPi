@@ -287,18 +287,21 @@ class EvaporatorHX(ShellAndTubeHX):
         # ----------------------------------------------------------
 
         if self.boiling_side == "tube":
+            # Cold side is the heating side when the boiling fluid
+            # is assigned to the tubes.
             explicit_heating_out = (
                 self._explicit_outlet_temperature(
-                    self.hot_out
+                    self.cold_out
                 )
             )
         else:
+            # Hot side is the heating side when the boiling fluid
+            # is assigned to the shell.
             explicit_heating_out = (
                 self._explicit_outlet_temperature(
                     self.hot_out
                 )
             )
-
         # ----------------------------------------------------------
         # Available heating-side duty
         # ----------------------------------------------------------
