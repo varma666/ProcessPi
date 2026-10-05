@@ -3,7 +3,7 @@ from processpi.units import *
 
 class ButylAcetate(Component):
     """
-    Represents the properties and constants for Butyl acetate(C6?H12?O2?).
+    Represents the properties and constants for Butyl acetate(C6H12O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Butyl acetate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class ButylAcetate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Butyl acetate"
-    formula = "C6?H12?O2?"
+    formula = "C6H12O2"
     molecular_weight = 116.158
 
     # Critical properties
@@ -45,8 +45,8 @@ class ButylAcetate(Component):
     _critical_acentric_factor = 0.4394
 
     _density_constants = [0.67794, 0.2637, 575.4, 0.29318]
-    _specific_heat_constants = [0.0, 384.52, 0.0, 0.0, 0.0, 2.2649, 2.6537]
-    _viscosity_constants = [-17.488, 1478.2, 0.91828]
-    _thermal_conductivity_constants = [0.21721, -0.00026563]
-    _vapor_pressure_constants = [122.82, 0.0, -14.99, 1.05e-05, 2.0]
-    _enthalpy_constants = [5.8276, 0.38854]
+    _specific_heat_constants = [111850,384.52,0,0,0]
+    _viscosity_constants = [-17.488, 1478.2, 0.91828,0,0]
+    _thermal_conductivity_constants = [0.21721, -0.00026563,0,0,0]
+    _vapor_pressure_constants = [122.82, -9253.20, -14.99, 1.05e-05, 2.0]
+    _enthalpy_constants = [5.8276e-7, 0.38854,0,0,0]
