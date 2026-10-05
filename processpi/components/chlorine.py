@@ -15,3 +15,10 @@ class Chlorine(Component):
     _thermal_conductivity_constants = [0.2246, -0.000064,-0.000000788,0,0]
     _vapor_pressure_constants = [71.334,-3855,-8.5171,1.24E-02, 1] 
     _enthalpy_constants = [3.068E-7, 0.8458, -0.9001,0.453, 0]  # Placeholder for enthalpy constants
+
+
+    def hx_data(self):
+        p = self.pressure.to("Pa").value
+        pvap = self.vapor_pressure().to("Pa").value
+        phase = "vapor" if p < pvap else "liquid"
+        return {"family": "gas", "phase": phase, "velocity_key": "chlorine", "u_key": "gas", "fouling_key": "gas", "corrosion_key": "gas"}
