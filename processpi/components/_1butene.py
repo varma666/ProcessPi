@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Butene(Component):
     """
-    Represents the properties and constants for 1Butene(C4?H8?).
+    Represents the properties and constants for 1Butene(C4H8).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Butene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Butene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Butene"
-    formula = "C4?H8?"
+    formula = "C4H8"
     molecular_weight = 56.106
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Butene(Component):
     _critical_acentric_factor = 0.1845
 
     _density_constants = [1.0877, 0.26454, 419.5, 0.2843]
-    _specific_heat_constants = [0.0, 0.0, 11.963, -0.037454, 4.5e-05, 1.1015, 1.8103]
-    _viscosity_constants = [-10.773, 591.61]
-    _thermal_conductivity_constants = [0.22153, -0.00035023]
-    _vapor_pressure_constants = [51.836, 0.0, -4.5229, 4.88e-17, 6.0]
-    _enthalpy_constants = [3.3774, 0.5107, -0.17304, 0.05181]
+    _specific_heat_constants = [182050,-1611,11.963,-0.03745,4.5e-5]
+    _viscosity_constants = [-10.773, 591.61,0,0,0]
+    _thermal_conductivity_constants = [0.22153, -0.00035023,0,0,0]
+    _vapor_pressure_constants = [51.836, -4019.20, -4.5229, 4.88e-17, 6.0]
+    _enthalpy_constants = [3.3774e-7, 0.5107, -0.17304, 0.05181,0]
