@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Butylbenzene(Component):
     """
-    Represents the properties and constants for Butylbenzene(C10?H14?).
+    Represents the properties and constants for Butylbenzene(C10H14).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Butylbenzene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Butylbenzene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Butylbenzene"
-    formula = "C10?H14?"
+    formula = "C10H14"
     molecular_weight = 134.218
 
     # Critical properties
@@ -45,8 +45,8 @@ class Butylbenzene(Component):
     _critical_acentric_factor = 0.3941
 
     _density_constants = [0.50812, 0.25238, 660.5, 0.29373]
-    _specific_heat_constants = [0.0, -13.912, 0.72897, 0.0, 0.0, 2.0492, 2.9354]
-    _viscosity_constants = [-23.802, 1887.2, 1.8479]
-    _thermal_conductivity_constants = [0.18707, -0.00020037]
-    _vapor_pressure_constants = [101.22, 0.0, -11.538, 5.92e-06, 2.0]
-    _enthalpy_constants = [6.3487, 0.38222]
+    _specific_heat_constants = [182470,-13.912,0.72897,0,0]
+    _viscosity_constants = [-23.802, 1887.2, 1.8479,0,0,0]
+    _thermal_conductivity_constants = [0.18707, -0.00020037,0,0,0]
+    _vapor_pressure_constants = [101.22, -9255.40, -11.538, 5.92e-06, 2.0]
+    _enthalpy_constants = [6.3487e-7, 0.38222,0,0,0]
