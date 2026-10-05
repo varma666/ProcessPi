@@ -46,6 +46,8 @@ class EvaporatorHX(ShellAndTubeHX):
 
         th_out = hot["t_k"] - q_watts / max(hot["m_dot"] * hot["cp"], 1e-12)
         tc_out = cold["t_k"]  # near-isothermal boiling
+        print("DEBUG m_dot cold:", cold["m_dot"])
+        print("DEBUG latent_heat:", latent_heat)
         return q_watts, th_out, tc_out
 
     def _calculate_ft(self, *args: Any, **kwargs: Any) -> float:
