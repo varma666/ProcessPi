@@ -3,7 +3,7 @@ from processpi.units import *
 
 class ButylMercaptan(Component):
     """
-    Represents the properties and constants for Butyl mercaptan(C4?H10?S).
+    Represents the properties and constants for Butyl mercaptan(C4H10S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Butyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class ButylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Butyl mercaptan"
-    formula = "C4?H10?S"
+    formula = "C4H10S"
     molecular_weight = 90.187
 
     # Critical properties
@@ -45,8 +45,8 @@ class ButylMercaptan(Component):
     _critical_acentric_factor = 0.2714
 
     _density_constants = [0.89458, 0.27463, 570.1, 0.28512]
-    _specific_heat_constants = [0.0, -804.35, 2.7063, -0.0023017, 0.0, 1.6365, 1.9359]
-    _viscosity_constants = [-10.807, 966.74, -0.014851]
-    _thermal_conductivity_constants = [0.21143, -0.000258]
-    _vapor_pressure_constants = [65.382, 0.0, -6.2585, 1.49e-17, 6.0]
-    _enthalpy_constants = [4.9702, 0.41199]
+    _specific_heat_constants = [232190,-804.35,2.7063,-0.0023017,0]
+    _viscosity_constants = [-10.807, 966.74, -0.014851,0,0]
+    _thermal_conductivity_constants = [0.21143, -0.000258,0,0,0]
+    _vapor_pressure_constants = [65.382, -6262.40, -6.2585, 1.49e-17, 6.0]
+    _enthalpy_constants = [4.9702e-7, 0.41199,0,0,0]
