@@ -2,6 +2,7 @@
 
 from .heatexchangers import *
 from .pressure_vessel import PressureVessel, PressureVessels
+from .distillation import DistillationColumn, DistillationResults
 
 __all__ = [
     "HeatExchanger",
@@ -15,4 +16,6 @@ __all__ = [
     "BellDelawareHX",
     "PressureVessel",
     "PressureVessels",
+    "DistillationColumn",
+    "DistillationResults",
 ]

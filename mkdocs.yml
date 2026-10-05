@@ -118,6 +118,7 @@ nav:
           - Overview: user-guide/equipment/overview.md
           - Heat Exchangers: user-guide/equipment/heat_exchangers/overview.md
           - Pressure Vessels: user-guide/equipment/pressure_vessel.md
+          - Distillation Columns: user-guide/equipment/distillation_column.md
           - Coming Soon: user-guide/equipment/coming_soon.md
 
           
