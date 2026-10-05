@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Cis2Butene(Component):
     """
-    Represents the properties and constants for cis2Butene(C4?H8?).
+    Represents the properties and constants for cis2Butene(C4H8).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for cis2Butene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Cis2Butene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "cis2Butene"
-    formula = "C4?H8?"
+    formula = "C4H8"
     molecular_weight = 56.106
 
     # Critical properties
@@ -45,8 +45,8 @@ class Cis2Butene(Component):
     _critical_acentric_factor = 0.2019
 
     _density_constants = [1.1591, 0.27085, 435.5, 0.28116]
-    _specific_heat_constants = [0.0, -65.47, -0.64, 0.002912, 0.0, 1.134, 1.5022]
-    _viscosity_constants = [-10.346, 522.3, -0.011847]
-    _thermal_conductivity_constants = [0.21378, -0.00035445]
-    _vapor_pressure_constants = [72.541, 0.0, -7.9776, 1.04e-05, 2.0]
-    _enthalpy_constants = [3.4358, 0.38004]
+    _specific_heat_constants = [126680,-65.47,-0.64,0.002912,0]
+    _viscosity_constants = [-10.346, 522.3, -0.011847,0,0]
+    _thermal_conductivity_constants = [0.21378, -0.00035445,0,0,0]
+    _vapor_pressure_constants = [72.541, -4691.20, -7.9776, 1.04e-05, 2.0]
+    _enthalpy_constants = [3.4358e-7, 0.38004,0,0,0]
