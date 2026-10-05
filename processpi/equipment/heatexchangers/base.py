@@ -131,110 +131,598 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
         value = self._safe_float(x, name)
         return value if abs(value) > eps else eps
 
-    def _resolve_stream_mass_flow(self, stream: MaterialStream) -> tuple[float | None, str]:
+    # ==============================================================
+    # MASS-FLOW / ENERGY-BALANCE RESOLUTION
+    # ==============================================================
+
+    def _stream_for_side(self, side: str) -> Optional[MaterialStream]:
+        """Return the inlet stream for a hot/cold side."""
+        return self.hot_in if side == "hot" else self.cold_in
+
+    def _outlet_for_side(self, side: str) -> Optional[MaterialStream]:
+        """Return the outlet stream for a hot/cold side."""
+        return self.hot_out if side == "hot" else self.cold_out
+
+    def _direct_mass_flow(
+        self,
+        stream: Optional[MaterialStream],
+    ) -> float | None:
+        """
+        Return explicitly supplied mass flow from a stream.
+
+        This deliberately does NOT perform energy-balance resolution.
+        It is used to determine which side is actually known.
+        """
+        if stream is None:
+            return None
+
+        try:
+            mass_flow = stream.mass_flow()
+        except Exception:
+            mass_flow = None
+
+        if mass_flow is None:
+            return None
+
+        value = self._safe_float(
+            mass_flow.to("kg/s"),
+            "mass_flow",
+        )
+
+        return value if value > 0 else None
+
+    def _explicit_stream_temperature(
+        self,
+        stream: Optional[MaterialStream],
+    ) -> float | None:
+        """
+        Return an explicitly supplied stream temperature in K.
+
+        A MaterialStream can inherit its component's default temperature.
+        That inherited value is not treated as a user-specified outlet target.
+        """
+        if stream is None:
+            return None
+
+        temperature = getattr(
+            stream,
+            "temperature",
+            None,
+        )
+
+        if temperature is None:
+            return None
+
+        component = getattr(
+            stream,
+            "component",
+            None,
+        )
+
+        component_temperature = getattr(
+            component,
+            "temperature",
+            None,
+        )
+
+        if (
+            component_temperature is not None
+            and temperature is component_temperature
+        ):
+            return None
+
+        return self._safe_float(
+            temperature.to("K"),
+            "temperature",
+        )
+
+    def _stream_cp(self, stream: MaterialStream) -> float:
+        """Return stream heat capacity in J/kg-K."""
+        if stream is None:
+            raise ValueError(
+                f"{self.name}: stream is required to calculate heat capacity."
+            )
+
+        if getattr(stream, "specific_heat", None) is not None:
+            return self._safe_float(
+                stream.specific_heat.to("J/kgK"),
+                "cp",
+            )
+
+        return self._safe_float(
+            self.specs.get("cp", 4180.0),
+            "cp",
+        )
+
+    def _latent_side_for_energy_balance(self) -> str | None:
+        """
+        Determine which side undergoes phase change.
+
+        Returns:
+            "hot", "cold", or None.
+        """
+        service = str(
+            self.specs.get("service")
+            or getattr(self, "service_type", "")
+            or ""
+        ).lower()
+
+        # Condenser: hot stream condenses.
+        if service in {
+            "condenser",
+            "total_condenser",
+            "partial_condenser",
+        }:
+            return "hot"
+
+        # Evaporator / reboiler:
+        # respect the actual boiling-side configuration.
+        if service in {
+            "evaporator",
+            "reboiler",
+            "kettle_reboiler",
+            "thermosyphon_reboiler",
+        }:
+            boiling_side = str(
+                getattr(
+                    self,
+                    "boiling_side",
+                    self.specs.get("boiling_side", "shell"),
+                )
+            ).lower()
+
+            return "hot" if boiling_side == "tube" else "cold"
+
+        # Explicit generic latent-side override.
+        latent_side = self.specs.get("latent_side")
+        if latent_side is not None:
+            side = str(latent_side).lower()
+            if side in {"hot", "cold"}:
+                return side
+
+        return None
+
+    def _latent_heat_for_energy_balance(
+        self,
+        hot: Optional[Dict[str, float]] = None,
+        cold: Optional[Dict[str, float]] = None,
+    ) -> float | None:
+        """
+        Resolve latent heat in J/kg for energy-balance flow calculation.
+        """
+        latent_heat = self.specs.get("latent_heat")
+
+        if latent_heat is not None:
+            if hasattr(latent_heat, "to"):
+                return self._safe_float(
+                    latent_heat.to("J/kg"),
+                    "latent_heat",
+                )
+
+            return self._safe_float(
+                latent_heat,
+                "latent_heat",
+            )
+
+        if hot is not None and cold is not None:
+            return self._resolve_phase_change_latent_heat(
+                hot,
+                cold,
+            )
+
+        return None
+
+    def _calculate_energy_balance_duty_from_known_side(
+        self,
+        known_side: str,
+        known_mass_flow: float,
+    ) -> tuple[float, str]:
+        """
+        Calculate heat duty from a side whose mass flow is known.
+
+        Returns:
+            (duty_W, basis)
+        """
+        if known_mass_flow <= 0:
+            raise ValueError(
+                f"{self.name}: known mass flow must be positive."
+            )
+
+        # ----------------------------------------------------------
+        # Explicit Q has highest priority.
+        # ----------------------------------------------------------
+
+        if self.specs.get("Q") is not None:
+            q = self._to_float(
+                self.specs["Q"],
+                "W",
+            )
+
+            if q <= 0:
+                raise ValueError(
+                    f"{self.name}: specified Q must be positive."
+                )
+
+            return abs(q), "specified_Q"
+
+        latent_side = self._latent_side_for_energy_balance()
+
+        # ----------------------------------------------------------
+        # Phase-change side
+        # ----------------------------------------------------------
+
+        if latent_side == known_side:
+            latent_heat = self._latent_heat_for_energy_balance()
+
+            if latent_heat is None or latent_heat <= 0:
+                raise ValueError(
+                    f"{self.name}: cannot calculate phase-change duty "
+                    "because latent_heat is unavailable."
+                )
+
+            q = known_mass_flow * latent_heat
+
+            return q, (
+                f"{known_side}_side_phase_change"
+            )
+
+        # ----------------------------------------------------------
+        # Sensible side
+        # ----------------------------------------------------------
+
+        inlet = self._stream_for_side(known_side)
+        outlet = self._outlet_for_side(known_side)
+
+        if inlet is None:
+            raise ValueError(
+                f"{self.name}: {known_side} inlet stream is missing."
+            )
+
+        t_in = getattr(
+            inlet,
+            "temperature",
+            None,
+        )
+
+        if t_in is None:
+            raise ValueError(
+                f"{self.name}: {known_side} inlet temperature is required "
+                "to calculate the missing flow."
+            )
+
+        t_in_k = self._safe_float(
+            t_in.to("K"),
+            f"{known_side}_in_temperature",
+        )
+
+        t_out_k = self._explicit_stream_temperature(
+            outlet
+        )
+
+        if t_out_k is None:
+            raise ValueError(
+                f"{self.name}: cannot calculate the missing flow on the "
+                f"other side because {known_side}_out temperature is not "
+                "specified. Provide the outlet temperature or Q."
+            )
+
+        delta_t = abs(
+            t_in_k - t_out_k
+        )
+
+        if delta_t <= 1e-9:
+            raise ValueError(
+                f"{self.name}: {known_side} inlet and outlet temperatures "
+                "are equal; sensible heat duty cannot be calculated."
+            )
+
+        cp = self._stream_cp(inlet)
+
+        q = (
+            known_mass_flow
+            * cp
+            * delta_t
+        )
+
+        return q, (
+            f"{known_side}_side_sensible"
+        )
+
+    def _calculate_missing_side_mass_flow(
+        self,
+        missing_side: str,
+        known_side: str,
+        known_mass_flow: float,
+    ) -> tuple[float, str]:
+        """
+        Calculate the missing side mass flow from an energy balance.
+
+        Examples
+        --------
+        Reboiler:
+
+            chlorine flow known
+            ->
+            Q = m_chlorine * latent_heat
+            ->
+            water flow = Q / (Cp * deltaT)
+
+        Reverse case:
+
+            water flow known
+            ->
+            Q = m_water * Cp * deltaT
+            ->
+            chlorine flow = Q / latent_heat
+        """
+
+        q_watts, duty_basis = (
+            self._calculate_energy_balance_duty_from_known_side(
+                known_side=known_side,
+                known_mass_flow=known_mass_flow,
+            )
+        )
+
+        latent_side = (
+            self._latent_side_for_energy_balance()
+        )
+
+        # ----------------------------------------------------------
+        # Missing side is phase change
+        # ----------------------------------------------------------
+
+        if missing_side == latent_side:
+            latent_heat = (
+                self._latent_heat_for_energy_balance()
+            )
+
+            if latent_heat is None or latent_heat <= 0:
+                raise ValueError(
+                    f"{self.name}: latent heat is required to calculate "
+                    f"the {missing_side}-side phase-change flow."
+                )
+
+            missing_flow = (
+                q_watts / latent_heat
+            )
+
+            return (
+                missing_flow,
+                (
+                    f"energy_balance:{known_side}"
+                    f"->{missing_side}:latent"
+                ),
+            )
+
+        # ----------------------------------------------------------
+        # Missing side is sensible
+        # ----------------------------------------------------------
+
+        inlet = self._stream_for_side(
+            missing_side
+        )
+
+        outlet = self._outlet_for_side(
+            missing_side
+        )
+
+        if inlet is None:
+            raise ValueError(
+                f"{self.name}: {missing_side} inlet stream is missing."
+            )
+
+        t_in = getattr(
+            inlet,
+            "temperature",
+            None,
+        )
+
+        if t_in is None:
+            raise ValueError(
+                f"{self.name}: {missing_side} inlet temperature is "
+                "required to calculate the missing flow."
+            )
+
+        t_in_k = self._safe_float(
+            t_in.to("K"),
+            f"{missing_side}_in_temperature",
+        )
+
+        t_out_k = self._explicit_stream_temperature(
+            outlet
+        )
+
+        if t_out_k is None:
+            raise ValueError(
+                f"{self.name}: cannot calculate {missing_side} mass flow "
+                f"from the energy balance because {missing_side}_out "
+                "temperature is not specified."
+            )
+
+        delta_t = abs(
+            t_in_k - t_out_k
+        )
+
+        if delta_t <= 1e-9:
+            raise ValueError(
+                f"{self.name}: {missing_side} inlet and outlet "
+                "temperatures are equal; cannot calculate mass flow."
+            )
+
+        cp = self._stream_cp(
+            inlet
+        )
+
+        missing_flow = (
+            q_watts
+            / max(cp * delta_t, 1e-12)
+        )
+
+        if missing_flow <= 0:
+            raise ValueError(
+                f"{self.name}: calculated {missing_side} mass flow "
+                "is not positive."
+            )
+
+        return (
+            missing_flow,
+            (
+                f"energy_balance:{known_side}"
+                f"->{missing_side}:sensible"
+            ),
+        )
+
+    def _resolve_stream_mass_flow(
+        self,
+        stream: MaterialStream,
+    ) -> tuple[float | None, str]:
         """
         Resolve mass flow for a stream.
-    
-        Mass flow may be specified on either:
-            1. The inlet stream
-            2. The corresponding outlet stream
-    
-        Precedence:
-            inlet mass flow > outlet mass flow > exchanger-level mass_flow_rate
-    
-        This prevents the exchanger from silently falling back to 1 kg/s when
-        the user specified the process flow on the outlet stream.
-    
-        Returns:
-            (mass_flow_kg_s, source)
+
+        Priority
+        --------
+        1. Explicit inlet flow
+        2. Explicit corresponding outlet flow
+        3. Energy-balance calculation from the opposite side
+        4. Explicit exchanger-level mass_flow_rate
+
+        The important rule is:
+
+            A flow is NOT required on every stream.
+
+        If one process side has a known flow and enough thermal information
+        exists, ProcessPI calculates the other side's flow from the energy
+        balance.
         """
-    
+
         if stream is None:
             return None, "none"
-    
-        # ---------------------------------------------------------
-        # Determine corresponding outlet
-        # ---------------------------------------------------------
-        paired_outlet = None
-    
+
+        # ----------------------------------------------------------
+        # Identify side
+        # ----------------------------------------------------------
+
         if stream is self.hot_in:
+            side = "hot"
             paired_outlet = self.hot_out
+            other_side = "cold"
+
         elif stream is self.cold_in:
+            side = "cold"
             paired_outlet = self.cold_out
-    
-        # ---------------------------------------------------------
-        # 1. Inlet mass flow
-        # ---------------------------------------------------------
-        inlet_mass_flow = None
-    
-        try:
-            inlet_mass_flow = stream.mass_flow()
-        except Exception:
-            inlet_mass_flow = None
-    
-        if inlet_mass_flow is not None:
-            inlet_value = self._safe_float(
-                inlet_mass_flow.to("kg/s"),
-                "mass_flow",
+            other_side = "hot"
+
+        else:
+            return None, "unknown"
+
+        # ----------------------------------------------------------
+        # 1. Explicit inlet flow
+        # ----------------------------------------------------------
+
+        inlet_value = self._direct_mass_flow(
+            stream
+        )
+
+        if inlet_value is not None:
+
+            # Check outlet consistency when both are explicitly supplied.
+            outlet_value = self._direct_mass_flow(
+                paired_outlet
             )
-    
-            if inlet_value > 0:
-                # If outlet flow is also specified, check consistency.
-                if paired_outlet is not None:
-                    try:
-                        outlet_mass_flow = paired_outlet.mass_flow()
-                    except Exception:
-                        outlet_mass_flow = None
-    
-                    if outlet_mass_flow is not None:
-                        outlet_value = self._safe_float(
-                            outlet_mass_flow.to("kg/s"),
-                            "outlet_mass_flow",
-                        )
-    
-                        if outlet_value > 0:
-                            relative_difference = abs(
-                                inlet_value - outlet_value
-                            ) / max(abs(inlet_value), 1e-12)
-    
-                            if relative_difference > 0.01:
-                                self._warn_with_category(
-                                    "FLOW_BALANCE_WARNING",
-                                    (
-                                        f"{stream.name}: inlet mass flow "
-                                        f"{inlet_value:.6g} kg/s differs from "
-                                        f"outlet mass flow {outlet_value:.6g} kg/s "
-                                        f"by {relative_difference * 100:.2f}%; "
-                                        f"inlet flow is used."
-                                    ),
-                                )
-    
-                return inlet_value, f"{stream.name}:inlet"
-    
-        # ---------------------------------------------------------
-        # 2. Corresponding outlet mass flow
-        # ---------------------------------------------------------
-        if paired_outlet is not None:
-            try:
-                outlet_mass_flow = paired_outlet.mass_flow()
-            except Exception:
-                outlet_mass_flow = None
-    
-            if outlet_mass_flow is not None:
-                outlet_value = self._safe_float(
-                    outlet_mass_flow.to("kg/s"),
-                    "outlet_mass_flow",
+
+            if outlet_value is not None:
+                relative_difference = (
+                    abs(inlet_value - outlet_value)
+                    / max(abs(inlet_value), 1e-12)
                 )
-    
-                if outlet_value > 0:
-                    return outlet_value, f"{paired_outlet.name}:outlet"
-    
-        # ---------------------------------------------------------
-        # 3. Explicit exchanger-level fallback
-        # ---------------------------------------------------------
-        configured_flow = self.specs.get("mass_flow_rate")
-    
+
+                if relative_difference > 0.01:
+                    self._warn_with_category(
+                        "FLOW_BALANCE_WARNING",
+                        (
+                            f"{stream.name}: inlet mass flow "
+                            f"{inlet_value:.6g} kg/s differs from "
+                            f"outlet mass flow {outlet_value:.6g} kg/s "
+                            f"by {relative_difference * 100:.2f}%; "
+                            "inlet flow is used."
+                        ),
+                    )
+
+            return (
+                inlet_value,
+                f"{stream.name}:inlet",
+            )
+
+        # ----------------------------------------------------------
+        # 2. Explicit outlet flow
+        # ----------------------------------------------------------
+
+        outlet_value = self._direct_mass_flow(
+            paired_outlet
+        )
+
+        if outlet_value is not None:
+            return (
+                outlet_value,
+                f"{paired_outlet.name}:outlet",
+            )
+
+        # ----------------------------------------------------------
+        # 3. Calculate from opposite-side energy balance
+        # ----------------------------------------------------------
+
+        other_stream = (
+            self.hot_in
+            if other_side == "hot"
+            else self.cold_in
+        )
+
+        other_outlet = (
+            self.hot_out
+            if other_side == "hot"
+            else self.cold_out
+        )
+
+        known_flow = self._direct_mass_flow(
+            other_stream
+        )
+
+        if known_flow is None:
+            known_flow = self._direct_mass_flow(
+                other_outlet
+            )
+
+        if known_flow is not None:
+            calculated_flow, source = (
+                self._calculate_missing_side_mass_flow(
+                    missing_side=side,
+                    known_side=other_side,
+                    known_mass_flow=known_flow,
+                )
+            )
+
+            self._warn_with_category(
+                "FLOW_BALANCE_INFO",
+                (
+                    f"{self.name}: calculated {side}-side mass flow "
+                    f"{calculated_flow:.6g} kg/s from energy balance "
+                    f"using {other_side}-side flow "
+                    f"{known_flow:.6g} kg/s."
+                ),
+            )
+
+            return calculated_flow, source
+
+        # ----------------------------------------------------------
+        # 4. Explicit exchanger-level flow
+        # ----------------------------------------------------------
+
+        configured_flow = (
+            self.specs.get("mass_flow_rate")
+        )
+
         if configured_flow is not None:
+
             configured_value = (
                 self._safe_float(
                     configured_flow.to("kg/s"),
@@ -246,13 +734,17 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
                     "mass_flow_rate",
                 )
             )
-    
+
             if configured_value > 0:
-                return configured_value, "exchanger_spec"
-    
-        # ---------------------------------------------------------
-        # 4. Do NOT silently assume 1 kg/s
-        # ---------------------------------------------------------
+                return (
+                    configured_value,
+                    "exchanger_spec",
+                )
+
+        # ----------------------------------------------------------
+        # 5. No flow and insufficient energy information
+        # ----------------------------------------------------------
+
         return None, "missing"
     
     
@@ -272,13 +764,16 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
             )
     
         mass_flow, mass_flow_source = self._resolve_stream_mass_flow(s)
-    
+        
         if mass_flow is None:
             raise ValueError(
                 f"{self.name}: mass flow is missing for stream "
-                f"'{s.name}'. Specify mass_flow on either the inlet or "
-                f"outlet stream, or provide exchanger-level "
-                f"mass_flow_rate."
+                f"'{s.name}'. Specify a flow on at least one stream "
+                "side, or provide exchanger-level mass_flow_rate. "
+                "If only one side flow is supplied, ProcessPI will "
+                "calculate the other side from the energy balance "
+                "when sufficient thermal information is available."
+                
             )
     
         if mass_flow <= 0:
@@ -354,7 +849,6 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
             ),
     
             "m_dot": mass_flow,
-    
             "m_dot_source": mass_flow_source,
     
             "p_bar": pressure_bar,
