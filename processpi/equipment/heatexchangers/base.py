@@ -131,18 +131,239 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
         value = self._safe_float(x, name)
         return value if abs(value) > eps else eps
 
+    def _resolve_stream_mass_flow(self, stream: MaterialStream) -> tuple[float | None, str]:
+        """
+        Resolve mass flow for a stream.
+    
+        Mass flow may be specified on either:
+            1. The inlet stream
+            2. The corresponding outlet stream
+    
+        Precedence:
+            inlet mass flow > outlet mass flow > exchanger-level mass_flow_rate
+    
+        This prevents the exchanger from silently falling back to 1 kg/s when
+        the user specified the process flow on the outlet stream.
+    
+        Returns:
+            (mass_flow_kg_s, source)
+        """
+    
+        if stream is None:
+            return None, "none"
+    
+        # ---------------------------------------------------------
+        # Determine corresponding outlet
+        # ---------------------------------------------------------
+        paired_outlet = None
+    
+        if stream is self.hot_in:
+            paired_outlet = self.hot_out
+        elif stream is self.cold_in:
+            paired_outlet = self.cold_out
+    
+        # ---------------------------------------------------------
+        # 1. Inlet mass flow
+        # ---------------------------------------------------------
+        inlet_mass_flow = None
+    
+        try:
+            inlet_mass_flow = stream.mass_flow()
+        except Exception:
+            inlet_mass_flow = None
+    
+        if inlet_mass_flow is not None:
+            inlet_value = self._safe_float(
+                inlet_mass_flow.to("kg/s"),
+                "mass_flow",
+            )
+    
+            if inlet_value > 0:
+                # If outlet flow is also specified, check consistency.
+                if paired_outlet is not None:
+                    try:
+                        outlet_mass_flow = paired_outlet.mass_flow()
+                    except Exception:
+                        outlet_mass_flow = None
+    
+                    if outlet_mass_flow is not None:
+                        outlet_value = self._safe_float(
+                            outlet_mass_flow.to("kg/s"),
+                            "outlet_mass_flow",
+                        )
+    
+                        if outlet_value > 0:
+                            relative_difference = abs(
+                                inlet_value - outlet_value
+                            ) / max(abs(inlet_value), 1e-12)
+    
+                            if relative_difference > 0.01:
+                                self._warn_with_category(
+                                    "FLOW_BALANCE_WARNING",
+                                    (
+                                        f"{stream.name}: inlet mass flow "
+                                        f"{inlet_value:.6g} kg/s differs from "
+                                        f"outlet mass flow {outlet_value:.6g} kg/s "
+                                        f"by {relative_difference * 100:.2f}%; "
+                                        f"inlet flow is used."
+                                    ),
+                                )
+    
+                return inlet_value, f"{stream.name}:inlet"
+    
+        # ---------------------------------------------------------
+        # 2. Corresponding outlet mass flow
+        # ---------------------------------------------------------
+        if paired_outlet is not None:
+            try:
+                outlet_mass_flow = paired_outlet.mass_flow()
+            except Exception:
+                outlet_mass_flow = None
+    
+            if outlet_mass_flow is not None:
+                outlet_value = self._safe_float(
+                    outlet_mass_flow.to("kg/s"),
+                    "outlet_mass_flow",
+                )
+    
+                if outlet_value > 0:
+                    return outlet_value, f"{paired_outlet.name}:outlet"
+    
+        # ---------------------------------------------------------
+        # 3. Explicit exchanger-level fallback
+        # ---------------------------------------------------------
+        configured_flow = self.specs.get("mass_flow_rate")
+    
+        if configured_flow is not None:
+            configured_value = (
+                self._safe_float(
+                    configured_flow.to("kg/s"),
+                    "mass_flow_rate",
+                )
+                if hasattr(configured_flow, "to")
+                else self._safe_float(
+                    configured_flow,
+                    "mass_flow_rate",
+                )
+            )
+    
+            if configured_value > 0:
+                return configured_value, "exchanger_spec"
+    
+        # ---------------------------------------------------------
+        # 4. Do NOT silently assume 1 kg/s
+        # ---------------------------------------------------------
+        return None, "missing"
+    
+    
     def _stream_props(self, s: MaterialStream) -> Dict[str, float]:
+        """
+        Build normalized stream properties for exchanger calculations.
+    
+        Mass flow is resolved from either the inlet or the corresponding
+        outlet stream. The exchanger no longer silently assumes 1 kg/s
+        when a process flow has not been supplied.
+        """
+    
         if s is None:
-            raise ValueError(f"{self.name}: connect the hot_in and cold_in streams before sizing the exchanger.")
+            raise ValueError(
+                f"{self.name}: connect the hot_in and cold_in streams "
+                "before sizing the exchanger."
+            )
+    
+        mass_flow, mass_flow_source = self._resolve_stream_mass_flow(s)
+    
+        if mass_flow is None:
+            raise ValueError(
+                f"{self.name}: mass flow is missing for stream "
+                f"'{s.name}'. Specify mass_flow on either the inlet or "
+                f"outlet stream, or provide exchanger-level "
+                f"mass_flow_rate."
+            )
+    
+        if mass_flow <= 0:
+            raise ValueError(
+                f"{self.name}: mass flow for stream '{s.name}' "
+                f"must be positive."
+            )
+    
+        temperature = (
+            self._safe_float(
+                s.temperature.to("K"),
+                "t_k",
+            )
+            if s.temperature
+            else None
+        )
+    
+        if temperature is None:
+            raise ValueError(
+                f"{self.name}: temperature is missing for stream '{s.name}'."
+            )
+    
+        pressure_bar = (
+            self._to_float(s.pressure, "Pa") / 1e5
+            if s.pressure
+            else 1.0
+        )
+    
         return {
-            "density": self._safe_float(s.density.to("kg/m3"), "density"),
-            "viscosity": self._safe_float(s.component.viscosity().to("Pa·s"), "viscosity") if s.component and hasattr(s.component, "viscosity") else self._safe_float(self.specs.get("viscosity", 1e-3), "viscosity"),
-            "cp": self._safe_float(s.specific_heat.to("J/kgK"), "cp") if s.specific_heat else self._safe_float(self.specs.get("cp", 4180.0), "cp"),
-            "k": self._safe_float(s.component.thermal_conductivity().to("W/mK"), "k") if s.component and hasattr(s.component, "thermal_conductivity") else self._safe_float(self.specs.get("thermal_conductivity", 0.6), "k"),
-            "m_dot": self._safe_float(s.mass_flow().to("kg/s"), "m_dot") if s.mass_flow() else self._safe_float(self.specs.get("mass_flow_rate", 1.0), "m_dot"),
-            "p_bar": self._to_float(s.pressure, "Pa") / 1e5 if s.pressure else 1.0,
-            "phase": (s.phase or "liquid").lower(),
-            "t_k": self._safe_float(s.temperature.to("K"), "t_k") if s.temperature else None,
+            "density": self._safe_float(
+                s.density.to("kg/m3"),
+                "density",
+            ),
+    
+            "viscosity": (
+                self._safe_float(
+                    s.component.viscosity().to("Pa·s"),
+                    "viscosity",
+                )
+                if s.component and hasattr(s.component, "viscosity")
+                else self._safe_float(
+                    self.specs.get("viscosity", 1e-3),
+                    "viscosity",
+                )
+            ),
+    
+            "cp": (
+                self._safe_float(
+                    s.specific_heat.to("J/kgK"),
+                    "cp",
+                )
+                if s.specific_heat
+                else self._safe_float(
+                    self.specs.get("cp", 4180.0),
+                    "cp",
+                )
+            ),
+    
+            "k": (
+                self._safe_float(
+                    s.component.thermal_conductivity().to("W/mK"),
+                    "k",
+                )
+                if s.component
+                and hasattr(s.component, "thermal_conductivity")
+                else self._safe_float(
+                    self.specs.get(
+                        "thermal_conductivity",
+                        0.6,
+                    ),
+                    "k",
+                )
+            ),
+    
+            "m_dot": mass_flow,
+    
+            "m_dot_source": mass_flow_source,
+    
+            "p_bar": pressure_bar,
+    
+            "phase": (
+                s.phase or "liquid"
+            ).lower(),
+    
+            "t_k": temperature,
         }
 
     def _to_float(self, value: Any, unit: str | None = None) -> float:
