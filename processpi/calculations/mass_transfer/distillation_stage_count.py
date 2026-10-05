@@ -178,13 +178,21 @@ class DistillationStageCount(CalculationBase):
         y_cur = xD if total_condenser else y_rect(xD)  # horizontal to equilibrium first if total condenser
 
         # Stage loop
+        reached_bottoms = False
         while stages < max_stages and x_cur - xB > tol:
             # 1) Horizontal to equilibrium curve (constant y)
             # Find x_eq such that y_eq(x_eq) = y_cur
-            x_eq = self._x_from_y_on_eq(y_cur, y_eq, x_min=xB, x_max=xD)
-            if x_eq is None:
-                # If it fails, try clipping
-                x_eq = max(min(x_cur, xD), xB)
+            # Search the whole composition range: the last step lands below xB,
+            # so a search confined to [xB, xD] finds no root there and the
+            # stepping stalled until max_stages.
+            x_eq = self._x_from_y_on_eq(y_cur, y_eq, x_min=0.0, x_max=1.0)
+            if x_eq is None or x_eq <= xB:
+                # This step reaches the bottoms composition: it is the last
+                # stage, the partial reboiler.
+                stages += 1
+                strip_stages += 1
+                reached_bottoms = True
+                break
 
             # 2) Vertical to operating line:
             # if x_eq >= xF_int -> rectifying, else stripping
@@ -204,10 +212,16 @@ class DistillationStageCount(CalculationBase):
             if abs(x_cur - xB) <= tol:
                 break
 
-        # Add reboiler stage if required
-        if partial_reboiler:
-            stages += 1
-            strip_stages += 1
+        if not reached_bottoms and x_cur - xB > tol:
+            raise ValueError(
+                f"McCabe-Thiele stepping did not reach xB within {max_stages} stages; "
+                "the reflux ratio is at or below the minimum (pinch)."
+            )
+
+        # The step that reaches xB is the partial reboiler, so it is already
+        # counted; adding another stage here counted the reboiler twice.
+        # Without a partial reboiler that last step is a tray, and the count
+        # stays the same as well.
 
         # Add condenser stage if total condenser and at least one rectifying stage
         if total_condenser and rect_stages > 0:
