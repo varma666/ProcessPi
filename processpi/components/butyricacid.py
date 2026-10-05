@@ -3,7 +3,7 @@ from processpi.units import *
 
 class ButyricAcid(Component):
     """
-    Represents the properties and constants for Butyric acid(C4?H8?O2?).
+    Represents the properties and constants for Butyric acid(C4H8O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Butyric acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class ButyricAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Butyric acid"
-    formula = "C4?H8?O2?"
+    formula = "C4H8O2"
     molecular_weight = 88.105
 
     # Critical properties
@@ -45,8 +45,8 @@ class ButyricAcid(Component):
     _critical_acentric_factor = 0.6805
 
     _density_constants = [0.88443, 0.25828, 615.7, 0.248]
-    _specific_heat_constants = [0.0, -746.4, 1.829, 0.0, 0.0, 1.6902, 2.6031]
-    _viscosity_constants = [-9.817, 1388.0, -0.238]
-    _thermal_conductivity_constants = [0.1967, -0.000168]
-    _vapor_pressure_constants = [93.815, 0.0, -9.8019, 9.31e-18, 6.0]
-    _enthalpy_constants = [6.1947, 1.6524, -2.8505, 1.6285]
+    _specific_heat_constants = [237700,-746.4,1.829,0,0]
+    _viscosity_constants = [-9.817, 1388.0, -0.238,0,0]
+    _thermal_conductivity_constants = [0.1967, -0.000168,0,0,0]
+    _vapor_pressure_constants = [93.815, -9942.20, -9.8019, 9.31e-18, 6.0]
+    _enthalpy_constants = [6.1947e-7, 1.6524, -2.8505, 1.6285,0]
