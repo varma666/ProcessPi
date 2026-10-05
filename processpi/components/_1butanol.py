@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Butanol(Component):
     """
-    Represents the properties and constants for 1Butanol(C4?H10?O).
+    Represents the properties and constants for 1Butanol(C4H10O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Butanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Butanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Butanol"
-    formula = "C4?H10?O"
+    formula = "C4H10O"
     molecular_weight = 74.122
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Butanol(Component):
     _critical_acentric_factor = 0.5883
 
     _density_constants = [0.98279, 0.2683, 563.1, 0.25488]
-    _specific_heat_constants = [0.0, -730.4, 2.2998, 0.0, 0.0, 1.3465, 2.5817]
+    _specific_heat_constants = [191200,-730.4,2.2998,0,0]
     _viscosity_constants = [0.87669, 1602.9, -2.1475, 3.39e+22, -9.9231]
-    _thermal_conductivity_constants = [0.2136, -0.0002034]
-    _vapor_pressure_constants = [106.295, 0.0, -11.655, 1.08e-17, 6.0]
-    _enthalpy_constants = [7.1274, 0.0483, 0.8966, -0.5116]
+    _thermal_conductivity_constants = [0.2136, -0.0002034,0,0,0]
+    _vapor_pressure_constants = [106.295, -9866.40, -11.655, 1.08e-17, 6.0]
+    _enthalpy_constants = [7.1274e-7, 0.0483, 0.8966, -0.5116,0]
