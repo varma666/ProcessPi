@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Butyne(Component):
     """
-    Represents the properties and constants for 1Butyne(C4?H6?).
+    Represents the properties and constants for 1Butyne(C4H6).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Butyne, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Butyne(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Butyne"
-    formula = "C4?H6?"
+    formula = "C4H6"
     molecular_weight = 54.09
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Butyne(Component):
     _critical_acentric_factor = 0.247
 
     _density_constants = [1.3409, 0.27892, 440.0, 0.29661]
-    _specific_heat_constants = [0.0, -300.4, 1.0216, 0.0, 0.0, 1.1426, 1.3759]
-    _viscosity_constants = [-3.4644, 334.5, -1.0811]
-    _thermal_conductivity_constants = [0.22334, -0.0003515]
-    _vapor_pressure_constants = [77.004, 0.0, -8.5665, 1.02e-05, 2.0]
-    _enthalpy_constants = [3.6972, 0.39168]
+    _specific_heat_constants = [136340,-300.4,1.0216,0,0]
+    _viscosity_constants = [-3.4644, 334.5, -1.0811,0,0]
+    _thermal_conductivity_constants = [0.22334, -0.0003515,0,0,0]
+    _vapor_pressure_constants = [77.004, -5054.50, -8.5665, 1.02e-05, 2.0]
+    _enthalpy_constants = [3.6972e-7, 0.39168,0,0,0]
