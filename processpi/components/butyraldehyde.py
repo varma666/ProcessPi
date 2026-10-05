@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Butyraldehyde(Component):
     """
-    Represents the properties and constants for Butyraldehyde(C4?H8?O).
+    Represents the properties and constants for Butyraldehyde(C4H8O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Butyraldehyde, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Butyraldehyde(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Butyraldehyde"
-    formula = "C4?H8?O"
+    formula = "C4H8O"
     molecular_weight = 72.106
 
     # Critical properties
@@ -45,8 +45,8 @@ class Butyraldehyde(Component):
     _critical_acentric_factor = 0.2774
 
     _density_constants = [1.0361, 0.26731, 537.2, 0.28397]
-    _specific_heat_constants = [0.0, 0.0, -7.1579, 0.012755, 0.0, 1.4741, 1.6459]
-    _viscosity_constants = [-10.057, 903.73, -0.13186]
-    _thermal_conductivity_constants = [0.21915, -0.00024846]
-    _vapor_pressure_constants = [99.33, 0.0, -11.733, 1e-05, 2.0]
-    _enthalpy_constants = [4.6403, 0.3849]
+    _specific_heat_constants = [65682,1329.10,-7.1579,0.012755,0]
+    _viscosity_constants = [-10.057, 903.73, -0.13186,0,0]
+    _thermal_conductivity_constants = [0.21915, -0.00024846,0,0,0]
+    _vapor_pressure_constants = [99.33, -7083.60, -11.733, 1e-05, 2.0]
+    _enthalpy_constants = [4.6403e-7, 0.3849,0,0,0]
