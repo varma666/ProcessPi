@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Trans2Butene(Component):
     """
-    Represents the properties and constants for trans2Butene(C4?H8?).
+    Represents the properties and constants for trans2Butene(C4H8).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for trans2Butene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Trans2Butene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "trans2Butene"
-    formula = "C4?H8?"
+    formula = "C4H8"
     molecular_weight = 56.106
 
     # Critical properties
@@ -45,8 +45,8 @@ class Trans2Butene(Component):
     _critical_acentric_factor = 0.2176
 
     _density_constants = [1.1448, 0.27154, 428.6, 0.28419]
-    _specific_heat_constants = [0.0, -104.7, 0.5214, 0.0, 0.0, 1.0986, 1.2322]
-    _viscosity_constants = [-10.335, 521.39, -0.013184]
-    _thermal_conductivity_constants = [0.21153, -0.00035056]
-    _vapor_pressure_constants = [71.704, 0.0, -7.9053, 1.13e-05, 2.0]
-    _enthalpy_constants = [3.3191, 0.36968]
+    _specific_heat_constants = [112760,-104.7,0.5214,0,0]
+    _viscosity_constants = [-10.335, 521.39, -0.013184,0,0]
+    _thermal_conductivity_constants = [0.21153, -0.00035056,0,0,0]
+    _vapor_pressure_constants = [71.704, -4563.10, -7.9053, 1.13e-05, 2.0]
+    _enthalpy_constants = [3.3191e-7, 0.36968,0,0,0]
