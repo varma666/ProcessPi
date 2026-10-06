@@ -950,10 +950,12 @@ class EvaporatorHX(ShellAndTubeHX):
             return None
 
         tube_velocity = _velocity_value(
-            "tube_velocity", "v_tube", "Tube Velocity", "tube_velocity_m_s"
+            "tube_velocity", "v_tube", "Tube Velocity", "tube velocity",
+            "tube_velocity_m_s"
         )
         shell_velocity = _velocity_value(
-            "shell_velocity", "v_shell", "Shell Velocity", "shell_velocity_m_s"
+            "shell_velocity", "v_shell", "Shell Velocity", "shell velocity",
+            "shell_velocity_m_s"
         )
         limits = self.design_limits
         min_tube = limits["min_tube_velocity"]
