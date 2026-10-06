@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Cyclohexanone(Component):
     """
-    Represents the properties and constants for Cyclohexanone(C6?H10?O).
+    Represents the properties and constants for Cyclohexanone(C6H10O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Cyclohexanone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Cyclohexanone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Cyclohexanone"
-    formula = "C6?H10?O"
+    formula = "C6H10O"
     molecular_weight = 98.143
 
     # Critical properties
@@ -45,8 +45,8 @@ class Cyclohexanone(Component):
     _critical_acentric_factor = 0.299
 
     _density_constants = [0.86464, 0.26888, 653.0, 0.29943]
-    _specific_heat_constants = [0.0, 600.94, 0.0, 0.0, 0.0, 1.8038, 3.0042]
-    _viscosity_constants = [-44.877, 3227.7, 4.887]
-    _thermal_conductivity_constants = [0.17557, -0.00012392]
-    _vapor_pressure_constants = [85.424, 0.0, -9.2862, 5e-06, 2.0]
-    _enthalpy_constants = [5.6772, 0.37431]
+    _specific_heat_constants = [6110.40,600.94,0,0,0]
+    _viscosity_constants = [-44.877, 3227.7, 4.887,0,0]
+    _thermal_conductivity_constants = [0.17557, -0.00012392,0,0,0]
+    _vapor_pressure_constants = [85.424, -7944.40, -9.2862, 5e-06, 2.0]
+    _enthalpy_constants = [5.6772e-7, 0.37431,0,0,0]
