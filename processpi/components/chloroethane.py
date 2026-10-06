@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Chloroethane(Component):
     """
-    Represents the properties and constants for Chloroethane(C2?H5?Cl).
+    Represents the properties and constants for Chloroethane(C2H5Cl).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Chloroethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Chloroethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Chloroethane"
-    formula = "C2?H5?Cl"
+    formula = "C2H5Cl"
     molecular_weight = 64.514
 
     # Critical properties
@@ -45,8 +45,8 @@ class Chloroethane(Component):
     _critical_acentric_factor = 0.1902
 
     _density_constants = [1.3, 0.26019, 460.35, 0.27155]
-    _specific_heat_constants = [0.0, -345.15, 0.915, 0.0, 0.0, 0.98, 1.1632]
-    _viscosity_constants = [-10.216, 702.0, -0.072]
-    _thermal_conductivity_constants = [0.2438, -0.000419]
-    _vapor_pressure_constants = [65.988, 0.0, -6.8586, 7.94e-06, 2.0]
-    _enthalpy_constants = [3.524, 0.3652]
+    _specific_heat_constants = [127900,-345.15,0.915,0,0]
+    _viscosity_constants = [-10.216, 702.0, -0.072,0,0]
+    _thermal_conductivity_constants = [0.2438, -0.000419,0,0,0]
+    _vapor_pressure_constants = [65.988, -4661.30, -6.8586, 7.94e-06, 2.0]
+    _enthalpy_constants = [3.524e-7, 0.3652,0,0,0]
