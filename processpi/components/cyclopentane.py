@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Cyclopentane(Component):
     """
-    Represents the properties and constants for Cyclopentane(C5?H10?).
+    Represents the properties and constants for Cyclopentane(C5H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Cyclopentane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Cyclopentane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Cyclopentane"
-    formula = "C5?H10?"
+    formula = "C5H10"
     molecular_weight = 70.133
 
     # Critical properties
@@ -45,8 +45,8 @@ class Cyclopentane(Component):
     _critical_acentric_factor = 0.1949
 
     _density_constants = [1.0897, 0.28356, 511.7, 0.25142]
-    _specific_heat_constants = [0.0, -403.8, 1.7344, -0.0010975, 0.0, 0.9956, 1.3584]
-    _viscosity_constants = [-3.2612, 614.16, -1.156]
-    _thermal_conductivity_constants = [0.2066, -0.0002696]
-    _vapor_pressure_constants = [66.341, 0.0, -6.8103, 6.19e-06, 2.0]
-    _enthalpy_constants = [3.8911, 0.36111]
+    _specific_heat_constants = [122530,-403.8,1.7344,-0.0010975,0]
+    _viscosity_constants = [-3.2612, 614.16, -1.156,0,0]
+    _thermal_conductivity_constants = [0.2066, -0.0002696,0,0,0]
+    _vapor_pressure_constants = [66.341, -5198.50, -6.8103, 6.19e-06, 2.0]
+    _enthalpy_constants = [3.8911e-7, 0.36111,0,0,0]
