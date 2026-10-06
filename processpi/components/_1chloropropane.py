@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Chloropropane(Component):
     """
-    Represents the properties and constants for 1Chloropropane(C3?H7?Cl).
+    Represents the properties and constants for 1Chloropropane(C3H7Cl).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Chloropropane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Chloropropane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Chloropropane"
-    formula = "C3?H7?Cl"
+    formula = "C3H7Cl"
     molecular_weight = 78.541
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Chloropropane(Component):
     _critical_acentric_factor = 0.2277
 
     _density_constants = [1.087, 0.26832, 503.15, 0.28055]
-    _specific_heat_constants = [0.0, -153.27, 0.50836, 0.0, 0.0, 1.2073, 1.3523]
+    _specific_heat_constants = [132280,-153.27,0.50836,0,0]
     _viscosity_constants = [-13.994, 949.4, 0.50223, -6.16e-17, 6.0]
-    _thermal_conductivity_constants = [0.20143, -0.00028925]
-    _vapor_pressure_constants = [79.24, 0.0, -8.789, 8.45e-06, 2.0]
-    _enthalpy_constants = [3.989, 0.37956]
+    _thermal_conductivity_constants = [0.20143, -0.00028925,0,0,0]
+    _vapor_pressure_constants = [79.24, -5718.80, -8.789, 8.45e-06, 2.0]
+    _enthalpy_constants = [3.989e-7, 0.37956,0,0,0]
