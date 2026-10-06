@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Mcresol(Component):
     """
-    Represents the properties and constants for mCresol(C7?H8?O).
+    Represents the properties and constants for mCresol(C7H8O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for mCresol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Mcresol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "mCresol"
-    formula = "C7?H8?O"
+    formula = "C7H8O"
     molecular_weight = 108.138
 
     # Critical properties
@@ -45,8 +45,8 @@ class Mcresol(Component):
     _critical_acentric_factor = 0.448
 
     _density_constants = [0.9061, 0.28268, 705.85, 0.2707]
-    _specific_heat_constants = [0.0, 0.0, -7.4202, 0.0060467, 0.0, 2.1895, 2.5578]
+    _specific_heat_constants = [-246700,3256.80,-7.4202,0.0060467,0]
     _viscosity_constants = [59.686, -3517.9, -9.838, 9030000000000.0, -5.0]
-    _thermal_conductivity_constants = [0.18241, -0.00011109]
-    _vapor_pressure_constants = [95.403, 0.0, -10.004, 4.3e-18, 6.0]
-    _enthalpy_constants = [8.0082, 0.45314]
+    _thermal_conductivity_constants = [0.18241, -0.00011109,0,0,0]
+    _vapor_pressure_constants = [95.403, -10581, -10.004, 4.3e-18, 6.0]
+    _enthalpy_constants = [8.0082e-7, 0.45314,0,0,0]
