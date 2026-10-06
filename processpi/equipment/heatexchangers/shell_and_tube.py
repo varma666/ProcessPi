@@ -2596,6 +2596,14 @@ class ShellAndTubeHX(HeatExchanger):
         hot = self._stream_props(self.hot_in)
         cold = self._stream_props(self.cold_in)
         self._warnings = []
+        # Resolve phase at the stream's actual inlet T/P before fluid-side
+        # assignment, velocity limits, and service classification.
+        hot_category = self._assumed_u_fluid_type("hot", hot)
+        cold_category = self._assumed_u_fluid_type("cold", cold)
+        if hot_category == "steam":
+            hot["phase"] = "vapor"
+        if cold_category == "steam":
+            cold["phase"] = "vapor"
         self._validate_inputs(hot, cold)
         assignment = self._assign_fluids_to_sides(hot, cold)
         # Duty, LMTD and Ft are side-independent and stay on (hot, cold); the
@@ -2638,11 +2646,11 @@ class ShellAndTubeHX(HeatExchanger):
 
         u_assumed = self._assume_u(hot, cold)
         self._trace_step("THERMAL", "U assumed initial", u_assumed)
-        hot_hx = self.hot_in.component.hx_data() if hasattr(self.hot_in.component, "hx_data") else {"u_key": getattr(self.hot_in.component, "hx_type", "generic")}
-        cold_hx = self.cold_in.component.hx_data() if hasattr(self.cold_in.component, "hx_data") else {"u_key": getattr(self.cold_in.component, "hx_type", "generic")}
-        self._debug(f"Hot hx_data = {hot_hx}")
-        self._debug(f"Cold hx_data = {cold_hx}")
-        u_range = get_u_range("shell_and_tube", self.service_type, hot_hx.get("u_key", "generic"), cold_hx.get("u_key", "generic"))
+        hot_hx = {"u_key": self._assumed_u_fluid_type("hot", hot)}
+        cold_hx = {"u_key": self._assumed_u_fluid_type("cold", cold)}
+        self._debug(f"Phase-aware hot U category = {hot_hx}")
+        self._debug(f"Phase-aware cold U category = {cold_hx}")
+        u_range = get_u_range("shell_and_tube", self.service_type, hot_hx["u_key"], cold_hx["u_key"])
 
         state = self._iterate_U(effective_q_watts, cltd, tube, shell, shell_passes, tube_passes, u_assumed, u_range)
         # `_check_velocities` may have moved the tube passes inside the
