@@ -1280,9 +1280,12 @@ class ShellAndTubeHX(HeatExchanger):
         if self.specs.get("U") is not None:
             u_user = self._safe_float(self.specs["U"].to("W/m2K"), "U")
             self._trace_step("THERMAL", "U user supplied", u_user)
+        # A user-specified U is the design basis, not merely a value to
+        # compare against the calculated coefficient. Keep it fixed during
+        # area sizing; U_calculated is still reported independently.
         state = {
             "iterations": 0,
-            "u_assumed": u_assumed,
+            "u_assumed": u_user if u_user is not None else u_assumed,
             "u_user": u_user,
             "u_history": [],
             "area_history": [],
@@ -1403,7 +1406,7 @@ class ShellAndTubeHX(HeatExchanger):
     
             required_dirty_area = (
                 q_watts
-                / max(u_dirty * cltd, 1e-12)
+                / max((u_user if u_user is not None else u_dirty) * cltd, 1e-12)
             )
     
             # ======================================================
@@ -1509,7 +1512,10 @@ class ShellAndTubeHX(HeatExchanger):
             # convergence test decides. Before, three identical geometries were
             # declared FAILED_CONVERGENCE while the error was still falling.
             geometry_key = (geometry["tube_count"], round(geometry["tube_length"], 3), round(shell_diameter, 3), tube_passes)
-            if state["geometry_history"] and state["geometry_history"][-1] == geometry_key:
+            if u_user is not None:
+                # Do not silently replace the user's design U with U_calc.
+                state["u_assumed"] = u_user
+            elif state["geometry_history"] and state["geometry_history"][-1] == geometry_key:
                 state["u_assumed"] = u_new
             else:
                 state["u_assumed"] = (1.0 - relaxation) * u_old + relaxation * u_new
