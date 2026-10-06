@@ -109,17 +109,59 @@ class ShellAndTubeHX(HeatExchanger):
         self.fixed_geometry = {k: (self.specs.get(k) is not None) for k in fixed_keys}
         self._load_standard_tables()
 
+    def _assumed_u_fluid_type(self, side: str, props: Dict[str, float]) -> str:
+        """Return a phase-aware category for the assumed-U lookup.
+
+        Component categories describe the chemical (e.g. Water), but the
+        exchanger lookup must describe the stream state. In particular, water
+        above its saturation pressure/temperature is steam for U estimation.
+        """
+        stream = self.hot_in if side == "hot" else self.cold_in
+        component = stream.component
+        hx_type = str(getattr(component, "hx_type", "generic")).lower()
+        name = str(getattr(component, "name", "")).lower()
+        phase = str(props.get("phase", "")).lower()
+
+        # A water component can represent liquid water or steam depending on
+        # the actual stream T/P. Use the Antoine vapour-pressure correlation
+        # over its common 99-374 C validity range; outside that range retain
+        # the stream/component phase rather than extrapolating the equation.
+        if "water" in hx_type or name == "water":
+            temperature_c = props.get("t_k", 0.0) - 273.15
+            pressure_bar = props.get("p_bar", 1.01325)
+            if 99.0 <= temperature_c <= 374.0:
+                p_mm_hg = 10 ** (8.14019 - 1810.94 / (244.485 + temperature_c))
+                saturation_bar = p_mm_hg * 133.322368 / 100000.0
+                if pressure_bar < saturation_bar:
+                    phase = "vapor"
+                else:
+                    phase = "liquid"
+            if phase in {"vapor", "gas", "steam"}:
+                return "steam"
+            return "water"
+
+        if phase in {"vapor", "gas", "steam"}:
+            if hx_type in {"water", "steam"}:
+                return "steam"
+            if hx_type in {"organic", "light_oil", "heavy_oil", "oil"}:
+                return "gas_low_pressure" if props.get("p_bar", 1.0) <= 3.0 else "gas_high_pressure"
+            return hx_type
+
+        return hx_type
+
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
         if self.specs.get("U") is not None:
             return self._safe_float(self.specs["U"].to("W/m2K"), "U")
-        hot_type = getattr(self.hot_in.component, "hx_type", "generic")
-        cold_type = getattr(self.cold_in.component, "hx_type", "generic")
+        hot_type = self._assumed_u_fluid_type("hot", hot)
+        cold_type = self._assumed_u_fluid_type("cold", cold)
         service_type = getattr(self, "service_type", "heat_exchanger")
-        #self._debug(hot_type, cold_type, service_type)
         u_range = get_u_range("shell_and_tube", service_type, hot_type, cold_type)
         if u_range:
             u_min, u_max = u_range
-            #self._debug(f"Assuming overall heat transfer coefficient U = {u_min}-{u_max} W/m2K based on service and fluids")
+            self._trace_step("THERMAL", "Assumed U lookup", {
+                "service": service_type, "hot_type": hot_type,
+                "cold_type": cold_type, "range_W_m2K": (u_min, u_max),
+            })
             return 0.5 * (u_min + u_max)
         return 300.0
 
@@ -2560,12 +2602,19 @@ class ShellAndTubeHX(HeatExchanger):
         # geometry, film coefficients and hydraulics use the resolved sides.
         tube, shell = self._side_props(hot, cold)
 
-        if hot["phase"] == "vapor":
+        # Classify service from the actual stream state, not just the
+        # component's default phase. Superheated steam cooling sensibly is a
+        # heater/cooler service, not a condenser unless condensation is intended.
+        hot_type_for_service = self._assumed_u_fluid_type("hot", hot)
+        cold_type_for_service = self._assumed_u_fluid_type("cold", cold)
+        hot_is_vapor = hot_type_for_service in {"steam", "gas_low_pressure", "gas_high_pressure", "vapor"}
+        cold_is_vapor = cold_type_for_service in {"steam", "gas_low_pressure", "gas_high_pressure", "vapor"}
+        if hot_is_vapor and self.specs.get("service") in {"condenser", "total_condenser", "partial_condenser"}:
             self.service_type = "condenser"
-        elif cold["phase"] == "vapor":
+        elif cold_is_vapor and self.specs.get("service") in {"vaporizer", "evaporator"}:
             self.service_type = "vaporizer"
         elif hot["t_k"] > cold["t_k"]:
-            self.service_type = "cooler"
+            self.service_type = "heater" if hot_is_vapor else "cooler"
         else:
             self.service_type = "heater"
 
