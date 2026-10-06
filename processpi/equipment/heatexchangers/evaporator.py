@@ -923,6 +923,56 @@ class EvaporatorHX(ShellAndTubeHX):
                 )
 
         # ----------------------------------------------------------
+        # Hydraulic feasibility must reflect the calculated velocities.
+        # Do not report PASS merely because pressure-drop calculations ran.
+        # ----------------------------------------------------------
+        def _velocity_value(*keys):
+            for key in keys:
+                value = results.get(key)
+                if value is not None:
+                    try:
+                        return float(value.to("m/s") if hasattr(value, "to") else value)
+                    except (TypeError, ValueError, AttributeError):
+                        continue
+            return None
+
+        tube_velocity = _velocity_value("tube_velocity", "v_tube")
+        shell_velocity = _velocity_value("shell_velocity", "v_shell")
+        limits = self.design_limits
+        min_tube = limits["min_tube_velocity"]
+        max_tube = limits["max_tube_velocity"]
+        min_shell = limits["min_shell_velocity"]
+        # Use an explicit max if provided; otherwise flag extreme shell
+        # velocities rather than allowing a physically implausible PASS.
+        max_shell = float(self.specs.get("max_shell_velocity", 2.0))
+        velocity_checks = []
+        if tube_velocity is not None:
+            velocity_checks.append(min_tube <= tube_velocity <= max_tube)
+        if shell_velocity is not None:
+            velocity_checks.append(min_shell <= shell_velocity <= max_shell)
+        hydraulic_ok = all(velocity_checks) if len(velocity_checks) == 2 else False
+
+        feasibility = results.get("feasibility_summary")
+        if not isinstance(feasibility, dict):
+            feasibility = {}
+            results["feasibility_summary"] = feasibility
+        feasibility["hydraulic_ok"] = hydraulic_ok
+        feasibility["hydraulic_feasible"] = hydraulic_ok
+        if not hydraulic_ok and results.get("status") not in {"THERMAL_FAILURE"}:
+            results["status"] = "HYDRAULIC_FAILURE"
+            results["convergence_status"] = "HYDRAULIC_FAILURE"
+            feasibility["status"] = "HYDRAULIC_FAILURE"
+        if not hydraulic_ok:
+            warning = (
+                "Calculated tube/shell velocity is outside configured hydraulic limits "
+                f"(tube={tube_velocity!r} m/s, shell={shell_velocity!r} m/s; "
+                f"tube range {min_tube}-{max_tube} m/s, shell range "
+                f"{min_shell}-{max_shell} m/s)."
+            )
+            if warning not in results.get("warnings", []):
+                results.setdefault("warnings", []).append(warning)
+
+        # ----------------------------------------------------------
         # Metadata
         # ----------------------------------------------------------
 
