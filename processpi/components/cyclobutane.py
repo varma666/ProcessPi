@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Cyclobutane(Component):
     """
-    Represents the properties and constants for Cyclobutane(C4?H8?).
+    Represents the properties and constants for Cyclobutane(C4H8).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Cyclobutane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Cyclobutane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Cyclobutane"
-    formula = "C4?H8?"
+    formula = "C4H8"
     molecular_weight = 56.106
 
     # Critical properties
@@ -45,8 +45,8 @@ class Cyclobutane(Component):
     _critical_acentric_factor = 0.1847
 
     _density_constants = [1.3931, 0.29255, 459.93, 0.24913]
-    _specific_heat_constants = [0.0, -215.81, 0.8103, 0.0, 0.0, 0.9017, 1.0961]
-    _viscosity_constants = [-3.4968, 397.94, -1.1087]
-    _thermal_conductivity_constants = [0.22262, -0.00034082]
-    _vapor_pressure_constants = [85.899, 0.0, -10.883, 0.0149, 1.0]
-    _enthalpy_constants = [3.334, 0.3395]
+    _specific_heat_constants = [101920,-215.81,0.8103,0,0]
+    _viscosity_constants = [-3.4968, 397.94, -1.1087,0,0]
+    _thermal_conductivity_constants = [0.22262, -0.00034082,0,0,0]
+    _vapor_pressure_constants = [85.899, -4884.40, -10.883, 0.0149, 1.0]
+    _enthalpy_constants = [3.334e-7, 0.3395,0,0,0]
