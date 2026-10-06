@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Cyclohexene(Component):
     """
-    Represents the properties and constants for Cyclohexene(C6?H10?).
+    Represents the properties and constants for Cyclohexene(C6H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Cyclohexene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Cyclohexene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Cyclohexene"
-    formula = "C6?H10?"
+    formula = "C6H10"
     molecular_weight = 82.144
 
     # Critical properties
@@ -45,8 +45,8 @@ class Cyclohexene(Component):
     _critical_acentric_factor = 0.2123
 
     _density_constants = [0.92997, 0.27056, 560.4, 0.28943]
-    _specific_heat_constants = [0.0, -60.0, 0.68, 0.0, 0.0, 1.1525, 1.7072]
-    _viscosity_constants = [-11.641, 1154.3, 0.066511]
-    _thermal_conductivity_constants = [0.20926, -0.00026037]
-    _vapor_pressure_constants = [88.184, 0.0, -10.059, 8.26e-06, 2.0]
-    _enthalpy_constants = [4.4405, 0.37479]
+    _specific_heat_constants = [105850,-60,0.68,0,0]
+    _viscosity_constants = [-11.641, 1154.3, 0.066511,0,0]
+    _thermal_conductivity_constants = [0.20926, -0.00026037,0,0,0]
+    _vapor_pressure_constants = [88.184, -6624.90, -10.059, 8.26e-06, 2.0]
+    _enthalpy_constants = [4.4405e-7, 0.37479,0,0,0]
