@@ -3,7 +3,7 @@ from processpi.units import *
 
 class CyclohexylMercaptan(Component):
     """
-    Represents the properties and constants for Cyclohexyl mercaptan(C6?H12?S).
+    Represents the properties and constants for Cyclohexyl mercaptan(C6H12S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Cyclohexyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class CyclohexylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Cyclohexyl mercaptan"
-    formula = "C6?H12?S"
+    formula = "C6H12S"
     molecular_weight = 116.224
 
     # Critical properties
@@ -45,8 +45,8 @@ class CyclohexylMercaptan(Component):
     _critical_acentric_factor = 0.2641
 
     _density_constants = [0.78578, 0.27882, 664.0, 0.31067]
-    _specific_heat_constants = [0.0, -179.12, 0.76723, 0.0, 0.0, 1.7118, 2.4334]
-    _viscosity_constants = [-11.338, 1304.1, 9.2396e-05]
-    _thermal_conductivity_constants = [0.18374, -0.0001925]
-    _vapor_pressure_constants = [85.146, 0.0, -9.2982, 5.18e-06, 2.0]
-    _enthalpy_constants = [5.6067, 0.38729]
+    _specific_heat_constants = [177560,-179.12,0.76723,0,0]
+    _viscosity_constants = [-11.338, 1304.1, 9.2396e-05,0,0]
+    _thermal_conductivity_constants = [0.18374, -0.0001925,0,0,0]
+    _vapor_pressure_constants = [85.146,-7843.70, -9.2982, 5.18e-06, 2.0]
+    _enthalpy_constants = [5.6067e-7, 0.38729,0,0,0]
