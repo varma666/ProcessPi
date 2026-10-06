@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Decane(Component):
     """
-    Represents the properties and constants for Decane(C10?H22?).
+    Represents the properties and constants for Decane(C10H22).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Decane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Decane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Decane"
-    formula = "C10?H22?"
+    formula = "C10H22"
     molecular_weight = 142.282
 
     # Critical properties
@@ -45,8 +45,8 @@ class Decane(Component):
     _critical_acentric_factor = 0.4923
 
     _density_constants = [0.41084, 0.25175, 617.7, 0.28571]
-    _specific_heat_constants = [0.0, -197.91, 1.0737, 0.0, 0.0, 2.9409, 4.1478]
+    _specific_heat_constants = [278620,-197.91,1.0737,0,0]
     _viscosity_constants = [-9.6489, 1181.1, -0.24367, 9.05e+34, -15.0]
-    _thermal_conductivity_constants = [0.2063, -0.00025]
-    _vapor_pressure_constants = [112.73, 0.0, -13.245, 7.13e-06, 2.0]
-    _enthalpy_constants = [6.6126, 0.39797]
+    _thermal_conductivity_constants = [0.2063, -0.00025,0,0,0]
+    _vapor_pressure_constants = [112.73, -9749.60, -13.245, 7.13e-06, 2.0]
+    _enthalpy_constants = [6.6126e-7, 0.39797,0,0,0]

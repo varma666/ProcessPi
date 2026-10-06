@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DecanoicAcid(Component):
     """
-    Represents the properties and constants for Decanoic acid(C10?H20?O2?).
+    Represents the properties and constants for Decanoic acid(C10H20O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Decanoic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DecanoicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Decanoic acid"
-    formula = "C10?H20?O2?"
+    formula = "C10H20O2"
     molecular_weight = 172.265
 
     # Critical properties
@@ -45,8 +45,8 @@ class DecanoicAcid(Component):
     _critical_acentric_factor = 0.8126
 
     _density_constants = [0.39348, 0.2492, 722.1, 0.28571]
-    _specific_heat_constants = [0.0, 140.41, 0.9968, 0.0, 0.0, 3.5521, 5.9017]
-    _viscosity_constants = [-12.305, 2324.1, -0.055494]
-    _thermal_conductivity_constants = [0.206, -0.0002]
-    _vapor_pressure_constants = [123.36, 0.0, -13.474, 1.95e-18, 6.0]
-    _enthalpy_constants = [13.107, 1.0674, -0.97372, 0.40491]
+    _specific_heat_constants = [219840,140.41,0.9968,0,0]
+    _viscosity_constants = [-12.305, 2324.1, -0.055494,0,0,0]
+    _thermal_conductivity_constants = [0.206, -0.0002,0,0,0]
+    _vapor_pressure_constants = [123.36, -14680, -13.474, 1.95e-18, 6.0]
+    _enthalpy_constants = [13.107e-7, 1.0674, -0.97372, 0.40491,0]

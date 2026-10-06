@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Deuterium(Component):
     """
-    Represents the properties and constants for Deuterium(D2?).
+    Represents the properties and constants for Deuterium(D2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Deuterium, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Deuterium(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Deuterium"
-    formula = "D2?"
+    formula = "D2"
     molecular_weight = 4.032
 
     # Critical properties
@@ -45,8 +45,8 @@ class Deuterium(Component):
     _critical_acentric_factor = -0.1449
 
     _density_constants = [5.2115, 0.315, 38.35, 0.28571]
-    _specific_heat_constants = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    _viscosity_constants = [1.348e-06]
-    _thermal_conductivity_constants = [1.264]
+    _specific_heat_constants = [0,0,0,0,0]
+    _viscosity_constants = [1.348e-06,0,0,0,0]
+    _thermal_conductivity_constants = [1.264,0,0,0,0]
     _vapor_pressure_constants = [18.947, -154.47, -0.5723, 0.0389, 1.0]
-    _enthalpy_constants = [0.1657, 0.352]
+    _enthalpy_constants = [0.1657e-7, 0.352,0,0,0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Decanal(Component):
     """
-    Represents the properties and constants for Decanal(C10?H20?O).
+    Represents the properties and constants for Decanal(C10H20O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Decanal, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Decanal(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Decanal"
-    formula = "C10?H20?O"
+    formula = "C10H20O"
     molecular_weight = 156.265
 
     # Critical properties
@@ -45,8 +45,8 @@ class Decanal(Component):
     _critical_acentric_factor = 0.582
 
     _density_constants = [0.46802, 0.27146, 674.2, 0.26869]
-    _specific_heat_constants = [0.0, 586.63, 0.0, 0.0, 0.0, 3.0718, 4.3682]
-    _viscosity_constants = [-10.115, 1111.9, -0.015659]
-    _thermal_conductivity_constants = [0.20383, -0.0002]
-    _vapor_pressure_constants = [201.64, 0.0, -26.264, 1.46e-05, 2.0]
-    _enthalpy_constants = [7.9073, 0.4129]
+    _specific_heat_constants = [150460,586.63, 0,0,0]
+    _viscosity_constants = [-10.115, 1111.9, -0.015659,0,0,0]
+    _thermal_conductivity_constants = [0.20383, -0.0002,0,0,0]
+    _vapor_pressure_constants = [201.64, -15133, -26.264, 1.46e-05, 2.0]
+    _enthalpy_constants = [7.9073e-7, 0.4129,0,0,0]

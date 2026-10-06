@@ -1,0 +1,52 @@
+from .base import Component
+from processpi.units import *
+
+class PentylMercaptan(Component):
+    """
+    Represents the properties and constants for Pentyl mercaptan(C5?H12?S).
+
+    This class provides a comprehensive set of physical and thermodynamic properties
+    for Pentyl mercaptan, which are essential for various process engineering calculations.
+    These properties are stored as class attributes and are available for use by other
+    calculation modules within the ProcessPI library.
+
+    **Properties:**
+    - `name`: The common name of the compound.
+    - `formula`: The chemical formula.
+    - `molecular_weight`: The molar mass in g/mol.
+    - `_critical_temperature`: The critical temperature, above which a substance
+      cannot exist as a liquid, regardless of pressure.
+    - `_critical_pressure`: The critical pressure, the vapor pressure at the
+      critical temperature.
+    - `_critical_volume`: The critical volume per kmole.
+    - `_critical_zc`: The critical compressibility factor.
+    - `_critical_acentric_factor`: The acentric factor, a measure of the
+      non-sphericity of the molecule.
+    - `_density_constants`: Constants for calculating density as a function of temperature.
+    - `_specific_heat_constants`: Constants for calculating specific heat capacity as a
+      function of temperature.
+    - `_viscosity_constants`: Constants for calculating viscosity as a function of
+      temperature.
+    - `_thermal_conductivity_constants`: Constants for calculating thermal conductivity
+      as a function of temperature.
+    - `_vapor_pressure_constants`: Constants for calculating vapor pressure as a
+      function of temperature using the Antoine equation or similar models.
+    - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
+    """
+    name = "Pentyl mercaptan"
+    formula = "C5?H12?S"
+    molecular_weight = 104.214
+
+    # Critical properties
+    _critical_temperature = Temperature(598.0, "K")
+    _critical_pressure = Pressure(3.47, "MPa")
+    _critical_volume = Volume(0.359, "m3")
+    _critical_zc = 0.251
+    _critical_acentric_factor = 0.3207
+
+    _density_constants = [0.75345, 0.27047, 598.0, 0.30583]
+    _specific_heat_constants = [0.0, -324.4, 0.9472, 0.0, 0.0, 1.8664, 2.3546]
+    _viscosity_constants = [-11.677, 1091.2, 0.10658]
+    _thermal_conductivity_constants = [0.2086, -0.00024536]
+    _vapor_pressure_constants = [67.309, 0.0, -6.4449, 1.01e-17, 6.0]
+    _enthalpy_constants = [5.4315, 0.3972]
