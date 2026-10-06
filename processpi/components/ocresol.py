@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Ocresol(Component):
     """
-    Represents the properties and constants for oCresol(C7?H8?O).
+    Represents the properties and constants for oCresol(C7H8O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for oCresol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Ocresol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "oCresol"
-    formula = "C7?H8?O"
+    formula = "C7H8O"
     molecular_weight = 108.138
 
     # Critical properties
@@ -45,8 +45,8 @@ class Ocresol(Component):
     _critical_acentric_factor = 0.4339
 
     _density_constants = [1.0861, 0.30624, 697.55, 0.30587]
-    _specific_heat_constants = [0.0, 0.0, -8.0367, 0.007254, 0.0, 2.3297, 2.5243]
+    _specific_heat_constants = [-185150,3148,-8.0367,0.007254,0]
     _viscosity_constants = [-0.033937, 390.77, -1.4547, 5020000000000.0, -5.0]
-    _thermal_conductivity_constants = [0.19186, -0.0001303]
-    _vapor_pressure_constants = [210.88, 0.0, -29.483, 0.0252, 1.0]
-    _enthalpy_constants = [7.1979, 0.40317]
+    _thermal_conductivity_constants = [0.19186, -0.0001303,0,0,0]
+    _vapor_pressure_constants = [210.88, -13928, -29.483, 0.0252, 1.0]
+    _enthalpy_constants = [7.1979e-7, 0.40317,0,0,0]
