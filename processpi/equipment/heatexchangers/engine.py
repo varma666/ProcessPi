@@ -154,9 +154,13 @@ class HeatExchangerResults:
         # STATUS CLASSIFICATION
         # ==========================================================
     
-        thermal_ok = data.get("thermal_ok")
-        hydraulic_ok = data.get("hydraulic_ok")
-        pressure_drop_ok = data.get("pressure_drop_ok")
+        # Accept both the normalized summary flags and the feasibility
+        # flags emitted by exchanger implementations. Older results exposed
+        # only *_feasible, which otherwise made the summary omit or misreport
+        # the hydraulic verdict.
+        thermal_ok = data.get("thermal_ok", data.get("thermal_feasible"))
+        hydraulic_ok = data.get("hydraulic_ok", data.get("hydraulic_feasible"))
+        pressure_drop_ok = data.get("pressure_drop_ok", data.get("pressure_drop_feasible"))
     
         feasibility = data.get("feasibility_summary")
     
