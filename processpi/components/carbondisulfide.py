@@ -3,7 +3,7 @@ from processpi.units import *
 
 class CarbonDisulfide(Component):
     """
-    Represents the properties and constants for Carbon disulfide(CS2?).
+    Represents the properties and constants for Carbon disulfide(CS2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Carbon disulfide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class CarbonDisulfide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Carbon disulfide"
-    formula = "CS2?"
+    formula = "CS2"
     molecular_weight = 76.141
 
     # Critical properties
@@ -45,8 +45,8 @@ class CarbonDisulfide(Component):
     _critical_acentric_factor = 0.1107
 
     _density_constants = [1.7968, 0.28749, 552.0, 0.3226]
-    _specific_heat_constants = [0.0, -122.0, 0.5605, -0.001452, 2.01e-06, 0.7577, 1.3125]
-    _viscosity_constants = [-10.306, 703.01]
-    _thermal_conductivity_constants = [0.2333, -0.000275]
-    _vapor_pressure_constants = [67.114, 0.0, -7.5303, 0.00917, 1.0]
-    _enthalpy_constants = [3.496, 0.2986]
+    _specific_heat_constants = [85600,-122,0.5605,-0.001452,2.01e-6]
+    _viscosity_constants = [-10.306, 703.01,0,0,0]
+    _thermal_conductivity_constants = [0.2333, -0.000275,0,0,0]
+    _vapor_pressure_constants = [67.114, -4820.40, -7.5303, 0.00917, 1.0]
+    _enthalpy_constants = [3.496e-7, 0.2986,0,0,0]
