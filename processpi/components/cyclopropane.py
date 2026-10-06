@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Cyclopropane(Component):
     """
-    Represents the properties and constants for Cyclopropane(C3?H6?).
+    Represents the properties and constants for Cyclopropane(C3H6).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Cyclopropane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Cyclopropane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Cyclopropane"
-    formula = "C3?H6?"
+    formula = "C3H6"
     molecular_weight = 42.08
 
     # Critical properties
@@ -45,8 +45,8 @@ class Cyclopropane(Component):
     _critical_acentric_factor = 0.1278
 
     _density_constants = [1.7411, 0.28205, 398.0, 0.29598]
-    _specific_heat_constants = [0.0, -196.63, 0.65237, 0.0, 0.0, 0.7514, 0.8932]
-    _viscosity_constants = [-3.524, 342.54, -1.1599]
-    _thermal_conductivity_constants = [0.24348, -0.00042568]
-    _vapor_pressure_constants = [40.608, 0.0, -2.8937, 5.61e-17, 6.0]
-    _enthalpy_constants = [2.7672, 0.35588]
+    _specific_heat_constants = [89952,-196.63,0.65237,0,0]
+    _viscosity_constants = [-3.524, 342.54, -1.1599,0,0]
+    _thermal_conductivity_constants = [0.24348, -0.00042568,0,0,0]
+    _vapor_pressure_constants = [40.608, -3179.60, -2.8937, 5.61e-17, 6.0]
+    _enthalpy_constants = [2.7672e-7, 0.35588,0,0,0]
