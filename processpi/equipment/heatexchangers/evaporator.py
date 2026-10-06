@@ -962,32 +962,36 @@ class EvaporatorHX(ShellAndTubeHX):
         # Use an explicit max if provided; otherwise flag extreme shell
         # velocities rather than allowing a physically implausible PASS.
         max_shell = float(self.specs.get("max_shell_velocity", 2.0))
-        velocity_checks = []
-        if tube_velocity is not None:
-            velocity_checks.append(min_tube <= tube_velocity <= max_tube)
-        if shell_velocity is not None:
-            velocity_checks.append(min_shell <= shell_velocity <= max_shell)
-        hydraulic_ok = all(velocity_checks) if len(velocity_checks) == 2 else False
-
         feasibility = results.get("feasibility_summary")
         if not isinstance(feasibility, dict):
             feasibility = {}
             results["feasibility_summary"] = feasibility
-        feasibility["hydraulic_ok"] = hydraulic_ok
-        feasibility["hydraulic_feasible"] = hydraulic_ok
-        if not hydraulic_ok and results.get("status") not in {"THERMAL_FAILURE"}:
-            results["status"] = "HYDRAULIC_FAILURE"
-            results["convergence_status"] = "HYDRAULIC_FAILURE"
-            feasibility["status"] = "HYDRAULIC_FAILURE"
-        if not hydraulic_ok:
-            warning = (
-                "Calculated tube/shell velocity is outside configured hydraulic limits "
-                f"(tube={tube_velocity!r} m/s, shell={shell_velocity!r} m/s; "
-                f"tube range {min_tube}-{max_tube} m/s, shell range "
-                f"{min_shell}-{max_shell} m/s)."
+
+        # Only recalculate hydraulic feasibility when this design path actually
+        # supplies both velocities. Some reboiler result paths normalize the
+        # velocities after decoration; treating missing values as real zeros
+        # (or as automatic failure) creates misleading "None m/s" warnings and
+        # can overwrite the pressure-drop assessment.
+        if tube_velocity is not None and shell_velocity is not None:
+            hydraulic_ok = (
+                min_tube <= tube_velocity <= max_tube
+                and min_shell <= shell_velocity <= max_shell
             )
-            if warning not in results.get("warnings", []):
-                results.setdefault("warnings", []).append(warning)
+            feasibility["hydraulic_ok"] = hydraulic_ok
+            feasibility["hydraulic_feasible"] = hydraulic_ok
+            if not hydraulic_ok and results.get("status") not in {"THERMAL_FAILURE"}:
+                results["status"] = "HYDRAULIC_FAILURE"
+                results["convergence_status"] = "HYDRAULIC_FAILURE"
+                feasibility["status"] = "HYDRAULIC_FAILURE"
+            if not hydraulic_ok:
+                warning = (
+                    "Calculated tube/shell velocity is outside configured hydraulic limits "
+                    f"(tube={tube_velocity:.3f} m/s, shell={shell_velocity:.3f} m/s; "
+                    f"tube range {min_tube}-{max_tube} m/s, shell range "
+                    f"{min_shell}-{max_shell} m/s)."
+                )
+                if warning not in results.get("warnings", []):
+                    results.setdefault("warnings", []).append(warning)
 
         # ----------------------------------------------------------
         # Metadata
