@@ -927,6 +927,8 @@ class EvaporatorHX(ShellAndTubeHX):
         # Do not report PASS merely because pressure-drop calculations ran.
         # ----------------------------------------------------------
         def _velocity_value(*keys):
+            # Results may be returned as normalized payload keys or as
+            # presentation-layer labels, depending on the design path.
             for key in keys:
                 value = results.get(key)
                 if value is not None:
@@ -934,10 +936,25 @@ class EvaporatorHX(ShellAndTubeHX):
                         return float(value.to("m/s") if hasattr(value, "to") else value)
                     except (TypeError, ValueError, AttributeError):
                         continue
+            # Some HX result wrappers keep the original design payload nested.
+            for container_key in ("payload", "results", "design", "geometry"):
+                nested = results.get(container_key)
+                if isinstance(nested, dict):
+                    for key in keys:
+                        value = nested.get(key)
+                        if value is not None:
+                            try:
+                                return float(value.to("m/s") if hasattr(value, "to") else value)
+                            except (TypeError, ValueError, AttributeError):
+                                continue
             return None
 
-        tube_velocity = _velocity_value("tube_velocity", "v_tube")
-        shell_velocity = _velocity_value("shell_velocity", "v_shell")
+        tube_velocity = _velocity_value(
+            "tube_velocity", "v_tube", "Tube Velocity", "tube_velocity_m_s"
+        )
+        shell_velocity = _velocity_value(
+            "shell_velocity", "v_shell", "Shell Velocity", "shell_velocity_m_s"
+        )
         limits = self.design_limits
         min_tube = limits["min_tube_velocity"]
         max_tube = limits["max_tube_velocity"]
