@@ -3060,13 +3060,17 @@ class ShellAndTubeHX(HeatExchanger):
     
         return data
     def _infer_service_type(self, hot: Dict[str, float], cold: Dict[str, float]) -> str:
-        explicit = str(self.specs.get("service") or getattr(self, "service_type", "")).lower()
+        explicit = str(self.specs.get("service") or "").lower()
         if explicit:
             return explicit
-        if hot.get("phase") == "vapor":
-            return "condenser"
-        if cold.get("phase") == "vapor":
-            return "reboiler"
+
+        # A vapor inlet does not by itself prove condensation/boiling. In
+        # rating mode, absent an explicit phase-change service, default to
+        # sensible heating/cooling and choose the U category from stream phase.
+        hot_category = self._assumed_u_fluid_type("hot", hot)
+        cold_category = self._assumed_u_fluid_type("cold", cold)
+        if hot_category == "steam" and cold_category not in {"steam", "gas_low_pressure", "gas_high_pressure", "vapor"}:
+            return "heater"
         return "cooler" if hot["t_k"] > cold["t_k"] else "heater"
 
     def _calculate_service_lmtd(self, service: str, hot: Dict[str, float], cold: Dict[str, float], th_out: float, tc_out: float) -> float:
@@ -3103,6 +3107,12 @@ class ShellAndTubeHX(HeatExchanger):
             raise ValueError("Shell-and-tube rating requires exactly one hot stream and one cold stream")
         hot = self._stream_props(self.hot_in)
         cold = self._stream_props(self.cold_in)
+        # Resolve the actual inlet phase before service inference and assumed-U
+        # selection. Component identity alone is insufficient for water/steam.
+        if self._assumed_u_fluid_type("hot", hot) == "steam":
+            hot["phase"] = "vapor"
+        if self._assumed_u_fluid_type("cold", cold) == "steam":
+            cold["phase"] = "vapor"
         self._validate_inputs(hot, cold)
 
         if self.hot_out is None or self.cold_out is None:
