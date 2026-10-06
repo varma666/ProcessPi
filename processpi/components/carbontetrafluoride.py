@@ -3,7 +3,7 @@ from processpi.units import *
 
 class CarbonTetrafluoride(Component):
     """
-    Represents the properties and constants for Carbon tetrafluoride(CF4?).
+    Represents the properties and constants for Carbon tetrafluoride(CF4).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Carbon tetrafluoride, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class CarbonTetrafluoride(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Carbon tetrafluoride"
-    formula = "CF4?"
+    formula = "CF4"
     molecular_weight = 88.004
 
     # Critical properties
@@ -45,8 +45,8 @@ class CarbonTetrafluoride(Component):
     _critical_acentric_factor = 0.179
 
     _density_constants = [1.955, 0.27884, 227.51, 0.28571]
-    _specific_heat_constants = [0.0, -500.6, 2.2851, 0.0, 0.0, 0.781, 0.8007]
-    _viscosity_constants = [-9.9212, 300.5]
-    _thermal_conductivity_constants = [0.20771, -0.00078883]
-    _vapor_pressure_constants = [61.89, 0.0, -7.086, 3.47e-05, 2.0]
-    _enthalpy_constants = [1.9311, 0.94983, -1.0615, 0.51894]
+    _specific_heat_constants = [104600,-500.6,2.2851,0,0]
+    _viscosity_constants = [-9.9212, 300.5,0,0,0]
+    _thermal_conductivity_constants = [0.20771, -0.00078883,0,0,0]
+    _vapor_pressure_constants = [61.89,-2296.30, -7.086, 3.47e-05, 2.0]
+    _enthalpy_constants = [1.9311e-7, 0.94983, -1.0615, 0.51894,0]
