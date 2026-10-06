@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Cumene(Component):
     """
-    Represents the properties and constants for Cumene(C9?H12?).
+    Represents the properties and constants for Cumene(C9H12).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Cumene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Cumene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Cumene"
-    formula = "C9?H12?"
+    formula = "C9H12"
     molecular_weight = 120.192
 
     # Critical properties
@@ -45,8 +45,8 @@ class Cumene(Component):
     _critical_acentric_factor = 0.3274
 
     _density_constants = [0.58711, 0.25583, 631.0, 0.28498]
-    _specific_heat_constants = [0.0, 494.81, 0.0, 0.0, 0.0, 1.4937, 2.7229]
-    _viscosity_constants = [-24.988, 1807.9, 2.0556]
-    _thermal_conductivity_constants = [0.1855, -0.00020895]
-    _vapor_pressure_constants = [102.81, 0.0, -11.922, 7e-06, 2.0]
-    _enthalpy_constants = [5.766, 0.38939]
+    _specific_heat_constants = [61723,494.81,0,0,0]
+    _viscosity_constants = [-24.988, 1807.9, 2.0556,0,0]
+    _thermal_conductivity_constants = [0.1855, -0.00020895,0,0,0]
+    _vapor_pressure_constants = [102.81, -8674.60, -11.922, 7e-06, 2.0]
+    _enthalpy_constants = [5.766e-7, 0.38939,0,0,0]
