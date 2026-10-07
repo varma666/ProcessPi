@@ -1,8 +1,9 @@
 # Distillation Columns
 
-`DistillationColumn` is a ProcessPI equipment unit for the preliminary design
-of a simple distillation column: one feed, a total condenser, a partial
-reboiler, a distillate and a bottoms product.
+`DistillationEngine` designs a simple distillation column (one feed, a total
+condenser, a partial reboiler, a distillate and a bottoms product) with the
+same `fit()` / `run()` interface as the pipeline and heat exchanger engines.
+`DistillationColumn` is the same column as a flowsheet unit.
 
 It runs the Fenske-Underwood-Gilliland-Kirkbride shortcut (any number of
 components), checks a binary design by McCabe-Thiele stepping, and then sizes
@@ -11,7 +12,7 @@ height and the condenser and reboiler duties.
 
 ```python
 from processpi.components import Benzene, Toluene
-from processpi.equipment import DistillationColumn
+from processpi.equipment import DistillationEngine
 from processpi.streams import MaterialStream
 from processpi.units import MolarFlowRate, Pressure, Temperature
 
@@ -22,8 +23,8 @@ feed = MaterialStream(
     temperature=Temperature(95, "C"),
     pressure=Pressure(1.01325, "bar"),
 )
-column = DistillationColumn(
-    name="T-101",
+model = DistillationEngine(name="T-101")
+model.fit(
     feed=feed,
     components=[Benzene(), Toluene()],
     light_key="Benzene",
@@ -31,7 +32,7 @@ column = DistillationColumn(
     distillate_lk_fraction=0.97,
     bottoms_lk_fraction=0.02,
 )
-result = column.design()
+result = model.run()
 print(result.summary())
 ```
 
@@ -101,7 +102,13 @@ Every number is also in `result.data` (or `result["key"]`), as ProcessPI unit
 objects where the quantity has a unit: for example `result["diameter"]`,
 `result["condenser_duty"].to("kW")`, `result["distillate"]["x"]`.
 
+`fit()` also takes optional `distillate` and `bottoms` streams; when both are
+given, `run()` writes the products to them. `model.summary()` and
+`model.results()` return the last run, as in the other engines.
+
 ## Specifications
+
+These are the keyword arguments of `fit()` (and of `DistillationColumn`).
 
 | Spec | Meaning |
 |------|---------|

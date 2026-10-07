@@ -2,7 +2,7 @@
 
 from .heatexchangers import *
 from .pressure_vessel import PressureVessel, PressureVessels
-from .distillation import DistillationColumn, DistillationResults
+from .distillation import DistillationColumn, DistillationEngine, DistillationResults
 
 __all__ = [
     "HeatExchanger",
@@ -17,5 +17,6 @@ __all__ = [
     "PressureVessel",
     "PressureVessels",
     "DistillationColumn",
+    "DistillationEngine",
     "DistillationResults",
 ]
