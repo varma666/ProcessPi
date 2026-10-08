@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Dibromomethane(Component):
     """
-    Represents the properties and constants for Dibromomethane(CH2?Br2?).
+    Represents the properties and constants for Dibromomethane(CH2Br2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Dibromomethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Dibromomethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Dibromomethane"
-    formula = "CH2?Br2?"
+    formula = "CH2Br2"
     molecular_weight = 173.835
 
     # Critical properties
@@ -45,8 +45,8 @@ class Dibromomethane(Component):
     _critical_acentric_factor = 0.2095
 
     _density_constants = [1.1136, 0.24834, 611.0, 0.27583]
-    _specific_heat_constants = [0.0, -726.3, 1.3377, 0.0, 0.0, 1.0532, 1.1701]
-    _viscosity_constants = [-10.013, 921.31]
-    _thermal_conductivity_constants = [0.17558, -0.00022499]
-    _vapor_pressure_constants = [86.295, 0.0, -9.5972, 6.78e-06, 2.0]
-    _enthalpy_constants = [4.82, 0.3771]
+    _specific_heat_constants = [202580,-726.3,1.3377,0,0]
+    _viscosity_constants = [-10.013, 921.31,0,0,0]
+    _thermal_conductivity_constants = [0.17558, -0.00022499,0,0,0]
+    _vapor_pressure_constants = [86.295, -7010.30, -9.5972, 6.78e-06, 2.0]
+    _enthalpy_constants = [4.82e-7, 0.3771,0,0,0]

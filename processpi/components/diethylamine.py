@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DiethylAmine(Component):
     """
-    Represents the properties and constants for Diethyl amine(C4?H11?N).
+    Represents the properties and constants for Diethyl amine(C4H11N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Diethyl amine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DiethylAmine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Diethyl amine"
-    formula = "C4?H11?N"
+    formula = "C4H11N"
     molecular_weight = 73.137
 
     # Critical properties
@@ -45,8 +45,8 @@ class DiethylAmine(Component):
     _critical_acentric_factor = 0.3039
 
     _density_constants = [0.85379, 0.25675, 496.6, 0.27027]
-    _specific_heat_constants = [0.0, 243.18, 0.0, 0.0, 0.0, 1.5564, 1.8124]
-    _viscosity_constants = [-17.57, 1385.7, 0.85647]
-    _thermal_conductivity_constants = [0.2587, -0.00054343, 4.21e-07]
-    _vapor_pressure_constants = [49.314, 0.0, -3.9256, 9.2e-18, 6.0]
+    _specific_heat_constants = [101330,243.18,0,0,0]
+    _viscosity_constants = [-17.57, 1385.7, 0.85647,0,0]
+    _thermal_conductivity_constants = [0.2587, -0.00054343, 4.21e-07,0,0]
+    _vapor_pressure_constants = [49.314, -4949, -3.9256, 9.2e-18, 6.0]
     _enthalpy_constants = [4.6133, 0.42628]

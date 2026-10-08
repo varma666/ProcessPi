@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DiisopropylEther(Component):
     """
-    Represents the properties and constants for Diisopropyl ether(C6?H14?O).
+    Represents the properties and constants for Diisopropyl ether(C6H14O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Diisopropyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DiisopropylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Diisopropyl ether"
-    formula = "C6?H14?O"
+    formula = "C6H14O"
     molecular_weight = 102.175
 
     # Critical properties
@@ -45,8 +45,8 @@ class DiisopropylEther(Component):
     _critical_acentric_factor = 0.3387
 
     _density_constants = [0.69213, 0.26974, 500.05, 0.28571]
-    _specific_heat_constants = [0.0, -4.5, 0.62, 0.0, 0.0, 1.8399, 2.3375]
-    _viscosity_constants = [-11.5, 993.0, 0.022]
-    _thermal_conductivity_constants = [0.19162, -0.0002762]
-    _vapor_pressure_constants = [41.631, 0.0, -2.8551, 0.000637, 1.0]
-    _enthalpy_constants = [4.6117, 0.4]
+    _specific_heat_constants = [163000,-4.5,0.62,0,0]
+    _viscosity_constants = [-11.5, 993.0, 0.022,0,0]
+    _thermal_conductivity_constants = [0.19162, -0.0002762,0,0,0]
+    _vapor_pressure_constants = [41.631, -4668.70, -2.8551, 0.000637, 1.0]
+    _enthalpy_constants = [4.6117e-7, 0.4,0,0,0]

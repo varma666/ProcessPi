@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DimethylDisulfide(Component):
     """
-    Represents the properties and constants for Dimethyl disulfide(C2?H6?S2?).
+    Represents the properties and constants for Dimethyl disulfide(C2H6S2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Dimethyl disulfide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DimethylDisulfide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Dimethyl disulfide"
-    formula = "C2?H6?S2?"
+    formula = "C2H6S2"
     molecular_weight = 94.199
 
     # Critical properties
@@ -45,8 +45,8 @@ class DimethylDisulfide(Component):
     _critical_acentric_factor = 0.2059
 
     _density_constants = [1.1058, 0.27866, 615.0, 0.31082]
-    _specific_heat_constants = [0.0, -256.67, 0.5727, 0.0, 0.0, 1.4355, 1.534]
-    _viscosity_constants = [-10.577, 1172.6, -0.14244]
-    _thermal_conductivity_constants = [0.21373, -0.0002447]
-    _vapor_pressure_constants = [81.045, 0.0, -8.777, 5.55e-06, 2.0]
-    _enthalpy_constants = [4.9825, 0.3958]
+    _specific_heat_constants = [171580,-256.67,0.5727,0,0]
+    _viscosity_constants = [-10.577, 1172.6, -0.14244,0,0]
+    _thermal_conductivity_constants = [0.21373, -0.0002447,0,0,0]
+    _vapor_pressure_constants = [81.045, -6941.30, -8.777, 5.55e-06, 2.0]
+    _enthalpy_constants = [4.9825e-7, 0.3958,0,0,0]

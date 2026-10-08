@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Dodecane(Component):
     """
-    Represents the properties and constants for Dodecane(C12?H26?).
+    Represents the properties and constants for Dodecane(C12H26).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Dodecane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Dodecane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Dodecane"
-    formula = "C12?H26?"
+    formula = "C12H26"
     molecular_weight = 170.335
 
     # Critical properties
@@ -45,8 +45,8 @@ class Dodecane(Component):
     _critical_acentric_factor = 0.5764
 
     _density_constants = [0.33267, 0.24664, 658.0, 0.28571]
-    _specific_heat_constants = [0.0, 0.0, 3.1015, 0.0, 0.0, 3.6292, 3.9429]
+    _specific_heat_constants = [508210, -1368.70, 3.1015, 0.0, 0.0]
     _viscosity_constants = [-7.8244, 1191.9, -0.49963, 3.96e+23, -10.0]
-    _thermal_conductivity_constants = [0.2047, -0.0002326]
-    _vapor_pressure_constants = [137.47, 0.0, -16.698, 8.09e-06, 2.0]
-    _enthalpy_constants = [7.7337, 0.40681]
+    _thermal_conductivity_constants = [0.2047, -0.0002326, 0, 0, 0]
+    _vapor_pressure_constants = [137.47, -11976, -16.698, 8.09e-06, 2.0]
+    _enthalpy_constants = [7.7337e-7, 0.40681, 0, 0, 0]

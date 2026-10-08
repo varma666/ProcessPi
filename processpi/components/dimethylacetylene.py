@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DimethylAcetylene(Component):
     """
-    Represents the properties and constants for Dimethyl acetylene(C4?H6?).
+    Represents the properties and constants for Dimethyl acetylene(C4H6).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Dimethyl acetylene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DimethylAcetylene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Dimethyl acetylene"
-    formula = "C4?H6?"
+    formula = "C4H6"
     molecular_weight = 54.09
 
     # Critical properties
@@ -45,8 +45,8 @@ class DimethylAcetylene(Component):
     _critical_acentric_factor = 0.2385
 
     _density_constants = [1.1717, 0.25895, 473.2, 0.27289]
-    _specific_heat_constants = [0.0, 124.16, 0.0, 0.0, 0.0, 1.1806, 1.2542]
-    _viscosity_constants = [0.10842, 300.2, -1.6831]
-    _thermal_conductivity_constants = [0.22773, -0.00034804]
-    _vapor_pressure_constants = [66.592, 0.0, -6.8387, 6.68e-06, 2.0]
-    _enthalpy_constants = [3.856, 0.3737]
+    _specific_heat_constants = [88153,124.16,0,0,0]
+    _viscosity_constants = [0.10842, 300.2, -1.6831,0,0]
+    _thermal_conductivity_constants = [0.22773, -0.00034804,0,0,0]
+    _vapor_pressure_constants = [66.592, -4999.80, -6.8387, 6.68e-06, 2.0]
+    _enthalpy_constants = [3.856e-7, 0.3737,0,0,0]

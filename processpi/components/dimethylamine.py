@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DimethylAmine(Component):
     """
-    Represents the properties and constants for Dimethyl amine(C2?H7?N).
+    Represents the properties and constants for Dimethyl amine(C2H7N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Dimethyl amine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DimethylAmine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Dimethyl amine"
-    formula = "C2?H7?N"
+    formula = "C2H7N"
     molecular_weight = 45.084
 
     # Critical properties
@@ -45,8 +45,8 @@ class DimethylAmine(Component):
     _critical_acentric_factor = 0.2999
 
     _density_constants = [1.5436, 0.27784, 437.2, 0.2572]
-    _specific_heat_constants = [0.0, 0.0, -13.781, 0.016924, 0.0, 1.1947, 1.3779]
-    _viscosity_constants = [-10.93, 699.5]
-    _thermal_conductivity_constants = [0.2454, -0.000338]
-    _vapor_pressure_constants = [71.738, 0.0, -7.3324, 6.42e-17, 6.0]
-    _enthalpy_constants = [4.09, 0.42005]
+    _specific_heat_constants = [-214870,3787.20,-13.781,0.016924,0]
+    _viscosity_constants = [-10.93, 699.5,0,0,0]
+    _thermal_conductivity_constants = [0.2454, -0.000338,0,0,0]
+    _vapor_pressure_constants = [71.738, -5302, -7.3324, 6.42e-17, 6.0]
+    _enthalpy_constants = [4.09e-7, 0.42005,0,0,0]

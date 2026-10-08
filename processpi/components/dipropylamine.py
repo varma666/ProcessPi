@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DipropylAmine(Component):
     """
-    Represents the properties and constants for Dipropyl amine(C6?H15?N).
+    Represents the properties and constants for Dipropyl amine(C6H15N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Dipropyl amine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DipropylAmine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Dipropyl amine"
-    formula = "C6?H15?N"
+    formula = "C6H15N"
     molecular_weight = 101.19
 
     # Critical properties
@@ -45,8 +45,8 @@ class DipropylAmine(Component):
     _critical_acentric_factor = 0.4497
 
     _density_constants = [0.659, 0.26428, 550.0, 0.2766]
-    _specific_heat_constants = [0.0, 562.24, 0.0, 0.0, 0.0, 2.0537, 2.7846]
-    _viscosity_constants = [-15.404, 1390.0, 0.5564]
-    _thermal_conductivity_constants = [0.2224, -0.000314]
-    _vapor_pressure_constants = [54.0, 0.0, -4.4981, 9.97e-18, 6.0]
-    _enthalpy_constants = [5.428, 0.3665]
+    _specific_heat_constants = [49120, 562.24, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-15.404, 1390.0, 0.5564, 0, 0]
+    _thermal_conductivity_constants = [0.2224, -0.000314, 0, 0, 0]
+    _vapor_pressure_constants = [54.0, -6018.50, -4.4981, 9.97e-18, 6.0]
+    _enthalpy_constants = [5.428e-7, 0.3665, 0, 0, 0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DiethylSulfide(Component):
     """
-    Represents the properties and constants for Diethyl sulfide(C4?H10?S).
+    Represents the properties and constants for Diethyl sulfide(C4H10S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Diethyl sulfide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DiethylSulfide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Diethyl sulfide"
-    formula = "C4?H10?S"
+    formula = "C4H10S"
     molecular_weight = 90.187
 
     # Critical properties
@@ -45,8 +45,8 @@ class DiethylSulfide(Component):
     _critical_acentric_factor = 0.29
 
     _density_constants = [0.82227, 0.26314, 557.15, 0.27369]
-    _specific_heat_constants = [0.0, 0.0, 4.0587, -0.0044691, 0.0, 1.5703, 1.7579]
-    _viscosity_constants = [-5.135, 667.5, -0.8553]
-    _thermal_conductivity_constants = [0.21065, -0.0002623]
-    _vapor_pressure_constants = [46.705, 0.0, -3.5985, 1.71e-06, 2.0]
-    _enthalpy_constants = [4.7659, 0.37987]
+    _specific_heat_constants = [238520,-1038.40,4.0587,-0.0044691,0]
+    _viscosity_constants = [-5.135, 667.5, -0.8553,0,0]
+    _thermal_conductivity_constants = [0.21065, -0.0002623,0,0,0]
+    _vapor_pressure_constants = [46.705, -5177.40, -3.5985, 1.71e-06, 2.0]
+    _enthalpy_constants = [4.7659e-7, 0.37987,0,0,0]

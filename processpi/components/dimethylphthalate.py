@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DimethylPhthalate(Component):
     """
-    Represents the properties and constants for Dimethyl phthalate(C10?H10?O4?).
+    Represents the properties and constants for Dimethyl phthalate(C10H10O4).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Dimethyl phthalate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DimethylPhthalate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Dimethyl phthalate"
-    formula = "C10?H10?O4?"
+    formula = "C10H10O4"
     molecular_weight = 194.184
 
     # Critical properties
@@ -45,8 +45,8 @@ class DimethylPhthalate(Component):
     _critical_acentric_factor = 0.6568
 
     _density_constants = [0.47977, 0.25428, 766.0, 0.30722]
-    _specific_heat_constants = [0.0, 325.75, 0.0, 0.0, 0.0, 2.9587, 3.2383]
+    _specific_heat_constants = [206560,325.75,0,0,0]
     _viscosity_constants = [16.961, -423.16, -3.8178, 1360000000000000.0, -6.0]
-    _thermal_conductivity_constants = [0.13905, 0.0001509, -3.98e-07]
-    _vapor_pressure_constants = [72.517, 0.0, -6.755, 1.33e-06, 2.0]
-    _enthalpy_constants = [8.1578, 0.29346]
+    _thermal_conductivity_constants = [0.13905, 0.0001509, -3.98e-07,0,0]
+    _vapor_pressure_constants = [72.517, -10415, -6.755, 1.33e-06, 2.0]
+    _enthalpy_constants = [8.1578e-7, 0.29346,0,0,0]

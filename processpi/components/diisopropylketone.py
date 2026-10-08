@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DiisopropylKetone(Component):
     """
-    Represents the properties and constants for Diisopropyl ketone(C7?H14?O).
+    Represents the properties and constants for Diisopropyl ketone(C7H14O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Diisopropyl ketone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DiisopropylKetone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Diisopropyl ketone"
-    formula = "C7?H14?O"
+    formula = "C7H14O"
     molecular_weight = 114.185
 
     # Critical properties
@@ -45,8 +45,8 @@ class DiisopropylKetone(Component):
     _critical_acentric_factor = 0.4044
 
     _density_constants = [0.64619, 0.26881, 576.0, 0.28036]
-    _specific_heat_constants = [0.0, 28.37, 0.5375, 0.0, 0.0, 2.0763, 2.8126]
-    _viscosity_constants = [-15.097, 1426.9, 0.51512]
-    _thermal_conductivity_constants = [0.22076, -0.00027624]
-    _vapor_pressure_constants = [50.868, 0.0, -4.066, 1.13e-06, 2.0]
-    _enthalpy_constants = [5.0256, 0.29611]
+    _specific_heat_constants = [179270,28.37,0.5375,0,0]
+    _viscosity_constants = [-15.097, 1426.9, 0.51512,0,0]
+    _thermal_conductivity_constants = [0.22076, -0.00027624,0,0,0]
+    _vapor_pressure_constants = [50.868, -6063.50, -4.066, 1.13e-06, 2.0]
+    _enthalpy_constants = [5.0256e-7, 0.29611,0,0,0]

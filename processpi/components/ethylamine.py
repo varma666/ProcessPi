@@ -3,7 +3,7 @@ from processpi.units import *
 
 class EthylAmine(Component):
     """
-    Represents the properties and constants for Ethyl amine(C2?H7?N).
+    Represents the properties and constants for Ethyl amine(C2H7N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethyl amine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class EthylAmine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethyl amine"
-    formula = "C2?H7?N"
+    formula = "C2H7N"
     molecular_weight = 45.084
 
     # Critical properties
@@ -45,8 +45,8 @@ class EthylAmine(Component):
     _critical_acentric_factor = 0.2848
 
     _density_constants = [1.0936, 0.22636, 456.15, 0.25522]
-    _specific_heat_constants = [0.0, 38.993, 0.0, 0.0, 0.0, 1.2919, 1.33]
-    _viscosity_constants = [19.822, -0.12598, -4.9793]
-    _thermal_conductivity_constants = [0.30059, -0.000581, 6.6e-07]
-    _vapor_pressure_constants = [81.56, 0.0, -9.0779, 8.79e-06, 2.0]
-    _enthalpy_constants = [4.275, 0.5857, -0.332, 0.169]
+    _specific_heat_constants = [121700, 38.993, 0.0, 0.0, 0.0]
+    _viscosity_constants = [19.822, -0.12598, -4.9793, 0, 0]
+    _thermal_conductivity_constants = [0.30059, -0.000581, 6.6e-07, 0, 0]
+    _vapor_pressure_constants = [81.56, -5596.90, -9.0779, 8.79e-06, 2.0]
+    _enthalpy_constants = [4.275e-7, 0.5857, -0.332, 0.169, 0]

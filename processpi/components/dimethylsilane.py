@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Dimethylsilane(Component):
     """
-    Represents the properties and constants for Dimethylsilane(C2?H8?Si).
+    Represents the properties and constants for Dimethylsilane(C2H8Si).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Dimethylsilane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Dimethylsilane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Dimethylsilane"
-    formula = "C2?H8?Si"
+    formula = "C2H8Si"
     molecular_weight = 60.17
 
     # Critical properties
@@ -45,8 +45,8 @@ class Dimethylsilane(Component):
     _critical_acentric_factor = 0.13
 
     _density_constants = [1.0214, 0.26351, 402.0, 0.28421]
-    _specific_heat_constants = [0.0, 0.0, 0.0, 0.0, 0.0, 1.3181, 1.3181]
-    _viscosity_constants = []
-    _thermal_conductivity_constants = [0.25547, -0.0004411]
-    _vapor_pressure_constants = [63.08, 0.0, -6.425, 1.51e-16, 6.0]
-    _enthalpy_constants = [2.8365, 0.35393]
+    _specific_heat_constants = [131810,0,0,0,0]
+    _viscosity_constants = [0, 0, 0, 0, 0]
+    _thermal_conductivity_constants = [0.25547, -0.0004411, 0, 0, 0]
+    _vapor_pressure_constants = [63.08, -4062.30, -6.425, 1.51e-16, 6.0]
+    _enthalpy_constants = [2.8365e-7, 0.35393, 0, 0, 0]

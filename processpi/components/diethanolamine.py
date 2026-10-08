@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DiethanolAmine(Component):
     """
-    Represents the properties and constants for Diethanol amine(C4?H11?NO2?).
+    Represents the properties and constants for Diethanol amine(C4H11NO2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Diethanol amine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DiethanolAmine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Diethanol amine"
-    formula = "C4?H11?NO2?"
+    formula = "C4H11NO2"
     molecular_weight = 105.136
 
     # Critical properties
@@ -45,8 +45,8 @@ class DiethanolAmine(Component):
     _critical_acentric_factor = 0.9529
 
     _density_constants = [0.68184, 0.23796, 736.6, 0.2062]
-    _specific_heat_constants = [0.0, 286.0, 0.0, 0.0, 0.0, 2.7033, 3.3908]
+    _specific_heat_constants = [184200,286,0,0,0]
     _viscosity_constants = [-375.21, 17177.0, 66.66, -3.6367, 0.5]
-    _thermal_conductivity_constants = [0.0218, 0.0010315, -1.355e-06]
-    _vapor_pressure_constants = [106.38, 0.0, -11.06, 3.26e-18, 6.0]
-    _enthalpy_constants = [10.154, 0.3403]
+    _thermal_conductivity_constants = [0.0218, 0.0010315, -1.355e-06,0,0]
+    _vapor_pressure_constants = [106.38, -13714, -11.06, 3.26e-18, 6.0]
+    _enthalpy_constants = [10.154e-7, 0.3403,0,0,0]

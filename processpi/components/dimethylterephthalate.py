@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DimethylTerephthalate(Component):
     """
-    Represents the properties and constants for Dimethyl terephthalate(C10?H10?O4?).
+    Represents the properties and constants for Dimethyl terephthalate(C10H10O4).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Dimethyl terephthalate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DimethylTerephthalate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Dimethyl terephthalate"
-    formula = "C10?H10?O4?"
+    formula = "C10H10O4"
     molecular_weight = 194.184
 
     # Critical properties
@@ -45,8 +45,8 @@ class DimethylTerephthalate(Component):
     _critical_acentric_factor = 0.6371
 
     _density_constants = [0.50824, 0.26885, 772.0, 0.2612]
-    _specific_heat_constants = [0.0, 431.04, 0.0, 0.0, 0.0, 3.7252, 3.9104]
-    _viscosity_constants = [-11.488, 1922.6]
-    _thermal_conductivity_constants = [0.21593, -0.00020805]
-    _vapor_pressure_constants = [43.541, 0.0, -2.7519, 1.05e-18, 6.0]
-    _enthalpy_constants = [7.236, 0.2424]
+    _specific_heat_constants = [190020, 431.04, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-11.488, 1922.6, 0, 0, 0]
+    _thermal_conductivity_constants = [0.21593, -0.00020805, 0, 0, 0]
+    _vapor_pressure_constants = [43.541, -8204.80, -2.7519, 1.05e-18, 6.0]
+    _enthalpy_constants = [7.236e-7, 0.2424, 0, 0, 0]

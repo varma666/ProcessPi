@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Dichloromethane(Component):
     """
-    Represents the properties and constants for Dichloromethane(CH2?Cl2?).
+    Represents the properties and constants for Dichloromethane(CH2Cl2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Dichloromethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Dichloromethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Dichloromethane"
-    formula = "CH2?Cl2?"
+    formula = "CH2Cl2"
     molecular_weight = 84.933
 
     # Critical properties
@@ -45,8 +45,8 @@ class Dichloromethane(Component):
     _critical_acentric_factor = 0.1986
 
     _density_constants = [1.3897, 0.25678, 510.0, 0.2902]
-    _specific_heat_constants = [0.0, -62.941, 0.23265, 0.0, 0.0, 0.9518, 1.0265]
-    _viscosity_constants = [-13.071, 940.03, 0.3733]
-    _thermal_conductivity_constants = [0.23847, -0.00033366]
-    _vapor_pressure_constants = [101.6, 0.0, -12.247, 1.23e-05, 2.0]
-    _enthalpy_constants = [4.186, 0.4092]
+    _specific_heat_constants = [98968,-62.9410,0.23265,0,0,]
+    _viscosity_constants = [-13.071, 940.03, 0.3733,0,0]
+    _thermal_conductivity_constants = [0.23847, -0.00033366,0,0,0]
+    _vapor_pressure_constants = [101.6, -6541.60, -12.247, 1.23e-05, 2.0]
+    _enthalpy_constants = [4.186e-7, 0.4092,0,0,0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Difluoromethane(Component):
     """
-    Represents the properties and constants for Difluoromethane(CH2?F2?).
+    Represents the properties and constants for Difluoromethane(CH2F2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Difluoromethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Difluoromethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Difluoromethane"
-    formula = "CH2?F2?"
+    formula = "CH2F2"
     molecular_weight = 52.023
 
     # Critical properties
@@ -45,8 +45,8 @@ class Difluoromethane(Component):
     _critical_acentric_factor = 0.2771
 
     _density_constants = [1.9973, 0.24653, 351.26, 0.28153]
-    _specific_heat_constants = [0.0, 0.0, 4.3666, 0.0, 0.0, 0.8042, 0.8912]
+    _specific_heat_constants = [263980,-1791.10,4.36666,0,0]
     _viscosity_constants = [-17.723, 850.2, 1.0601, -1.17e-18, 7.0]
-    _thermal_conductivity_constants = [0.37296, -0.00088707, 2.58e-07]
-    _vapor_pressure_constants = [69.132, 0.0, -7.5868, 1.51e-05, 2.0]
-    _enthalpy_constants = [2.8081, 0.3364]
+    _thermal_conductivity_constants = [0.37296, -0.00088707, 2.58e-07,0,0]
+    _vapor_pressure_constants = [69.132, -3847.70, -7.5868, 1.51e-05, 2.0]
+    _enthalpy_constants = [2.8081e-7, 0.3364,0,0,0]

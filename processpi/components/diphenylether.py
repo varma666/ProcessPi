@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DiphenylEther(Component):
     """
-    Represents the properties and constants for Diphenyl ether(C12?H10?O).
+    Represents the properties and constants for Diphenyl ether(C12H10O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Diphenyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DiphenylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Diphenyl ether"
-    formula = "C12?H10?O"
+    formula = "C12H10O"
     molecular_weight = 170.207
 
     # Critical properties
@@ -45,8 +45,8 @@ class DiphenylEther(Component):
     _critical_acentric_factor = 0.4389
 
     _density_constants = [0.52133, 0.26218, 766.8, 0.31033]
-    _specific_heat_constants = [0.0, 447.67, 0.0, 0.0, 0.0, 2.6847, 3.8933]
-    _viscosity_constants = [-12.373, 2017.5]
-    _thermal_conductivity_constants = [0.18686, -0.00014953]
-    _vapor_pressure_constants = [59.969, 0.0, -5.1538, 2e-18, 6.0]
-    _enthalpy_constants = [6.8243, 0.30877]
+    _specific_heat_constants = [134160, 447.67, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-12.373, 2017.5, 0, 0, 0]
+    _thermal_conductivity_constants = [0.18686, -0.00014953, 0, 0, 0]
+    _vapor_pressure_constants = [59.969, -8585.50, -5.1538, 2e-18, 6.0]
+    _enthalpy_constants = [6.8243e-7, 0.30877, 0, 0, 0]

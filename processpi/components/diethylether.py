@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DiethylEther(Component):
     """
-    Represents the properties and constants for Diethyl ether(C4?H10?O).
+    Represents the properties and constants for Diethyl ether(C4H10O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Diethyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DiethylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Diethyl ether"
-    formula = "C4?H10?O"
+    formula = "C4H10O"
     molecular_weight = 74.122
 
     # Critical properties
@@ -45,8 +45,8 @@ class DiethylEther(Component):
     _critical_acentric_factor = 0.2811
 
     _density_constants = [0.9554, 0.26847, 466.7, 0.2814]
-    _specific_heat_constants = [0.0, 0.0, -5.5, 0.008763, 0.0, 1.4698, 3.3202]
-    _viscosity_constants = [10.197, -63.8, -3.226]
-    _thermal_conductivity_constants = [0.2495, -0.000407]
-    _vapor_pressure_constants = [136.9, 0.0, -19.254, 0.0245, 1.0]
-    _enthalpy_constants = [4.06, 0.3868]
+    _specific_heat_constants = [44400,1301,-5.5,0.008763,0]
+    _viscosity_constants = [10.197, -63.8, -3.226,0,0]
+    _thermal_conductivity_constants = [0.2495, -0.000407,0,0,0]
+    _vapor_pressure_constants = [136.9, -6954.30, -19.254, 0.0245, 1.0]
+    _enthalpy_constants = [4.06e-7, 0.3868,0,0,0]

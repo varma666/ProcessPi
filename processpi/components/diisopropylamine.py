@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DiisopropylAmine(Component):
     """
-    Represents the properties and constants for Diisopropyl amine(C6?H15?N).
+    Represents the properties and constants for Diisopropyl amine(C6H15N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Diisopropyl amine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DiisopropylAmine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Diisopropyl amine"
-    formula = "C6?H15?N"
+    formula = "C6H15N"
     molecular_weight = 101.19
 
     # Critical properties
@@ -45,8 +45,8 @@ class DiisopropylAmine(Component):
     _critical_acentric_factor = 0.3883
 
     _density_constants = [0.6181, 0.25786, 523.1, 0.271]
-    _specific_heat_constants = [0.0, 429.04, 0.0, 0.0, 0.0, 2.1642, 2.5162]
-    _viscosity_constants = [-1.7366, 599.8, -1.4237]
-    _thermal_conductivity_constants = [0.1844, -0.000239]
-    _vapor_pressure_constants = [462.84, 0.0, -73.734, 0.0928, 1.0]
-    _enthalpy_constants = [5.007, 0.4362]
+    _specific_heat_constants = [98434,429.40,0,0,0]
+    _viscosity_constants = [-1.7366, 599.8, -1.4237,0,0]
+    _thermal_conductivity_constants = [0.1844, -0.000239,0,0,0]
+    _vapor_pressure_constants = [462.84, -18227, -73.734, 0.0928, 1.0]
+    _enthalpy_constants = [5.007e-7, 0.4362,0,0,0]

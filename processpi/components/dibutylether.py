@@ -3,7 +3,7 @@ from processpi.units import *
 
 class DibutylEther(Component):
     """
-    Represents the properties and constants for Dibutyl ether(C8?H18?O).
+    Represents the properties and constants for Dibutyl ether(C8H18O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Dibutyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class DibutylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Dibutyl ether"
-    formula = "C8?H18?O"
+    formula = "C8H18O"
     molecular_weight = 130.228
 
     # Critical properties
@@ -45,8 +45,8 @@ class DibutylEther(Component):
     _critical_acentric_factor = 0.4476
 
     _density_constants = [0.55941, 0.27243, 584.1, 0.29932]
-    _specific_heat_constants = [0.0, -259.83, 0.95427, 0.0, 0.0, 2.545, 3.4704]
-    _viscosity_constants = [10.027, 206.0, -3.1607]
-    _thermal_conductivity_constants = [0.19418, -0.00022246]
-    _vapor_pressure_constants = [72.227, 0.0, -7.0596, 9.14e-18, 6.0]
-    _enthalpy_constants = [5.9616, 0.38833]
+    _specific_heat_constants = [270720,-259.83,0.95247,0,0]
+    _viscosity_constants = [10.027, 206.0, -3.1607,0,0]
+    _thermal_conductivity_constants = [0.19418, -0.00022246,0,0,0]
+    _vapor_pressure_constants = [72.227, -7537.60, -7.0596, 9.14e-18, 6.0]
+    _enthalpy_constants = [5.9616e-7, 0.38833,0,0,0]

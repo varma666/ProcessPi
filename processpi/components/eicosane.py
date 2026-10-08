@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Eicosane(Component):
     """
-    Represents the properties and constants for Eicosane(C20?H42?).
+    Represents the properties and constants for Eicosane(C20H42).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Eicosane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Eicosane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Eicosane"
-    formula = "C20?H42?"
+    formula = "C20H42"
     molecular_weight = 282.547
 
     # Critical properties
@@ -45,8 +45,8 @@ class Eicosane(Component):
     _critical_acentric_factor = 0.9069
 
     _density_constants = [0.18166, 0.23351, 768.0, 0.28571]
-    _specific_heat_constants = [0.0, 807.32, 0.2122, 0.0, 0.0, 6.2299, 9.3154]
-    _viscosity_constants = [-18.315, 2283.5, 0.95485]
-    _thermal_conductivity_constants = [0.2178, -0.0002233]
-    _vapor_pressure_constants = [203.66, 0.0, -25.525, 8.84e-06, 2.0]
-    _enthalpy_constants = [12.86, 0.50351, 0.32986, -0.42184]
+    _specific_heat_constants = [352720, 807.32, 0.2122, 0.0, 0.0]
+    _viscosity_constants = [-18.315, 2283.5, 0.95485, 0, 0]
+    _thermal_conductivity_constants = [0.2178, -0.0002233, 0, 0, 0]
+    _vapor_pressure_constants = [203.66, -19441, -25.525, 8.84e-06, 2.0]
+    _enthalpy_constants = [12.86e-7, 0.50351, 0.32986, -0.42184, 0]
