@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Ethylenediamine(Component):
     """
-    Represents the properties and constants for Ethylenediamine(C2?H8?N2?).
+    Represents the properties and constants for Ethylenediamine(C2H8N2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethylenediamine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Ethylenediamine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethylenediamine"
-    formula = "C2?H8?N2?"
+    formula = "C2H8N2"
     molecular_weight = 60.098
 
     # Critical properties
@@ -45,8 +45,8 @@ class Ethylenediamine(Component):
     _critical_acentric_factor = 0.4724
 
     _density_constants = [0.7842, 0.20702, 593.0, 0.20254]
-    _specific_heat_constants = [0.0, -150.2, 0.37044, 0.0, 0.0, 1.7168, 1.8226]
-    _viscosity_constants = [-53.908, 4030.8, 5.9704]
-    _thermal_conductivity_constants = [0.36434, -0.0004433]
-    _vapor_pressure_constants = [73.51, 0.0, -7.1435, 1.21e-17, 6.0]
-    _enthalpy_constants = [5.7521, 0.34513]
+    _specific_heat_constants = [184440, -150.2, 0.37044, 0.0, 0.0]
+    _viscosity_constants = [-53.908, 4030.8, 5.9704, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.36434, -0.0004433, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [73.51, -7572.70, -7.1435, 1.21e-17, 6.0]
+    _enthalpy_constants = [5.7521e-7, 0.34513, 0.0, 0.0, 0.0]

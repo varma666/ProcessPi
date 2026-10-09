@@ -3,7 +3,7 @@ from processpi.units import *
 
 class EthyleneGlycol(Component):
     """
-    Represents the properties and constants for Ethylene glycol(C2?H6?O2?).
+    Represents the properties and constants for Ethylene glycol(C2H6O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethylene glycol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class EthyleneGlycol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethylene glycol"
-    formula = "C2?H6?O2?"
+    formula = "C2H6O2"
     molecular_weight = 62.068
 
     # Critical properties
@@ -45,8 +45,8 @@ class EthyleneGlycol(Component):
     _critical_acentric_factor = 0.5068
 
     _density_constants = [1.315, 0.25125, 720.0, 0.21868]
-    _specific_heat_constants = [0.0, 436.78, -0.18486, 0.0, 0.0, 1.3666, 2.0598]
+    _specific_heat_constants = [35540, 436.78, -0.18486, 0.0, 0.0]
     _viscosity_constants = [-20.515, 2468.5, 1.2435, 2500000000000.0, -5.0]
-    _thermal_conductivity_constants = [0.088067, 0.00094712, -1.31e-06]
-    _vapor_pressure_constants = [84.09, 0.0, -8.1976, 1.65e-18, 6.0]
-    _enthalpy_constants = [8.3518, 0.42625]
+    _thermal_conductivity_constants = [0.088067, 0.00094712, -1.31e-06, 0.0, 0.0]
+    _vapor_pressure_constants = [84.09, -104111, -8.1976, 1.65e-18, 6.0]
+    _enthalpy_constants = [8.3518e-7, 0.42625, 0.0, 0.0, 0.0]

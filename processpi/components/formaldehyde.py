@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Formaldehyde(Component):
     """
-    Represents the properties and constants for Formaldehyde(CH2?O).
+    Represents the properties and constants for Formaldehyde(CH2O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Formaldehyde, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Formaldehyde(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Formaldehyde"
-    formula = "CH2?O"
+    formula = "CH2O"
     molecular_weight = 30.026
 
     # Critical properties
@@ -45,8 +45,8 @@ class Formaldehyde(Component):
     _critical_acentric_factor = 0.2818
 
     _density_constants = [1.9415, 0.22309, 408.0, 0.28571]
-    _specific_heat_constants = [0.0, 28.3, 0.0, 0.0, 0.0, 0.6767, 0.6852]
-    _viscosity_constants = [-11.24, 751.69, -0.024579]
-    _thermal_conductivity_constants = [0.37329, -0.00065]
-    _vapor_pressure_constants = [101.51, 0.0, -13.765, 0.022, 1.0]
-    _enthalpy_constants = [3.076, 0.2954]
+    _specific_heat_constants = [61900, 28.3, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-11.24, 751.69, -0.024579, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.37329, -0.00065, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [101.51, -4917.20, -13.765, 0.022, 1.0]
+    _enthalpy_constants = [3.076e-7, 0.2954, 0.0, 0.0, 0.0]

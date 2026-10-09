@@ -3,7 +3,7 @@ from processpi.units import *
 
 class EthylMercaptan(Component):
     """
-    Represents the properties and constants for Ethyl mercaptan(C2?H6?S).
+    Represents the properties and constants for Ethyl mercaptan(C2H6S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class EthylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethyl mercaptan"
-    formula = "C2?H6?S"
+    formula = "C2H6S"
     molecular_weight = 62.134
 
     # Critical properties
@@ -45,8 +45,8 @@ class EthylMercaptan(Component):
     _critical_acentric_factor = 0.1878
 
     _density_constants = [1.3047, 0.2694, 499.15, 0.27866]
-    _specific_heat_constants = [0.0, -234.39, 0.59656, 0.0, 0.0, 1.1467, 1.2007]
-    _viscosity_constants = [-9.7574, 729.43, -0.14912]
-    _thermal_conductivity_constants = [0.23392, -0.0003206]
-    _vapor_pressure_constants = [65.551, 0.0, -6.6853, 6.32e-06, 2.0]
-    _enthalpy_constants = [3.844, 0.37534]
+    _specific_heat_constants = [134670, -234.39, 0.59656, 0.0, 0.0]
+    _viscosity_constants = [-9.7574, 729.43, -0.14912, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.23392, -0.0003206, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [65.551, -5027.40, -6.6853, 6.32e-06, 2.0]
+    _enthalpy_constants = [3.844e-7, 0.37534, 0.0, 0.0, 0.0]

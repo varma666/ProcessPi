@@ -3,7 +3,7 @@ from processpi.units import *
 
 class EthylButyrate(Component):
     """
-    Represents the properties and constants for Ethyl butyrate(C6?H12?O2?).
+    Represents the properties and constants for Ethyl butyrate(C6H12O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethyl butyrate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class EthylButyrate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethyl butyrate"
-    formula = "C6?H12?O2?"
+    formula = "C6H12O2"
     molecular_weight = 116.158
 
     # Critical properties
@@ -45,8 +45,8 @@ class EthylButyrate(Component):
     _critical_acentric_factor = 0.4011
 
     _density_constants = [0.63566, 0.25613, 571.0, 0.27829]
-    _specific_heat_constants = [0.0, 422.45, 0.20992, 0.0, 0.0, 2.2015, 3.0185]
-    _viscosity_constants = [-15.485, 1325.6, 0.6432]
-    _thermal_conductivity_constants = [0.21043, -0.00024903]
-    _vapor_pressure_constants = [57.661, 0.0, -5.032, 8.25e-18, 6.0]
-    _enthalpy_constants = [5.6419, 0.37985]
+    _specific_heat_constants = [82434, 422.45, 0.20992, 0.0, 0.0]
+    _viscosity_constants = [-15.485, 1325.6, 0.6432, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21043, -0.00024903, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [57.661, -6346.50, -5.032, 8.25e-18, 6.0]
+    _enthalpy_constants = [5.6419e-7, 0.37985, 0.0, 0.0, 0.0]

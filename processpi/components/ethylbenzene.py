@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Ethylbenzene(Component):
     """
-    Represents the properties and constants for Ethylbenzene(C8?H10?).
+    Represents the properties and constants for Ethylbenzene(C8H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethylbenzene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Ethylbenzene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethylbenzene"
-    formula = "C8?H10?"
+    formula = "C8H10"
     molecular_weight = 106.165
 
     # Critical properties
@@ -45,8 +45,8 @@ class Ethylbenzene(Component):
     _critical_acentric_factor = 0.3035
 
     _density_constants = [0.70041, 0.26162, 617.15, 0.28454]
-    _specific_heat_constants = [0.0, -142.29, 0.80539, 0.0, 0.0, 1.5426, 2.3075]
-    _viscosity_constants = [-13.563, 1208.6, 0.377]
-    _thermal_conductivity_constants = [0.1999, -0.00023823]
-    _vapor_pressure_constants = [89.063, 0.0, -9.917, 5.99e-06, 2.0]
-    _enthalpy_constants = [5.4805, 0.39524]
+    _specific_heat_constants = [154040, -142.29, 0.80539, 0.0, 0.0]
+    _viscosity_constants = [-13.563, 1208.6, 0.377,0.0, 0.0]
+    _thermal_conductivity_constants = [0.1999, -0.00023823, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [89.063, -7733.30, -9.917, 5.99e-06, 2.0]
+    _enthalpy_constants = [5.4805e-7, 0.39524,0,0,0]

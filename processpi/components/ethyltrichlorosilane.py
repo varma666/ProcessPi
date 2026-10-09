@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Ethyltrichlorosilane(Component):
     """
-    Represents the properties and constants for Ethyltrichlorosilane(C2?H5?Cl3?Si).
+    Represents the properties and constants for Ethyltrichlorosilane(C2H5Cl3Si).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethyltrichlorosilane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Ethyltrichlorosilane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethyltrichlorosilane"
-    formula = "C2?H5?Cl3?Si"
+    formula = "C2H5Cl3Si"
     molecular_weight = 163.506
 
     # Critical properties
@@ -45,8 +45,8 @@ class Ethyltrichlorosilane(Component):
     _critical_acentric_factor = 0.2691
 
     _density_constants = [0.58579, 0.24246, 559.95, 0.29509]
-    _specific_heat_constants = [0.0, 85.318, 0.46693, 0.0, 0.0, 1.3255, 2.0109]
+    _specific_heat_constants = [105150, 85.318, 0.46693, 0.0, 0.0]
     _viscosity_constants = [7.8744, -106.34, -2.6884, 42800000000000.0, -6.0]
-    _thermal_conductivity_constants = [0.19769, -0.00017713, -1.54e-07]
-    _vapor_pressure_constants = [62.614, 0.0, -5.84, 1.09e-17, 6.0]
-    _enthalpy_constants = [4.9482, 0.39871]
+    _thermal_conductivity_constants = [0.19769, -0.00017713, -1.54e-07, 0.0, 0.0]
+    _vapor_pressure_constants = [62.614, -6148.20, -5.84, 1.09e-17, 6.0]
+    _enthalpy_constants = [4.9482e-7, 0.39871, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class EthylhexylEther(Component):
     """
-    Represents the properties and constants for Ethylhexyl ether(C8?H18?O).
+    Represents the properties and constants for Ethylhexyl ether(C8H18O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethylhexyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class EthylhexylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethylhexyl ether"
-    formula = "C8?H18?O"
+    formula = "C8H18O"
     molecular_weight = 130.228
 
     # Critical properties
@@ -45,8 +45,8 @@ class EthylhexylEther(Component):
     _critical_acentric_factor = 0.4944
 
     _density_constants = [0.55729, 0.2714, 583.0, 0.29538]
-    _specific_heat_constants = [0.0, 458.22, 0.0, 0.0, 0.0, 2.8266, 3.3719]
-    _viscosity_constants = [-11.311, 1337.2, -0.02982]
-    _thermal_conductivity_constants = [0.19356, -0.00024102]
-    _vapor_pressure_constants = [77.523, 0.0, -7.7757, 1.01e-17, 6.0]
-    _enthalpy_constants = [6.2786, 0.39513]
+    _specific_heat_constants = [146040, 458.22, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-11.311, 1337.2, -0.02982, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.19356, -0.00024102, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [77.523, -7978.80, -7.7757, 1.01e-17, 6.0]
+    _enthalpy_constants = [6.2786e-7, 0.39513, 0.0, 0.0, 0.0]

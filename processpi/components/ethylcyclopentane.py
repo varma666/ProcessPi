@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Ethylcyclopentane(Component):
     """
-    Represents the properties and constants for Ethylcyclopentane(C7?H14?).
+    Represents the properties and constants for Ethylcyclopentane(C7H14).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethylcyclopentane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Ethylcyclopentane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethylcyclopentane"
-    formula = "C7?H14?"
+    formula = "C7H14"
     molecular_weight = 98.186
 
     # Critical properties
@@ -45,8 +45,8 @@ class Ethylcyclopentane(Component):
     _critical_acentric_factor = 0.2701
 
     _density_constants = [0.71751, 0.26903, 569.5, 0.27733]
-    _specific_heat_constants = [0.0, -518.35, 2.3255, -0.0016818, 0.0, 1.4678, 1.8767]
-    _viscosity_constants = [-6.894, 818.6, -0.5941]
-    _thermal_conductivity_constants = [0.18334, -0.0002228]
-    _vapor_pressure_constants = [88.671, 0.0, -10.045, 7.46e-06, 2.0]
-    _enthalpy_constants = [4.8287, 0.37804]
+    _specific_heat_constants = [178520, -518.35, 2.3255, -0.0016818, 0.0]
+    _viscosity_constants = [-6.894, 818.6, -0.5941, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.18334, -0.0002228, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [88.671, -7012.70, -10.045, 7.46e-06, 2.0]
+    _enthalpy_constants = [4.8287e-7, 0.37804, 0.0, 0.0, 0.0]

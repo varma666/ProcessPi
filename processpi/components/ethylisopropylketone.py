@@ -3,7 +3,7 @@ from processpi.units import *
 
 class EthylisopropylKetone(Component):
     """
-    Represents the properties and constants for Ethylisopropyl ketone(C6?H12?O).
+    Represents the properties and constants for Ethylisopropyl ketone(C6H12O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethylisopropyl ketone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class EthylisopropylKetone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethylisopropyl ketone"
-    formula = "C6?H12?O"
+    formula = "C6H12O"
     molecular_weight = 100.159
 
     # Critical properties
@@ -45,8 +45,8 @@ class EthylisopropylKetone(Component):
     _critical_acentric_factor = 0.3891
 
     _density_constants = [0.68162, 0.25152, 567.0, 0.3182]
-    _specific_heat_constants = [0.0, -404.54, 1.1382, 0.0, 0.0, 1.941, 2.4295]
-    _viscosity_constants = [-11.452, 1172.7, -0.00010095]
-    _thermal_conductivity_constants = [0.22873, -0.0002913]
-    _vapor_pressure_constants = [57.459, 0.0, -4.9545, 5.2e-18, 6.0]
-    _enthalpy_constants = [5.2207, 0.34893]
+    _specific_heat_constants = [229250, -404.54, 1.1382, 0.0, 0.0]
+    _viscosity_constants = [-11.452, 1172.7, -0.00010095, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.22873, -0.0002913, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [57.459, -6356.80, -4.9545, 5.2e-18, 6.0]
+    _enthalpy_constants = [5.2207e-7, 0.34893, 0.0, 0.0, 0.0]

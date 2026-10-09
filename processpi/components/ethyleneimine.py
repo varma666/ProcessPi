@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Ethyleneimine(Component):
     """
-    Represents the properties and constants for Ethyleneimine(C2?H5?N).
+    Represents the properties and constants for Ethyleneimine(C2H5N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethyleneimine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Ethyleneimine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethyleneimine"
-    formula = "C2?H5?N"
+    formula = "C2H5N"
     molecular_weight = 43.068
 
     # Critical properties
@@ -45,8 +45,8 @@ class Ethyleneimine(Component):
     _critical_acentric_factor = 0.2007
 
     _density_constants = [1.3462, 0.23289, 537.0, 0.23357]
-    _specific_heat_constants = [0.0, 205.35, 0.0, 0.0, 0.0, 0.9819, 1.1441]
-    _viscosity_constants = [-11.012, 967.4]
-    _thermal_conductivity_constants = [0.3097, -0.0004023]
-    _vapor_pressure_constants = [66.51, 0.0, -6.3332, 1.04e-17, 6.0]
-    _enthalpy_constants = [4.94, 0.466]
+    _specific_heat_constants = [46848, 205.35, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-11.012, 967.4, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.3097, -0.0004023, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [66.51, -6019.20, -6.3332, 1.04e-17, 6.0]
+    _enthalpy_constants = [4.94e-7, 0.466, 0.0, 0.0, 0.0]

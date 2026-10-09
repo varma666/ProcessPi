@@ -3,7 +3,7 @@ from processpi.units import *
 
 class EthylisopropylEther(Component):
     """
-    Represents the properties and constants for Ethylisopropyl ether(C5?H12?O).
+    Represents the properties and constants for Ethylisopropyl ether(C5H12O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethylisopropyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class EthylisopropylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethylisopropyl ether"
-    formula = "C5?H12?O"
+    formula = "C5H12O"
     molecular_weight = 88.148
 
     # Critical properties
@@ -45,8 +45,8 @@ class EthylisopropylEther(Component):
     _critical_acentric_factor = 0.3056
 
     _density_constants = [0.8185, 0.26929, 489.0, 0.30621]
-    _specific_heat_constants = [0.0, 292.15, 0.0, 0.0, 0.0, 1.9335, 2.0153]
-    _viscosity_constants = [-11.331, 908.46, 0.00042478]
-    _thermal_conductivity_constants = [0.21928, -0.00032568]
-    _vapor_pressure_constants = [57.723, 0.0, -5.2136, 2.3e-17, 6.0]
-    _enthalpy_constants = [4.258, 0.37221]
+    _specific_heat_constants = [106520, 292.15, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-11.331, 908.46, 0.00042478, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21928, -0.00032568, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [57.723, -5236.90, -5.2136, 2.3e-17, 6.0]
+    _enthalpy_constants = [4.258e-7, 0.37221, 0.0, 0.0, 0.0]

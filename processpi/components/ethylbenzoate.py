@@ -3,7 +3,7 @@ from processpi.units import *
 
 class EthylBenzoate(Component):
     """
-    Represents the properties and constants for Ethyl benzoate(C9?H10?O2?).
+    Represents the properties and constants for Ethyl benzoate(C9H10O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethyl benzoate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class EthylBenzoate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethyl benzoate"
-    formula = "C9?H10?O2?"
+    formula = "C9H10O2"
     molecular_weight = 150.175
 
     # Critical properties
@@ -45,8 +45,8 @@ class EthylBenzoate(Component):
     _critical_acentric_factor = 0.4771
 
     _density_constants = [0.48864, 0.23894, 698.0, 0.28421]
-    _specific_heat_constants = [0.0, 370.6, 0.0, 0.0, 0.0, 2.1287, 3.0482]
-    _viscosity_constants = [-40.706, 3035.0, 4.2655]
-    _thermal_conductivity_constants = [0.20771, -0.00021265]
-    _vapor_pressure_constants = [52.923, 0.0, -4.2347, 1.18e-06, 2.0]
-    _enthalpy_constants = [6.7093, 0.33273]
+    _specific_heat_constants = [124500, 370.6, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-40.706, 3035.0, 4.2655, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20771, -0.00021265, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [52.923, -7531.70, -4.2347, 1.18e-06, 2.0]
+    _enthalpy_constants = [6.7093e-7, 0.33273, 0.0, 0.0, 0.0]

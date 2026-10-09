@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Furan(Component):
     """
-    Represents the properties and constants for Furan(C4?H4?O).
+    Represents the properties and constants for Furan(C4H4O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Furan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Furan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Furan"
-    formula = "C4?H4?O"
+    formula = "C4H4O"
     molecular_weight = 68.074
 
     # Critical properties
@@ -45,8 +45,8 @@ class Furan(Component):
     _critical_acentric_factor = 0.2015
 
     _density_constants = [1.1339, 0.24741, 490.15, 0.2612]
-    _specific_heat_constants = [0.0, -215.69, 0.72691, 0.0, 0.0, 0.9949, 1.1609]
-    _viscosity_constants = [-10.923, 894.63, -0.00068418]
-    _thermal_conductivity_constants = [0.2198, -0.00031405]
-    _vapor_pressure_constants = [74.738, 0.0, -8.0636, 7.47e-06, 2.0]
-    _enthalpy_constants = [4.005, 0.3995]
+    _specific_heat_constants = [114370, -215.69, 0.72691, 0.0, 0.0]
+    _viscosity_constants = [-10.923, 894.63, -0.00068418, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2198, -0.00031405, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [74.738, -5417, -8.0636, 7.47e-06, 2.0]
+    _enthalpy_constants = [4.005e-7, 0.3995, 0.0, 0.0, 0.0]

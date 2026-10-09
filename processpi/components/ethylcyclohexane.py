@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Ethylcyclohexane(Component):
     """
-    Represents the properties and constants for Ethylcyclohexane(C8?H16?).
+    Represents the properties and constants for Ethylcyclohexane(C8H16).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethylcyclohexane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Ethylcyclohexane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethylcyclohexane"
-    formula = "C8?H16?"
+    formula = "C8H16"
     molecular_weight = 112.213
 
     # Critical properties
@@ -45,8 +45,8 @@ class Ethylcyclohexane(Component):
     _critical_acentric_factor = 0.2455
 
     _density_constants = [0.61587, 0.26477, 609.15, 0.28054]
-    _specific_heat_constants = [0.0, 72.74, 0.64738, 0.0, 0.0, 1.6109, 2.6798]
-    _viscosity_constants = [-22.11, 1673.0, 1.641]
-    _thermal_conductivity_constants = [0.17662, -0.0002014]
-    _vapor_pressure_constants = [80.208, 0.0, -8.6023, 4.59e-06, 2.0]
-    _enthalpy_constants = [5.3832, 0.41763]
+    _specific_heat_constants = [132360, 72.74, 0.64738, 0.0, 0.0]
+    _viscosity_constants = [-22.11, 1673.0, 1.641, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.17662, -0.0002014, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [80.208, -7203.20, -8.6023, 4.59e-06, 2.0]
+    _enthalpy_constants = [5.3832e-7, 0.41763, 0.0, 0.0, 0.0]

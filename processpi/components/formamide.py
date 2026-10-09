@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Formamide(Component):
     """
-    Represents the properties and constants for Formamide(CH3?NO).
+    Represents the properties and constants for Formamide(CH3NO).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Formamide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Formamide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Formamide"
-    formula = "CH3?NO"
+    formula = "CH3NO"
     molecular_weight = 45.041
 
     # Critical properties
@@ -45,8 +45,8 @@ class Formamide(Component):
     _critical_acentric_factor = 0.4124
 
     _density_constants = [1.2486, 0.20352, 771.0, 0.25178]
-    _specific_heat_constants = [0.0, 150.6, 0.0, 0.0, 0.0, 1.0738, 1.3765]
+    _specific_heat_constants = [63400, 150.6, 0.0, 0.0, 0.0]
     _viscosity_constants = [40.153, -912.39, -7.5664, 1.69e+24, -10.0]
-    _thermal_conductivity_constants = [0.3847, -0.0001065]
-    _vapor_pressure_constants = [100.3, 0.0, -10.946, 3.85e-06, 2.0]
-    _enthalpy_constants = [7.358, 0.3564]
+    _thermal_conductivity_constants = [0.3847, -0.0001065, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [100.3, -10763, -10.946, 3.85e-06, 2.0]
+    _enthalpy_constants = [7.358e-7, 0.3564, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Fluoroethane(Component):
     """
-    Represents the properties and constants for Fluoroethane(C2?H5?F).
+    Represents the properties and constants for Fluoroethane(C2H5F).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Fluoroethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Fluoroethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Fluoroethane"
-    formula = "C2?H5?F"
+    formula = "C2H5F"
     molecular_weight = 48.06
 
     # Critical properties
@@ -45,8 +45,8 @@ class Fluoroethane(Component):
     _critical_acentric_factor = 0.22
 
     _density_constants = [1.6525, 0.27099, 375.31, 0.2442]
-    _specific_heat_constants = [0.0, -118.56, 0.55459, 0.0, 0.0, 0.7994, 0.8915]
-    _viscosity_constants = [-10.758, 558.81, -0.016459]
-    _thermal_conductivity_constants = [0.2595, -0.0005008]
-    _vapor_pressure_constants = [56.639, 0.0, -5.5801, 9.9e-06, 2.0]
-    _enthalpy_constants = [2.7617, 0.32162]
+    _specific_heat_constants = [85663, -118.56, 0.55459, 0.0, 0.0]
+    _viscosity_constants = [-10.758, 558.81, -0.016459, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2595, -0.0005008, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [56.639, -3576.70, -5.5801, 9.9e-06, 2.0]
+    _enthalpy_constants = [2.7617e-7, 0.32162, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class EthylFormate(Component):
     """
-    Represents the properties and constants for Ethyl formate(C3?H6?O2?).
+    Represents the properties and constants for Ethyl formate(C3H6O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethyl formate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class EthylFormate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethyl formate"
-    formula = "C3?H6?O2?"
+    formula = "C3H6O2"
     molecular_weight = 74.079
 
     # Critical properties
@@ -45,8 +45,8 @@ class EthylFormate(Component):
     _critical_acentric_factor = 0.2847
 
     _density_constants = [1.1343, 0.26168, 508.4, 0.2791]
-    _specific_heat_constants = [0.0, 223.6, 0.0, 0.0, 0.0, 1.3684, 1.6367]
-    _viscosity_constants = [-9.8417, 876.4, -0.1708]
-    _thermal_conductivity_constants = [0.2587, -0.00033]
-    _vapor_pressure_constants = [73.833, 0.0, -7.809, 6.32e-06, 2.0]
-    _enthalpy_constants = [4.5909, 0.4123]
+    _specific_heat_constants = [80000, 223.6, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-9.8417, 876.4, -0.1708, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2587, -0.00033, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [73.833, -5817.0, -7.809, 6.32e-06, 2.0]
+    _enthalpy_constants = [4.5909e-7, 0.4123, 0.0, 0.0, 0.0]

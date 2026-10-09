@@ -3,7 +3,7 @@ from processpi.units import *
 
 class EthyleneOxide(Component):
     """
-    Represents the properties and constants for Ethylene oxide(C2?H4?O).
+    Represents the properties and constants for Ethylene oxide(C2H4O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Ethylene oxide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class EthyleneOxide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Ethylene oxide"
-    formula = "C2?H4?O"
+    formula = "C2H4O"
     molecular_weight = 44.053
 
     # Critical properties
@@ -45,8 +45,8 @@ class EthyleneOxide(Component):
     _critical_acentric_factor = 0.1974
 
     _density_constants = [1.836, 0.26024, 469.15, 0.2696]
-    _specific_heat_constants = [0.0, -758.87, 2.8261, -0.003064, 0.0, 0.8303, 0.8693]
-    _viscosity_constants = [-8.521, 634.2, -0.3314]
-    _thermal_conductivity_constants = [0.26957, -0.0003984]
-    _vapor_pressure_constants = [91.944, 0.0, -11.682, 0.0149, 1.0]
-    _enthalpy_constants = [3.6652, 0.37878]
+    _specific_heat_constants = [144710, -758.87, 2.8261, -0.003064, 0.0]
+    _viscosity_constants = [-8.521, 634.2, -0.3314, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.26957, -0.0003984, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [91.944, -5293.40, -11.682, 0.0149, 1.0]
+    _enthalpy_constants = [3.6652e-7, 0.37878, 0.0, 0.0, 0.0]

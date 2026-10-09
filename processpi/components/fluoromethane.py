@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Fluoromethane(Component):
     """
-    Represents the properties and constants for Fluoromethane(CH3?F).
+    Represents the properties and constants for Fluoromethane(CH3F).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Fluoromethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Fluoromethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Fluoromethane"
-    formula = "CH3?F"
+    formula = "CH3F"
     molecular_weight = 34.033
 
     # Critical properties
@@ -45,8 +45,8 @@ class Fluoromethane(Component):
     _critical_acentric_factor = 0.198
 
     _density_constants = [2.1854, 0.24725, 317.42, 0.27558]
-    _specific_heat_constants = [0.0, -132.32, 0.53772, 0.0, 0.0, 0.6676, 0.7166]
-    _viscosity_constants = [-10.501, 427.78, 0.0086309]
-    _thermal_conductivity_constants = [0.445, -0.001023]
-    _vapor_pressure_constants = [59.123, 0.0, -6.1845, 1.66e-05, 2.0]
-    _enthalpy_constants = [2.4708, 0.37014]
+    _specific_heat_constants = [74746, -132.32, 0.53772, 0.0, 0.0]
+    _viscosity_constants = [-10.501, 427.78, 0.0086309, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.445, -0.001023, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [59.123, -3043.70, -6.1845, 1.66e-05, 2.0]
+    _enthalpy_constants = [2.4708e-7, 0.37014, 0.0, 0.0, 0.0]
