@@ -118,25 +118,30 @@ _SINCE_MASTER_WATER_HEATS_BENZENE_KERN = {
     # and so a new geometry. Master: 312 tubes, 55.870 m2, U 767.56,
     # h_tube 4968.7, h_shell 1629.2, v_tube 1.4246, v_shell 0.93425,
     # shell_dp 20232, Re_s 18679.
-    "tube_count": 344, "Area": 61.60034875158866, "U_calculated": 683.0794571965115,
-    "h_tube": 4595.376905482573, "h_shell": 1323.5966895421316,
-    "tube_velocity": 1.292040797257991, "shell_velocity": 0.6403822470290648,
-    "tube_dp": 58687.81131173749,
     # Textbook Kern shell-side pressure drop in place of the Kern/Bell hybrid.
-    "shell_dp": 28159.587927023906,
-    "re_shell": 12803.655778380571,
+    # 9f419f2 then made the user's U (575 W/m2K here) the design basis: the
+    # area is sized at it instead of at the iterated U_calc. Before: 344 tubes,
+    # 61.600 m2, U 683.08, h_tube 4595.4, h_shell 1323.6, v_tube 1.2920,
+    # v_shell 0.64038, tube_dp 58688, shell_dp 28160, Re_s 12804.
+    "tube_count": 416, "Area": 74.49344500192117, "U_calculated": 637.8360238127436,
+    "h_tube": 3947.2372162430866, "h_shell": 1224.097728783011,
+    "tube_velocity": 1.0684183515787233, "shell_velocity": 0.5555599833014843,
+    "tube_dp": 41199.53259767214, "shell_dp": 21428.897392945382,
+    "re_shell": 11107.738891006793,
 }
 _SINCE_MASTER_BENZENE_COOLER_KERN = {
     # As above, 6 settled passes. Master: 174 tubes, 31.158 m2, U 662.09,
     # h_tube 1300.6, h_shell 6967.1, v_tube 1.1460, v_shell 1.3925,
     # tube_dp 9900.3 (6 passes counted as 2), shell_dp 56918, Re_s 20849.
-    "tube_count": 168, "Area": 30.083891250775856, "U_calculated": 664.3626466565012,
-    "h_tube": 1337.608280910971, "h_shell": 6110.828556840333,
-    "tube_velocity": 1.186885306658964, "shell_velocity": 1.0971447749938399,
-    "tube_dp": 31710.83428017723,
     # Textbook Kern shell-side pressure drop in place of the Kern/Bell hybrid.
-    "shell_dp": 91454.82574918722,
-    "re_shell": 16426.04005958439,
+    # 9f419f2: area sized at the user's U, as above. Before: 168 tubes,
+    # 30.084 m2, U 664.36, h_tube 1337.6, h_shell 6110.8, v_tube 1.1869,
+    # v_shell 1.0971, tube_dp 31711, shell_dp 91455, Re_s 16426.
+    "tube_count": 192, "Area": 34.381590000886696, "U_calculated": 619.119637520951,
+    "h_tube": 1202.085590241852, "h_shell": 5762.002364306542,
+    "tube_velocity": 1.0385246433265936, "shell_velocity": 0.9859430199959479,
+    "tube_dp": 24719.221652966713, "shell_dp": 74830.35533634211,
+    "re_shell": 14761.169092758959,
 }
 
 
@@ -161,10 +166,12 @@ def test_scoring_hot_in_tubes_gives_the_master_numbers_on_the_bell_path():
     # Bell-Delaware design of the same case. 3e8a241 gave U 460.1777828989243,
     # h_shell 673.8324876931076 and shell_dp 23266.861493659602; these moved with
     # the Kern geometry under them (see _SINCE_MASTER_WATER_HEATS_BENZENE_KERN),
-    # and the shell dP is now the Kern one with no 1.15 uplift.
-    assert _value(data["U_calculated"]) == pytest.approx(416.87097088356177, rel=1e-12)
-    assert _value(data["h_shell"]) == pytest.approx(591.5821168422973, rel=1e-12)
-    assert _value(data["shell_dp"]) == pytest.approx(28159.587927023906, rel=1e-12)
+    # and the shell dP is now the Kern one with no 1.15 uplift. With the area
+    # sized at the user's U (9f419f2) they moved again from U 416.87097,
+    # h_shell 591.58212 and shell_dp 28159.588.
+    assert _value(data["U_calculated"]) == pytest.approx(385.62002500515774, rel=1e-12)
+    assert _value(data["h_shell"]) == pytest.approx(542.7840010069787, rel=1e-12)
+    assert _value(data["shell_dp"]) == pytest.approx(21428.897392945382, rel=1e-12)
 
 
 def test_force_hot_in_tubes_overrides_the_scoring_and_gives_the_master_numbers():
