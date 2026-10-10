@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 from typing import List, Dict, Union, Optional, Any
-import matplotlib.pyplot as plt
-import networkx as nx
-from matplotlib.patches import Rectangle
 
 from .pipes import Pipe
 from .fittings import Fitting
@@ -477,6 +474,10 @@ class PipelineNetwork:
         import plotly.graph_objects as go
 
         # ---------------- Prepare Graph ----------------
+        # Imported here: networkx (and matplotlib, which nothing here used)
+        # loaded at `import processpi`, about 1.5 s of every import.
+        import networkx as nx
+
         G = nx.DiGraph()
         edge_colors = []
 
