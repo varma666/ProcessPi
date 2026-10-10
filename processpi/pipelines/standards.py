@@ -429,10 +429,36 @@ def get_thickness(nominal_diameter: Diameter, schedule: str = "STD") -> Optional
         return None
     return PIPE_SCHEDULES[nominal_diameter].get(schedule, (None, None, None))[0]
 
+# Common spellings of the ROUGHNESS keys.
+_ROUGHNESS_ALIASES: Dict[str, str] = {
+    "cs": "CS", "carbon steel": "CS", "carbon_steel": "CS", "steel": "CS",
+    "commercial steel": "CS", "commercial_steel": "CS",
+    "ss": "SS", "stainless": "SS", "stainless steel": "SS", "stainless_steel": "SS",
+    "pvc": "PVC", "copper": "Copper", "concrete": "Concrete", "glass": "Glass",
+    "other": "Other",
+}
+
+
 def get_roughness(material: str) -> Variable:
-    """Returns roughness for given material. Defaults if not found."""
-    roughness_mm = ROUGHNESS.get(material, ROUGHNESS["Other"])
-    return Variable(roughness_mm, "mm")
+    """
+    Returns roughness for given material, by key ("CS") or a common spelling
+    ("carbon steel", "Steel", "cs"). An unknown or missing material takes the
+    "Other" value with a warning; every natural spelling used to fall back to
+    it silently (0.05 mm for carbon steel instead of 0.045 mm).
+    """
+    key = material if material in ROUGHNESS else _ROUGHNESS_ALIASES.get(
+        str(material).strip().lower().replace("-", " ")
+    )
+    if key is None:
+        import warnings
+
+        warnings.warn(
+            f"No roughness for pipe material {material!r}; using "
+            f"{ROUGHNESS['Other']} mm. Known: {', '.join(ROUGHNESS)}",
+            stacklevel=2,
+        )
+        key = "Other"
+    return Variable(ROUGHNESS[key], "mm")
 
 def get_recommended_velocity(service: str) -> Optional[Union[float, Tuple[float, float]]]:
     """
@@ -461,12 +487,6 @@ def get_standard_pipe_data(
         "outer_diameter": data[1],
         "internal_diameter": data[2],
     }
-
-def get_k_factor(fitting_type: str) -> float:
-    """
-    Retrieve the standard K-factor (loss coefficient) for a given fitting type.
-    """
-    return K_FACTORS.get(fitting_type.lower(), 0.0)
 
 def list_available_pipe_diameters() -> List[Diameter]:
     """
@@ -555,13 +575,21 @@ def get_k_factor(
     if k_factor_value is not None:
         return k_factor_value
 
-    # 2. Fallback to calculating K from equivalent length
+    # 2. Fallback to calculating K from equivalent length, K = f (Le/D), with
+    # the Colebrook-White f. It used to name ColebrookWhite without importing
+    # it, so this branch raised NameError.
     le_d_ratio = EQUIVALENT_LENGTHS.get(fitting_type.lower())
-    if le_d_ratio is not None and reynolds_number is not None and relative_roughness is not None:
-        # This part assumes you have a ColebrookWhite function or similar
-        # to calculate the friction factor 'f'
-        f = ColebrookWhite(reynolds_number, relative_roughness).calculate()
-        return f * le_d_ratio
+    if (le_d_ratio is not None and reynolds_number is not None
+            and relative_roughness is not None and diameter is not None):
+        from processpi.calculations.fluids.friction_factor_colebrookwhite import ColebrookWhite
+        from processpi.units import Diameter as _Diameter
+
+        f = ColebrookWhite(
+            reynolds_number=reynolds_number,
+            diameter=_Diameter(diameter, "m"),
+            roughness=Variable(relative_roughness * diameter * 1000.0, "mm"),
+        ).calculate()
+        return float(getattr(f, "value", f)) * le_d_ratio
     
     # Return None if no method yields a value
     return None
