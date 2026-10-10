@@ -450,9 +450,9 @@ def test_rating_refuses_an_undefined_ft(monkeypatch):
 
 def test_bell_results_carry_units_like_kern():
     """_design_bell_delaware overwrote the unit-wrapped Kern U_calculated with a
-    bare float and added U_clean as one. The Bell U itself is unchanged: it is
-    still the Kern design corrected by the Bell factors after sizing (the Bell
-    area is not resized in this change)."""
+    bare float and added U_clean as one. Both designs now go through the same
+    results, with units. With the user's U both are sized at 575 W/m2K, so the
+    geometry is the same and only the calculated U differs."""
     from processpi.units import Pressure as P
     from processpi.units.heat_transfer_coefficient import HeatTransferCoefficient as HTC
 
@@ -464,7 +464,6 @@ def test_bell_results_carry_units_like_kern():
     assert isinstance(bell["U_clean"], HTC)
     assert isinstance(bell["shell_dp"], P)
     assert isinstance(bell["tube_dp"], P)
-    # Same value as the bare float before: the Bell-corrected U of the Kern geometry.
     assert bell["tube_count"] == kern["tube_count"]
     assert _value(bell["U_calculated"]) < _value(kern["U_calculated"])
     assert _value(bell["U_clean"]) > _value(bell["U_calculated"])

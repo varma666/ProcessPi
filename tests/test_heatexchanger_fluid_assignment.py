@@ -188,8 +188,11 @@ def test_scoring_hot_in_tubes_gives_the_master_numbers_on_the_bell_path():
     # sized at the user's U (9f419f2) they moved again from U 416.87097,
     # h_shell 591.58212 and shell_dp 28159.588, and with the properties at the
     # mean temperatures from U 385.62003, h_shell 542.78400, shell_dp 21428.897.
-    assert _value(data["U_calculated"]) == pytest.approx(414.422839434229, rel=1e-12)
-    assert _value(data["h_shell"]) == pytest.approx(560.838248729842, rel=1e-12)
+    # The Bell-Delaware coefficient is then Taborek's (ideal tube bank times
+    # Jc Jl Jb Jr Js) in place of the Kern one times five unsourced factors:
+    # from U 414.42284 and h_shell 560.83825.
+    assert _value(data["U_calculated"]) == pytest.approx(553.1015027684888, rel=1e-12)
+    assert _value(data["h_shell"]) == pytest.approx(848.8695698879369, rel=1e-12)
     assert _value(data["shell_dp"]) == pytest.approx(21497.523265606316, rel=1e-12)
 
 
