@@ -1,4 +1,5 @@
 # processpi/streams/material.py
+import copy
 from typing import Dict, Optional, Union
 from ..units import (
     Pressure, Temperature, Density, VolumetricFlowRate,
@@ -46,6 +47,24 @@ class MaterialStream:
     ):
         self.name = name
         self.phase = phase
+        # Properties belong to the stream's state, not to the component's
+        # default 25 C and 1 atm. The stream works on its own copy of the
+        # component (the caller's object is left alone) set to the stream's
+        # temperature, pressure and phase. A stream given no temperature keeps
+        # the component's temperature object, which is how the exchangers tell
+        # an unspecified outlet from a specified one.
+        if component is not None:
+            component = copy.copy(component)
+            if temperature is not None:
+                component.temperature = copy.copy(temperature)
+            if pressure is not None:
+                component.pressure = copy.copy(pressure)
+            if phase is not None and hasattr(component, "_phase"):
+                component._phase = phase
+        # Values given explicitly, kept apart from the ones taken from the
+        # component, so a property evaluated elsewhere does not overwrite them.
+        self.given_density = density
+        self.given_specific_heat = specific_heat
         self.temperature = temperature or getattr(component,"temperature", None)
         self.pressure = pressure or getattr(component,"pressure", None)
         self.flow_rate = flow_rate

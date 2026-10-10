@@ -389,9 +389,12 @@ class HeatExchangerEngine:
         "bell_delaware": ShellAndTubeHX,
     }
 
-    def __init__(self, name: Optional[str] = None, method: str = "kern", **kwargs: Any):
+    def __init__(self, name: Optional[str] = None, method: Optional[str] = None, **kwargs: Any):
         self.name = name
-        self.method = method.lower()
+        # Whether the method was chosen, as opposed to the "kern" default; a
+        # chosen method must agree with hx_type="bell_delaware".
+        self._method_given = method is not None
+        self.method = (method or "kern").lower()
         if self.method not in {"kern", "bell_delaware"}:
             raise ValueError("method must be 'kern' or 'bell_delaware'")
         self.data: Dict[str, Any] = {}
@@ -433,6 +436,7 @@ class HeatExchangerEngine:
         if method is not None:
     
             self.method = method.lower()
+            self._method_given = True
     
             if self.method not in {
                 "kern",
@@ -545,6 +549,17 @@ class HeatExchangerEngine:
             and self.method == "bell_delaware"
         ):
             hx_type = "bell_delaware"
+
+        # hx_type="bell_delaware" is a shell-and-tube exchanger rated by the
+        # Bell-Delaware method; with the default method it used to run Kern
+        # and report method "kern".
+        method = self.method
+        if hx_type == "bell_delaware":
+            if self._method_given and self.method != "bell_delaware":
+                raise ValueError(
+                    f"hx_type='bell_delaware' conflicts with method={self.method!r}"
+                )
+            method = "bell_delaware"
     
         cls = self._map[self._check_hx_type(hx_type)]
     
@@ -564,7 +579,7 @@ class HeatExchangerEngine:
             hot_out=self.data.get("hot_out"),
             cold_out=self.data.get("cold_out"),
             method=(
-                self.method
+                method
                 if issubclass(cls, ShellAndTubeHX)
                 else "kern"
             ),

@@ -62,8 +62,16 @@ def _benzene_cooler(cold_out_t=None):
 
 
 def _water_heats_benzene():
-    """Hot water heating benzene: the scoring puts the water (hot) in the tubes."""
+    """Hot water heating benzene. Declared corrosive (`_HOT_WATER_CORROSIVE`),
+    the scoring puts the water (hot) in the tubes."""
     return _streams(Water, Benzene, 90, 60, 15, 40000.0, 60000.0)
+
+
+# Treated water and benzene tie on the side scoring, and a tie puts the larger
+# flow (the benzene here) in the tubes. These tests need the scoring to pick the
+# hot water, which it did before only because plain water was looked up as
+# seawater; a user-declared corrosion level does it honestly.
+_HOT_WATER_CORROSIVE = dict(hot_corrosion_level="high")
 
 
 _DESIGN_SPECS = dict(U=HeatTransferCoefficient(575, "W/m2K"),
@@ -118,26 +126,49 @@ _SINCE_MASTER_WATER_HEATS_BENZENE_KERN = {
     # and so a new geometry. Master: 312 tubes, 55.870 m2, U 767.56,
     # h_tube 4968.7, h_shell 1629.2, v_tube 1.4246, v_shell 0.93425,
     # shell_dp 20232, Re_s 18679.
-    "tube_count": 344, "Area": 61.60034875158866, "U_calculated": 683.0794571965115,
-    "h_tube": 4595.376905482573, "h_shell": 1323.5966895421316,
-    "tube_velocity": 1.292040797257991, "shell_velocity": 0.6403822470290648,
-    "tube_dp": 58687.81131173749,
     # Textbook Kern shell-side pressure drop in place of the Kern/Bell hybrid.
-    "shell_dp": 28159.587927023906,
-    "re_shell": 12803.655778380571,
+    # 9f419f2 then made the user's U (575 W/m2K here) the design basis: the
+    # area is sized at it instead of at the iterated U_calc. Before: 344 tubes,
+    # 61.600 m2, U 683.08, h_tube 4595.4, h_shell 1323.6, v_tube 1.2920,
+    # v_shell 0.64038, tube_dp 58688, shell_dp 28160, Re_s 12804.
+    # The physical properties are then taken at each side's mean temperature
+    # instead of the component's 25 C. Before: Q 1394826.8, LMTD 35.299,
+    # 416 tubes, 74.493 m2, U 637.84, h_tube 3947.2, h_shell 1224.1,
+    # v_tube 1.0684, v_shell 0.55556, tube_dp 41200, shell_dp 21429, Re_s 11108.
+    "Q": 1397026.153521924, "LMTD": 35.87291104111817,
+    "tube_count": 408, "Area": 73.06087875188423, "U_calculated": 703.6078911295018,
+    "h_tube": 6600.169208319926, "h_shell": 1263.747978513249,
+    "tube_velocity": 1.1150147201413836, "shell_velocity": 0.5726266933718321,
+    "tube_dp": 38925.012062292146, "shell_dp": 21497.523265606316,
+    "re_shell": 13306.71982230708,
 }
 _SINCE_MASTER_BENZENE_COOLER_KERN = {
     # As above, 6 settled passes. Master: 174 tubes, 31.158 m2, U 662.09,
     # h_tube 1300.6, h_shell 6967.1, v_tube 1.1460, v_shell 1.3925,
     # tube_dp 9900.3 (6 passes counted as 2), shell_dp 56918, Re_s 20849.
-    "tube_count": 168, "Area": 30.083891250775856, "U_calculated": 664.3626466565012,
-    "h_tube": 1337.608280910971, "h_shell": 6110.828556840333,
-    "tube_velocity": 1.186885306658964, "shell_velocity": 1.0971447749938399,
-    "tube_dp": 31710.83428017723,
     # Textbook Kern shell-side pressure drop in place of the Kern/Bell hybrid.
-    "shell_dp": 91454.82574918722,
-    "re_shell": 16426.04005958439,
+    # 9f419f2: area sized at the user's U, as above. Before: 168 tubes,
+    # 30.084 m2, U 664.36, h_tube 1337.6, h_shell 6110.8, v_tube 1.1869,
+    # v_shell 1.0971, tube_dp 31711, shell_dp 91455, Re_s 16426.
+    # Properties at the mean temperatures, as above. Before: Q 611559.6,
+    # LMTD 34.520, 192 tubes, 34.382 m2, U 619.12, h_tube 1202.1,
+    # h_shell 5762.0, v_tube 1.0385, v_shell 0.98594, tube_dp 24719,
+    # shell_dp 74830, Re_s 14761.
+    "Q": 649112.6188603034, "LMTD": 34.35172388087927,
+    "tube_count": 208, "Area": 37.24672250096059, "U_calculated": 736.727965705766,
+    "h_tube": 1683.2043787359137, "h_shell": 5048.617507203097,
+    "tube_velocity": 1.3333117830922405, "shell_velocity": 0.8239612591308477,
+    "tube_dp": 48009.84042339958, "shell_dp": 53000.97287696058,
+    "re_shell": 10942.845213271905,
 }
+
+
+def _basis(data, side, m_dot):
+    """One side's `property_basis` entry, keyed like `_stream_props`."""
+    basis = data["property_basis"][side]
+    return {"temperature_K": basis["temperature_K"], "density": basis["density_kg_m3"],
+            "viscosity": basis["viscosity_Pa_s"], "cp": basis["cp_J_kgK"],
+            "k": basis["k_W_mK"], "m_dot": m_dot}
 
 
 def _assert_matches(data, reference, since_master=None):
@@ -146,7 +177,7 @@ def _assert_matches(data, reference, since_master=None):
 
 
 def test_scoring_hot_in_tubes_gives_the_master_numbers():
-    data = _run(_water_heats_benzene())
+    data = _run(_water_heats_benzene(), **_HOT_WATER_CORROSIVE)
     assert data["assignment"]["tube_side"] == "hot"
     assert data["tube_side_fluid"] == "Water"
     assert data["shell_side_fluid"] == "Benzene"
@@ -156,15 +187,21 @@ def test_scoring_hot_in_tubes_gives_the_master_numbers():
 
 
 def test_scoring_hot_in_tubes_gives_the_master_numbers_on_the_bell_path():
-    data = _run(_water_heats_benzene(), method="bell_delaware")
+    data = _run(_water_heats_benzene(), method="bell_delaware", **_HOT_WATER_CORROSIVE)
     assert data["assignment"]["tube_side"] == "hot"
     # Bell-Delaware design of the same case. 3e8a241 gave U 460.1777828989243,
     # h_shell 673.8324876931076 and shell_dp 23266.861493659602; these moved with
     # the Kern geometry under them (see _SINCE_MASTER_WATER_HEATS_BENZENE_KERN),
-    # and the shell dP is now the Kern one with no 1.15 uplift.
-    assert _value(data["U_calculated"]) == pytest.approx(416.87097088356177, rel=1e-12)
-    assert _value(data["h_shell"]) == pytest.approx(591.5821168422973, rel=1e-12)
-    assert _value(data["shell_dp"]) == pytest.approx(28159.587927023906, rel=1e-12)
+    # and the shell dP is now the Kern one with no 1.15 uplift. With the area
+    # sized at the user's U (9f419f2) they moved again from U 416.87097,
+    # h_shell 591.58212 and shell_dp 28159.588, and with the properties at the
+    # mean temperatures from U 385.62003, h_shell 542.78400, shell_dp 21428.897.
+    # The Bell-Delaware coefficient is then Taborek's (ideal tube bank times
+    # Jc Jl Jb Jr Js) in place of the Kern one times five unsourced factors:
+    # from U 414.42284 and h_shell 560.83825.
+    assert _value(data["U_calculated"]) == pytest.approx(553.1015027684888, rel=1e-12)
+    assert _value(data["h_shell"]) == pytest.approx(848.8695698879369, rel=1e-12)
+    assert _value(data["shell_dp"]) == pytest.approx(21497.523265606316, rel=1e-12)
 
 
 def test_force_hot_in_tubes_overrides_the_scoring_and_gives_the_master_numbers():
@@ -204,7 +241,7 @@ def test_duty_and_lmtd_do_not_depend_on_the_side_assignment():
     for key in ("Q", "LMTD"):
         assert _value(cold_in_tubes[key]) == _value(hot_in_tubes[key])
         assert _value(cold_in_tubes[key]) == pytest.approx(
-            _MASTER_BENZENE_COOLER_KERN[key], rel=1e-12
+            _SINCE_MASTER_BENZENE_COOLER_KERN[key], rel=1e-12
         )
 
 
@@ -214,16 +251,17 @@ def test_cold_in_tubes_tube_side_uses_the_cold_fluid_properties():
     Water (the cold stream) in the tubes, 200 tubes 19.05/16.0 mm x 4.88 m,
     2 passes; benzene in a 0.45 m shell with 0.18 m baffle spacing.
 
-    Water at 15 C from the component: rho = 994.679 kg/m3,
-    mu = 9.1253e-4 Pa.s, cp = 4184.48 J/kg.K, k = 0.60630 W/m.K,
-    m = 60500 kg/h = 16.8056 kg/s.
+    Water at its mean temperature (15 + 25) / 2 = 20 C from the component:
+    rho = 996.457 kg/m3, mu = 1.02141e-3 Pa.s, cp = 4189.71 J/kg.K,
+    k = 0.599115 W/m.K, m = 60500 kg/h = 16.8056 kg/s. (These were the
+    component's 25 C values before, whatever the stream temperature.)
 
       tube flow area = (200/2) pi 0.016^2 / 4    = 0.0201062 m2
-      v_tube         = 16.8056 / 994.679 / A      = 0.84031 m/s
-      Re_t           = 994.679 * 0.84031 * 0.016 / 9.1253e-4 = 14655
-      Pr_t           = 4184.48 * 9.1253e-4 / 0.60630        = 6.2980
-      Nu_t           = 0.023 Re^0.8 Pr^0.4 (water is heated) = 103.32
-      h_tube         = 103.32 * 0.60630 / 0.016              = 3915.4 W/m2K
+      v_tube         = 16.8056 / 996.457 / A      = 0.83881 m/s
+      Re_t           = 996.457 * 0.83881 * 0.016 / 1.02141e-3 = 13093
+      Pr_t           = 4189.71 * 1.02141e-3 / 0.599115       = 7.1429
+      Nu_t           = 0.023 Re^0.8 Pr^0.4 (water is heated) = 99.29
+      h_tube         = 99.29 * 0.599115 / 0.016              = 3717.9 W/m2K
 
     With benzene in the tubes instead (master), Re_t came out 7740 and
     h_tube 483.1 W/m2K, so the two cannot be confused.
@@ -234,9 +272,11 @@ def test_cold_in_tubes_tube_side_uses_the_cold_fluid_properties():
     data = _run(streams, mode="rate", **geometry)
     assert data["assignment"]["tube_side"] == "cold"
 
-    hx = _hx(streams)
-    water = hx._stream_props(streams["cold_in"])
-    benzene = hx._stream_props(streams["hot_in"])
+    # The properties the rating was done on (each side at its mean temperature).
+    water = _basis(data, "cold", 60500.0 / 3600.0)
+    benzene = _basis(data, "hot", 21000.0 / 3600.0)
+    assert water["temperature_K"] == pytest.approx(293.15, rel=1e-12)
+    assert benzene["temperature_K"] == pytest.approx(333.15, rel=1e-12)
 
     # Independent recomputation from the raw water properties.
     flow_area = (200 / 2) * math.pi * 0.016 ** 2 / 4.0
@@ -245,9 +285,9 @@ def test_cold_in_tubes_tube_side_uses_the_cold_fluid_properties():
     pr_t = water["cp"] * water["viscosity"] / water["k"]
     h_tube = 0.023 * re_t ** 0.8 * pr_t ** 0.4 * water["k"] / 0.016
 
-    assert v_tube == pytest.approx(0.84031, rel=1e-4)
-    assert re_t == pytest.approx(14655, rel=1e-4)
-    assert h_tube == pytest.approx(3915.4, rel=1e-4)
+    assert v_tube == pytest.approx(0.83881, rel=1e-4)
+    assert re_t == pytest.approx(13093, rel=1e-4)
+    assert h_tube == pytest.approx(3717.9, rel=1e-4)
     assert _value(data["tube_velocity"]) == pytest.approx(v_tube, rel=1e-9)
     assert _value(data["h_tube"]) == pytest.approx(h_tube, rel=1e-9)
 
@@ -326,7 +366,7 @@ def test_velocity_limits_are_those_of_the_fluid_on_each_side():
 
 
 def test_force_cold_in_tubes_overrides_a_hot_scoring():
-    data = _run(_water_heats_benzene(), force_cold_in_tubes=True)
+    data = _run(_water_heats_benzene(), force_cold_in_tubes=True, **_HOT_WATER_CORROSIVE)
     assert data["assignment"]["tube_side"] == "cold"
     assert data["tube_side_fluid"] == "Benzene"
     assert data["assignment"]["recommended_tube_side_fluid"] == "Water"
@@ -365,24 +405,42 @@ def _benzene_condenser_streams():
     return dict(hot_in=hot_in, hot_out=hot_out, cold_in=cold_in, cold_out=cold_out)
 
 
-def test_condenser_keeps_the_hot_stream_in_the_tubes_and_says_so():
-    streams = _benzene_condenser_streams()
+def _condenser(**specs):
     engine = HeatExchangerEngine(method="kern").fit(
         hx_type="condenser", latent_heat=394000, orientation="horizontal",
-        mode="design", **streams,
+        mode="design", **_benzene_condenser_streams(), **specs,
     )
-    data = _quiet(engine.run).data
-    assert data["assignment"]["tube_side"] == "hot"
-    assert data["tube_side_fluid"] == "Benzene"
-    assert data["assignment"]["recommended_tube_side_fluid"] == "Water"
+    return _quiet(engine.run).data
+
+
+def test_condenser_condenses_on_the_side_it_is_told():
+    """The condensing (hot) stream used to be held in the tubes whatever
+    condensing_side said, so with the default shell-side condensation the
+    condensing coefficient replaced the water's shell coefficient."""
+    shell = _condenser()
+    assert shell["condensing_side"] == "shell"
+    assert shell["assignment"]["tube_side"] == "cold"
+    assert shell["tube_side_fluid"] == "Water"
+    # The scoring also wants the water in the tubes (benzene vapour is light),
+    # so there is nothing to warn about.
+    assert not any("ASSIGNMENT_WARNING" in w for w in shell["warnings"])
+
+    tube = _condenser(condensing_side="tube")
+    assert tube["assignment"]["tube_side"] == "hot"
+    assert tube["tube_side_fluid"] == "Benzene"
     assert any(
         "ASSIGNMENT_WARNING" in w and "CondenserHX models the hot stream" in w
-        for w in data["warnings"]
+        for w in tube["warnings"]
     )
 
 
-def test_condenser_refuses_a_forced_cold_tube_side():
+def test_condenser_refuses_a_forced_side_against_its_condensing_side():
     streams = _benzene_condenser_streams()
-    hx = CondenserHX(latent_heat=394000, force_cold_in_tubes=True, **streams)
-    with pytest.raises(ValueError, match="CondenserHX models the hot stream in the tubes"):
+    hx = CondenserHX(latent_heat=394000, force_hot_in_tubes=True, **streams)
+    with pytest.raises(ValueError, match="CondenserHX models the cold stream in the tubes"):
         _quiet(hx.design)
+
+
+def test_condenser_rejects_an_unknown_condensing_side():
+    with pytest.raises(ValueError, match="condensing_side"):
+        CondenserHX(latent_heat=394000, condensing_side="both", **_benzene_condenser_streams())
