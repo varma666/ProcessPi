@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import logging
 from typing import Any, Dict, Optional
 
@@ -7,6 +8,7 @@ from processpi.calculations.heat_transfer import HeatExchangerArea, LMTD, Overal
 from processpi.calculations.heat_transfer.hx_kern import LatentDuty, SensibleDuty
 from processpi.equipment.base import Equipment
 from processpi.streams.material import MaterialStream
+from processpi.units.temperature import Temperature
 
 
 class HeatExchangerBaseMixin:
@@ -21,10 +23,14 @@ class HeatExchangerBaseMixin:
             self.logger.debug(" ".join(str(a) for a in args))
 
     def _warn(self, message: str) -> None:
+        if getattr(self, "_suppress_warnings", False):
+            return
         self._warnings.append(message)
         self.logger.warning(message)
 
     def _warn_with_category(self, category: str, message: str) -> None:
+        if getattr(self, "_suppress_warnings", False):
+            return
         tagged = f"[{category}] {message}"
         if tagged in self._warnings:
             return
@@ -802,7 +808,7 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
             else 1.0
         )
     
-        return {
+        props = {
             "density": self._safe_float(
                 s.density.to("kg/m3"),
                 "density",
@@ -859,6 +865,70 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
     
             "t_k": temperature,
         }
+        self._evaluate_props(props, s, temperature)
+        return props
+
+    def _evaluate_props(self, props: Dict[str, Any], s: MaterialStream, t_k: float) -> None:
+        """
+        Set density, viscosity, cp and k in ``props`` to the component's values
+        at ``t_k``, the stream pressure and the phase in ``props["phase"]``.
+
+        These used to be read from the component at its default 25 C (and,
+        for density, in whatever phase the vapour pressure test gave at
+        1 atm), whatever the stream temperature. A density or specific heat
+        given on the stream is kept; a stream without a component keeps the
+        values it was built with.
+        """
+        component = getattr(s, "component", None)
+        if component is None:
+            return
+        state = copy.copy(component)
+        state.temperature = Temperature(t_k, "K")
+        if getattr(s, "pressure", None) is not None:
+            state.pressure = s.pressure
+        resolved = "gas" if props["phase"] in {"vapor", "vapour", "gas", "steam"} else "liquid"
+        if hasattr(state, "_phase"):
+            state._phase = resolved
+        # The stream's own component (a copy the stream owns) takes the phase
+        # the exchanger works with, so its hx_data() lookups (velocity band,
+        # fouling, U category) agree with these properties. A stream with no
+        # stated phase is taken as liquid, and benzene at 90 C and the default
+        # 1 atm would otherwise come out as vapour there.
+        if hasattr(component, "_phase"):
+            component._phase = resolved
+
+        if getattr(s, "given_density", None) is None and hasattr(state, "density"):
+            props["density"] = self._safe_float(state.density().to("kg/m3"), "density")
+        if hasattr(state, "viscosity"):
+            props["viscosity"] = self._safe_float(state.viscosity().to("Pa·s"), "viscosity")
+        if getattr(s, "given_specific_heat", None) is None and hasattr(state, "specific_heat"):
+            props["cp"] = self._safe_float(state.specific_heat().to("J/kgK"), "cp")
+        if hasattr(state, "thermal_conductivity"):
+            props["k"] = self._safe_float(state.thermal_conductivity().to("W/mK"), "k")
+        props["t_props_k"] = t_k
+
+    def _property_basis(self, hot: Dict[str, Any], cold: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+        """The temperature, phase and physical properties each side was designed on."""
+        def side(props):
+            return {
+                "temperature_K": props.get("t_props_k", props["t_k"]),
+                "phase": props["phase"],
+                "density_kg_m3": props["density"],
+                "viscosity_Pa_s": props["viscosity"],
+                "cp_J_kgK": props["cp"],
+                "k_W_mK": props["k"],
+            }
+        return {"hot": side(hot), "cold": side(cold)}
+
+    def _evaluate_props_at_mean_temperature(self, hot: Dict[str, Any], cold: Dict[str, Any],
+                                            th_out: float, tc_out: float) -> None:
+        """
+        Re-evaluate both sides' properties at their mean temperature,
+        (inlet + outlet) / 2, the basis of the Kern method. ``t_k`` stays the
+        inlet temperature.
+        """
+        self._evaluate_props(hot, self.hot_in, 0.5 * (hot["t_k"] + th_out))
+        self._evaluate_props(cold, self.cold_in, 0.5 * (cold["t_k"] + tc_out))
 
     def _to_float(self, value: Any, unit: str | None = None) -> float:
         if hasattr(value, "to") and callable(value.to):
@@ -970,11 +1040,13 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
             latent_side = str(self.specs.get("latent_side", "hot")).lower()
             m_dot = hot["m_dot"] if latent_side == "hot" else cold["m_dot"]
             return self._safe_float(LatentDuty(m_dot=m_dot, latent_heat=latent_heat).calculate().to("W"), "latent_duty")
-        if self.hot_out and hot["t_k"] is not None and self.hot_out.temperature is not None:
-            t_out = self._safe_float(self.hot_out.temperature.to("K"), "hot_out_temperature")
+        # An outlet built without a temperature carries its component's 25 C
+        # default; that is not a specification and must not set the duty.
+        t_out = self._explicit_stream_temperature(self.hot_out)
+        if hot["t_k"] is not None and t_out is not None:
             return self._safe_float(SensibleDuty(m_dot=hot["m_dot"], cp=hot["cp"], t_in=hot["t_k"], t_out=t_out).calculate().to("W"), "sensible_duty_hot")
-        if self.cold_out and cold["t_k"] is not None and self.cold_out.temperature is not None:
-            t_in = self._safe_float(self.cold_out.temperature.to("K"), "cold_out_temperature")
+        t_in = self._explicit_stream_temperature(self.cold_out)
+        if cold["t_k"] is not None and t_in is not None:
             return self._safe_float(SensibleDuty(m_dot=cold["m_dot"], cp=cold["cp"], t_in=t_in, t_out=cold["t_k"]).calculate().to("W"), "sensible_duty_cold")
         raise ValueError("Insufficient thermal specification. Provide one outlet stream or Q/latent_heat.")
 
