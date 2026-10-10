@@ -1033,7 +1033,7 @@ class ShellAndTubeHX(HeatExchanger):
         geometry = self._regenerate_geometry(geometry, tube_passes, tube)
         dimless = self._calculate_dimensionless(geometry, tube, shell, v_tube, v_shell)
         h_t, h_s = self._calculate_htc(dimless, geometry, tube, shell)
-        if self.method == "bell_delaware":
+        if self.method == "bell_delaware" and self._shell_side_is_single_phase():
             h_s, dimless["bell"] = self._bell_delaware_shell(shell, geometry, dimless["phi_s"])
         return {
             "geometry": geometry,
@@ -2841,6 +2841,12 @@ class ShellAndTubeHX(HeatExchanger):
         return max(base_htc, 1e-9)
     
     
+    def _shell_side_is_single_phase(self) -> bool:
+        """Whether the shell-side coefficient is a single-phase one. Bell-Delaware
+        is a single-phase method; a condensing or boiling shell keeps the
+        phase-change coefficient its exchanger class computes."""
+        return True
+
     def _bell_layout(self) -> str:
         layout = self._get_standard_layout()
         if layout.startswith("rot"):
@@ -3138,7 +3144,7 @@ class ShellAndTubeHX(HeatExchanger):
 
         dimless = self._calculate_dimensionless(geometry, tube, shell, v_tube, v_shell)
         h_t, h_s = self._calculate_htc(dimless, geometry, tube, shell)
-        if self.method == "bell_delaware":
+        if self.method == "bell_delaware" and self._shell_side_is_single_phase():
             # rate() used to report bell_delaware while computing Kern.
             geometry["bundle_diameter"] = self._calculate_bundle_diameter(tube_count, tube_od, tube_passes)
             h_s, dimless["bell"] = self._bell_delaware_shell(shell, geometry, dimless["phi_s"])

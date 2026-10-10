@@ -217,3 +217,33 @@ def test_baffle_cut_outside_the_fitted_range_is_warned():
 def test_layout_picks_its_j_table(layout, key):
     hx = ShellAndTubeHX(method="bell_delaware", tube_layout=layout, **_streams())
     assert hx._bell_layout() == key
+
+
+# ----------------------------------------------------------------------------
+# Phase change on the shell side
+# ----------------------------------------------------------------------------
+
+def _phase_change(hx_type, method, **extra):
+    hot_in = MaterialStream("hot_in", component=Water(), temperature=Temperature(120, "C"),
+                            pressure=Pressure(2, "bar"), mass_flow=MassFlowRate(3, "kg/s"),
+                            phase="vapor")
+    cold_in = MaterialStream("cold_in", component=Water(), temperature=Temperature(25, "C"),
+                             pressure=Pressure(2, "bar"), mass_flow=MassFlowRate(10, "kg/s"))
+    engine = HeatExchangerEngine(method=method).fit(
+        hot_in=hot_in, cold_in=cold_in, hx_type=hx_type, mode="design",
+        orientation="horizontal", **extra)
+    return _quiet(engine.run).data
+
+
+@pytest.mark.parametrize("hx_type, extra", [
+    ("condenser", {"latent_heat": 2.2e6}),
+    ("evaporator", {"latent_heat": 2.2e6}),
+    ("reboiler", {"latent_heat": 2.2e6}),
+])
+def test_bell_does_not_replace_a_condensing_or_boiling_shell_coefficient(hx_type, extra):
+    """Bell-Delaware is a single-phase shell-side method. With condensation or
+    boiling on the shell, the exchanger's own phase-change coefficient stays."""
+    kern = _phase_change(hx_type, "kern", **extra)
+    bell = _phase_change(hx_type, "bell_delaware", **extra)
+    assert "bell_factors" not in bell
+    assert _value(bell["h_shell"]) == pytest.approx(_value(kern["h_shell"]), rel=1e-12)
