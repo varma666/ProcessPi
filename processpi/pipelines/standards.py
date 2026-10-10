@@ -399,6 +399,22 @@ PUMP_COST_PER_POWER: Dict[str, float] = {
 # --------------------------
 # 🔹 Utility Functions
 # --------------------------
+def normalize_schedule(schedule: Any) -> str:
+    """
+    Schedule label as PIPE_SCHEDULES keys it: "40", "Sch 40", "SCH-40" and
+    "schedule 40" give "S40"; "40s" gives "40S" (stainless); "std", "xs" and
+    "xxs" give "STD", "XS" and "XXS". Anything else is returned upper-cased.
+    """
+    s = str(schedule).strip().upper().replace(" ", "").replace("-", "").replace("_", "")
+    for prefix in ("SCHEDULE", "SCH"):
+        if s.startswith(prefix):
+            s = s[len(prefix):]
+            break
+    if s.isdigit():
+        return f"S{s}"
+    return s
+
+
 def get_internal_diameter(
     nominal_diameter: Diameter, schedule: str = "STD"
 ) -> Optional[Diameter]:
