@@ -30,7 +30,7 @@ form before design/fabrication use.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from math import acos, cos, pi, radians, sqrt
+from math import acos, asin, cos, log, pi, radians, sin, sqrt
 from typing import Any, Dict, List, Optional
 
 from processpi.calculations.base import CalculationBase
@@ -748,11 +748,22 @@ def set_temperature_range(
             )
         minimum = bands[0]
         maximum = bands[-1]
+        # The first ASME column of ASME Section II, Part D, Table 1A is
+        # "-20 to 100°F" (metric edition: "-30 to 40°C"): the 100°F value
+        # holds down to -20°F. Taking 100°F as the floor made every ambient
+        # or chilled vessel undesignable, including the 20°C default.
+        if standard == "ASME" and minimum <= 100.0:
+            minimum = MIN_SUPPORTED_TEMPERATURE_F
 
     if temperature_f < minimum - TEMPERATURE_TOLERANCE_F:
         raise ValueError(
             f"Design temperature is below the available allowable-stress "
             f"database. Minimum supported temperature is {minimum:g}°F."
+            + (
+                " Below -20°F the minimum design metal temperature rules "
+                "(UCS-66, impact testing) apply, which are not evaluated."
+                if standard == "ASME" else ""
+            )
         )
 
     for band in bands:
@@ -834,6 +845,46 @@ class PressureVesselResults:
     @property
     def warnings(self) -> List[str]:
         return self.data["warnings"]
+
+    def __getitem__(self, key: str) -> Any:
+        return self.data[key]
+
+    def summary(self) -> str:
+        """A short text report of the design."""
+        d = self.data
+
+        def fmt(key: str, unit: str) -> str:
+            value = d.get(key)
+            if value is None:
+                return "-"
+            return f"{_value(value, key, unit):.4g} {unit}"
+
+        lines = [
+            "Pressure vessel design",
+            "-" * 40,
+            f"Standard            : {d.get('design_standard', d.get('std'))}",
+            f"Vessel / head       : {d.get('vessel_type')} / {d.get('head_type')}",
+            f"Material            : {d.get('material')}",
+            f"Design pressure     : {fmt('design_pressure', 'bar')}",
+            f"Design temperature  : {fmt('design_temperature', 'C')}",
+            f"Allowable stress    : {fmt('allowable_stress', 'MPa')}",
+            f"Shell thickness req : {fmt('shell_required_thickness', 'mm')}",
+            f"Head thickness req  : {fmt('head_required_thickness', 'mm')}",
+            f"Selected thickness  : {fmt('selected_thickness', 'mm')}",
+            f"Hydrotest pressure  : {fmt('hydrotest_pressure', 'bar')}",
+            f"Internal volume     : {fmt('internal_volume', 'm3')}",
+            f"Estimated weight    : {d.get('estimated_weight_kg', 0.0):.0f} kg",
+        ]
+        validity = d.get("ug27_validity")
+        if validity is not None:
+            lines.append(
+                "UG-27(c)(1) validity: " + ("within limits" if validity["valid"] else "OUTSIDE limits")
+            )
+        warnings = d.get("warnings") or []
+        if warnings:
+            lines.append("Warnings:")
+            lines.extend(f"  - {w}" for w in warnings)
+        return "\n".join(lines)
 
 
 # ============================================================================
@@ -1612,6 +1663,103 @@ class PressureVessel(CalculationBase):
             * radius_m ** 3
         )
 
+    def _head_surface_area(
+        self,
+        radius_m: float,
+        head_type: str,
+    ) -> float:
+        """
+        Surface area of ONE head on the inside radius, for the weight estimate.
+
+        Geometry of each head as the thickness formulas assume it:
+
+        - flat: the disc, pi R^2
+        - hemispherical: 2 pi R^2
+        - 2:1 ellipsoidal (half an oblate spheroid, depth R/2):
+          pi R^2 [1 + ln((1 + e) / (1 - e)) / (8 e)], e = sqrt(3)/2,
+          about 1.380 pi R^2 (1.084 D^2)
+        - torispherical (crown radius L, knuckle radius r = 0.06 L, as in
+          `head_thickness`): crown cap 2 pi L^2 (1 - cos b) plus knuckle
+          2 pi r [(R - r) t + r sin t], with sin b = (R - r) / (L - r) and
+          t = pi/2 - b
+        - conical (half apex angle a): the lateral area pi R^2 / sin a
+
+        Both heads used to be counted as flat discs, which put the weight
+        5% (ellipsoidal) to 11% (hemispherical) low.
+        """
+        normalized = {
+            "2:1_ellipsoidal": "ellipsoidal",
+            "2:1 ellipsoidal": "ellipsoidal",
+            "elliptical": "ellipsoidal",
+            "hemisphere": "hemispherical",
+            "flat_head": "flat",
+        }.get(
+            str(head_type).strip().lower(),
+            str(head_type).strip().lower(),
+        )
+
+        if normalized == "flat":
+            return pi * radius_m ** 2
+        if normalized == "hemispherical":
+            return 2.0 * pi * radius_m ** 2
+        if normalized == "torispherical":
+            crown = self.inputs.get("crown_radius")
+            crown_m = (
+                _value(crown, "crown_radius", "m")
+                if crown is not None
+                else 2.0 * radius_m
+            )
+            knuckle_m = 0.06 * crown_m
+            beta = asin((radius_m - knuckle_m) / (crown_m - knuckle_m))
+            theta = pi / 2.0 - beta
+            cap = 2.0 * pi * crown_m ** 2 * (1.0 - cos(beta))
+            knuckle = 2.0 * pi * knuckle_m * (
+                (radius_m - knuckle_m) * theta + knuckle_m * sin(theta)
+            )
+            return cap + knuckle
+        if normalized == "conical":
+            alpha = _cone_half_angle_degrees(self.inputs.get("cone_half_angle"))
+            return pi * radius_m ** 2 / sin(radians(alpha))
+        # 2:1 ellipsoidal, the default head.
+        e = sqrt(3.0) / 2.0
+        return pi * radius_m ** 2 * (1.0 + log((1.0 + e) / (1.0 - e)) / (8.0 * e))
+
+    def ug27_cylinder_validity(self) -> Dict[str, Any]:
+        """
+        Range of the UG-27(c)(1) circumferential-stress formula
+        t = P R / (S E - 0.6 P): it applies while t <= R/2 and P <= 0.385 S E;
+        beyond either, the thick-wall rules of Appendix 1-2 apply. Checked on
+        the pressure thickness (corrosion allowance excluded) and the inside
+        radius, as the formula is used here.
+        """
+        pressure = _value(
+            self.inputs.get("design_pressure", self.inputs.get("pressure")),
+            "design_pressure",
+            "Pa",
+        )
+        diameter = _value(
+            self.inputs.get("diameter", self.inputs.get("inside_diameter")),
+            "diameter",
+            "m",
+        )
+        stress_pa = _value(self.allowable_stress(), "allowable stress", "psi") * 6894.757293168
+        joint_efficiency = float(self.inputs.get("joint_efficiency", 1.0))
+        corrosion = _value(
+            self.inputs.get("corrosion_allowance", Length(0, "mm")),
+            "corrosion_allowance",
+            "m",
+        )
+        radius = diameter / 2.0
+        pressure_thickness = _value(self.shell_thickness(), "shell thickness", "m") - corrosion
+        pressure_limit = 0.385 * stress_pa * joint_efficiency
+        return {
+            "pressure_Pa": pressure,
+            "pressure_limit_Pa": pressure_limit,
+            "pressure_thickness_m": pressure_thickness,
+            "thickness_limit_m": radius / 2.0,
+            "valid": pressure <= pressure_limit and pressure_thickness <= radius / 2.0,
+        }
+
     def _calculate_internal_volume(
         self,
         diameter_m: float,
@@ -1859,8 +2007,7 @@ class PressureVessel(CalculationBase):
                 * diameter_m
                 * length_m
                 + 2.0
-                * pi
-                * (diameter_m / 2.0) ** 2
+                * self._head_surface_area(diameter_m / 2.0, head_type)
             )
 
         density = float(
@@ -1998,6 +2145,22 @@ class PressureVessel(CalculationBase):
                 "Nozzle and manhole reinforcement calculations are not included."
             )
 
+        ug27_validity = None
+        if self.vessel_type != "spherical" and self.std == "ASME":
+            ug27_validity = self.ug27_cylinder_validity()
+            if not ug27_validity["valid"]:
+                warnings.append(
+                    "Shell outside the UG-27(c)(1) range (t <= R/2 and "
+                    "P <= 0.385 S E): pressure "
+                    f"{ug27_validity['pressure_Pa'] / 1e5:.4g} bar against "
+                    f"{ug27_validity['pressure_limit_Pa'] / 1e5:.4g} bar, "
+                    "pressure thickness "
+                    f"{ug27_validity['pressure_thickness_m'] * 1000:.4g} mm against "
+                    f"{ug27_validity['thickness_limit_m'] * 1000:.4g} mm. The "
+                    "thick-wall formulas of Appendix 1-2 apply; this shell "
+                    "thickness is not valid."
+                )
+
         if self.std == "ASME":
             design_basis = (
                 "Preliminary ASME VIII-1 internal-pressure screening: "
@@ -2121,6 +2284,7 @@ class PressureVessel(CalculationBase):
             "nozzles": self.nozzles.copy(),
             "manholes": self.manholes.copy(),
 
+            "ug27_validity": ug27_validity,
             "warnings": warnings,
             "design_basis": design_basis,
         }
@@ -2163,6 +2327,76 @@ PressureVessels = PressureVessel
 
 
 # ============================================================================
+# ENGINE
+# ============================================================================
+
+class PressureVesselEngine:
+    """
+    Pressure-vessel design with the fit/run interface of the other ProcessPI
+    engines (PipelineEngine, HeatExchangerEngine, DistillationEngine):
+
+        model = PressureVesselEngine()
+        model.fit(design_pressure=Pressure(10, "bar"),
+                  design_temperature=Temperature(150, "C"),
+                  diameter=Length(2, "m"), length=Length(6, "m"),
+                  material="SA516-70", joint_efficiency=0.85,
+                  corrosion_allowance=Length(3, "mm"))
+        results = model.run()
+        print(results.summary())
+
+    `fit()` takes every PressureVessel input, plus optional ``nozzles`` and
+    ``manholes`` lists of keyword dicts for `add_nozzle` / `add_manhole`.
+    """
+
+    def __init__(self, name: Optional[str] = None, **kwargs: Any) -> None:
+        self.name = name or "PressureVessel"
+        self.data: Dict[str, Any] = {}
+        self.vessel: Optional[PressureVessel] = None
+        self._results: Optional[PressureVesselResults] = None
+        if kwargs:
+            self.fit(**kwargs)
+
+    def fit(self, **inputs: Any) -> "PressureVesselEngine":
+        """Store the inputs for the next run(); they are checked by PressureVessel."""
+        if not inputs:
+            raise ValueError("fit() needs the vessel inputs.")
+        if "name" in inputs:
+            self.name = inputs.pop("name")
+        nozzles = list(inputs.pop("nozzles", None) or [])
+        manholes = list(inputs.pop("manholes", None) or [])
+        for label, items in (("nozzles", nozzles), ("manholes", manholes)):
+            if any(not isinstance(item, dict) for item in items):
+                raise TypeError(f"{label} must be a list of keyword dicts.")
+        self.data = {"inputs": inputs, "nozzles": nozzles, "manholes": manholes}
+        self.vessel = None
+        self._results = None
+        return self
+
+    def run(self) -> PressureVesselResults:
+        """Design the vessel from the fitted inputs and return the results."""
+        if not self.data:
+            raise RuntimeError("Configure the model first using model.fit(...).")
+        vessel = PressureVessel(**self.data["inputs"])
+        for nozzle in self.data["nozzles"]:
+            vessel.add_nozzle(**nozzle)
+        for manhole in self.data["manholes"]:
+            vessel.add_manhole(**manhole)
+        self.vessel = vessel
+        self._results = PressureVesselResults(vessel.design())
+        return self._results
+
+    def summary(self) -> Optional[str]:
+        if self._results is None:
+            return None
+        return self._results.summary()
+
+    def results(self) -> PressureVesselResults:
+        if self._results is None:
+            raise RuntimeError("Run the model first using model.run().")
+        return self._results
+
+
+# ============================================================================
 # PUBLIC API
 # ============================================================================
 
@@ -2170,6 +2404,7 @@ __all__ = [
     "PressureVessel",
     "PressureVessels",
     "PressureVesselResults",
+    "PressureVesselEngine",
     "CylindricalHorizontalFlatEnd",
     "CylindricalHorizontalDishEnd",
     "asme_material_stress_data",
