@@ -57,6 +57,14 @@ def _run(streams, method="kern", mode="design", **specs):
     return _quiet(engine.run).data
 
 
+def _basis(data, side):
+    """One side's `property_basis` entry (its mean-temperature properties),
+    keyed like `_stream_props`."""
+    basis = data["property_basis"][side]
+    return {"density": basis["density_kg_m3"], "viscosity": basis["viscosity_Pa_s"],
+            "cp": basis["cp_J_kgK"], "k": basis["k_W_mK"]}
+
+
 def _hx(streams, method="kern", **specs):
     return ShellAndTubeHX(method=method, **streams, **dict(_SPECS, **specs))
 
@@ -66,16 +74,17 @@ def _hx(streams, method="kern", **specs):
 # ----------------------------------------------------------------------------
 
 def test_design_pressure_drop_uses_the_settled_tube_passes():
-    """The velocity check moves the benzene cooler from 2 to 6 tube passes, and
-    the reported velocity is the 6-pass velocity. The final tube-side pressure
-    drop was still computed for 2 passes (a third of the friction length and of
-    the return losses). It must be the pressure drop of the passes reported."""
+    """The velocity check moves the benzene cooler from 2 to 8 tube passes (6
+    with the 25 C properties used before), and the reported velocity is the
+    8-pass velocity. The final tube-side pressure drop was still computed for
+    2 passes (a quarter of the friction length and of the return losses). It
+    must be the pressure drop of the passes reported."""
     streams = _benzene_cooler()
     data = _run(streams, force_hot_in_tubes=True)
-    assert data["tube_passes"] == 6
+    assert data["tube_passes"] == 8
     assert data["shell_passes"] == 1
 
-    benzene = _hx(streams)._stream_props(streams["hot_in"])
+    benzene = _basis(data, "hot")
     v = _value(data["tube_velocity"])
     di = _value(data["tube_id"])
     length = _value(data["tube_length"])
@@ -226,7 +235,7 @@ def test_bell_shell_pressure_drop_is_the_kern_one_without_an_uplift():
     streams = _benzene_cooler()
     data = _run(streams, method="bell_delaware", force_hot_in_tubes=True)
     hx = _hx(streams)
-    water = hx._stream_props(streams["cold_in"])
+    water = _basis(data, "cold")
     od = _value(data["tube_od"])
     expected = hx._kern_shell_pressure_drop(
         shell=water, v_shell=_value(data["shell_velocity"]),
@@ -334,10 +343,12 @@ def test_without_a_wall_viscosity_phi_is_one_and_says_so():
 def test_wall_viscosity_corrects_the_kern_shell_film_and_both_pressure_drops():
     """Fixed geometry, so only phi changes between the two ratings.
 
-    Water in the tubes, mu = 9.1253e-4 Pa.s, given mu_w = 6.0e-4:
-      phi_t = (9.1253e-4 / 6.0e-4)^0.14 = 1.0605
-    Benzene in the shell, mu = 5.9973e-4 Pa.s, given mu_w = 7.0e-4:
-      phi_s = (5.9973e-4 / 7.0e-4)^0.14 = 0.97859
+    Water in the tubes at its 20 C mean, mu = 1.02141e-3 Pa.s, given mu_w = 6.0e-4:
+      phi_t = (1.02141e-3 / 6.0e-4)^0.14 = 1.0773
+    Benzene in the shell at its 60 C mean, mu = 3.96442e-4 Pa.s, given mu_w = 7.0e-4:
+      phi_s = (3.96442e-4 / 7.0e-4)^0.14 = 0.92349
+    (Before, both viscosities were the component's 25 C values: phi_t 1.0605,
+    phi_s 0.97859.)
 
     Kern: h_s carries phi_s, the shell dP is divided by phi_s, and the tube
     friction (not the 4 Np return losses) is divided by phi_t.
@@ -345,14 +356,12 @@ def test_wall_viscosity_corrects_the_kern_shell_film_and_both_pressure_drops():
     plain = _rating()
     corrected = _rating(cold_wall_viscosity=6.0e-4, hot_wall_viscosity=7.0e-4)
 
-    streams = _benzene_cooler()
-    hx = _hx(streams)
-    water = hx._stream_props(streams["cold_in"])
-    benzene = hx._stream_props(streams["hot_in"])
+    water = _basis(plain, "cold")
+    benzene = _basis(plain, "hot")
     phi_t = (water["viscosity"] / 6.0e-4) ** 0.14
     phi_s = (benzene["viscosity"] / 7.0e-4) ** 0.14
-    assert phi_t == pytest.approx(1.0605, abs=1e-4)
-    assert phi_s == pytest.approx(0.97859, abs=1e-5)
+    assert phi_t == pytest.approx(1.0773, abs=1e-4)
+    assert phi_s == pytest.approx(0.92349, abs=1e-5)
     assert corrected["viscosity_correction"]["tube"]["phi"] == pytest.approx(phi_t)
     assert corrected["viscosity_correction"]["shell"]["phi"] == pytest.approx(phi_s)
     assert not any(w.startswith("[ASSUMPTION_WARNING]") for w in corrected["warnings"])

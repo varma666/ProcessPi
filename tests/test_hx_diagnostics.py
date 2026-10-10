@@ -227,10 +227,31 @@ def _benzene_condenser(**extra):
     return engine
 
 
+def _cycling_cooler():
+    """The benzene cooler at 27 000 kg/h benzene and 80 000 kg/h water, sized
+    from the tabulated U: its tube count goes 300, 248, 224, 216, 212, 224 and
+    then round 212/216/224 for ever. (The benzene condenser cycled between 192
+    and 280 tubes while its vapour density was the 25 C liquid one; it no
+    longer cycles.)"""
+    hot_in = MaterialStream("hot_in", component=Benzene(),
+                            temperature=Temperature(90, "C"),
+                            mass_flow=MassFlowRate(27000, "kg/h"))
+    hot_out = MaterialStream("hot_out", component=Benzene(),
+                             temperature=Temperature(30, "C"))
+    cold_in = MaterialStream("cold_in", component=Water(),
+                             temperature=Temperature(15, "C"),
+                             mass_flow=MassFlowRate(80000, "kg/h"))
+    cold_out = MaterialStream("cold_out", component=Water())
+    engine = HeatExchangerEngine(method="kern")
+    engine.fit(hot_in=hot_in, hot_out=hot_out, cold_in=cold_in, cold_out=cold_out,
+               shell_dp=Pressure(1, "bar"), tube_dp=Pressure(1, "bar"), mode="design")
+    return engine
+
+
 def test_a_cycle_between_tube_counts_settles_on_the_smallest_adequate_one():
-    """The tube count is a step function of U, so this case alternates between
-    192 and 280 tubes for ever; it used to run out of iterations."""
-    data = _quiet(_benzene_condenser().run).data
+    """The tube count is a step function of U, so this case cycles between
+    tube counts for ever; it used to run out of iterations."""
+    data = _quiet(_cycling_cooler().run).data
     assert data["converged"] is True
     assert data["status"] != "FAILED_CONVERGENCE"
     assert any("cycles between tube counts" in w for w in data["warnings"])
