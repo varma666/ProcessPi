@@ -453,7 +453,11 @@ class PipelineEngine:
             pipe = self.data.get("pipe")
             roughness = get_roughness(getattr(pipe, "material", None))
             
-            K_from_standards = get_k_factor(fitting_type, Re, roughness, d.value)
+            d_m = d.to("m").value
+            # get_roughness gives a plain Variable in mm.
+            eps_m = float(getattr(roughness, "value", roughness)) / 1000.0
+            relative_roughness = eps_m / d_m if d_m > 0 else None
+            K_from_standards = get_k_factor(fitting_type, Re, relative_roughness, d_m)
             #print(K_from_standards)
             if K_from_standards is not None:
                 return Pressure(0.5 * rho * v_val * v_val * float(K_from_standards), "Pa")
@@ -516,17 +520,22 @@ class PipelineEngine:
         #print(f"   Major Losses: {dp_major.to('Pa').value:.2f} Pa")
         dp_minor = Pressure(0.0, "Pa")
         ft = getattr(pipe, "fittings", []) or [] or getattr(self.data.get("pipe"), "fittings", []) or [] or getattr(self.data.get("fittings"), "fittings", []) or []
-        #ft.diameter = 
+        # Hazen-Williams has no friction factor, but the fitting losses are
+        # Darcy-Weisbach on an equivalent length; with f None they raised
+        # "Could not interpret friction_factor value: None".
+        f_minor = f
+        if f_minor is None and ft:
+            f_minor = self._friction_factor(Re, d, material=pipe.material)
         for ft in ft:
             ft.diameter = d
-            le_val = self._minor_dp_pa(ft, v, f, d)
+            le_val = self._minor_dp_pa(ft, v, f_minor, d)
             #print(le_val)
             equivalent_length = Length(0.0, "m")
             if isinstance(le_val, Length):
                 #print(le_val,d.value,ft.quantity)
                 equivalent_length = le_val.value * ft.quantity
                 #print(equivalent_length)
-                dp_minor += self._major_dp_pa(f, equivalent_length, d, v)
+                dp_minor += self._major_dp_pa(f_minor, equivalent_length, d, v)
                 #print(dp_minor)
             elif isinstance(le_val, Pressure):
                 dp_minor += le_val
