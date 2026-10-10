@@ -28,8 +28,17 @@ def _quiet(fn, *args, **kwargs):
         return fn(*args, **kwargs)
 
 
-def _benzene_cooler(**extra):
-    """The benzene cooler from docs/examples/equipment/heatexchanger."""
+_DOCS_U = HeatTransferCoefficient(575, "W/m2K")
+
+
+def _benzene_cooler(U=_DOCS_U, **extra):
+    """The benzene cooler from docs/examples/equipment/heatexchanger.
+
+    A user U is the design basis: the area is sized at it and U is not
+    iterated. Pass U=None to size from the assumed-U table and iterate.
+    """
+    if U is not None:
+        extra["U"] = U
     hot_in = MaterialStream("hot_in", component=Benzene(),
                             temperature=Temperature(90, "C"),
                             mass_flow=MassFlowRate(21000, "kg/h"))
@@ -41,7 +50,6 @@ def _benzene_cooler(**extra):
     cold_out = MaterialStream("cold_out", component=Water())
     engine = HeatExchangerEngine(method="kern")
     engine.fit(hot_in=hot_in, hot_out=hot_out, cold_in=cold_in, cold_out=cold_out,
-               U=HeatTransferCoefficient(575, "W/m2K"),
                shell_dp=Pressure(1, "bar"), tube_dp=Pressure(1, "bar"),
                mode="design", **extra)
     return engine
@@ -75,26 +83,19 @@ def test_results_after_run_are_returned():
 
 
 def test_convergence_tolerance_is_honoured():
-    """The first U step is about 10% out; only a tolerance above it may accept it.
+    """From the tabulated U the first step is about 25% out and the second about
+    11%; a 15% tolerance stops at the second pass, a 1% one goes on.
 
-    That step size belongs to the benzene-in-tubes arrangement, which the fluid
-    assignment no longer picks by default for this case (it puts the water in
-    the tubes), so the arrangement is forced to keep the test on the case it
-    was calibrated for.
+    The iteration only runs without a user U (a user U is the design basis).
     """
-    loose = _quiet(_benzene_cooler(u_tolerance_percent=15.0, force_hot_in_tubes=True).run).data
+    loose = _quiet(_benzene_cooler(U=None, u_tolerance_percent=15.0).run).data
     assert loose["converged"] is True
-    assert len(loose["convergence_history"]) == 1
-    assert 5.0 < loose["convergence_history"][0] < 15.0
+    assert len(loose["convergence_history"]) == 2
+    assert loose["convergence_history"][0] > 15.0 > loose["convergence_history"][1]
 
-    # With the bundle diameter for the settled pass count, the default 0.8
-    # relaxation walks this case into a 168/174 tube cycle, which the cycle rule
-    # settles (tested below) before the 1% test is reached. Plain successive
-    # substitution (relaxation 1.0) reaches the tolerance test.
-    tight = _quiet(_benzene_cooler(u_tolerance_percent=1.0, force_hot_in_tubes=True,
-                                   u_relaxation=1.0).run).data
+    tight = _quiet(_benzene_cooler(U=None, u_tolerance_percent=1.0).run).data
     assert tight["converged"] is True
-    assert len(tight["convergence_history"]) > 1
+    assert len(tight["convergence_history"]) > 2
     assert tight["convergence_history"][-1] < 1.0
     assert not any("cycles between tube counts" in w for w in tight["warnings"])
     # The settled area is within 5% of what its own U requires.
@@ -102,7 +103,7 @@ def test_convergence_tolerance_is_honoured():
 
 
 def test_failed_convergence_reaches_the_status():
-    data = _quiet(_benzene_cooler(u_tolerance_percent=1.0, max_u_iterations=2).run).data
+    data = _quiet(_benzene_cooler(U=None, u_tolerance_percent=1.0, max_u_iterations=2).run).data
     assert data["converged"] is False
     assert data["status"] == "FAILED_CONVERGENCE"
     assert any("CONVERGENCE_WARNING" in w for w in data["warnings"])
@@ -226,10 +227,31 @@ def _benzene_condenser(**extra):
     return engine
 
 
+def _cycling_cooler():
+    """The benzene cooler at 27 000 kg/h benzene and 80 000 kg/h water, sized
+    from the tabulated U: its tube count goes 300, 248, 224, 216, 212, 224 and
+    then round 212/216/224 for ever. (The benzene condenser cycled between 192
+    and 280 tubes while its vapour density was the 25 C liquid one; it no
+    longer cycles.)"""
+    hot_in = MaterialStream("hot_in", component=Benzene(),
+                            temperature=Temperature(90, "C"),
+                            mass_flow=MassFlowRate(27000, "kg/h"))
+    hot_out = MaterialStream("hot_out", component=Benzene(),
+                             temperature=Temperature(30, "C"))
+    cold_in = MaterialStream("cold_in", component=Water(),
+                             temperature=Temperature(15, "C"),
+                             mass_flow=MassFlowRate(80000, "kg/h"))
+    cold_out = MaterialStream("cold_out", component=Water())
+    engine = HeatExchangerEngine(method="kern")
+    engine.fit(hot_in=hot_in, hot_out=hot_out, cold_in=cold_in, cold_out=cold_out,
+               shell_dp=Pressure(1, "bar"), tube_dp=Pressure(1, "bar"), mode="design")
+    return engine
+
+
 def test_a_cycle_between_tube_counts_settles_on_the_smallest_adequate_one():
-    """The tube count is a step function of U, so this case alternates between
-    192 and 280 tubes for ever; it used to run out of iterations."""
-    data = _quiet(_benzene_condenser().run).data
+    """The tube count is a step function of U, so this case cycles between
+    tube counts for ever; it used to run out of iterations."""
+    data = _quiet(_cycling_cooler().run).data
     assert data["converged"] is True
     assert data["status"] != "FAILED_CONVERGENCE"
     assert any("cycles between tube counts" in w for w in data["warnings"])
@@ -290,7 +312,32 @@ def test_relaxation_outside_its_range_is_rejected(relaxation):
 
 
 def test_relaxation_is_configurable():
-    fast = _quiet(_benzene_cooler(u_relaxation=0.8).run).data
-    slow = _quiet(_benzene_cooler(u_relaxation=0.4).run).data
+    fast = _quiet(_benzene_cooler(U=None, u_relaxation=0.8).run).data
+    slow = _quiet(_benzene_cooler(U=None, u_relaxation=0.4).run).data
     assert fast["converged"] and slow["converged"]
     assert len(fast["convergence_history"]) < len(slow["convergence_history"])
+
+
+def test_user_u_is_the_design_basis_and_the_geometry_settles():
+    """With a user U the area is sized at it on every pass, so the loop stops as
+    soon as the geometry repeats. It used to run on until the cycle rule
+    reported a "cycle" of a single tube count."""
+    data = _quiet(_benzene_cooler(u_tolerance_percent=1.0).run).data
+    history = data["convergence_history"]
+    assert data["converged"] is True
+    assert data["status"] != "FAILED_CONVERGENCE"
+    # The last two passes have the same geometry, hence the same U_calc and
+    # the same deviation from the user's U; there is no third.
+    assert len(history) >= 2
+    assert history[-1] == pytest.approx(history[-2], rel=1e-12)
+    assert not any("cycles between tube counts" in w for w in data["warnings"])
+    # The reported error is U_calc against the user's U.
+    u_calc = data["U_calculated"].to("W/m2K").value
+    assert history[-1] == pytest.approx(abs(u_calc - 575.0) / 575.0 * 100.0, rel=1e-9)
+
+
+def test_relaxation_does_not_move_a_user_u_design():
+    fast = _quiet(_benzene_cooler(u_relaxation=0.8).run).data
+    slow = _quiet(_benzene_cooler(u_relaxation=0.4).run).data
+    assert fast["tube_count"] == slow["tube_count"]
+    assert fast["convergence_history"] == slow["convergence_history"]

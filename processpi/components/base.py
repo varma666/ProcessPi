@@ -43,9 +43,14 @@ class Component(ABC):
         thermal_conductivity: ThermalConductivity = None,
         vapor_pressure: Pressure = None,
         enthalpy: HeatOfVaporization = None,
+        phase: str = None,
     ):
         self.temperature = temperature or Temperature(25, "C")
         self.pressure = pressure or Pressure(101325, "Pa")
+        # A known phase ("liquid", or "gas"/"vapor") overrides the vapour
+        # pressure test, e.g. a liquid held above its normal boiling point
+        # by a pressure the stream does not state.
+        self._phase = phase
         self.hx_type = getattr(self, "hx_type", self._infer_hx_type())
 
         self._density = density
@@ -89,9 +94,12 @@ class Component(ABC):
     @PropertyMethod
     def phase(self) -> str:
         """
-        Detects phase based on system pressure and vapor pressure.
-        Returns: "gas" or "liquid"
+        Detects phase based on system pressure and vapor pressure, unless a
+        phase was given. Returns: "gas" or "liquid"
         """
+        forced = getattr(self, "_phase", None)
+        if forced:
+            return "gas" if str(forced).lower() in {"gas", "vapor", "vapour", "steam"} else "liquid"
         P = self.pressure.to("Pa").value
         Pvap = self.vapor_pressure().to("Pa").value
         return "gas" if P < Pvap else "liquid"

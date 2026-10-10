@@ -34,8 +34,10 @@ def _quiet(fn, *args, **kwargs):
         return fn(*args, **kwargs)
 
 
-def _benzene_cooler(cold_out=None, **specs):
+def _benzene_cooler(cold_out=None, U=HeatTransferCoefficient(575, "W/m2K"), **specs):
     """docs/examples benzene cooler: benzene 21 000 kg/h 90 to 30 C, water 60 500 kg/h from 15 C."""
+    if U is not None:
+        specs["U"] = U
     engine = HeatExchangerEngine().fit(
         hot_in=MaterialStream("hot_in", component=Benzene(),
                               temperature=Temperature(90, "C"),
@@ -46,7 +48,6 @@ def _benzene_cooler(cold_out=None, **specs):
                                temperature=Temperature(15, "C"),
                                mass_flow=MassFlowRate(60500, "kg/h")),
         cold_out=cold_out if cold_out is not None else MaterialStream("cold_out", component=Water()),
-        U=HeatTransferCoefficient(575, "W/m2K"),
         shell_dp=Pressure(1, "bar"), tube_dp=Pressure(1, "bar"),
         mode="design", **specs,
     )
@@ -101,17 +102,40 @@ def _assert_velocity_warnings_match(data):
 # ----------------------------------------------------------------------------
 
 def test_cooler_warnings_describe_the_reported_geometry():
-    data = _benzene_cooler()
+    # Without a user U the design iterates through several geometries (with a
+    # user U, the design basis since 9f419f2, the area is fixed), which is
+    # where warnings of a geometry not reported used to pile up.
+    data = _benzene_cooler(U=None)
     assert 0.5 <= _velocity(data, "shell") <= 1.5
     _assert_velocity_warnings_match(data)
     assert not [w for w in data["warnings"] if "Shell velocity" in w]
 
 
-def test_condenser_cycle_keeps_the_warnings_of_the_pass_it_settles_on():
-    """The condenser settles on 192 tubes out of a 192/280 cycle. The warnings
-    reported must be those of the 192-tube pass, plus the cycle warning."""
-    data = _benzene_condenser()
-    assert data["tube_count"] == 192
+def _cycling_cooler():
+    """The benzene cooler at 27 000 kg/h benzene and 80 000 kg/h water, sized
+    from the tabulated U; it cycles between 212, 216 and 224 tubes. (The
+    benzene condenser cycled between 192 and 280 tubes while its vapour
+    density was the 25 C liquid one; it no longer cycles.)"""
+    engine = HeatExchangerEngine().fit(
+        hot_in=MaterialStream("hot_in", component=Benzene(),
+                              temperature=Temperature(90, "C"),
+                              mass_flow=MassFlowRate(27000, "kg/h")),
+        hot_out=MaterialStream("hot_out", component=Benzene(),
+                               temperature=Temperature(30, "C")),
+        cold_in=MaterialStream("cold_in", component=Water(),
+                               temperature=Temperature(15, "C"),
+                               mass_flow=MassFlowRate(80000, "kg/h")),
+        cold_out=MaterialStream("cold_out", component=Water()),
+        shell_dp=Pressure(1, "bar"), tube_dp=Pressure(1, "bar"), mode="design",
+    )
+    return _quiet(engine.run).data
+
+
+def test_cycle_keeps_the_warnings_of_the_pass_it_settles_on():
+    """The cooler settles on 212 tubes out of a 212/216/224 cycle. The warnings
+    reported must be those of the 212-tube pass, plus the cycle warning."""
+    data = _cycling_cooler()
+    assert data["tube_count"] == 212
     assert any("U cycles between tube counts" in w for w in data["warnings"])
     _assert_velocity_warnings_match(data)
 
@@ -154,7 +178,8 @@ def test_specified_outlet_that_disagrees_is_still_reported():
 
 
 def test_specified_outlet_that_agrees_is_not_reported():
-    """The balance gives 296.85 K for the cold outlet."""
+    """The balance gives 297.37 K for the cold outlet (296.85 K on the 25 C
+    properties used before)."""
     data = _benzene_cooler(cold_out=MaterialStream("cold_out", component=Water(),
-                                                   temperature=Temperature(296.85, "K")))
+                                                   temperature=Temperature(297.37, "K")))
     assert _balance_warnings(data) == []

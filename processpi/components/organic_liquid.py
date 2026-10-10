@@ -23,7 +23,9 @@ class OrganicLiquid(Component):
     def hx_data(self):
         p = self.pressure.to("Pa").value
         pvap = self.vapor_pressure().to("Pa").value
-        phase = "vapor" if p < pvap else "liquid"
+        # A known phase (set by the stream or the exchanger) overrides the
+        # vapour pressure test, as in Component.phase().
+        phase = "vapor" if self.phase() == "gas" else "liquid"
         return {"family": "organic", "phase": phase, "velocity_key": "organic_liquid", "u_key": "organic", "fouling_key": "hydrocarbons", "corrosion_key": "hydrocarbon"}
 
     def httype(self):

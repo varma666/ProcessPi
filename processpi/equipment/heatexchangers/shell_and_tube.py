@@ -1608,6 +1608,17 @@ class ShellAndTubeHX(HeatExchanger):
                 state["converged"] = True
                 break
 
+            # With the user's U as the design basis the area is the same on every
+            # pass, so only the geometry adjustments can still move. Once the
+            # geometry comes out as on the previous pass the design has settled;
+            # the error above is then U_calc against U_user, which no further
+            # pass changes. Before, the loop ran on until the cycle rule below
+            # reported a cycle of one tube count.
+            if u_user is not None and len(state["geometry_history"]) > 1 and state["geometry_history"][-2] == geometry_key:
+                self._debug("Geometry settled at the user-specified U")
+                state["converged"] = True
+                break
+
             # The tube count is a step function of the assumed U, so the loop can
             # cycle between geometries that each call for the other. A geometry
             # seen before (other than on the pass just gone, handled above) means
@@ -2485,6 +2496,8 @@ class ShellAndTubeHX(HeatExchanger):
             "tube_friction_model": self._tube_friction_model(),
 
             "viscosity_correction": payload.get("viscosity_correction"),
+
+            "property_basis": payload.get("property_basis"),
     
             # ======================================================
             # THERMAL
@@ -2605,6 +2618,24 @@ class ShellAndTubeHX(HeatExchanger):
         if cold_category == "steam":
             cold["phase"] = "vapor"
         self._validate_inputs(hot, cold)
+        # Physical properties at each side's mean temperature, in the phase
+        # resolved above. The outlets follow from the energy balance, which
+        # depends on cp, so the two are iterated from the inlet properties
+        # until the outlets settle. The warnings of these balances are dropped;
+        # the balance below raises them again on the settled properties.
+        self._evaluate_props(hot, self.hot_in, hot["t_k"])
+        self._evaluate_props(cold, self.cold_in, cold["t_k"])
+        self._suppress_warnings = True
+        try:
+            outlets = None
+            for _ in range(10):
+                _, th_out, tc_out = self._calculate_heat_duty(hot, cold)
+                self._evaluate_props_at_mean_temperature(hot, cold, th_out, tc_out)
+                if outlets and abs(outlets[0] - th_out) < 0.01 and abs(outlets[1] - tc_out) < 0.01:
+                    break
+                outlets = (th_out, tc_out)
+        finally:
+            self._suppress_warnings = False
         assignment = self._assign_fluids_to_sides(hot, cold)
         # Duty, LMTD and Ft are side-independent and stay on (hot, cold); the
         # geometry, film coefficients and hydraulics use the resolved sides.
@@ -2735,6 +2766,7 @@ class ShellAndTubeHX(HeatExchanger):
             "shell_passes": shell_passes,
             "tube_passes": tube_passes,
             "viscosity_correction": self._viscosity_correction_report(tube, shell),
+            "property_basis": self._property_basis(hot, cold),
             "method": "kern",
             "tube_dp": tube_dp,
             "shell_dp": shell_dp,
@@ -3117,14 +3149,18 @@ class ShellAndTubeHX(HeatExchanger):
 
         if self.hot_out is None or self.cold_out is None:
             raise ValueError("rate() requires hot_out and cold_out outlet stream targets")
-        for stream_name, stream in (("hot_out", self.hot_out), ("cold_out", self.cold_out)):
-            if getattr(stream, "temperature", None) is None:
+        # An outlet built without a temperature carries its component's 25 C
+        # default, which used to be rated as if it were the target.
+        th_out = self._explicit_stream_temperature(self.hot_out)
+        tc_out = self._explicit_stream_temperature(self.cold_out)
+        for stream_name, t_out in (("hot_out", th_out), ("cold_out", tc_out)):
+            if t_out is None:
                 raise ValueError(f"rate() requires {stream_name}.temperature to be specified")
-
-        th_out = self._safe_float(self.hot_out.temperature.to("K"), "hot_out.temperature")
-        tc_out = self._safe_float(self.cold_out.temperature.to("K"), "cold_out.temperature")
         if th_out <= tc_out:
             raise ValueError("Thermally infeasible outlet targets: hot_out must be greater than cold_out for shell-and-tube rating")
+        # Physical properties at each side's mean temperature, in the phase
+        # resolved above.
+        self._evaluate_props_at_mean_temperature(hot, cold, th_out, tc_out)
 
         assignment = self._assign_fluids_to_sides(hot, cold)
         tube, shell = self._side_props(hot, cold)
@@ -3236,7 +3272,7 @@ class ShellAndTubeHX(HeatExchanger):
         else:
             assessment = "OK"
 
-        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "ft": ft, "cltd": cltd, "tube_passes": tube_passes, "shell_passes": shell_passes, "viscosity_correction": self._viscosity_correction_report(tube, shell), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "tube_dp_limit": tube_dp_limit, "shell_dp_limit": shell_dp_limit, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
+        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "ft": ft, "cltd": cltd, "tube_passes": tube_passes, "shell_passes": shell_passes, "viscosity_correction": self._viscosity_correction_report(tube, shell), "property_basis": self._property_basis(hot, cold), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "tube_dp_limit": tube_dp_limit, "shell_dp_limit": shell_dp_limit, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
 
         return self._finalize_results(payload)
     def design(self) -> Dict[str, Any]:
