@@ -67,6 +67,31 @@ _TUBE_LAMINAR_RE = 2100.0
 _KERN_SHELL_F_RE_MIN = 200.0
 _KERN_SHELL_F_RE_MAX = 1.0e6
 
+# Bell-Delaware (Taborek) ideal tube bank Colburn factor
+#   j = a1 (1.33 / (pt/do))^a Re^a2,   a = a3 / (1 + 0.14 Re^a4),
+# with Re = do m / (mu Sm). Coefficients of J. Taborek, Heat Exchanger Design
+# Handbook (Hemisphere, 1983), Sec. 3.3, as tabulated in R. W. Serth, Process
+# Heat Transfer, Ch. 6, keyed by layout: (a3, a4) and rows of (Re lower bound,
+# a1, a2). Checked against the ideal-bank curves of Perry's Chemical Engineers'
+# Handbook, 8th ed. (2008), Fig. 11-9, and continuous across every Re boundary.
+_BELL_IDEAL_J = {
+    "triangular": ((1.450, 0.519), ((1.0e3, 0.321, -0.388), (1.0e2, 0.593, -0.477),
+                                    (1.0e1, 1.360, -0.657), (0.0, 1.400, -0.667))),
+    "rotated_square": ((1.930, 0.500), ((1.0e3, 0.370, -0.396), (1.0e2, 0.730, -0.500),
+                                        (1.0e1, 1.498, -0.656), (0.0, 1.550, -0.667))),
+    "square": ((1.187, 0.370), ((1.0e4, 0.370, -0.395), (1.0e3, 0.107, -0.266),
+                                (1.0e2, 0.408, -0.460), (1.0e1, 0.900, -0.631),
+                                (0.0, 0.970, -0.667))),
+}
+
+# Bell-Delaware defaults when the construction is not given (Taborek, as
+# reproduced by Goncalves, Costa and Bagajewicz, AIChE J. 65 (2019) e16602,
+# Eqs. 31-34): TEMA shell-to-baffle diametral clearance 3.1 mm + 0.004 Ds,
+# tube-to-baffle diametral clearance 0.8 mm (TEMA class R, 1/32 in; the same
+# basis as Perry Eq. 11-12), a 25% baffle cut and no sealing strips.
+_BELL_DEFAULT_BAFFLE_CUT = 0.25
+_BELL_TUBE_BAFFLE_CLEARANCE_M = 0.8e-3
+
 # Bundle diameter constants K1, n1 in Db = do (Nt / K1)^(1/n1), keyed by the
 # number of tube passes, for a tube pitch of 1.25 do. R. K. Sinnott, Coulson and
 # Richardson's Chemical Engineering Vol. 6, Chemical Engineering Design, 4th ed.
@@ -1008,6 +1033,8 @@ class ShellAndTubeHX(HeatExchanger):
         geometry = self._regenerate_geometry(geometry, tube_passes, tube)
         dimless = self._calculate_dimensionless(geometry, tube, shell, v_tube, v_shell)
         h_t, h_s = self._calculate_htc(dimless, geometry, tube, shell)
+        if self.method == "bell_delaware":
+            h_s, dimless["bell"] = self._bell_delaware_shell(shell, geometry, dimless["phi_s"])
         return {
             "geometry": geometry,
             "v_tube": v_tube,
@@ -2498,6 +2525,18 @@ class ShellAndTubeHX(HeatExchanger):
             "viscosity_correction": payload.get("viscosity_correction"),
 
             "property_basis": payload.get("property_basis"),
+
+            # Bell-Delaware only: the ideal-bank coefficient, the correction
+            # factors and the geometry they came from, of the settled pass.
+            **(
+                {
+                    "h_shell_ideal": payload["dimless"]["bell"]["h_shell_ideal"],
+                    "bell_factors": dict(payload["dimless"]["bell"]["factors"]),
+                    "bell_delaware": payload["dimless"]["bell"],
+                }
+                if isinstance(payload.get("dimless"), dict) and "bell" in payload["dimless"]
+                else {}
+            ),
     
             # ======================================================
             # THERMAL
@@ -2511,6 +2550,12 @@ class ShellAndTubeHX(HeatExchanger):
             "h_tube": payload.get("h_t"),
     
             "h_shell": payload.get("h_s"),
+
+            "U_clean": (
+                HeatTransferCoefficient(payload["u_clean"], "W/m2K")
+                if payload.get("u_clean") is not None
+                else None
+            ),
     
             "re_shell": payload.get("re_shell"),
     
@@ -2767,7 +2812,7 @@ class ShellAndTubeHX(HeatExchanger):
             "tube_passes": tube_passes,
             "viscosity_correction": self._viscosity_correction_report(tube, shell),
             "property_basis": self._property_basis(hot, cold),
-            "method": "kern",
+            "method": self.method,
             "tube_dp": tube_dp,
             "shell_dp": shell_dp,
             "area": state["geometry"]["area"],
@@ -2796,301 +2841,147 @@ class ShellAndTubeHX(HeatExchanger):
         return max(base_htc, 1e-9)
     
     
-    def _calc_tube_row_factor(
-        self,
-        re_shell: float,
-        ncv: float,
-    ) -> float:
-        """
-        Bell tube row correction factor (Fn)
-        """
-    
-        if re_shell >= 100:
-            return 1.0
-    
-        ncv = max(ncv, 1.0)
-    
-        return ncv ** (-0.18)
-    
-    
-    def _calc_window_factor(
-        self,
-        rw: float,
-    ) -> float:
-        """
-        Window correction factor (Fw)
-    
-        rw = fraction of tubes in window zone
-        """
-    
-        rw = max(0.0, min(rw, 0.5))
-    
-        fw = 1.0 - 0.72 * rw
-    
-        return max(0.5, min(fw, 1.0))
-    
-    
-    def _calc_bypass_factor(
-        self,
-        re_shell: float,
-        ab: float,
-        as_cross: float,
-        ns: int,
-        ncv: float,
-    ) -> float:
-        """
-        Bell bypass correction factor
-        """
-    
-        if as_cross <= 0:
-            return 1.0
-    
-        alpha = 1.5 if re_shell < 100 else 1.35
-    
-        sealing_term = (
-            1.0
-            - (
-                (2.0 * ns)
-                / max(ncv, 1.0)
-            ) ** (1.0 / 3.0)
-        )
-    
-        sealing_term = max(sealing_term, 0.0)
-    
-        fb = math.exp(
-            -alpha
-            * (ab / as_cross)
-            * sealing_term
-        )
-    
-        return max(0.5, min(fb, 1.0))
-    
-    
-    def _calc_leakage_factor(
-        self,
-        atb: float,
-        asb: float,
-        as_cross: float,
-    ) -> float:
-        """
-        Bell-Delaware leakage correction factor.
-    
-        Uses a smooth exponential approximation
-        instead of overly aggressive linear penalty.
-        """
-    
-        leakage_ratio = (
-            (atb + asb)
-            / max(as_cross, 1e-9)
-        )
-    
-        fl = math.exp(
-            -1.25 * leakage_ratio
-        )
-    
-        return max(0.65, min(fl, 1.0))
-        
-    
-    def _calc_spacing_factor(
-        self,
-        baffle_spacing: float,
-        shell_id: float,
-    ) -> float:
-        """
-        Baffle spacing correction factor
-        """
-    
-        ratio = (
-            baffle_spacing
-            / max(shell_id, 1e-9)
-        )
-    
-        if ratio <= 0.3:
-            return 1.0
-    
-        if ratio >= 1.0:
-            return 0.6
-    
-        return 1.0 - 0.57 * (ratio - 0.3)
+    def _bell_layout(self) -> str:
+        layout = self._get_standard_layout()
+        if layout.startswith("rot"):
+            return "rotated_square"
+        if layout.startswith("squ"):
+            return "square"
+        return "triangular"
 
-    def _update_overall_u(self, h_tube: float, h_shell: float) -> float:
-        return self.overall_u(
-            h_tube=max(h_tube, 1e-9),
-            h_shell=max(h_shell, 1e-9),
-            fouling_factor=float(self.specs.get("fouling_factor", 0.0)),
-        )
+    def _bell_ideal_j(self, re: float, pitch_ratio: float) -> float:
+        """Taborek's ideal tube bank Colburn factor; see `_BELL_IDEAL_J`."""
+        (a3, a4), rows = _BELL_IDEAL_J[self._bell_layout()]
+        re = max(re, 1e-9)
+        a1, a2 = next((a1, a2) for lower, a1, a2 in rows if re >= lower)
+        a = a3 / (1.0 + 0.14 * re ** a4)
+        return a1 * (1.33 / pitch_ratio) ** a * re ** a2
+
+    def _bell_delaware_shell(self, shell: Dict[str, float], geometry: Dict[str, float],
+                             phi_s: float = 1.0) -> Tuple[float, Dict[str, Any]]:
+        """
+        Bell-Delaware shell-side coefficient h_s = h_ideal Jc Jl Jb Jr Js.
+
+        The procedure and geometry are those of Perry's Chemical Engineers'
+        Handbook, 8th ed., Sec. 11 (Eqs. 11-8 to 11-22); the correction factors
+        are Taborek's closed forms of Perry's Figs. 11-10 to 11-14 (Heat
+        Exchanger Design Handbook, 1983; Goncalves et al., AIChE J. 2019,
+        Eqs. 5-29 and 47-54):
+
+            Jc = 0.55 + 0.72 Fc
+            Jl = 0.44 (1 - rs) + [1 - 0.44 (1 - rs)] exp(-2.2 rlm)
+            Jb = exp[-Cbh Fsbp (1 - (2 rss)^(1/3))]   (1 for rss >= 1/2)
+            Jr = (10/Nc)^0.18 for Re <= 20, linear to 1 at Re = 100
+            Js = 1 (equal baffle spacing)
+
+        The ideal-bank coefficient is h_ideal = j cp (m/Sm) Pr^(-2/3) phi_s,
+        with Taborek's j (`_bell_ideal_j`) at Re = do m / (mu Sm).
+
+        Construction not given in the specs takes the TEMA defaults above:
+        ``baffle_cut`` (fraction of Ds, default 0.25), ``shell_baffle_clearance``
+        and ``tube_baffle_clearance`` (diametral, m) and
+        ``sealing_strip_pairs`` (default 0). The bundle-to-shell clearance is
+        the one of the geometry (shell diameter less the bundle diameter).
+        """
+        ds = self._safe_float(geometry["shell_diameter"], "shell_diameter")
+        do = self._safe_float(geometry["tube_od"], "tube_od")
+        pitch = self._safe_float(geometry.get("tube_pitch", 1.25 * do), "tube_pitch")
+        lbc = self._safe_float(geometry.get("baffle_spacing", max(0.4 * ds, 1e-6)), "baffle_spacing")
+        length = self._safe_float(geometry["tube_length"], "tube_length")
+        n_tubes = self._safe_float(geometry["tube_count"], "tube_count")
+        dotl = min(self._safe_float(geometry.get("bundle_diameter", ds), "bundle_diameter"), ds)
+
+        bc = float(self.specs.get("baffle_cut", _BELL_DEFAULT_BAFFLE_CUT))
+        if not 0.15 <= bc <= 0.45:
+            self._warn_with_category(
+                "ASSUMPTION_WARNING",
+                f"Baffle cut {bc:.2f} is outside 0.15-0.45, the range the "
+                f"Bell-Delaware Jc fit covers",
+            )
+        lsb = (self._to_float(self.specs["shell_baffle_clearance"], "m")
+               if self.specs.get("shell_baffle_clearance") is not None else 3.1e-3 + 0.004 * ds)
+        ltb = (self._to_float(self.specs["tube_baffle_clearance"], "m")
+               if self.specs.get("tube_baffle_clearance") is not None else _BELL_TUBE_BAFFLE_CLEARANCE_M)
+        n_ss = int(self.specs.get("sealing_strip_pairs", 0))
+
+        layout = self._bell_layout()
+        # Row pitch in the flow direction, and the pitch across it.
+        lpp = {"triangular": 0.866, "rotated_square": 0.707, "square": 1.0}[layout] * pitch
+        pitch_eff = 0.707 * pitch if layout == "rotated_square" else pitch
+
+        lbb = ds - dotl
+        dctl = dotl - do
+        theta_ds = 2.0 * math.acos(1.0 - 2.0 * bc)
+        theta_ctl = 2.0 * math.acos(max(-1.0, min(1.0, ds * (1.0 - 2.0 * bc) / max(dctl, 1e-9))))
+        fw = (theta_ctl - math.sin(theta_ctl)) / (2.0 * math.pi)
+        fc = 1.0 - 2.0 * fw
+
+        sm = lbc * (lbb + dctl / pitch_eff * (pitch - do))
+        ssb = math.pi * ds * (lsb / 2.0) * (1.0 - theta_ds / (2.0 * math.pi))
+        stb = math.pi / 4.0 * ((do + ltb) ** 2 - do ** 2) * n_tubes * (1.0 - fw)
+        sb = lbc * lbb
+        f_sbp = sb / sm
+
+        n_tcc = ds * (1.0 - 2.0 * bc) / lpp
+        n_tcw = max(0.8 / lpp * (ds * bc - (ds - dctl) / 2.0), 0.0)
+        n_baffles = max(int(math.floor(length / max(lbc, 1e-9) + 1e-9)) - 1, 1)
+        n_c = (n_tcc + n_tcw) * (n_baffles + 1)
+
+        m_dot = shell["m_dot"]
+        re = do * m_dot / (shell["viscosity"] * sm)
+        pr = shell["cp"] * shell["viscosity"] / max(shell["k"], 1e-12)
+        j = self._bell_ideal_j(re, pitch / do)
+        h_ideal = j * shell["cp"] * (m_dot / sm) * pr ** (-2.0 / 3.0) * phi_s
+
+        laminar = re <= 100.0
+        jc = 0.55 + 0.72 * fc
+        rs = ssb / (ssb + stb)
+        rlm = (ssb + stb) / sm
+        jl = 0.44 * (1.0 - rs) + (1.0 - 0.44 * (1.0 - rs)) * math.exp(-2.2 * rlm)
+        rss = n_ss / max(n_tcc, 1e-9)
+        if rss >= 0.5:
+            jb = 1.0
+        else:
+            jb = math.exp(-(1.35 if laminar else 1.25) * f_sbp * (1.0 - (2.0 * rss) ** (1.0 / 3.0)))
+        jr1 = (10.0 / max(n_c, 1e-9)) ** 0.18
+        if re <= 20.0:
+            jr = jr1
+        elif re <= 100.0:
+            jr = jr1 + (20.0 - re) / 80.0 * (jr1 - 1.0)
+        else:
+            jr = 1.0
+        js = 1.0
+
+        factors = {"Jc": jc, "Jl": jl, "Jb": jb, "Jr": jr, "Js": js}
+        h_shell = h_ideal * jc * jl * jb * jr * js
+        report = {
+            "h_shell_ideal": h_ideal,
+            "j_ideal": j,
+            "re_shell": re,
+            "factors": factors,
+            "geometry": {
+                "layout": layout, "baffle_cut": bc, "Fc": fc, "Fw": fw,
+                "Sm_m2": sm, "Ssb_m2": ssb, "Stb_m2": stb, "Sb_m2": sb, "Fsbp": f_sbp,
+                "Ntcc": n_tcc, "Ntcw": n_tcw, "baffles": n_baffles,
+                "bundle_shell_clearance_m": lbb, "shell_baffle_clearance_m": lsb,
+                "tube_baffle_clearance_m": ltb, "sealing_strip_pairs": n_ss,
+            },
+        }
+        return h_shell, report
 
     def _design_bell_delaware(self) -> Dict[str, Any]:
-    
-        # ======================================================
-        # START FROM KERN DESIGN
-        # ======================================================
-    
-        kern_results = self._design_kern()
-    
-        data = dict(kern_results)
-    
-        geometry = {
-            "tube_od": data["tube_od"],
-            "tube_id": data["tube_id"],
-            "tube_count": data["tube_count"],
-            "tube_length": data["tube_length"],
-            "shell_diameter": data["shell_diameter"],
-            "baffle_spacing": data["baffle_spacing"],
-        }
-    
-        # ======================================================
-        # IDEAL SHELL HTC
-        # ======================================================
-    
-        h_ideal = float(data["h_shell"])
-    
-        shell_id = self._safe_float(geometry["shell_diameter"], "shell_diameter")
-    
-        tube_od = self._safe_float(geometry["tube_od"], "tube_od")
-    
-        tube_pitch = tube_od * 1.25
-    
-        baffle_spacing = self._safe_float(geometry["baffle_spacing"], "baffle_spacing")
-    
-        # ======================================================
-        # APPROXIMATE BELL GEOMETRY
-        # ======================================================
-    
-        as_cross = (
-            shell_id
-            * baffle_spacing
-            * (
-                (tube_pitch - tube_od)
-                / max(tube_pitch, 1e-9)
-            )
-        )
-    
-        ab = (
-            0.05
-            * shell_id
-            * baffle_spacing
-        )
-    
-        atb = (
-            0.00025
-            * math.pi
-            * tube_od
-            * geometry["tube_count"]
-        )
-        
-        asb = (
-            0.0015
-            * shell_id
-        )
-    
-        rw = 0.20
-    
-        ncv = max(
-            shell_id / tube_pitch,
-            1.0,
-        )
-    
-        # ======================================================
-        # ESTIMATE SHELL RE
-        # ======================================================
-    
-        re_shell = data["re_shell"]
-    
-        # ======================================================
-        # BELL FACTORS
-        # ======================================================
-    
-        fn = self._calc_tube_row_factor(
-            re_shell=re_shell,
-            ncv=ncv,
-        )
-    
-        fw = self._calc_window_factor(
-            rw=rw,
-        )
-    
-        fb = self._calc_bypass_factor(
-            re_shell=re_shell,
-            ab=ab,
-            as_cross=as_cross,
-            ns=0,
-            ncv=ncv,
-        )
-    
-        fl = self._calc_leakage_factor(
-            atb=atb,
-            asb=asb,
-            as_cross=as_cross,
-        )
-    
-        fs = self._calc_spacing_factor(
-            baffle_spacing=baffle_spacing,
-            shell_id=shell_id,
-        )
-    
-        # ======================================================
-        # CORRECTED SHELL HTC
-        # ======================================================
-    
-        h_shell_corrected = (
-            h_ideal
-            * fn
-            * fw
-            * fb
-            * fl
-            * fs
-        )
-    
-        # ======================================================
-        # RECALCULATE OVERALL U
-        # ======================================================
-    
-        u_results = (
-            self._calculate_overall_U(
-                h_t=data["h_tube"],
-                h_s=h_shell_corrected,
-                geometry={
-                    "tube_od": tube_od,
-                    "tube_id": geometry["tube_id"],
-                },
-            )
-        )
-    
-        # ======================================================
-        # UPDATE RESULTS
-        # ======================================================
-    
-        data["method"] = "bell_delaware"
-    
-        data["h_shell_ideal"] = h_ideal
-    
-        data["h_shell"] = h_shell_corrected
-    
-        # Unit-wrapped like the Kern result this replaces; these were bare floats.
-        data["U_calculated"] = HeatTransferCoefficient(
-            u_results["U_dirty"],
-            "W/m2K",
-        )
-    
-        data["U_clean"] = HeatTransferCoefficient(
-            u_results["U_clean"],
-            "W/m2K",
-        )
-    
-        data["bell_factors"] = {
-            "Fn": fn,
-            "Fw": fw,
-            "Fb": fb,
-            "Fl": fl,
-            "Fs": fs,
-        }
-    
-        # The shell pressure drop is the Kern one: no Bell-Delaware pressure
-        # drop correlation is implemented, and the undocumented 15% uplift that
-        # stood in for one is gone.
-    
-        return data
+        """
+        Bell-Delaware design: the Kern sizing loop with the Bell-Delaware shell
+        coefficient on every pass (`_regenerate_geometry_state`), so the area is
+        sized for the Bell U. It used to size for the Kern U and then multiply the
+        finished shell coefficient by five unsourced factors, which left the area
+        short of what its own reported U needed.
+
+        The shell pressure drop is still Kern's: the Bell-Delaware pressure drop
+        (Perry Eqs. 11-23 to 11-25) is not implemented.
+        """
+        return self._design_kern()
+
     def _infer_service_type(self, hot: Dict[str, float], cold: Dict[str, float]) -> str:
         explicit = str(self.specs.get("service") or "").lower()
         if explicit:
@@ -3247,6 +3138,10 @@ class ShellAndTubeHX(HeatExchanger):
 
         dimless = self._calculate_dimensionless(geometry, tube, shell, v_tube, v_shell)
         h_t, h_s = self._calculate_htc(dimless, geometry, tube, shell)
+        if self.method == "bell_delaware":
+            # rate() used to report bell_delaware while computing Kern.
+            geometry["bundle_diameter"] = self._calculate_bundle_diameter(tube_count, tube_od, tube_passes)
+            h_s, dimless["bell"] = self._bell_delaware_shell(shell, geometry, dimless["phi_s"])
         u_calc = self._calculate_overall_U(h_t=h_t, h_s=h_s, geometry=geometry)["U_dirty"]
 
         tube_dp, shell_dp = self._calculate_pressure_drop(geometry=geometry, tube=tube, shell=shell, shell_velocity=v_shell, tube_velocity=v_tube, shell_passes=shell_passes, tube_passes=tube_passes, shell_diameter=shell_diameter, tube_length=tube_length, tube_id=tube_id)
@@ -3272,7 +3167,7 @@ class ShellAndTubeHX(HeatExchanger):
         else:
             assessment = "OK"
 
-        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "ft": ft, "cltd": cltd, "tube_passes": tube_passes, "shell_passes": shell_passes, "viscosity_correction": self._viscosity_correction_report(tube, shell), "property_basis": self._property_basis(hot, cold), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "tube_dp_limit": tube_dp_limit, "shell_dp_limit": shell_dp_limit, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
+        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "ft": ft, "cltd": cltd, "tube_passes": tube_passes, "shell_passes": shell_passes, "viscosity_correction": self._viscosity_correction_report(tube, shell), "property_basis": self._property_basis(hot, cold), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "dimless": dimless, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "tube_dp_limit": tube_dp_limit, "shell_dp_limit": shell_dp_limit, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
 
         return self._finalize_results(payload)
     def design(self) -> Dict[str, Any]:
