@@ -3,7 +3,7 @@
 from typing import Optional, Dict, Any
 from .base import PipelineBase
 from ..units import *
-from .standards import get_roughness, get_internal_diameter
+from .standards import PIPE_SCHEDULES, get_roughness, get_internal_diameter, normalize_schedule
 
 
 class Pipe(PipelineBase):
@@ -55,7 +55,7 @@ class Pipe(PipelineBase):
 
         # Core attributes
         self.nominal_diameter: Optional[Diameter] = nominal_diameter
-        self.schedule: str = schedule
+        self.schedule: str = normalize_schedule(schedule)
         self.material: str = material
         self.length: Length = length or Length(1.0, "m")
 
@@ -67,6 +67,15 @@ class Pipe(PipelineBase):
             self.internal_diameter = internal_diameter
             #self.nominal_diameter = internal_diameter + ( 2 * get_thickness(internal_diameter, self.schedule))
         elif nominal_diameter:
+            # A schedule the table does not have for this size used to give no
+            # internal diameter, and the engine then used the nominal size as
+            # the bore ("40" or "Sch40" for a 4 in pipe: 101.6 mm, not 102.26).
+            available = PIPE_SCHEDULES.get(self.nominal_diameter)
+            if available is not None and self.schedule not in available:
+                raise ValueError(
+                    f"Schedule {schedule!r} is not tabulated for "
+                    f"{self.nominal_diameter}; available: {', '.join(available)}"
+                )
             self.internal_diameter = get_internal_diameter(
                 self.nominal_diameter, self.schedule
             )

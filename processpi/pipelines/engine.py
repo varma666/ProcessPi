@@ -1592,10 +1592,12 @@ class PipelineEngine:
 
         for nominal in list_available_pipe_diameters():
             try:
-                d_internal = nominal  # already a Diameter object
+                # The STD bore of the size; the nominal size itself used to be
+                # returned as the internal diameter, labelled "4 in mm".
+                d_internal = get_internal_diameter(nominal, "STD") or nominal
                 if not isinstance(d_internal, Diameter):
                     d_internal = Diameter(float(d_internal), "m")
-                candidates.append((f"{nominal} mm", d_internal))
+                candidates.append((str(nominal), d_internal))
             except Exception:
                 continue
 
@@ -1680,54 +1682,55 @@ class PipelineEngine:
 
         available_dp_pa = _pressure_to_Pa(available_dp)
         
+        available_dp_met = None
         if available_dp_pa is not None:
             all_standard_diameters = list_available_pipe_diameters()
-            best_result = None
-        
-            # Step 1: Solve for Diameter using Major Losses Only
+            if not all_standard_diameters:
+                raise RuntimeError("No suitable diameter found among standard sizes.")
+            fittings = self.data.get("fittings", []) or []
+
+            # The smallest standard size whose whole pressure drop (pipe friction,
+            # fittings and elevation) fits in the available drop. Sizing used to
+            # test the pipe friction alone and then add the fittings without
+            # checking again, so the size it called optimal could exceed the
+            # available drop.
+            D_final = None
             for D_test in all_standard_diameters:
-                pipe_sizing_temp = Pipe(
+                trial_pipe = Pipe(
                     name=pipe.name,
                     length=pipe.length,
                     material=pipe.material,
                     nominal_diameter=D_test,
-                    fittings=[] # Sizing with no fittings
                 )
-                
-                calc = self._pipe_calculation(pipe_sizing_temp, flow_rate)
-                pd_major_pa = _pressure_to_Pa(calc.get("major_dp"))
-
-                if pd_major_pa is not None and pd_major_pa <= available_dp_pa:
-                    best_result = {
-                        "diameter": D_test,
-                        "major_dp_pa": pd_major_pa,
-                    }
+                # Pipe keeps a `fittings` keyword in its params; the loss
+                # calculation reads the attribute.
+                trial_pipe.fittings = fittings
+                trial_calc = self._pipe_calculation(trial_pipe, flow_rate)
+                trial_dp_pa = _pressure_to_Pa(trial_calc.get("pressure_drop"))
+                if trial_dp_pa is not None and trial_dp_pa <= available_dp_pa:
+                    D_final, final_pipe_object, final_calc = D_test, trial_pipe, trial_calc
                     break
-            
-            # If no feasible solution, fall back to largest pipe size
-            if best_result is None and all_standard_diameters:
-                D_test = all_standard_diameters[-1]
-                best_result = {"diameter": D_test}
-            
-            if best_result is None:
-                raise RuntimeError("No suitable diameter found among standard sizes.")
+            available_dp_met = D_final is not None
 
-            D_final = best_result["diameter"]
-            
-            # Step 2: Finalize Calculations with All Losses
-            final_pipe_object = Pipe(
-                name=pipe.name,
-                length=pipe.length,
-                material=pipe.material,
-                nominal_diameter=D_final,
-                fittings=self.data.get("fittings", []) or [] # Ensure fittings are included
-            )
-            final_calc = self._pipe_calculation(final_pipe_object, flow_rate)
+            if D_final is None:
+                # Nothing fits: the largest size, reported as not meeting the drop.
+                D_final = all_standard_diameters[-1]
+                final_pipe_object = Pipe(
+                    name=pipe.name,
+                    length=pipe.length,
+                    material=pipe.material,
+                    nominal_diameter=D_final,
+                )
+                final_pipe_object.fittings = fittings
+                final_calc = self._pipe_calculation(final_pipe_object, flow_rate)
             total_dp_pa = _pressure_to_Pa(final_calc.get("pressure_drop"))
             v_final = _to_value(final_calc.get("velocity"))
 
-            print(f"✅ Found optimal diameter for available pressure drop.")
-            print(f"   Selected Diameter: {D_final.to('in')} ({D_final.value:.3f} m)")
+            if available_dp_met:
+                print(f"✅ Found optimal diameter for available pressure drop.")
+            else:
+                print(f"⚠️ No standard size meets the available pressure drop; using the largest.")
+            print(f"   Selected Diameter: {D_final.to('in')} ({final_pipe_object.internal_diameter.to('m').value:.4f} m internal)")
             print(f"   Calculated Pressure Drop: {total_dp_pa:.2f} Pa (allowed: {available_dp_pa:.2f} Pa)")
 
         else:
@@ -1784,6 +1787,9 @@ class PipelineEngine:
                 f"range ({v_min:.2f}-{v_max:.2f} m/s) for {getattr(fluid, 'name', 'fluid')}."
             )
         self.selected_diameter = D_final
+        # The calculation used the internal diameter of the selected size; the
+        # nominal size was reported in its place.
+        internal_final = final_pipe_object.internal_diameter or D_final
         results_out = {
             "network_name": pipe.name,
             "mode": "single_pipe",
@@ -1795,14 +1801,17 @@ class PipelineEngine:
                 "velocity": v_final,
                 "reynolds": final_calc.get("reynolds"),
                 "friction_factor": final_calc.get("friction_factor"),
-                "calculated_diameter_m": D_final.to("m").value,
+                "calculated_diameter_m": internal_final.to("m").value,
+                "nominal_diameter": D_final,
+                "available_dp_met": available_dp_met,
             },
             "components": [
                 {
                     "type": "pipe",
                     "name": pipe.name,
                     "length": pipe.length,
-                    "diameter": D_final,
+                    "diameter": internal_final,
+                    "nominal_diameter": D_final,
                     "velocity": v_final,
                     "reynolds": final_calc.get("reynolds"),
                     "friction_factor": final_calc.get("friction_factor"),
