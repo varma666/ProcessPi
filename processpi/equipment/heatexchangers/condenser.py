@@ -71,6 +71,9 @@ class CondenserHX(ShellAndTubeHX):
         h_cond = h_base * orientation_factor * side_factor
         return max(1200.0, min(h_cond, 20000.0))
 
+    def _shell_side_is_single_phase(self) -> bool:
+        return self.condensing_side != "shell"
+
     def _calculate_htc(self, dimless: Dict[str, float], geometry: Dict[str, float], tube: Dict[str, float], shell: Dict[str, float], **kwargs: Any):
         h_tube, h_shell = super()._calculate_htc(dimless, geometry, tube, shell)
         hot, _ = self._hot_cold_props(tube, shell)

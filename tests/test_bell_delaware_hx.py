@@ -81,7 +81,7 @@ def test_bell_delaware_hx_designs_with_the_bell_method():
     out = _class_design(BellDelawareHX)
 
     assert out["method"] == "bell_delaware"
-    assert set(out["bell_factors"]) == {"Fn", "Fw", "Fb", "Fl", "Fs"}
+    assert set(out["bell_factors"]) == {"Jc", "Jl", "Jb", "Jr", "Js"}
     assert float(getattr(out["Q"], "value", out["Q"])) == pytest.approx(M_DOT * CP * 30.0)
 
 

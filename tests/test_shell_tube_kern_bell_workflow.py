@@ -72,9 +72,9 @@ def test_bell_delaware_applies_its_correction_factors():
     out = _design("bell_delaware")
 
     factors = out["bell_factors"]
-    assert set(factors) == {"Fn", "Fw", "Fb", "Fl", "Fs"}
+    assert set(factors) == {"Jc", "Jl", "Jb", "Jr", "Js"}
     assert all(f > 0 for f in factors.values())
-    # The shell coefficient is the ideal one times the five factors.
+    # The shell coefficient is the ideal-bank one times the five factors.
     assert _number(out["h_shell"]) == pytest.approx(
         _number(out["h_shell_ideal"]) * math.prod(factors.values())
     )
