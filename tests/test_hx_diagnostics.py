@@ -148,7 +148,11 @@ def test_feasibility_flags_reflect_the_design_that_was_produced():
                              temperature=Temperature(25, "C"),
                              mass_flow=MassFlowRate(18, "kg/s"))
     engine = HeatExchangerEngine(method="kern")
-    engine.fit(hot_in=hot_in, hot_out=hot_out, cold_in=cold_in, mode="design")
+    # Water on both sides ties the side scoring; the tie now puts the larger
+    # flow (the cold water) in the tubes. This case was calibrated with the hot
+    # water in the tubes, where the tie used to go.
+    engine.fit(hot_in=hot_in, hot_out=hot_out, cold_in=cold_in, mode="design",
+               force_hot_in_tubes=True)
 
     data = _quiet(engine.run).data
     summary = data.get("feasibility_summary", {})

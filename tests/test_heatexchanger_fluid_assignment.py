@@ -62,8 +62,16 @@ def _benzene_cooler(cold_out_t=None):
 
 
 def _water_heats_benzene():
-    """Hot water heating benzene: the scoring puts the water (hot) in the tubes."""
+    """Hot water heating benzene. Declared corrosive (`_HOT_WATER_CORROSIVE`),
+    the scoring puts the water (hot) in the tubes."""
     return _streams(Water, Benzene, 90, 60, 15, 40000.0, 60000.0)
+
+
+# Treated water and benzene tie on the side scoring, and a tie puts the larger
+# flow (the benzene here) in the tubes. These tests need the scoring to pick the
+# hot water, which it did before only because plain water was looked up as
+# seawater; a user-declared corrosion level does it honestly.
+_HOT_WATER_CORROSIVE = dict(hot_corrosion_level="high")
 
 
 _DESIGN_SPECS = dict(U=HeatTransferCoefficient(575, "W/m2K"),
@@ -169,7 +177,7 @@ def _assert_matches(data, reference, since_master=None):
 
 
 def test_scoring_hot_in_tubes_gives_the_master_numbers():
-    data = _run(_water_heats_benzene())
+    data = _run(_water_heats_benzene(), **_HOT_WATER_CORROSIVE)
     assert data["assignment"]["tube_side"] == "hot"
     assert data["tube_side_fluid"] == "Water"
     assert data["shell_side_fluid"] == "Benzene"
@@ -179,7 +187,7 @@ def test_scoring_hot_in_tubes_gives_the_master_numbers():
 
 
 def test_scoring_hot_in_tubes_gives_the_master_numbers_on_the_bell_path():
-    data = _run(_water_heats_benzene(), method="bell_delaware")
+    data = _run(_water_heats_benzene(), method="bell_delaware", **_HOT_WATER_CORROSIVE)
     assert data["assignment"]["tube_side"] == "hot"
     # Bell-Delaware design of the same case. 3e8a241 gave U 460.1777828989243,
     # h_shell 673.8324876931076 and shell_dp 23266.861493659602; these moved with
@@ -358,7 +366,7 @@ def test_velocity_limits_are_those_of_the_fluid_on_each_side():
 
 
 def test_force_cold_in_tubes_overrides_a_hot_scoring():
-    data = _run(_water_heats_benzene(), force_cold_in_tubes=True)
+    data = _run(_water_heats_benzene(), force_cold_in_tubes=True, **_HOT_WATER_CORROSIVE)
     assert data["assignment"]["tube_side"] == "cold"
     assert data["tube_side_fluid"] == "Benzene"
     assert data["assignment"]["recommended_tube_side_fluid"] == "Water"
@@ -397,24 +405,42 @@ def _benzene_condenser_streams():
     return dict(hot_in=hot_in, hot_out=hot_out, cold_in=cold_in, cold_out=cold_out)
 
 
-def test_condenser_keeps_the_hot_stream_in_the_tubes_and_says_so():
-    streams = _benzene_condenser_streams()
+def _condenser(**specs):
     engine = HeatExchangerEngine(method="kern").fit(
         hx_type="condenser", latent_heat=394000, orientation="horizontal",
-        mode="design", **streams,
+        mode="design", **_benzene_condenser_streams(), **specs,
     )
-    data = _quiet(engine.run).data
-    assert data["assignment"]["tube_side"] == "hot"
-    assert data["tube_side_fluid"] == "Benzene"
-    assert data["assignment"]["recommended_tube_side_fluid"] == "Water"
+    return _quiet(engine.run).data
+
+
+def test_condenser_condenses_on_the_side_it_is_told():
+    """The condensing (hot) stream used to be held in the tubes whatever
+    condensing_side said, so with the default shell-side condensation the
+    condensing coefficient replaced the water's shell coefficient."""
+    shell = _condenser()
+    assert shell["condensing_side"] == "shell"
+    assert shell["assignment"]["tube_side"] == "cold"
+    assert shell["tube_side_fluid"] == "Water"
+    # The scoring also wants the water in the tubes (benzene vapour is light),
+    # so there is nothing to warn about.
+    assert not any("ASSIGNMENT_WARNING" in w for w in shell["warnings"])
+
+    tube = _condenser(condensing_side="tube")
+    assert tube["assignment"]["tube_side"] == "hot"
+    assert tube["tube_side_fluid"] == "Benzene"
     assert any(
         "ASSIGNMENT_WARNING" in w and "CondenserHX models the hot stream" in w
-        for w in data["warnings"]
+        for w in tube["warnings"]
     )
 
 
-def test_condenser_refuses_a_forced_cold_tube_side():
+def test_condenser_refuses_a_forced_side_against_its_condensing_side():
     streams = _benzene_condenser_streams()
-    hx = CondenserHX(latent_heat=394000, force_cold_in_tubes=True, **streams)
-    with pytest.raises(ValueError, match="CondenserHX models the hot stream in the tubes"):
+    hx = CondenserHX(latent_heat=394000, force_hot_in_tubes=True, **streams)
+    with pytest.raises(ValueError, match="CondenserHX models the cold stream in the tubes"):
         _quiet(hx.design)
+
+
+def test_condenser_rejects_an_unknown_condensing_side():
+    with pytest.raises(ValueError, match="condensing_side"):
+        CondenserHX(latent_heat=394000, condensing_side="both", **_benzene_condenser_streams())
