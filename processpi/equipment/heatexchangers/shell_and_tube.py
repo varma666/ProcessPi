@@ -536,6 +536,10 @@ class ShellAndTubeHX(HeatExchanger):
         if service in {"evaporator"}:
             return (0.8, 2.0) if side == "tube" else (0.3, 1.0)
 
+        return self._phase_velocity_limits(side, component)
+
+    def _phase_velocity_limits(self, side: str, component) -> tuple[float, float]:
+        """Velocity band from the stream's phase, family and pressure."""
         if hasattr(component, "hx_data"):
             data = component.hx_data()
         elif isinstance(component, dict):
@@ -603,13 +607,30 @@ class ShellAndTubeHX(HeatExchanger):
         self._debug(f"Recalculated required tubes={required_tubes} for base area={base_required_area:.4f}")
         return required_tubes
 
+    @staticmethod
+    def _lookup_by_name(table: Dict[str, Any], fluid_name: str) -> Any:
+        """The entry whose key is the fluid name, or the longest key contained in
+        it ("sea water" -> seawater). The old test also matched a name contained
+        in a key, so plain "water" scored as seawater."""
+        key = (fluid_name or "").lower().replace(" ", "_").replace("-", "_")
+        if key in table:
+            return table[key]
+        compact = key.replace("_", "")
+        hits = [k for k in table if k.replace("_", "") in compact]
+        return table[max(hits, key=len)] if hits else None
+
+    def _service_key(self, stream, field: str) -> str:
+        """The component's own ``hx_data()`` key for ``field`` (fouling_key,
+        corrosion_key), else its name."""
+        component = getattr(stream, "component", None)
+        if component is not None and hasattr(component, "hx_data"):
+            key = component.hx_data().get(field)
+            if key:
+                return str(key)
+        return str(getattr(component, "name", ""))
+
     def _get_fouling_factor(self, fluid_name: str, velocity: float | None = None, temperature_k: float | None = None) -> float:
-        key = (fluid_name or "").lower()
-        best = None
-        for k,v in self._fouling_db.items():
-            if k in key or key in k:
-                best = v
-                break
+        best = self._lookup_by_name(self._fouling_db, fluid_name)
         if best is None:
             best = {"base": float(self.specs.get("fouling_factor", 0.0002))}
         ff = best["base"]
@@ -620,11 +641,8 @@ class ShellAndTubeHX(HeatExchanger):
         return ff
 
     def _get_corrosion_severity(self, fluid_name: str) -> str:
-        key = (fluid_name or "").lower()
-        for k,v in self._corrosion_db.items():
-            if k in key or key in k:
-                return v
-        return "medium"
+        found = self._lookup_by_name(self._corrosion_db, fluid_name)
+        return found if found is not None else "medium"
 
     def _calculate_tube_side_score(self, props: Dict[str, float], meta: Dict[str, Any]) -> float:
         score = 0.0
@@ -643,30 +661,50 @@ class ShellAndTubeHX(HeatExchanger):
         return score
 
     def _assign_fluids_to_sides(self, hot: Dict[str, float], cold: Dict[str, float]) -> Dict[str, Any]:
+        # The service keys the component declares (Water: treated_water), which
+        # the U calculation also uses; a component without them is looked up
+        # by name.
         hot_name = getattr(self.hot_in.component, "name", "hot")
         cold_name = getattr(self.cold_in.component, "name", "cold")
+        hot_fouling_key = self._service_key(self.hot_in, "fouling_key")
+        cold_fouling_key = self._service_key(self.cold_in, "fouling_key")
+        hot_corrosion_key = self._service_key(self.hot_in, "corrosion_key")
+        cold_corrosion_key = self._service_key(self.cold_in, "corrosion_key")
         hot_meta = {
             "hazardous": bool(self.specs.get("hot_hazardous", False)),
-            "fouling": float(self.specs.get("hot_fouling_factor", self._get_fouling_factor(hot_name, temperature_k=hot["t_k"]))),
-            "corrosion": str(self.specs.get("hot_corrosion_level", self._get_corrosion_severity(hot_name))),
+            "fouling": float(self.specs.get("hot_fouling_factor", self._get_fouling_factor(hot_fouling_key, temperature_k=hot["t_k"]))),
+            "corrosion": str(self.specs.get("hot_corrosion_level", self._get_corrosion_severity(hot_corrosion_key))),
             "phase": str(self.specs.get("hot_phase", hot.get("phase", "liquid"))),
         }
         cold_meta = {
             "hazardous": bool(self.specs.get("cold_hazardous", False)),
-            "fouling": float(self.specs.get("cold_fouling_factor", self._get_fouling_factor(cold_name, temperature_k=cold["t_k"]))),
-            "corrosion": str(self.specs.get("cold_corrosion_level", self._get_corrosion_severity(cold_name))),
+            "fouling": float(self.specs.get("cold_fouling_factor", self._get_fouling_factor(cold_fouling_key, temperature_k=cold["t_k"]))),
+            "corrosion": str(self.specs.get("cold_corrosion_level", self._get_corrosion_severity(cold_corrosion_key))),
             "phase": str(self.specs.get("cold_phase", cold.get("phase", "liquid"))),
         }
         hot_tube = self._calculate_tube_side_score(hot, hot_meta) - self._calculate_shell_side_score(hot, hot_meta)
         cold_tube = self._calculate_tube_side_score(cold, cold_meta) - self._calculate_shell_side_score(cold, cold_meta)
         self._debug(f"Hot fluid scoring: tube={self._calculate_tube_side_score(hot, hot_meta):.2f}, shell={self._calculate_shell_side_score(hot, hot_meta):.2f}")
         self._debug(f"Cold fluid scoring: tube={self._calculate_tube_side_score(cold, cold_meta):.2f}, shell={self._calculate_shell_side_score(cold, cold_meta):.2f}")
-        if hot_tube >= cold_tube:
+        if hot_tube > cold_tube:
             scored_side = "hot"
-            scored_reason = f"Hot fluid tube-side score {hot_tube:.2f} >= cold score {cold_tube:.2f}"
-        else:
+            scored_reason = f"Hot fluid tube-side score {hot_tube:.2f} > cold score {cold_tube:.2f}"
+        elif cold_tube > hot_tube:
             scored_side = "cold"
             scored_reason = f"Cold fluid tube-side score {cold_tube:.2f} > hot score {hot_tube:.2f}"
+        else:
+            # A tie used to go to the hot stream. Sinnott (Coulson and
+            # Richardson Vol. 6, Sec. 12.4, "Fluid allocation"): allocating the
+            # fluid with the lowest flow rate to the shell side will normally
+            # give the most economical design, so the larger volumetric flow
+            # goes in the tubes.
+            hot_q = hot["m_dot"] / max(hot["density"], 1e-12)
+            cold_q = cold["m_dot"] / max(cold["density"], 1e-12)
+            scored_side = "hot" if hot_q >= cold_q else "cold"
+            scored_reason = (
+                f"Tube-side scores tie at {hot_tube:.2f}; the larger volumetric flow "
+                f"({max(hot_q, cold_q) * 3600.0:.3g} m3/h, {scored_side}) goes in the tubes"
+            )
 
         force_hot = bool(self.specs.get("force_hot_in_tubes"))
         force_cold = bool(self.specs.get("force_cold_in_tubes"))
@@ -1312,10 +1350,14 @@ class ShellAndTubeHX(HeatExchanger):
         # PRESSURE DROP
         # ==========================================================
     
-        if tube_dp > self._dp_limit(tube):
+        # The same limits as the final verdict: the user's tube_dp/shell_dp,
+        # else the built-in default. This used the default even when the
+        # user had given a limit.
+        tube_limit, shell_limit = self._design_dp_limits(tube, shell)
+        if tube_dp > tube_limit:
             hard.append("tube_dp")
-    
-        if shell_dp > self._dp_limit(shell):
+
+        if shell_dp > shell_limit:
             hard.append("shell_dp")
     
         # ==========================================================
@@ -1977,6 +2019,18 @@ class ShellAndTubeHX(HeatExchanger):
             f_shell * g_shell ** 2 * shell_diameter * (n_baffles + 1)
             / (2.0 * rho * de_shell * phi_s)
         )
+
+    def _design_dp_limits(self, tube: Dict[str, float], shell: Dict[str, float]) -> Tuple[float, float]:
+        """Allowed (tube, shell) pressure drops in Pa: the ``tube_dp`` and
+        ``shell_dp`` specs (Pressure, or a number in Pa), else `_dp_limit`."""
+        limits = []
+        for key, props in (("tube_dp", tube), ("shell_dp", shell)):
+            value = self.specs.get(key)
+            if value is None:
+                limits.append(self._dp_limit(props))
+            else:
+                limits.append(self._safe_float(value.to("Pa") if hasattr(value, "to") else value, f"{key}_limit"))
+        return limits[0], limits[1]
 
     def _dp_limit(self, props: Dict[str, float]) -> float:
         mu_cp = props["viscosity"] * 1000.0
@@ -2760,10 +2814,7 @@ class ShellAndTubeHX(HeatExchanger):
             )
         )
 
-        tube_limit_val = self.specs.get("tube_dp", self._dp_limit(tube))
-        shell_limit_val = self.specs.get("shell_dp", self._dp_limit(shell))
-        tube_limit = self._safe_float(tube_limit_val.to("Pa"), "tube_dp_limit") if hasattr(tube_limit_val, "to") else self._safe_float(tube_limit_val, "tube_dp_limit")
-        shell_limit = self._safe_float(shell_limit_val.to("Pa"), "shell_dp_limit") if hasattr(shell_limit_val, "to") else self._safe_float(shell_limit_val, "shell_dp_limit")
+        tube_limit, shell_limit = self._design_dp_limits(tube, shell)
 
         if tube_dp > tube_limit:
             warnings.append(f"Tube-side pressure drop {tube_dp:.1f} Pa exceeds limit {tube_limit:.1f} Pa")

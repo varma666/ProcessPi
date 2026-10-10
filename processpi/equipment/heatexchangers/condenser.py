@@ -10,15 +10,21 @@ from .shell_and_tube import ShellAndTubeHX
 class CondenserHX(ShellAndTubeHX):
     """Production-oriented shell-and-tube condenser with phase-change safeguards."""
 
-    # The condensing-side model has not been reworked to follow the fluid
-    # assignment, so the hot stream stays in the tubes as it always has been.
-    _FIXED_TUBE_SIDE = "hot"
-
     def __init__(self, *args: Any, method: str = "kern", **kwargs: Any):
         super().__init__(*args, method=method, **kwargs)
         self.service_type = "condenser"
         self.orientation = str(self.specs.get("orientation", "horizontal")).lower()
         self.condensing_side = str(self.specs.get("condensing_side", "shell")).lower()
+        if self.condensing_side not in {"shell", "tube"}:
+            raise ValueError(
+                f"condensing_side must be 'shell' or 'tube', got {self.condensing_side!r}"
+            )
+        # The condensing (hot) stream is on the side `condensing_side` names.
+        # It used to be held in the tubes whatever that said, so with the
+        # default shell-side condensation the condensing coefficient replaced
+        # the coolant's shell coefficient while the vapour was modelled as a
+        # single-phase tube flow.
+        self._FIXED_TUBE_SIDE = "hot" if self.condensing_side == "tube" else "cold"
         self.condensation_mode = str(self.specs.get("condensation_mode", "total")).lower()
 
     def _calculate_heat_duty(self, hot: Dict[str, float], cold: Dict[str, float], **kwargs: Any):
@@ -70,6 +76,13 @@ class CondenserHX(ShellAndTubeHX):
         side_factor = 0.9 if self.condensing_side == "tube" else 1.0
         h_cond = h_base * orientation_factor * side_factor
         return max(1200.0, min(h_cond, 20000.0))
+
+    def _get_velocity_limits(self, side: str, component) -> tuple[float, float]:
+        # The condensing side carries vapour: the liquid band of the condenser
+        # service would have the optimiser squeeze the vapour to 0.3-1 m/s.
+        if side == self.condensing_side:
+            return self._phase_velocity_limits(side, component)
+        return super()._get_velocity_limits(side, component)
 
     def _shell_side_is_single_phase(self) -> bool:
         return self.condensing_side != "shell"
