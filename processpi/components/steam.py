@@ -28,8 +28,10 @@ class Steam(Component):
         pressure: Pressure = None,
         phase: Literal["liquid", "vapor"] = "vapor",
     ):
-        super().__init__(temperature, pressure)
-        self.phase = phase
+        # The phase goes to Component, so phase() still works: an instance
+        # attribute named `phase` hid the phase() method ('str' object is not
+        # callable).
+        super().__init__(temperature, pressure, phase=phase)
         # Move critical properties to init to avoid module-level CP calls
         self._critical_temperature = Temperature(CP.PropsSI('Tcrit', 'Water'), "K")
         self._critical_pressure = Pressure(CP.PropsSI('Pcrit', 'Water'), "Pa")
@@ -45,7 +47,7 @@ class Steam(Component):
 
     def specific_heat(self) -> SpecificHeat:
         cp = CP.PropsSI(
-            'CP', 
+            'CPMASS', 
             'T', self.temperature.value, 
             'P', self.pressure.value, 
             'Water'
