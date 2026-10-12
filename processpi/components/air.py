@@ -53,3 +53,16 @@ class Air(Component):
     _thermal_conductivity_constants = [0.28472, -0.0017393, 0,0,0]
     _vapor_pressure_constants = [21.662, -692.39, -0.392, 0.0047574, 1] 
     _enthalpy_constants = [0.8474E-7, 0.3822,0,0,0]  # Placeholder for enthalpy constants
+
+    # `_specific_heat_constants` and `_thermal_conductivity_constants` above are
+    # the LIQUID air correlations (Perry's Chemical Engineers' Handbook, 8th ed.,
+    # Table 2-153, 75-115 K, and Table 2-315, 75-125 K). Above that range they
+    # give Cp = 162857 J/kgK and a negative k at 35 C. In the gas phase the
+    # base class uses these instead:
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-1500 K: Perry's 8th ed.,
+    # Table 2-156, p. 2-176 (C1 = 0.28958E5, C2 = 0.0939E5, C3 = 3.012E3,
+    # C4 = 0.0758E5, C5 = 1484). 1001.2 J/kgK at 300 K.
+    _ideal_gas_heat_capacity_constants = [0.28958E5, 0.0939E5, 3.012E3, 0.0758E5, 1484]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 70-2000 K: Perry's
+    # 8th ed., Table 2-314, p. 2-433. 0.0261 W/mK at 300 K.
+    _vapor_thermal_conductivity_constants = [0.00031417, 0.7786, -0.7116, 2121.7]
