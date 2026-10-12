@@ -166,6 +166,10 @@ class PipelineEngine:
           DeprecationWarning; it used to take `nominal_diameter` and
           `internal_diameter` as aliases, so a nominal 4 in was used as a
           101.6 mm bore instead of 102.26 mm.
+        - None of these, with a `pipe` that has a nominal or internal diameter:
+          that pipe's size is used. It used to be ignored and the pipe sized.
+          A fit() diameter is used over the pipe's, as before, with a
+          UserWarning when the two differ.
 
         A bare number for a diameter is read in millimetres
         (`assume_mm_for_numbers=False`: metres), a bare length in metres, as
@@ -268,10 +272,37 @@ class PipelineEngine:
 
         schedule = normalize_schedule(self.data.get("schedule") or "STD")
         nominal, internal = resolve_diameters(nominal, internal, schedule, "PipelineEngine")
+
+        # A `pipe` that has its own size is calculated on it; only fit()
+        # diameters used to be read, so such a pipe was sized all over again.
+        pipe = self.data.get("pipe")
+        pipe_bore = self._pipe_bore(pipe) if isinstance(pipe, Pipe) else None
+        if pipe_bore is not None:
+            if internal is None:
+                nominal, internal = pipe.nominal_diameter, pipe_bore
+                schedule = pipe.schedule
+            elif abs(internal.to_base() - pipe_bore.to_base()) > 1e-12:
+                # fit() diameters have always been the ones used (and written
+                # to the pipe by run()), so a Pipe reused with several fit()
+                # diameters keeps working.
+                _warn_at_caller(
+                    "The diameter given to fit() differs from the diameter of "
+                    "the `pipe` given to fit(); the fit() diameter is used and "
+                    "written to the pipe. Give the diameter in one place."
+                )
+
         self.data["schedule"] = schedule
         self.data["nominal_diameter"] = nominal
         self.data["internal_diameter"] = internal
         self.data["diameter"] = internal
+
+    def _pipe_bore(self, pipe: Pipe) -> Optional[Diameter]:
+        """The bore of a pipe that has a size (nominal or internal), else None."""
+        if getattr(pipe, "internal_diameter", None) is not None:
+            return pipe.internal_diameter
+        if getattr(pipe, "nominal_diameter", None) is not None:
+            return self._resolve_internal_diameter(pipe)
+        return None
 
 
     # ---------------------- Fluid properties --------------------------------
