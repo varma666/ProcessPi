@@ -77,7 +77,7 @@ Returns a **new** `Pressure` object converted to the `target_unit`. The original
 >>> psi_pressure = atm_pressure.to("psi")
 
 >>> print(psi_pressure)  
-14.695949 psi
+14.695943 psi
 ```
 ## **String Representation**
 

@@ -103,7 +103,7 @@ print(f"Reynolds Number: {Re}")
 **Using the `CalculationEngine`**
 
 ```py
-from processpi.engine.calculation_engine import CalculationEngine
+from processpi.calculations import CalculationEngine
 from processpi.units import Density, Velocity, Diameter, Viscosity
 
 # Initialize engine

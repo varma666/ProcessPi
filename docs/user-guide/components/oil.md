@@ -10,7 +10,7 @@ This class is typically used for crude oils, lubricating oils, or user-specified
 
 * **`name`** (string): Oil  
 * **`formula`** (string): N/A (mixture or undefined)  
-* **`molecular_weight`** (float): User-defined (default = None)  
+* **`molecular_weight`** (float): class attribute, default 150.0 g/mol; set it on the instance to change it  
 
 ## **Class Reference**
 
@@ -48,7 +48,7 @@ from processpi.units import *
 generic_oil = Oil(
     temperature=Temperature(25, "C"),
     pressure=Pressure(1, "atm"),
-    density=900  # Example density in kg/m3
+    density=Density(900, "kg/m3")  # Example density
 )
 
 print(generic_oil.density().to("kg/m3"))

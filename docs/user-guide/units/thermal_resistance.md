@@ -77,7 +77,7 @@ Returns a **new** `ThermalResistance` object converted to the `target_unit`. The
 >>> r_BTU = r_K.to("hrft2F/BTU")
 
 >>> print(r_BTU)  
-11.353457 hrft2F/BTU
+11.357183 hrft2F/BTU
 ```
 ## **String Representation**
 

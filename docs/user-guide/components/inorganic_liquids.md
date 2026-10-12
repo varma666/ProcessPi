@@ -10,7 +10,7 @@ This class is typically used as a placeholder or for defining user-specified ino
 
 * **`name`** (string): Inorganic Liquid  
 * **`formula`** (string): N/A (mixture or undefined)  
-* **`molecular_weight`** (float): User-defined (default = None)  
+* **`molecular_weight`** (float): class attribute, default 80.0 g/mol; set it on the instance to change it  
 
 ## **Class Reference**
 
@@ -19,7 +19,6 @@ This class is typically used as a placeholder or for defining user-specified ino
 **Parameters:**  
 * `temperature`: `Temperature`, default = `Temperature(25,"C")`  
 * `pressure`: `Pressure`, default = `Pressure(1,"atm")`  
-* `molecular_weight`: `float`, default = `None` (must be set for calculations)  
 * `density`: `Density`, default = `None`  
 * `specific_heat`: `SpecificHeat`, default = `None`  
 * `viscosity`: `Viscosity`, default = `None`  
@@ -50,8 +49,8 @@ from processpi.units import *
 water_liquid = InorganicLiquid(
     temperature=Temperature(25, "C"),
     pressure=Pressure(1, "atm"),
-    molecular_weight=18.015
 )
+water_liquid.molecular_weight = 18.015
 
 print(water_liquid.density().to("kg/m3"))
 print(water_liquid.viscosity().to("Pa·s"))

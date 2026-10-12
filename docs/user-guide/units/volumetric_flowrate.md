@@ -81,7 +81,7 @@ Returns a **new** `VolumetricFlowRate` object converted to the `target_unit`. Th
 # Convert to cubic meters per hour  
 >>> flow_m3h = flow_L.to("m3/h")
 
->>> print(flow\_m3h)  
+>>> print(flow_m3h)  
 360.0 m3/h
 ```
 ## **Class Methods**

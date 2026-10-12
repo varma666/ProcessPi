@@ -77,7 +77,7 @@ Returns a **new** `Length` object converted to the `target_unit`. The original o
 >>> distance_ft = distance_m.to("ft")
 
 >>> print(distance_ft)  
-16.4042 ft
+16.404199 ft
 ```
 **Arithmetic Operations**
 

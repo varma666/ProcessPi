@@ -51,7 +51,7 @@ print(f"Friction Factor: {friction_factor}")
 ## Output
 ```py
 # Output
-Velocity: 1.606153597 m/s
-Reynolds Number: 620899.308606354 (dimensionless)
-Friction Factor: 0.012658141727742982 (dimensionless)
+Velocity: 1.606149 m/s
+Reynolds Number: 620897.6684685505 (dimensionless)
+Friction Factor: 0.012658138929530433 (dimensionless)
 ```

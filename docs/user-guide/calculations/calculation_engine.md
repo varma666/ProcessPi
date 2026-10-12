@@ -55,7 +55,8 @@ Registers a new calculation dynamically, allowing the engine to be extended at r
 **Example:**
 
 ```python
-from processpi.calculations import FluidVelocity
+from processpi.calculations import CalculationEngine
+from processpi.calculations.fluids.velocity import FluidVelocity
 
 engine = CalculationEngine()
 engine.register_calculation("fluid_velocity", FluidVelocity)
@@ -89,6 +90,7 @@ Executes a calculation by its registered name. Instantiates the class with the p
 ## Example
 
 ```python
+from processpi.calculations import CalculationEngine
 from processpi.units import VolumetricFlowRate, Diameter
 
 engine = CalculationEngine()
@@ -113,6 +115,7 @@ print(velocity)
 | `pressure_drop_darcy`, `pd`, `pressure_drop` | `PressureDropDarcy` |
 | `pressure_drop_fanning` | `PressureDropFanning` |
 | `pressure_drop_hazen_williams` | `PressureDropHazenWilliams` |
+| `pressure_vessel`, `vessel_design` | `PressureVessel` |
 
 Additional calculations can be registered dynamically as needed.
 

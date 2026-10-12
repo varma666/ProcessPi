@@ -76,7 +76,7 @@ Returns a **new** `HeatTransferCoefficient` object converted to the `target_unit
 >>> h_BTU = h_W.to("BTU/hft2F")
 
 >>> print(h_BTU)  
-88.058309 BTU/hft2F
+88.055097 BTU/hft2F
 ```
 
 

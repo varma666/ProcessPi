@@ -51,6 +51,6 @@ print(f"Reynolds Number: {nre}")
 ## Output
 ```py
 # Output
-Velocity: 6.614228284 ft/s
-Reynolds Number: 985731.40506995 (dimensionless)
+Velocity: 6.614228 ft/s
+Reynolds Number: 985731.4050589902 (dimensionless)
 ```

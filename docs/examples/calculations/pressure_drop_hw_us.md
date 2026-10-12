@@ -77,8 +77,8 @@ print(f"Pressure Drop: {pressure_drop.to('kPa')}")
 ## Output
 ```py
 # Output
-Velocity: 3.006259895 m/s
-Reynolds Number: 6000494.7504199995 (dimensionless)
-Friction Factor: 0.008738971889204653 (dimensionless)
-Pressure Drop: 98.526701 kPa
+Velocity: 3.00626 m/s
+Reynolds Number: 6000495.03221577 (dimensionless)
+Friction Factor: 0.00873897182764873 (dimensionless)
+Pressure Drop: 98.52671 kPa
 ```
