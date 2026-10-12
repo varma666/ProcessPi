@@ -1,5 +1,6 @@
 """Regression tests for component data follow-ups: the liquid Cp Eq. (2) of
-Ammonia, Ethane, 1,2-Butanediol and 1,3-Butanediol.
+Ammonia, Ethane, 1,2-Butanediol and 1,3-Butanediol, and the Ethylene class
+name.
 
 Reference values:
 - Perry's Chemical Engineers' Handbook, 8th ed. (2008), Section 2: Table 2-153
@@ -10,6 +11,8 @@ Reference values:
 - NIST Chemistry WebBook, SRD 69, fluid properties (fetched 2026-10-12):
   saturated liquid Cp of ammonia and ethane, and Cp on the 0.101325 MPa isobar.
 """
+import warnings
+
 import pytest
 
 from processpi.units import Pressure, Temperature
@@ -90,3 +93,33 @@ def test_gas_cp_at_one_atm_matches_nist(cls, T, cp_nist, rel):
     gas = cls(temperature=Temperature(T, "K"), pressure=Pressure(101325, "Pa"))
     assert gas.phase() == "gas"
     assert gas.specific_heat().value == pytest.approx(cp_nist, rel=rel)
+
+
+# ----------------------------------------------------------------------
+# Ethylene: correct class name, old name still works
+# ----------------------------------------------------------------------
+def test_ethylene_imports_under_its_name():
+    from processpi.components import Ethylene
+
+    c2h4 = Ethylene(temperature=Temperature(25, "C"))
+    assert c2h4.name == "Ethylene"
+    assert c2h4.formula == "C2H4"
+    assert c2h4.density().value > 0
+
+
+def test_misspelt_ethylene_warns_and_still_works():
+    from processpi.components import Ethlylene, Ethylene
+
+    with pytest.warns(DeprecationWarning, match="Ethylene"):
+        old = Ethlylene(temperature=Temperature(25, "C"))
+    assert isinstance(old, Ethylene)
+    new = Ethylene(temperature=Temperature(25, "C"))
+    assert old.density().value == new.density().value
+
+
+def test_new_ethylene_name_does_not_warn():
+    from processpi.components import Ethylene
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        Ethylene()
