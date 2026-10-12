@@ -135,8 +135,8 @@ from processpi.components import Water, Ethanol
 water = Water()
 ethanol = Ethanol()
 
-print(f"Water density: {water.density()} kg/m3")
-print(f"Ethanol viscosity: {ethanol.viscosity()} Pa·s")
+print(f"Water density: {water.density()}")
+print(f"Ethanol viscosity: {ethanol.viscosity()}")
 ```
 
 ⚠ **Note**: Component data is for educational/demo purposes only. Extended property support is in progress.
@@ -153,6 +153,7 @@ from processpi.units import VolumetricFlowRate, Diameter, Length
 
 # Define pipe and fluid
 pipe = Pipe(
+    name="Main Pipe",
     internal_diameter=Diameter(50, "mm"),
     length=Length(10, "m")
 )
