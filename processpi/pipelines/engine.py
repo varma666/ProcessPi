@@ -75,6 +75,13 @@ _GRAPH_LOOP_WITHOUT_PIPE = (
 # total loss) at which the flows count as converged, and the iteration limit.
 GRAPH_LOOP_TOL = 1e-6
 GRAPH_MAX_ITER = 100
+# Sizing a looped graph network: the split depends on the sizes, so sizing and
+# solving alternate until the sizes no longer change, at most this many times.
+GRAPH_MAX_SIZING_PASSES = 10
+_GRAPH_SIZES_NOT_SETTLED = (
+    "The pipe sizes of the looped network did not settle: sizing a pipe for "
+    "its flow changes the split that set that flow. The last sizes are used."
+)
 _GRAPH_REVERSE_FLOW = (
     "A pump or equipment item of the network carries flow against its "
     "direction; its fixed head or pressure drop is applied as given."
@@ -1309,6 +1316,54 @@ class PipelineEngine:
             return self._equipment_dp_pa(elem).to("Pa").value + static, 0.0, static
         return static, 0.0, static
 
+    def _size_graph_network(
+        self, network: PipelineNetwork, graph: Dict[str, Any], q_in: VolumetricFlowRate, **kwargs: Any
+    ) -> None:
+        """
+        Sizes the pipes of a graph network that have no diameter, each for
+        the flow in its own edge (`_solve_for_diameter_network`); pipes with a
+        diameter keep it.
+
+        A tree network's flows come from the mass balance alone, so one pass
+        does. In a looped one the split depends on the sizes: every pipe to
+        size is first sized for the network flow, then the flows are solved
+        and the pipes sized again for them, until no size changes (at most
+        `GRAPH_MAX_SIZING_PASSES` passes).
+        """
+        to_size = [p for p in network.get_all_pipes() if self._pipe_bore(p) is None]
+        if not to_size:
+            return
+        q_total = float(q_in.to("m3/s").value)
+        if graph["loops"]:
+            design = {id(p): q_total for p in to_size}
+        else:
+            tree = self._graph_tree_flows(graph, {})
+            design = {
+                id(e["element"]): abs(q) for e, q in zip(graph["edges"], tree) if not e["virtual"]
+            }
+            self._solve_for_diameter_network(
+                network, design_flows=design, pipes_to_size=to_size, **kwargs
+            )
+            return
+
+        sizes = None
+        for _ in range(GRAPH_MAX_SIZING_PASSES):
+            self._solve_for_diameter_network(
+                network, design_flows=design, pipes_to_size=to_size, verbose=False, **kwargs
+            )
+            new_sizes = [p.internal_diameter.to("m").value for p in to_size]
+            if new_sizes == sizes:
+                break
+            sizes = new_sizes
+            solved = self._solve_graph_network(network, graph, q_in)
+            design = {k: abs(q) for k, q in solved["edge_flows"].items()}
+        else:
+            _warn_at_caller(_GRAPH_SIZES_NOT_SETTLED)
+        # Once more, printing the sizing on the final flows.
+        self._solve_for_diameter_network(
+            network, design_flows=design, pipes_to_size=to_size, **kwargs
+        )
+
     def _graph_balance_loops(
         self, graph: Dict[str, Any], chord_flows: Dict[int, float], rho: float, q_floor: float
     ) -> Tuple[bool, int]:
@@ -1515,6 +1570,9 @@ class PipelineEngine:
             }
         return {
             "reports": reports,
+            "edge_flows": {
+                id(e["element"]): q for e, q in zip(edges, flows) if not e["virtual"]
+            },
             "total_dp_Pa": total_dp_pa,
             "converged": converged,
             "iterations": iterations,
@@ -1729,7 +1787,11 @@ class PipelineEngine:
                 # The sizing sets the size of each pipe it sizes. The sizes
                 # were also copied again here by pipe name, which gave a pipe
                 # the user had sized the size of another pipe of the same name.
-                self._solve_for_diameter_network(net, **kwargs)
+                if graph is not None:
+                    # Each pipe for the flow of its own edge.
+                    self._size_graph_network(net, graph, q_in, **kwargs)
+                else:
+                    self._solve_for_diameter_network(net, **kwargs)
 
             # --------------------------------------------------
             # Step 3: Assign flowrate to pipes if missing
@@ -2305,7 +2367,9 @@ class PipelineEngine:
                 self._design_flows(branch, q_m3s * share / total, None, flows)
         return flows
 
-    def _solve_for_diameter_network(self, network, **kwargs):
+    def _solve_for_diameter_network(
+        self, network, design_flows=None, pipes_to_size=None, verbose=True, **kwargs
+    ):
         """
         Iteratively sizes each pipe in a network using the same standard diameter
         selection logic as `_solve_for_diameter`, ensuring consistency between
@@ -2315,6 +2379,13 @@ class PipelineEngine:
         internal diameter keeps it. Each pipe is sized for the flow it carries
         in the network (see `_design_flows`); every pipe used to be sized for
         the 0.001 m3/s placeholder `Pipe.flow_rate`, whatever the network flow.
+
+        Args:
+            design_flows: flow (m3/s) per id(pipe), in place of `_design_flows`
+                (a graph network passes its edge flows).
+            pipes_to_size: the pipes to size, in place of those without a
+                diameter (a graph network resizes the same pipes on each pass).
+            verbose: print the candidates and warnings.
         """
         import math
         from ..pipelines.standards import get_recommended_velocity, list_available_pipe_diameters
@@ -2333,10 +2404,14 @@ class PipelineEngine:
             [p for branch in self._normalize_branches(network) for p in branch if isinstance(p, Pipe)]
 
         q_total = float(self._infer_flowrate().to("m3/s").value)
-        design_flows = self._design_flows(network, q_total)
+        if design_flows is None:
+            design_flows = self._design_flows(network, q_total)
 
         for pipe in pipes:
-            if self._pipe_bore(pipe) is not None:
+            if pipes_to_size is not None:
+                if not any(pipe is p for p in pipes_to_size):
+                    continue
+            elif self._pipe_bore(pipe) is not None:
                 # A size the user gave is kept; it used to be replaced.
                 continue
             q_val = design_flows.get(id(pipe), q_total)
@@ -2416,9 +2491,10 @@ class PipelineEngine:
                 else:
                     _, range_note = self._velocity_range_index(velocities, idx, v_min, v_max)
             else:
-                print(f"🔍 Pipe {pipe.name}: No available DP provided. Showing candidates:")
-                for r in results_list:
-                    print(f"  {r['nominal_diameter'].to('in')} -> {r['velocity_m_s']:.2f} m/s, {r['pressure_drop_Pa']:.2f} Pa")
+                if verbose:
+                    print(f"🔍 Pipe {pipe.name}: No available DP provided. Showing candidates:")
+                    for r in results_list:
+                        print(f"  {r['nominal_diameter'].to('in')} -> {r['velocity_m_s']:.2f} m/s, {r['pressure_drop_Pa']:.2f} Pa")
                 # The size at the middle of the range, kept in the range (see
                 # `_velocity_range_index`). The middle entry of the list was
                 # used, which is the next larger size when the list starts at
@@ -2439,7 +2515,7 @@ class PipelineEngine:
     
             # Warning if velocity out of range
             v_final = best_result["velocity_m_s"]
-            if not (v_min <= v_final <= v_max):
+            if verbose and not (v_min <= v_final <= v_max):
                 print(f"⚠️ Warning: Pipe '{pipe.name}' velocity {v_final:.2f} m/s outside recommended range {v_min}-{v_max} m/s")
                 if range_note:
                     print(f"   {range_note}")

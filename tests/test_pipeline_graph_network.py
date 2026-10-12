@@ -514,6 +514,177 @@ def test_a_loop_without_a_pipe_raises():
 
 
 # --------------------------------------------------------------------------
+# Sizing on the flow of each edge
+# --------------------------------------------------------------------------
+
+BORE_5IN = 0.12820
+BORE_10IN = 0.25446
+
+
+def _inches(d):
+    # Unit objects hold their SI value: metres for a Diameter.
+    return d.to("m").value / 0.0254
+
+
+def test_tree_pipes_are_sized_for_their_edge_flow():
+    """
+    Water, recommended 1.0 to 2.5 m/s, sized at the middle (1.75 m/s) and
+    rounded up to the next STD bore:
+    S-A, 100 m3/h: D = sqrt(4 * 0.027778 / (pi * 1.75)) = 142.2 mm -> 6 in,
+      v = 0.027778 / 0.018646 = 1.490 m/s
+    A-B and A-C, 50 m3/h each (the demands): D = 100.5 mm -> 4 in,
+      v = 0.013889 / 0.0082130 = 1.691 m/s
+    Before: sized as a series chain, all three for 100 m3/h (6 in).
+    """
+    net = PipelineNetwork("Tree")
+    net.add_node("S")
+    net.add_node("A")
+    net.add_node("B", demand=VolumetricFlowRate(50, "m3/h"))
+    net.add_node("C", demand=VolumetricFlowRate(50, "m3/h"))
+    sa, ab, ac = (Pipe(n, length=Length(20, "m")) for n in ("SA", "AB", "AC"))
+    net.add_edge(sa, "S", "A")
+    net.add_edge(ab, "A", "B")
+    net.add_edge(ac, "A", "C")
+    results, printed = _run(net, 100)
+    comps = _by_name(results)
+
+    assert _inches(sa.nominal_diameter) == pytest.approx(6)
+    assert _inches(ab.nominal_diameter) == pytest.approx(4)
+    assert _inches(ac.nominal_diameter) == pytest.approx(4)
+    assert comps["SA"]["velocity"].to("m/s").value == pytest.approx(1.490, rel=1e-3)
+    assert comps["AB"]["velocity"].to("m/s").value == pytest.approx(1.691, rel=1e-3)
+    assert "Pipe AB: No available DP provided" in printed
+
+
+def test_looped_pipes_are_sized_for_their_solved_flow():
+    """
+    Two equal unsized pipes in parallel, 100 m3/h: the first pass sizes both
+    for 100 m3/h (6 in), the solved split is 50/50, and the second pass sizes
+    them for 50 m3/h: 4 in at 1.691 m/s. A third pass changes nothing.
+    """
+    p1, p2 = Pipe("P1", length=Length(20, "m")), Pipe("P2", length=Length(20, "m"))
+    results, printed = _two_paths(p1, p2, 100)
+    comps = _by_name(results)
+    assert _inches(p1.nominal_diameter) == pytest.approx(4)
+    assert _inches(p2.nominal_diameter) == pytest.approx(4)
+    assert comps["P1"]["flow_m3s"] == pytest.approx(_m3s(50), rel=1e-6)
+    assert comps["P1"]["velocity"].to("m/s").value == pytest.approx(1.691, rel=1e-3)
+    # The sizing is printed once, for the final flows.
+    assert printed.count("Pipe P1: No available DP provided") == 1
+
+
+def test_user_sized_pipes_keep_their_size_in_a_graph():
+    """
+    A fixed 3 in branch next to a branch to size: the fixed one keeps 3 in
+    and carries its own demand (20 m3/h: 1.165 m/s), the other is sized for
+    its 50 m3/h (4 in).
+    """
+    net = PipelineNetwork("Fixed")
+    net.add_node("S")
+    net.add_node("A")
+    net.add_node("B", demand=VolumetricFlowRate(20, "m3/h"))
+    net.add_node("C", demand=VolumetricFlowRate(50, "m3/h"))
+    fixed = _pipe("FIXED", 3, 20)
+    sized = Pipe("SIZED", length=Length(20, "m"))
+    net.add_edge(_pipe("SA", 6, 10), "S", "A")
+    net.add_edge(fixed, "A", "B")
+    net.add_edge(sized, "A", "C")
+    results, _ = _run(net, 70)
+    comps = _by_name(results)
+    assert _inches(fixed.nominal_diameter) == pytest.approx(3)
+    assert fixed.internal_diameter.to("m").value == pytest.approx(BORE_3IN)
+    assert comps["FIXED"]["velocity"].to("m/s").value == pytest.approx(1.165, rel=1e-3)
+    assert _inches(sized.nominal_diameter) == pytest.approx(4)
+
+
+def chilled_water_loop():
+    """
+    The chilled water example of the docs, opened at its tank: Tank (pump
+    suction) -> pump -> chiller -> header -> five branches of five AHUs in
+    series -> return header -> expansion tank -> Return_Tank (the outlet).
+    """
+    net = PipelineNetwork("Chilled Water Loop")
+    net.add_node("Tank", elevation=0)
+    net.add_node("Pump_In", elevation=0)
+    net.add_node("Pump_Out", elevation=1)
+    net.add_node("Chiller_Out", elevation=1)
+    net.add_node("Main_In", elevation=1)
+    net.add_node("Main_Out", elevation=1)
+    for b in range(1, 6):
+        net.add_node(f"Branch_{b}_In", elevation=1)
+        for a in range(1, 6):
+            net.add_node(f"AHU_{b}_{a}_PipeOut", elevation=1)
+            net.add_node(f"AHU_{b}_{a}_EqOut", elevation=1)
+        net.add_node(f"Return_{b}", elevation=0)
+    net.add_node("Return_Header", elevation=0)
+    net.add_node("Return_Tank", elevation=0)
+
+    pump = Pump("Pump1", pump_type="Centrifugal", inlet_pressure=Pressure(101325, "Pa"),
+                outlet_pressure=Pressure(201325, "Pa"))
+    net.add_edge(Pipe("TankPipe", length=Length(5, "m")), "Tank", "Pump_In")
+    net.add_edge(pump, "Pump_In", "Pump_Out")
+    net.add_edge(Equipment("Chiller", pressure_drop=0.2), "Pump_Out", "Chiller_Out")
+    net.add_edge(Pipe("MainPipe", length=Length(15, "m")), "Chiller_Out", "Main_In")
+    net.add_edge(Pipe("MainPipe_Out", length=Length(5, "m")), "Main_In", "Main_Out")
+    for b in range(1, 6):
+        net.add_edge(Pipe(f"MainToBranch_{b}", length=Length(3, "m")), "Main_Out", f"Branch_{b}_In")
+    sizes = [3, 4, 4, 5, 6]
+    flows = [8, 10, 10, 12, 15]
+    for b in range(1, 6):
+        for a in range(1, 6):
+            start = f"Branch_{b}_In" if a == 1 else f"AHU_{b}_{a - 1}_EqOut"
+            net.add_edge(_pipe(f"AHUPipe_{b}_{a}", sizes[a - 1], 5), start, f"AHU_{b}_{a}_PipeOut")
+            net.add_edge(Equipment(f"AHU_{b}_{a}", pressure_drop=0.05 + 0.01 * flows[a - 1] / 10),
+                         f"AHU_{b}_{a}_PipeOut", f"AHU_{b}_{a}_EqOut")
+    for b in range(1, 6):
+        net.add_edge(Pipe(f"BranchReturnPipe_{b}", length=Length(5, "m")),
+                     f"AHU_{b}_5_EqOut", f"Return_{b}")
+        net.add_edge(Pipe(f"ReturnPipe_{b}", length=Length(10, "m")), f"Return_{b}", "Return_Header")
+    from processpi.pipelines.vessel import Vessel
+    net.add_edge(Vessel("ExpansionTank"), "Return_Header", "Return_Tank")
+    return net
+
+
+def test_chilled_water_loop_branches_carry_their_share():
+    """
+    300 m3/h through five identical branches between Main_Out and
+    Return_Header: 60 m3/h each (0.016667 m3/s).
+    AHU pipe 3 in: v = 0.016667 / (pi / 4 * 0.07792^2) = 3.495 m/s
+      (was 17.48 m/s with 300 m3/h in every pipe).
+    Branch pipes sized for 60 m3/h: D = 110.1 mm -> 5 in, v = 1.291 m/s.
+    Header at 300 m3/h: D = 246.2 mm -> 10 in, v = 1.639 m/s (as before).
+    """
+    net = chilled_water_loop()
+    results, _ = _run(net, 300)
+    summary, comps = results["summary"], _by_name(results)
+    assert summary["solver"] == "graph"
+    assert summary["number_of_loops"] == 4
+    assert summary["solver_converged"] is True
+    _assert_mass_balance(results, net, _m3s(300))
+
+    for b in range(1, 6):
+        assert comps[f"AHUPipe_{b}_1"]["flow_m3s"] == pytest.approx(_m3s(60), rel=1e-6)
+        assert comps[f"AHUPipe_{b}_1"]["velocity"].to("m/s").value == pytest.approx(3.495, rel=1e-3)
+        assert comps[f"MainToBranch_{b}"]["nominal_diameter"].to("m").value / 0.0254 == pytest.approx(5)
+        assert comps[f"MainToBranch_{b}"]["velocity"].to("m/s").value == pytest.approx(1.291, rel=1e-3)
+    assert comps["MainPipe"]["diameter"].to("m").value == pytest.approx(BORE_10IN)
+    assert comps["MainPipe"]["velocity"].to("m/s").value == pytest.approx(1.639, rel=1e-3)
+
+    # The governing drop is the sum of the drops along one path.
+    path = summary["governing_path"]
+    assert path[0] == "Tank" and path[-1] == "Return_Tank"
+    on_path = [
+        c for c in comps.values()
+        if c["start_node"] in path and c["end_node"] in path
+        and path.index(c["end_node"]) == path.index(c["start_node"]) + 1
+    ]
+    assert len(on_path) == len(path) - 1
+    assert summary["total_pressure_drop_Pa"] == pytest.approx(
+        sum(c["pressure_drop_Pa"] for c in on_path), rel=1e-9
+    )
+
+
+# --------------------------------------------------------------------------
 # Demands that do not fit, and graphs that cannot be solved
 # --------------------------------------------------------------------------
 
