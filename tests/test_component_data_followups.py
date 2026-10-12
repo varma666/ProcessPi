@@ -1,7 +1,8 @@
 """Regression tests for component data follow-ups: the liquid Cp Eq. (2) of
 Ammonia, Ethane, 1,2-Butanediol and 1,3-Butanediol (with gas-phase Cp and k
 for ammonia and ethane), the Ethylene class name, the 1-Propanol constants,
-and the new Cyclohexane component.
+the new Cyclohexane component, and the heat-of-vaporization C1 of four
+"A" components.
 
 Reference values:
 - Perry's Chemical Engineers' Handbook, 8th ed. (2008), Section 2: Table 2-153
@@ -10,11 +11,14 @@ Reference values:
   Eq. 102, pp. 2-433 and 2-435). Each table lists the property at its own Tmin
   and Tmax, which checks the equation form and the constants.
   1-Propanol: Tables 2-8 (p. 2-59), 2-150 (p. 2-154) and 2-153 (p. 2-169).
+  Acetaldehyde, acetamide, acetic anhydride, acrylonitrile: Table 2-150
+  (p. 2-150) and Table 2-8 (p. 2-55).
 - NIST Chemistry WebBook, SRD 69, fluid properties (fetched 2026-10-12):
   saturated liquid Cp of ammonia and ethane, and Cp and k on the 0.101325 MPa
   isobar.
   1-Propanol (CAS 71-23-8) phase-change and condensed-phase pages.
   Cyclohexane (CAS 110-82-7): fluid properties and gas-phase Cp.
+  Acetaldehyde and acrylonitrile phase-change pages.
 - Cyclohexane constants: Perry's 8th ed., compound no. 65, Tables 2-8, 2-32,
   2-141, 2-150, 2-153, 2-156, 2-313, 2-314 and 2-315.
 """
@@ -313,3 +317,49 @@ def test_gas_k_at_one_atm_matches_nist(cls, T, k_nist, rel):
     gas = cls(temperature=Temperature(T, "K"), pressure=Pressure(101325, "Pa"))
     assert gas.phase() == "gas"
     assert gas.thermal_conductivity().value == pytest.approx(k_nist, rel=rel)
+
+
+# ----------------------------------------------------------------------
+# Heat of vaporization C1 given as the table's "C1 x 1E-07" number
+# ----------------------------------------------------------------------
+@pytest.mark.parametrize("name, T, hv_kmol", [
+    ("Acetaldehyde", 150.15, 3.2828e7),   # Table 2-150, p. 2-150, Hv at Tmin
+    ("Acetamide", 353.15, 6.2386e7),
+    ("AceticAnhydride", 200.15, 5.4139e7),
+    ("Acrylonitrile", 189.63, 3.6866e7),
+])
+def test_heat_of_vaporization_matches_perry_table_2_150(name, T, hv_kmol):
+    # C1 was 3.8366 for 3.8366E7 J/kmol, so Hv came out near 0.05 J/kg.
+    import processpi.components as components
+
+    c = getattr(components, name)(temperature=Temperature(T, "K"))
+    assert c.enthalpy().value * c.molecular_weight == pytest.approx(hv_kmol, rel=5e-4)
+
+
+@pytest.mark.parametrize("name, T, hv_mol", [
+    ("Acetaldehyde", 293.3, 25.76),   # NIST WebBook, Majer and Svoboda, 1985
+    ("Acrylonitrile", 308.0, 32.9),   # NIST WebBook, Gubkov, Fermor, et al., 1964
+])
+def test_heat_of_vaporization_matches_nist(name, T, hv_mol):
+    import processpi.components as components
+
+    c = getattr(components, name)(temperature=Temperature(T, "K"))
+    assert c.enthalpy().value * c.molecular_weight / 1e6 == pytest.approx(hv_mol, rel=0.01)
+
+
+@pytest.mark.parametrize("T, P", [(150.15, 3.23e-1), (466.0, 5.565e6)])
+def test_acetaldehyde_vapor_pressure_matches_perry_table_2_8(T, P):
+    # C2 was 0.0 for -8,036.7 (Table 2-8, p. 2-55).
+    from processpi.components import Acetaldehyde
+
+    vp = Acetaldehyde(temperature=Temperature(T, "K")).vapor_pressure().value
+    # C4 is stored rounded (0.0437 for 4.3678E-02): 1 % at Tmax.
+    assert vp == pytest.approx(P, rel=0.015)
+
+
+def test_acetaldehyde_boils_near_20_c():
+    # NIST WebBook Tboil 294.0 +/- 0.8 K: liquid at 10 C, gas at 25 C and 1 atm.
+    from processpi.components import Acetaldehyde
+
+    assert Acetaldehyde(temperature=Temperature(10, "C")).phase() == "liquid"
+    assert Acetaldehyde(temperature=Temperature(25, "C")).phase() == "gas"

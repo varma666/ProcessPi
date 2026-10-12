@@ -49,4 +49,5 @@ class Acetamide(Component):
     _viscosity_constants = [1.5525, 1376.4, -2.0126,0,0]
     _thermal_conductivity_constants = [0.39363, -0.00037053,0,0,0]
     _vapor_pressure_constants = [125.81, -12376, -14.589, 5.08e-06, 2.0]
-    _enthalpy_constants = [8.107, 0.42,0,0,0]
+    # Perry's 8th ed., Table 2-150, p. 2-150 prints C1 x 1E-07 = 8.107 (J/kmol).
+    _enthalpy_constants = [8.107E7, 0.42,0,0,0]
