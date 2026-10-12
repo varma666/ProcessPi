@@ -771,3 +771,79 @@ def test_block_networks_are_unchanged():
 BLOCK_TOTAL_DP_PA = 18167.105421693966
 BLOCK_FLOW_B_M3S = 0.010447782259543624
 BLOCK_FLOW_C_M3S = 0.01732999551823415
+
+
+# --------------------------------------------------------------------------
+# Reporting
+# --------------------------------------------------------------------------
+
+def _printed(fn):
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        value = fn()
+    return value, out.getvalue()
+
+
+def _engine_results(net, flow_m3h):
+    engine = PipelineEngine().fit(
+        fluid=Water(), flowrate=VolumetricFlowRate(flow_m3h, "m3/h"), network=net
+    )
+    results, _ = _printed(engine.run)
+    return results
+
+
+def test_summary_reports_the_graph_solution():
+    """
+    The summary names the solver, the governing outlet with its signed drop,
+    and the outlet flows. The inlet flow is printed (it showed 0.000 m3/s for
+    every network: 300 m3/h = 0.083 m3/s).
+    """
+    results = _engine_results(chilled_water_loop(), 300)
+    rows, text = _printed(results.summary)
+    assert "Inlet Flow: 0.083 m3/s" in text
+    assert "Flow Solver: graph, 4 loop(s), converged in" in text
+    assert "Governing Outlet: Return_Tank (drop from inlet Tank: " in text
+    assert "Outlet Flows: Return_Tank 300.00 m3/h" in text
+    row = rows[0]
+    assert row["governing_outlet"] == "Return_Tank"
+    assert row["number_of_loops"] == 4
+    assert row["governing_pressure_drop_kPa"] == pytest.approx(
+        results.results["summary"]["total_pressure_drop_Pa"] / 1000.0
+    )
+
+
+def test_detailed_summary_lists_each_edge_with_its_flow():
+    results = _engine_results(chilled_water_loop(), 300)
+    _, text = _printed(results.detailed_summary)
+    assert "Edge" in text and "Flow (m3/h)" in text
+    line = next(l for l in text.splitlines() if "| AHUPipe_2_1 " in l)
+    assert "Branch_2_In > AHU_2_1_PipeOut" in line
+    assert "|            60 |" in line
+    assert "Drop from Inlet (kPa)" in text
+
+
+def test_block_network_tables_are_unchanged_but_show_the_inlet_flow():
+    net = PipelineNetwork.series(
+        "Loop", _pipe("A", 6, 20), PipelineNetwork.parallel("PAR", _pipe("B", 3, 10), _pipe("C", 4, 15))
+    )
+    results = _engine_results(net, 100)
+    _, text = _printed(results.summary)
+    assert "Inlet Flow: 0.028 m3/s" in text
+    assert "Flow Solver" not in text
+    _, table = _printed(results.detailed_summary)
+    header = next(l for l in table.splitlines() if l.startswith("| Name"))
+    assert "Edge" not in header and "Flow" not in header
+
+
+def test_a_fitting_at_a_node_is_listed_without_an_edge_or_flow():
+    """A fitting added with add_fitting stays a zero-loss row, as in blocks."""
+    from processpi.pipelines.fittings import Fitting
+
+    net, _ = _tree()
+    net.add_fitting(Fitting(fitting_type="standard_elbow_90_deg"), "A")
+    results = _engine_results(net, 60)
+    assert results.results["summary"]["solver"] == "graph"
+    _, table = _printed(results.detailed_summary)
+    row = next(l for l in table.splitlines() if "standard_elbow_90_deg" in l)
+    cells = [c.strip() for c in row.strip("|").split("|")]
+    assert cells[2] == "" and cells[3] == ""

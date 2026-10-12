@@ -44,9 +44,12 @@ class PipelineResults:
             if self._all_simulation_results else {}
         )
 
-        # Units with safe numeric conversion
-        self.inlet_flow = VolumetricFlowRate(_to_number(first_summary.get("flow_m3s", 0.0)), "m3/s")
-        self.outlet_flow = VolumetricFlowRate(_to_number(first_summary.get("flow_m3s", 0.0)), "m3/s")
+        # Units with safe numeric conversion. A network result names its
+        # flow `inlet_flow_m3s`; it was read as `flow_m3s` only, so every
+        # network printed "Inlet Flow: 0.000 m3/s".
+        flow_m3s = first_summary.get("flow_m3s", first_summary.get("inlet_flow_m3s", 0.0))
+        self.inlet_flow = VolumetricFlowRate(_to_number(flow_m3s), "m3/s")
+        self.outlet_flow = VolumetricFlowRate(_to_number(flow_m3s), "m3/s")
         # A network whose pumps more than cover its friction has a net pressure
         # rise. Pressure, Length and Power all reject negative values, so the unit
         # objects are clamped at zero and the signed numbers kept beside them.
@@ -118,8 +121,26 @@ class PipelineResults:
             print(f"Friction Factor: {self.friction_factor:.4f}")
             if self.residual_dp:
                 print(f"Residual ΔP: {self.residual_dp:.3f}")
+            graph = self._graph_summary(result.get("summary", {}))
+            if graph:
+                print(
+                    f"Flow Solver: graph, {graph['number_of_loops']} loop(s), "
+                    f"{'converged' if graph['converged'] else 'NOT converged'} in "
+                    f"{graph['iterations']} iteration(s)"
+                )
+                if graph["governing_outlet"] is not None:
+                    # Signed: negative when the pumps give more than the losses.
+                    print(
+                        f"Governing Outlet: {graph['governing_outlet']} "
+                        f"(drop from inlet {graph['inlet_node']}: "
+                        f"{graph['governing_pressure_drop_kPa']:.2f} kPa)"
+                    )
+                flows = ", ".join(
+                    f"{name} {q * 3600.0:.2f} m3/h" for name, q in graph["outlet_flows_m3s"].items()
+                )
+                print(f"Outlet Flows: {flows}")
 
-            summaries.append({
+            row = {
                 "network_name": result.get("network_name"),
                 "simulation_mode": self.mode,
                 "pipe_diameter_in": diameter.to('in').original_value if diameter else None,
@@ -134,9 +155,32 @@ class PipelineResults:
                 "reynolds": self.reynolds.value,
                 "friction_factor": self.friction_factor.value,
                 "residual_dp_kPa": self.residual_dp,
-            })
+            }
+            if graph:
+                row.update({
+                    "governing_outlet": graph["governing_outlet"],
+                    "governing_pressure_drop_kPa": graph["governing_pressure_drop_kPa"],
+                    "number_of_loops": graph["number_of_loops"],
+                    "outlet_flows_m3s": graph["outlet_flows_m3s"],
+                })
+            summaries.append(row)
 
         return summaries
+
+    @staticmethod
+    def _graph_summary(summary: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """The entries of a network solved as a graph (add_edge), or None."""
+        if summary.get("solver") != "graph":
+            return None
+        return {
+            "inlet_node": summary.get("inlet_node"),
+            "number_of_loops": summary.get("number_of_loops", 0),
+            "converged": summary.get("solver_converged", True),
+            "iterations": summary.get("solver_iterations", 0),
+            "governing_outlet": summary.get("governing_outlet"),
+            "governing_pressure_drop_kPa": summary.get("total_pressure_drop_Pa", 0.0) / 1000.0,
+            "outlet_flows_m3s": summary.get("outlet_flows_m3s", {}),
+        }
 
 
     def detailed_summary(self) -> None:
@@ -177,6 +221,8 @@ class PipelineResults:
             components = result.get("components", [])
             if not components:
                 continue
+            # A graph network reports each edge's own flow and its nodes.
+            graph = self._graph_summary(result.get("summary", {}))
 
             print(f"\n=== Detailed Components for Result {idx+1} ({result.get('network_name', 'N/A')}) ===")
             rows = []
@@ -230,9 +276,19 @@ class PipelineResults:
                     diameter_display = f"{diameter_val:.2f} {diameter_unit}"
 
                 # Append the raw values and their units to the row
+                flow_cols = []
+                if graph:
+                    # A fitting at a node is not an edge: no edge, no flow.
+                    q = comp.get("flow_m3s")
+                    edge = comp.get("start_node") is not None
+                    flow_cols = [
+                        f"{comp['start_node']} > {comp.get('end_node', '')}" if edge else "",
+                        f"{q * 3600.0:.2f}" if edge and isinstance(q, (int, float)) else "",
+                    ]
                 rows.append([
                     name,
                     ctype,
+                    *flow_cols,
                     f"{pressure_val:.2f} {pressure_unit}",
                     f"{velocity_val:.2f} {velocity_unit}",
                     f"{reynolds_val:.2f} {reynolds_unit}",
@@ -243,5 +299,20 @@ class PipelineResults:
 
             headers = ["Name", "Type", "Pressure Drop", "Velocity", "Reynolds", "Friction Factor",
                        "Nominal Size", "Internal Diameter"]
+            if graph:
+                headers[2:2] = ["Edge", "Flow (m3/h)"]
             print(tabulate(rows, headers=headers, tablefmt="grid"))
+
+            if graph:
+                # Where the flow leaves, and the drop from the inlet to there.
+                drops = result.get("summary", {}).get("node_pressure_drop_Pa", {})
+                outlet_rows = [
+                    [name, f"{q * 3600.0:.2f}", f"{drops.get(name, 0.0) / 1000.0:.2f}"]
+                    for name, q in graph["outlet_flows_m3s"].items()
+                ]
+                print(tabulate(
+                    outlet_rows,
+                    headers=["Outlet", "Flow (m3/h)", "Drop from Inlet (kPa)"],
+                    tablefmt="grid",
+                ))
 
