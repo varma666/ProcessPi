@@ -60,15 +60,23 @@ class Fitting:
         """
         Returns a summary dictionary with fitting data and calculated values.
         """
-        le = self.equivalent_length()
+        # `equivalent_length()` gives the Le/D ratio (the engine multiplies it
+        # by the bore); this used to call .to("m") on that number and raise.
+        le_over_d = self.equivalent_length()
         k = self.k_factor()
+        diameter_m = self.diameter.to("m").value if self.diameter else None
 
         return {
             "fitting_type": self.fitting_type,
             "quantity": self.quantity,
             "diameter_in": self.diameter.to("in").original_value if self.diameter else None,
-            "diameter_m": self.diameter.to("m").value if self.diameter else None,
-            "equivalent_length_m": le.to("m").value if le else None,
+            "diameter_m": diameter_m,
+            "le_over_d": le_over_d,
+            "equivalent_length_m": (
+                le_over_d * diameter_m
+                if le_over_d is not None and diameter_m is not None
+                else None
+            ),
             "k_factor": k,
         }
 
