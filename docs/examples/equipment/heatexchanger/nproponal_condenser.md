@@ -184,8 +184,8 @@ Pressure Drop        : FAIL
 Engineering Insights
 ------------------------------
 • Heat-transfer coefficient within acceptable range.
-• Tube-side velocity within recommended range.
-• Shell-side velocity very high. Potential shell-side erosion risk.
+• Tube-side velocity 2.27 m/s is above the 0.6-2 m/s range. Potential tube-side erosion/vibration risk.
+• Shell-side velocity 16.60 m/s is within the 10-30 m/s range.
 • Tube-side pressure drop exceeds allowable limit.
 • Shell-side pressure drop exceeds allowable limit.
 
