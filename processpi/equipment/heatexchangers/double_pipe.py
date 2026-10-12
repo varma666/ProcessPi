@@ -33,41 +33,33 @@ class DoublePipeHX(HeatExchanger):
         hot = self._stream_props(self.hot_in)
         cold = self._stream_props(self.cold_in)
 
-        q = self.heat_duty(hot, cold)
-
         # ======================================================
         # OUTLET TEMPERATURES
         # ======================================================
 
-        th_out = (
-            self._safe_float(self.hot_out.temperature.to("K"), "hot_out.temperature")
-            if (
-                self.hot_out
-                and self.hot_out.temperature
-            )
-            else (
-                hot["t_k"]
-                - q / (
-                    hot["m_dot"]
-                    * hot["cp"]
-                )
-            )
-        )
+        # A supplied outlet is used as given; one built without a temperature
+        # carries its component's 25 C default, which used to be taken as the
+        # outlet, so the balance decides it instead.
+        th_spec = self._explicit_stream_temperature(self.hot_out)
+        tc_spec = self._explicit_stream_temperature(self.cold_out)
 
-        tc_out = (
-            self._safe_float(self.cold_out.temperature.to("K"), "cold_out.temperature")
-            if (
-                self.cold_out
-                and self.cold_out.temperature
-            )
-            else (
-                cold["t_k"]
-                + q / (
-                    cold["m_dot"]
-                    * cold["cp"]
-                )
-            )
-        )
+        def balance():
+            q = self.heat_duty(hot, cold)
+            th = th_spec if th_spec is not None else hot["t_k"] - q / (hot["m_dot"] * hot["cp"])
+            tc = tc_spec if tc_spec is not None else cold["t_k"] + q / (cold["m_dot"] * cold["cp"])
+            return q, th, tc
+
+        # Physical properties at each side's mean temperature. The balance
+        # depends on cp, so the two are iterated from the inlet properties
+        # until the outlets settle.
+        q, th_out, tc_out = balance()
+        for _ in range(10):
+            self._evaluate_props_at_mean_temperature(hot, cold, th_out, tc_out)
+            q, th_new, tc_new = balance()
+            settled = abs(th_new - th_out) < 0.01 and abs(tc_new - tc_out) < 0.01
+            th_out, tc_out = th_new, tc_new
+            if settled:
+                break
 
         # ======================================================
         # LMTD
@@ -194,6 +186,7 @@ class DoublePipeHX(HeatExchanger):
             "hx_type": "double_pipe",
             "method": "basic",
             "Q": HeatFlow(q / 1000.0, "kW"),
+            "property_basis": self._property_basis(hot, cold),
             "Area": Area(area, "m2"),
             "U_assumed": HeatTransferCoefficient(u_assumed, "W/m2K"),
             "U_clean": HeatTransferCoefficient(u_assumed, "W/m2K"),
@@ -477,6 +470,7 @@ class DoublePipeHX(HeatExchanger):
             "hx_type": "double_pipe",
             "method": "basic",
             "Q": HeatFlow(q_actual / 1000.0, "kW"),
+            "property_basis": self._property_basis(hot, cold),
             "Area": Area(area, "m2"),
             "U_assumed": HeatTransferCoefficient(u_dirty, "W/m2K"),
             "U_calculated": HeatTransferCoefficient(u_dirty, "W/m2K"),

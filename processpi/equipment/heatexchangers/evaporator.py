@@ -549,6 +549,9 @@ class EvaporatorHX(ShellAndTubeHX):
             ),
         )
 
+    def _shell_side_is_single_phase(self) -> bool:
+        return self.boiling_side != "shell"
+
     def _calculate_htc(
         self,
         dimless: Dict[str, float],

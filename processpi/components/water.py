@@ -27,7 +27,9 @@ class Water(Component):
     def hx_data(self):
         p = 101325 if self.pressure is None else self.pressure.to("Pa").value
         pvap = self.vapor_pressure().to("Pa").value
-        phase = "vapor" if p < pvap else "liquid"
+        # A known phase (set by the stream or the exchanger) overrides the
+        # vapour pressure test, as in Component.phase().
+        phase = "vapor" if self.phase() == "gas" else "liquid"
         velocity_key = "vapor" if phase == "vapor" else "water"
         u_key = "steam" if phase == "vapor" else "water"
         return {"family": "inorganic", "phase": phase, "velocity_key": velocity_key, "u_key": u_key, "fouling_key": "treated_water", "corrosion_key": "treated_water"}

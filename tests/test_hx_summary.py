@@ -153,10 +153,16 @@ def test_design_without_limits_reports_the_default_it_applied():
     tube_limit = results.data["tube_dp_limit"].to("Pa").value
     shell_limit = results.data["shell_dp_limit"].to("Pa").value
 
-    # Both liquids are below 1 cP, so the built-in limit is 35 kPa on each side.
-    assert tube_limit == pytest.approx(35_000)
+    # The water in the tubes is just over 1 cP at its mean temperature, about
+    # 19 C, so its built-in limit is 60 kPa; the benzene in the shell is below
+    # 1 cP and gets 35 kPa. (On the 25 C properties used before, both sides
+    # were below 1 cP.)
+    assert results.data["tube_side_fluid"] == "Water"
+    assert results.data["property_basis"]["cold"]["viscosity_Pa_s"] > 1e-3
+    assert results.data["property_basis"]["hot"]["viscosity_Pa_s"] < 1e-3
+    assert tube_limit == pytest.approx(60_000)
     assert shell_limit == pytest.approx(35_000)
-    assert _line(results.summary(), "Tube ΔP Limit") == "35.000 kPa"
+    assert _line(results.summary(), "Tube ΔP Limit") == "60.000 kPa"
 
     pressure_ok = results.data["feasibility_summary"]["pressure_drop_ok"]
     within = (results.data["tube_dp"].to("Pa").value <= tube_limit
