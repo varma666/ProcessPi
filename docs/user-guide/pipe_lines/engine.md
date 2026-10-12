@@ -69,7 +69,7 @@ Chooses between **Network Mode** or **Single Pipe Mode**.
 
 **Core Logic**
 - **Network Mode** (with `network` object):  
-  - Diameter Check → Auto-sizing if missing  
+  - Diameter Check → Auto-sizing if missing: only pipes without a diameter are sized, each for the flow it carries in the network (a parallel block's flow split by `flow_split` when given, evenly otherwise); a pipe with a nominal or internal diameter keeps it  
   - Flowrate Assignment → Distributes flow  
   - Network Solving → Pressure drop, head, pump power  
 

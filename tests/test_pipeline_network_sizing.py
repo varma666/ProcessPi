@@ -1,5 +1,10 @@
 """Regression tests for pipe sizing in the pipeline engine.
 
+- Network pipes are sized for the flow they carry in the network. They were
+  all sized for the 0.001 m3/s placeholder of `Pipe.flow_rate`, and the solver
+  then ran the real flow through them (86 m/s in the chilled water example).
+- A network pipe given a nominal or internal diameter keeps it; sizing used to
+  resize every pipe.
 - `fit(pipe=...)` uses the diameter of that pipe; only fit() diameters were
   read, so the pipe was sized all over again.
 
@@ -16,10 +21,15 @@ import pytest
 
 from processpi.components import Water
 from processpi.pipelines.engine import PipelineEngine
+from processpi.pipelines.network import PipelineNetwork
 from processpi.pipelines.pipes import Pipe
 from processpi.units import Diameter, Length, VolumetricFlowRate
 
 # ASME B36.10M STD bores (m)
+BORE_3IN = 0.07792
+BORE_4IN = 0.10226
+BORE_5IN = 0.12820
+BORE_6IN = 0.15408
 BORE_2IN = 0.05248
 
 
@@ -45,9 +55,142 @@ def _darcy_dp(q_m3s, bore_m, length_m, rho, mu, eps_m=0.045e-3):
     return f * (length_m / bore_m) * rho * v * v / 2.0
 
 
+def _by_name(results):
+    return {c["name"]: c for c in results["components"]}
+
+
 def _inches(d):
     # Unit objects hold their SI value: metres for a Diameter.
     return d.to("m").value / 0.0254
+
+
+# --------------------------------------------------------------------------
+# Network pipes are sized for the flow they carry
+# --------------------------------------------------------------------------
+
+def _header_and_two_branches(flow_split=None):
+    """A -> (B | C) -> D, with D fixed at 4 in."""
+    a = Pipe("A", length=Length(20, "m"))
+    b = Pipe("B", length=Length(10, "m"))
+    c = Pipe("C", length=Length(10, "m"))
+    d = Pipe("D", nominal_diameter=Diameter(4, "in"), length=Length(10, "m"))
+    net = PipelineNetwork.series(
+        "Loop", a, PipelineNetwork.parallel("PAR", b, c), d
+    )
+    engine = PipelineEngine()
+    kwargs = {"flow_split": flow_split} if flow_split else {}
+    engine.fit(
+        fluid=Water(), flowrate=VolumetricFlowRate(100, "m3/h"), network=net, **kwargs
+    )
+    return engine, (a, b, c, d)
+
+
+def test_network_pipes_are_sized_for_their_own_flow():
+    """
+    Water, 100 m3/h, recommended 1.0 to 2.5 m/s, sized at the middle (1.75 m/s)
+    and rounded up to the next standard bore:
+
+    A carries 100 m3/h = 0.027778 m3/s: D = sqrt(4Q / (pi 1.75)) = 142.2 mm
+      -> 6 in (154.08 mm), v = 0.027778 / 0.018646 = 1.490 m/s
+    B and C carry 50 m3/h each (even split, equal pipes): D = 100.5 mm
+      -> 4 in (102.26 mm), v = 0.013889 / 0.0082130 = 1.691 m/s
+    Before: every pipe was sized for 0.001 m3/s (1.25 in) and then ran the
+    real flow, A at 0.027778 / 9.665e-4 = 28.7 m/s.
+    """
+    engine, (a, b, c, d) = _header_and_two_branches()
+    results, _ = _run(engine)
+
+    assert _inches(a.nominal_diameter) == pytest.approx(6)
+    assert _inches(b.nominal_diameter) == pytest.approx(4)
+    assert _inches(c.nominal_diameter) == pytest.approx(4)
+    assert a.internal_diameter.to("m").value == pytest.approx(BORE_6IN)
+
+    comps = _by_name(results)
+    assert comps["A"]["velocity"].to("m/s").value == pytest.approx(1.490, rel=1e-3)
+    assert comps["B"]["velocity"].to("m/s").value == pytest.approx(1.691, rel=1e-3)
+    assert comps["C"]["velocity"].to("m/s").value == pytest.approx(1.691, rel=1e-3)
+
+    # The solver runs the real flow through them: A at the full 100 m3/h.
+    assert comps["A"]["flow_m3s"] == pytest.approx(0.027778, rel=1e-4)
+    water = Water()
+    rho, mu = water.density().value, water.viscosity().value
+    assert comps["A"]["pressure_drop_Pa"] == pytest.approx(
+        _darcy_dp(100 / 3600, BORE_6IN, 20, rho, mu), rel=5e-3
+    )
+
+
+def test_network_sizing_uses_the_flow_split_given_for_a_parallel_block():
+    """
+    flow_split {"PAR": [3, 1]}: B carries 75 m3/h, C 25 m3/h.
+
+    B: D = sqrt(4 x 0.020833 / (pi 1.75)) = 123.1 mm -> 5 in (128.20 mm),
+       v = 0.020833 / 0.012908 = 1.614 m/s
+    C: D = 71.1 mm -> 3 in (77.92 mm), v = 0.0069444 / 0.0047686 = 1.456 m/s
+    """
+    engine, (a, b, c, d) = _header_and_two_branches(flow_split={"PAR": [3, 1]})
+    results, _ = _run(engine)
+
+    assert _inches(b.nominal_diameter) == pytest.approx(5)
+    assert _inches(c.nominal_diameter) == pytest.approx(3)
+    comps = _by_name(results)
+    assert comps["B"]["velocity"].to("m/s").value == pytest.approx(1.614, rel=1e-3)
+    assert comps["C"]["velocity"].to("m/s").value == pytest.approx(1.456, rel=1e-3)
+
+
+# --------------------------------------------------------------------------
+# Pipes with a diameter keep it
+# --------------------------------------------------------------------------
+
+def test_network_pipe_with_a_nominal_diameter_keeps_it():
+    """
+    D is 4 in and carries the full 100 m3/h:
+    v = 0.027778 / (pi 0.10226^2 / 4) = 3.382 m/s, and its drop is the Darcy
+    drop on the 4 in bore. Before: D was resized to 1.25 in like the rest.
+    """
+    engine, (a, b, c, d) = _header_and_two_branches()
+    results, _ = _run(engine)
+
+    assert _inches(d.nominal_diameter) == pytest.approx(4)
+    assert d.internal_diameter.to("m").value == pytest.approx(BORE_4IN)
+    comps = _by_name(results)
+    assert comps["D"]["velocity"].to("m/s").value == pytest.approx(3.382, rel=1e-3)
+    water = Water()
+    rho, mu = water.density().value, water.viscosity().value
+    assert comps["D"]["pressure_drop_Pa"] == pytest.approx(
+        _darcy_dp(100 / 3600, BORE_4IN, 10, rho, mu), rel=5e-3
+    )
+
+
+def test_network_pipe_with_an_internal_diameter_keeps_it():
+    """A non-standard bore (90 mm) is not replaced by a standard size."""
+    lined = Pipe("Lined", internal_diameter=Diameter(90, "mm"), length=Length(10, "m"))
+    free = Pipe("Free", length=Length(10, "m"))
+    net = PipelineNetwork.series("S", free, lined)
+    engine = PipelineEngine()
+    engine.fit(fluid=Water(), flowrate=VolumetricFlowRate(100, "m3/h"), network=net)
+    results, _ = _run(engine)
+
+    assert lined.internal_diameter.to("m").value == pytest.approx(0.090)
+    assert lined.nominal_diameter is None
+    # v = 0.027778 / (pi 0.090^2 / 4) = 4.366 m/s
+    assert _by_name(results)["Lined"]["velocity"].to("m/s").value == pytest.approx(
+        4.366, rel=1e-3
+    )
+    assert _inches(free.nominal_diameter) == pytest.approx(6)
+
+
+def test_fixed_pipe_keeps_its_size_next_to_a_sized_pipe_of_the_same_name():
+    """The sized diameters were copied again to every pipe of the same name."""
+    fixed = Pipe("P", nominal_diameter=Diameter(3, "in"), length=Length(10, "m"))
+    free = Pipe("P", length=Length(10, "m"))
+    net = PipelineNetwork.series("S", free, fixed)
+    engine = PipelineEngine()
+    engine.fit(fluid=Water(), flowrate=VolumetricFlowRate(100, "m3/h"), network=net)
+    _run(engine)
+
+    assert _inches(fixed.nominal_diameter) == pytest.approx(3)
+    assert fixed.internal_diameter.to("m").value == pytest.approx(BORE_3IN)
+    assert _inches(free.nominal_diameter) == pytest.approx(6)
 
 
 # --------------------------------------------------------------------------

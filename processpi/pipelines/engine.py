@@ -1168,16 +1168,10 @@ class PipelineEngine:
                 print("🔄 Auto-sizing network pipe diameters...")
                 kwargs = self.data.copy()
                 kwargs.pop("network", None)
-                sizing_results = self._solve_for_diameter_network(net, **kwargs)
-
-                # Access results directly
-                sizing_data = sizing_results.results
-
-                # Apply calculated diameters to network pipes
-                for comp in sizing_data.get("all_simulation_results", []):
-                    for pipe in net.get_all_pipes():
-                        if pipe.name == comp.get("network_name"):
-                            pipe.internal_diameter = comp["components"][0]["diameter"]
+                # The sizing sets the size of each pipe it sizes. The sizes
+                # were also copied again here by pipe name, which gave a pipe
+                # the user had sized the size of another pipe of the same name.
+                self._solve_for_diameter_network(net, **kwargs)
 
             # --------------------------------------------------
             # Step 3: Assign flowrate to pipes if missing
@@ -1626,11 +1620,63 @@ class PipelineEngine:
         return PipelineResults(results_out)
 
     
+    def _design_flows(
+        self,
+        block: Any,
+        q_m3s: float,
+        net_name: Optional[str] = None,
+        flows: Optional[Dict[int, float]] = None,
+    ) -> Dict[int, float]:
+        """
+        The flow (m3/s) each pipe of a network carries, keyed by id(pipe), for
+        sizing pipes that have no diameter yet.
+
+        Series elements carry the flow that enters them. A parallel block
+        splits its flow by `flow_split` when one is given for it, as
+        `_balance_parallel_flows` does, and evenly otherwise: the balanced
+        split needs the diameters being sized. The solver balances the split
+        on the sized pipes afterwards.
+        """
+        if flows is None:
+            flows = {}
+        if isinstance(block, Pipe):
+            flows[id(block)] = q_m3s
+        elif isinstance(block, PipelineNetwork):
+            if block.connection_type == "parallel":
+                self._design_flows(block.elements, q_m3s, block.name, flows)
+            else:
+                for element in block.elements:
+                    self._design_flows(element, q_m3s, None, flows)
+        elif isinstance(block, list):
+            parallel = (net_name is not None) or (
+                bool(block) and all(isinstance(b, list) for b in block)
+            )
+            if not parallel:
+                for element in block:
+                    self._design_flows(element, q_m3s, None, flows)
+                return flows
+            n = len(block)
+            if n == 0:
+                return flows
+            shares = [1.0] * n
+            split_cfg = (self.data.get("flow_split") or {}).get(net_name) if net_name else None
+            if split_cfg and len(split_cfg) == n:
+                shares = [float(x) for x in split_cfg]
+            total = sum(shares) or 1.0
+            for branch, share in zip(block, shares):
+                self._design_flows(branch, q_m3s * share / total, None, flows)
+        return flows
+
     def _solve_for_diameter_network(self, network, **kwargs):
         """
         Iteratively sizes each pipe in a network using the same standard diameter
         selection logic as `_solve_for_diameter`, ensuring consistency between
         single-pipe and network sizing.
+
+        Only pipes without a diameter are sized; a pipe with a nominal or
+        internal diameter keeps it. Each pipe is sized for the flow it carries
+        in the network (see `_design_flows`); every pipe used to be sized for
+        the 0.001 m3/s placeholder `Pipe.flow_rate`, whatever the network flow.
         """
         import math
         from ..pipelines.standards import get_recommended_velocity, list_available_pipe_diameters
@@ -1648,12 +1694,17 @@ class PipelineEngine:
         pipes = network.get_all_pipes() if hasattr(network, "get_all_pipes") else \
             [p for branch in self._normalize_branches(network) for p in branch if isinstance(p, Pipe)]
 
-        for pipe in pipes:
-            flow_rate = getattr(pipe, "flow_rate", None) or self._infer_flowrate()
-            if flow_rate is None or float(getattr(flow_rate, "value", flow_rate)) <= 0:
-                continue
+        q_total = float(self._infer_flowrate().to("m3/s").value)
+        design_flows = self._design_flows(network, q_total)
 
-            q_val = float(flow_rate.value)
+        for pipe in pipes:
+            if self._pipe_bore(pipe) is not None:
+                # A size the user gave is kept; it used to be replaced.
+                continue
+            q_val = design_flows.get(id(pipe), q_total)
+            if q_val <= 0:
+                continue
+            flow_rate = VolumetricFlowRate(q_val, "m3/s")
     
             # Recommended velocity range
             vel_range = get_recommended_velocity(getattr(fluid, "name", "").strip().lower().replace(" ", "_"))

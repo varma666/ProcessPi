@@ -33,7 +33,7 @@ Pipe(
 - **`inlet_pressure`** (`Optional[Pressure]`): Inlet pressure of the pipe.  
 - **`outlet_pressure`** (`Optional[Pressure]`): Outlet pressure of the pipe.  
 - **`internal_diameter`** (`Optional[Diameter]`): The bore used in the calculations. Given with `nominal_diameter`, it replaces the tabulated bore (a lined pipe, a non-standard wall) and must be smaller than that size's outside diameter (`ValueError` otherwise).  
-- **`flow_rate`** (`Optional[VolumetricFlowRate]`): Initial flow rate for solver. Defaults to `0.001 m³/s`.  
+- **`flow_rate`** (`Optional[VolumetricFlowRate]`): Initial flow rate for solver. Defaults to `0.001 m³/s`. The engine does not size or solve from it: a network pipe is sized for the flow it carries in the network.  
 - **`**kwargs`** (`Any`): Additional custom parameters stored in the base class.  
 
 A diameter or length given as a bare number is read in metres, as before, with a `UserWarning`; pass `Diameter` and `Length` objects. A `nominal_diameter` that is not a standard size is used as the internal diameter, with a `UserWarning`. `Pipe` has no `diameter` input: `Pipe(diameter=...)` is ignored (kept in `params`), with a `UserWarning`.  
