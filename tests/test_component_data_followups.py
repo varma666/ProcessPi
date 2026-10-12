@@ -1,16 +1,18 @@
 """Regression tests for component data follow-ups: the liquid Cp Eq. (2) of
-Ammonia, Ethane, 1,2-Butanediol and 1,3-Butanediol, the Ethylene class name,
-the 1-Propanol constants, and the new Cyclohexane component.
+Ammonia, Ethane, 1,2-Butanediol and 1,3-Butanediol (with gas-phase Cp and k
+for ammonia and ethane), the Ethylene class name, the 1-Propanol constants,
+and the new Cyclohexane component.
 
 Reference values:
 - Perry's Chemical Engineers' Handbook, 8th ed. (2008), Section 2: Table 2-153
-  (liquid Cp, "use Eq. (2)" rows, pp. 2-165 and 2-167) and Table 2-156
-  (ideal-gas Cp, DIPPR Eq. 107, pp. 2-176 and 2-178). Each table lists the
-  property at its own Tmin and Tmax, which checks the equation form and the
-  constants.
+  (liquid Cp, "use Eq. (2)" rows, pp. 2-165 and 2-167), Table 2-156 (ideal-gas
+  Cp, DIPPR Eq. 107, pp. 2-176 and 2-178) and Table 2-314 (vapour k, DIPPR
+  Eq. 102, pp. 2-433 and 2-435). Each table lists the property at its own Tmin
+  and Tmax, which checks the equation form and the constants.
   1-Propanol: Tables 2-8 (p. 2-59), 2-150 (p. 2-154) and 2-153 (p. 2-169).
 - NIST Chemistry WebBook, SRD 69, fluid properties (fetched 2026-10-12):
-  saturated liquid Cp of ammonia and ethane, and Cp on the 0.101325 MPa isobar.
+  saturated liquid Cp of ammonia and ethane, and Cp and k on the 0.101325 MPa
+  isobar.
   1-Propanol (CAS 71-23-8) phase-change and condensed-phase pages.
   Cyclohexane (CAS 110-82-7): fluid properties and gas-phase Cp.
 - Cyclohexane constants: Perry's 8th ed., compound no. 65, Tables 2-8, 2-32,
@@ -284,3 +286,30 @@ def test_cyclohexane_docs_example_runs():
     # NIST WebBook, 298.15 K and 0.101325 MPa: 773.966 kg/m3.
     assert c6h12.density().value == pytest.approx(773.966, rel=0.005)
     assert c6h12.enthalpy().value > 0
+
+
+# ----------------------------------------------------------------------
+# Ammonia and ethane gas: vapour k, Perry's Table 2-314
+# ----------------------------------------------------------------------
+@pytest.mark.parametrize("cls, T, k", [
+    (Ammonia, 200, 0.01446),   # p. 2-433
+    (Ammonia, 900, 0.11523),
+    (Ethane, 184.55, 0.00886),  # p. 2-435
+    (Ethane, 1000, 0.15807),
+])
+def test_vapor_k_matches_perry_table_2_314(cls, T, k):
+    gas = cls(temperature=Temperature(T, "K"), phase="gas")
+    assert gas.thermal_conductivity().value == pytest.approx(k, rel=1e-3)
+
+
+@pytest.mark.parametrize("cls, T, k_nist, rel", [
+    (Ammonia, 300, 0.0253719, 0.01),
+    (Ammonia, 400, 0.0374695, 0.01),
+    (Ethane, 300, 0.0209725, 0.04),  # Perry's fit is 3.7 % above NIST here
+    (Ethane, 400, 0.0358207, 0.01),
+])
+def test_gas_k_at_one_atm_matches_nist(cls, T, k_nist, rel):
+    # Used to return the liquid polynomial: 0.475 W/mK for ammonia at 300 K.
+    gas = cls(temperature=Temperature(T, "K"), pressure=Pressure(101325, "Pa"))
+    assert gas.phase() == "gas"
+    assert gas.thermal_conductivity().value == pytest.approx(k_nist, rel=rel)

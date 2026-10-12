@@ -39,7 +39,9 @@ The properties of the `Ammonia` class are calculated using the following methods
 * **`viscosity()`**:  
     * **Liquid Phase**: Calculates viscosity (μ) using the DIPPR correlation  
     * **Gas Phase**: Calculates viscosity using Sutherland's Law  
-* **`thermal_conductivity()`**: Calculates thermal conductivity (k) as a polynomial function of temperature  
+* **`thermal_conductivity()`**:  
+    * **Gas Phase**: Vapor thermal conductivity (k), DIPPR Eq. 102 with the constants of Perry's 8th ed., Table 2-314  
+    * **Liquid Phase**: Polynomial function of temperature (Perry's Table 2-315)  
 * **`vapor_pressure()`**: Calculates vapor pressure (Pvap​) using the Antoine-style equation  
 * **`enthalpy()`**: Calculates the enthalpy of vaporization (ΔHvap​) using a correlation based on reduced temperature  
 

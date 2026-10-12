@@ -60,6 +60,11 @@ class Ammonia(Component):
     # (C1 = 0.33427E5, C2 = 0.4898E5, C3 = 2.036E3, C4 = 0.2256E5, C5 = 882).
     # 2090.7 J/kgK at 300 K.
     _ideal_gas_heat_capacity_constants = [0.33427E5, 0.4898E5, 2.036E3, 0.2256E5, 882]
+    # `_thermal_conductivity_constants` above are the LIQUID ammonia
+    # correlation (Table 2-315). In the gas phase the base class uses this:
+    # vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 200-900 K: Perry's
+    # 8th ed., Table 2-314, p. 2-433 (C3, C4 blank). 0.0253 W/mK at 300 K.
+    _vapor_thermal_conductivity_constants = [9.6608E-06, 1.3799, 0, 0]
 
 
     @PropertyMethod

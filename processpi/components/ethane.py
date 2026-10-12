@@ -23,6 +23,11 @@ class Ethane(Component):
     # (C1 = 0.40326E5, C2 = 1.3422E5, C3 = 1.6555E3, C4 = 0.73223E5, C5 = 752.87).
     # 1750.1 J/kgK at 300 K.
     _ideal_gas_heat_capacity_constants = [0.40326E5, 1.3422E5, 1.6555E3, 0.73223E5, 752.87]
+    # `_thermal_conductivity_constants` above are the LIQUID ethane
+    # correlation (Table 2-315). In the gas phase the base class uses this:
+    # vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 184.55-1000 K:
+    # Perry's 8th ed., Table 2-314, p. 2-435 (C4 blank). 0.0218 W/mK at 300 K.
+    _vapor_thermal_conductivity_constants = [0.000073869, 1.1689, 500.73, 0]
 
     @PropertyMethod
     def specific_heat(self) -> SpecificHeat:
