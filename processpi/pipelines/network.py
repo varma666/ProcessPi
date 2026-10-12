@@ -248,6 +248,11 @@ class PipelineNetwork:
         to the network's nodes. It also automatically adds the component to the
         network's `elements` list.
 
+        `PipelineEngine` solves a network built this way as a graph: the
+        direction start to end is the direction of positive flow, the flow
+        enters at the one node no edge enters, and leaves at node demands and
+        at the nodes no edge leaves.
+
         Args:
             component (Union[Pipe, Pump, Vessel, Equipment]): The component to connect.
             start_node (str): The name of the inlet node.
