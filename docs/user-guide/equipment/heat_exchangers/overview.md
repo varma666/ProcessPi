@@ -70,6 +70,28 @@ together with equipment specifications.
 -   `hx_type`
 -   Additional design specifications
 
+### Overall heat-transfer coefficient
+
+A U can be given in one of two ways (a `HeatTransferCoefficient`, or a
+number in W/m²·K):
+
+-   `assumed_U`: a starting guess only. The design iterates U from the
+    film coefficients, fouling and wall, and resizes the area until U
+    converges, exactly as when no U is given (the starting value then
+    comes from the table of typical U values).
+-   `specified_U`: U is fixed. The area is sized at it and U is not
+    iterated. The U calculated from the film coefficients is still
+    reported, together with the area the duty would need at it, and a
+    `U_BASIS_WARNING` says when the exchanger falls short of that area or
+    exceeds it by more than 35 %.
+
+Passing both is an error. The older `U` keyword is read as `assumed_U`
+and raises a `DeprecationWarning`. The results report the basis used in
+`u_basis`: `"specified"`, `"assumed"` or `"calculated"` (no U given).
+The double-pipe design has no film-coefficient model, so it uses either
+keyword as the design U (350 W/m²·K, `u_basis` `"default"`, when none is
+given).
+
 ### Functionality
 
 -   Validates MaterialStream objects
@@ -142,7 +164,7 @@ Produces a concise engineering report including:
 
 -   Heat Duty
 -   Area
--   U Value
+-   U Value and U basis
 -   Velocities
 -   Pressure Drops
 -   Tube Count

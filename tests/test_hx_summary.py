@@ -60,7 +60,7 @@ def _benzene_cooler(**specs):
                                temperature=Temperature(15, "C"),
                                mass_flow=MassFlowRate(60500, "kg/h")),
         cold_out=MaterialStream("cold_out", component=Water()),
-        U=HeatTransferCoefficient(575, "W/m2K"),
+        specified_U=HeatTransferCoefficient(575, "W/m2K"),
         mode="design",
         **specs,
     )
@@ -80,7 +80,7 @@ def _kerosene_double_pipe(mode="design", **specs):
                                temperature=Temperature(20, "C"),
                                mass_flow=MassFlowRate(1.5, "kg/s"),
                                specific_heat=SpecificHeat(4180, "J/kgK")),
-        hx_type="double_pipe", mode=mode, U=350.0, **specs,
+        hx_type="double_pipe", mode=mode, specified_U=350.0, **specs,
     )
     return _quiet(engine.run)
 
@@ -182,7 +182,7 @@ def test_rating_reports_the_pressure_drop_limits():
                                mass_flow=MassFlowRate(60500, "kg/h")),
         cold_out=MaterialStream("cold_out", component=Water(),
                                 temperature=Temperature(25, "C")),
-        U=HeatTransferCoefficient(575, "W/m2K"), tube_dp=Pressure(50, "kPa"),
+        specified_U=HeatTransferCoefficient(575, "W/m2K"), tube_dp=Pressure(50, "kPa"),
         mode="rate", tube_od=0.01905, tube_id=0.016, tube_length=4.88,
         tube_count=200, tube_passes=2, shell_diameter=0.45, baffle_spacing=0.18,
     )

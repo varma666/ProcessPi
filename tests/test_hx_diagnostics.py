@@ -34,11 +34,11 @@ _DOCS_U = HeatTransferCoefficient(575, "W/m2K")
 def _benzene_cooler(U=_DOCS_U, **extra):
     """The benzene cooler from docs/examples/equipment/heatexchanger.
 
-    A user U is the design basis: the area is sized at it and U is not
-    iterated. Pass U=None to size from the assumed-U table and iterate.
+    U is passed as specified_U, the design basis: the area is sized at it and
+    U is not iterated. Pass U=None to size from the assumed-U table and iterate.
     """
     if U is not None:
-        extra["U"] = U
+        extra["specified_U"] = U
     hot_in = MaterialStream("hot_in", component=Benzene(),
                             temperature=Temperature(90, "C"),
                             mass_flow=MassFlowRate(21000, "kg/h"))
@@ -86,7 +86,7 @@ def test_convergence_tolerance_is_honoured():
     """From the tabulated U the first step is about 25% out and the second about
     11%; a 15% tolerance stops at the second pass, a 1% one goes on.
 
-    The iteration only runs without a user U (a user U is the design basis).
+    The iteration only runs without specified_U (a specified U is the design basis).
     """
     loose = _quiet(_benzene_cooler(U=None, u_tolerance_percent=15.0).run).data
     assert loose["converged"] is True

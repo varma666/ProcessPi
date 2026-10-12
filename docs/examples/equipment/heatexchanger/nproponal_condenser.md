@@ -23,7 +23,7 @@ The condenser has the following specifications:
 - Tube passes: **4**
 - Shell passes: **1**
 - Tube layout: **Triangular**
-- Overall Heat Transfer Coefficient (U): **568 W/m²·K**
+- Overall Heat Transfer Coefficient (`assumed_U`): **568 W/m²·K**
 - Design Method: **Bell–Delaware**
 
 ---
@@ -131,7 +131,7 @@ hx.fit(
     shell_dp=Pressure(2, "psi"),
     tube_dp=Pressure(10, "psi"),
 
-    U=HeatTransferCoefficient(568, "W/m2K"),
+    assumed_U=HeatTransferCoefficient(568, "W/m2K"),
 
     mode="rate",
 

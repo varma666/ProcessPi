@@ -190,7 +190,7 @@ def test_double_pipe_outlet_temperature_and_area():
                              specific_heat=SpecificHeat(4180, "J/kgK"))
     engine = HeatExchangerEngine(method="kern")
     engine.fit(hot_in=hot_in, hot_out=hot_out, cold_in=cold_in,
-               hx_type="double_pipe", mode="design", U=350.0)
+               hx_type="double_pipe", mode="design", specified_U=350.0)
     data = _quiet(engine.run).data
 
     q = data["Q"]

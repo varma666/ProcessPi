@@ -175,8 +175,12 @@ class ShellAndTubeHX(HeatExchanger):
         return hx_type
 
     def _assume_u(self, hot: Dict[str, float], cold: Dict[str, float]) -> float:
-        if self.specs.get("U") is not None:
-            return self._safe_float(self.specs["U"].to("W/m2K"), "U")
+        # The U the sizing starts from: the user's specified_U or assumed_U when
+        # given, otherwise the middle of the tabulated range for the service.
+        for key in ("specified_U", "assumed_U"):
+            u_user = self._user_u(key)
+            if u_user is not None:
+                return u_user
         hot_type = self._assumed_u_fluid_type("hot", hot)
         cold_type = self._assumed_u_fluid_type("cold", cold)
         service_type = getattr(self, "service_type", "heat_exchanger")
@@ -1387,13 +1391,14 @@ class ShellAndTubeHX(HeatExchanger):
         u_range: Tuple[float, float] | None,
     ) -> Dict[str, Any]:
     
-        u_user = None
-        if self.specs.get("U") is not None:
-            u_user = self._safe_float(self.specs["U"].to("W/m2K"), "U")
-            self._trace_step("THERMAL", "U user supplied", u_user)
-        # A user-specified U is the design basis, not merely a value to
-        # compare against the calculated coefficient. Keep it fixed during
-        # area sizing; U_calculated is still reported independently.
+        # specified_U is the design basis, not merely a value to compare
+        # against the calculated coefficient: the area is sized at it on every
+        # pass and U is not iterated; U_calculated is still reported
+        # independently. assumed_U (or no U at all) only sets `u_assumed`, the
+        # first pass's U, and the loop iterates from there.
+        u_user = self._user_u("specified_U")
+        if u_user is not None:
+            self._trace_step("THERMAL", "U specified", u_user)
         state = {
             "iterations": 0,
             "u_assumed": u_user if u_user is not None else u_assumed,
@@ -1507,7 +1512,7 @@ class ShellAndTubeHX(HeatExchanger):
             self._trace_step("THERMAL", "U clean", u_clean)
             self._trace_step("THERMAL", "U calculated", u_dirty)
             if u_user is not None:
-                self._trace_step("THERMAL", "U calc vs U user", f"{u_dirty:.2f} vs {u_user:.2f}")
+                self._trace_step("THERMAL", "U calc vs U specified", f"{u_dirty:.2f} vs {u_user:.2f}")
     
             # ======================================================
             # DIRTY AREA
@@ -2109,6 +2114,45 @@ class ShellAndTubeHX(HeatExchanger):
                 payload.get("warnings", [])
             )
         )
+
+        # ==========================================================
+        # U BASIS
+        # ==========================================================
+
+        # With specified_U the area is held to the user's U, so the status
+        # below judges the area against Q / (specified_U F LMTD), the basis
+        # the user asked for. The film coefficients can disagree with it: the
+        # area the duty needs at U_calculated is reported beside it, and a
+        # warning says when the exchanger falls short of that area (it would
+        # not make the duty at its own U) or exceeds it by more than the 1.35
+        # OVERSIZED ratio. With assumed_U or no U the area is sized at the
+        # converged U_calculated and the two areas agree.
+        u_specified = payload.get("u_user")
+        u_calc_value = payload.get("u_calculated")
+        cltd_value = payload.get("cltd")
+        q_effective = payload.get("q_watts_effective", payload.get("q_watts_original"))
+        area_at_u_calc = None
+        if u_calc_value and cltd_value and q_effective is not None:
+            area_at_u_calc = q_effective / max(u_calc_value * cltd_value, 1e-12)
+        if u_specified is not None and area_at_u_calc is not None:
+            area_value = payload["area"]
+            deviation = (u_calc_value - u_specified) / u_specified * 100.0
+            if area_value < area_at_u_calc:
+                warnings.append(
+                    f"[U_BASIS_WARNING] U calculated from the film coefficients, "
+                    f"{u_calc_value:.1f} W/m2K, is {abs(deviation):.0f}% below "
+                    f"specified_U {u_specified:.1f} W/m2K: at U calculated the duty "
+                    f"needs {area_at_u_calc:.2f} m2 and the exchanger has "
+                    f"{area_value:.2f} m2"
+                )
+            elif area_value > 1.35 * area_at_u_calc:
+                warnings.append(
+                    f"[U_BASIS_WARNING] U calculated from the film coefficients, "
+                    f"{u_calc_value:.1f} W/m2K, is {deviation:.0f}% above "
+                    f"specified_U {u_specified:.1f} W/m2K: at U calculated the duty "
+                    f"needs only {area_at_u_calc:.2f} m2 and the exchanger has "
+                    f"{area_value:.2f} m2"
+                )
     
         # ==========================================================
         # ENGINEERING FLAGS
@@ -2479,6 +2523,37 @@ class ShellAndTubeHX(HeatExchanger):
                 else None
     
             ),
+
+            # How U was treated: "specified" (specified_U, fixed), "assumed"
+            # (assumed_U, the starting guess of the iteration) or "calculated"
+            # (no U given, iterated from the tabulated value). U_specified is
+            # the fixed U (U_user is its older name) and U_initial the U the
+            # sizing started from.
+            "u_basis": self._u_basis(),
+
+            "U_specified": (
+                HeatTransferCoefficient(payload["u_user"], "W/m2K")
+                if payload.get("u_user") is not None
+                else None
+            ),
+
+            "U_initial": (
+                HeatTransferCoefficient(payload["u_initial"], "W/m2K")
+                if payload.get("u_initial") is not None
+                else None
+            ),
+
+            # The area the duty needs at U_calculated, and whether the exchanger
+            # has it. In design they differ from Area_required / thermal_ok only
+            # under specified_U; rate() takes Area_required at the U it was
+            # given or looked up, not at U_calculated.
+            "Area_required_at_U_calculated": (
+                Area(area_at_u_calc, "m2") if area_at_u_calc is not None else None
+            ),
+
+            "thermal_ok_at_U_calculated": (
+                payload["area"] >= area_at_u_calc if area_at_u_calc is not None else None
+            ),
     
             "U_calculated": HeatTransferCoefficient(
                 payload["u_calculated"],
@@ -2775,6 +2850,7 @@ class ShellAndTubeHX(HeatExchanger):
         self._debug(cltd)
 
         u_assumed = self._assume_u(hot, cold)
+        u_initial = u_assumed
         self._trace_step("THERMAL", "U assumed initial", u_assumed)
         hot_hx = {"u_key": self._assumed_u_fluid_type("hot", hot)}
         cold_hx = {"u_key": self._assumed_u_fluid_type("cold", cold)}
@@ -2868,6 +2944,7 @@ class ShellAndTubeHX(HeatExchanger):
             "shell_dp": shell_dp,
             "area": state["geometry"]["area"],
             "u_assumed": state["u_assumed"],
+            "u_initial": u_initial,
             "u_calculated": state["u_calculated"],
             "u_user": state.get("u_user"),
             "re_shell": state["re_shell"],
@@ -3164,8 +3241,12 @@ class ShellAndTubeHX(HeatExchanger):
                 )
         cltd = ft * lmtd
 
-        user_u = self.specs.get("U")
-        u_assumed = self._assume_u(hot, cold) if user_u is None else self._safe_float(user_u.to("W/m2K"), "U")
+        # No U iteration here: when neither the area nor the tube count is
+        # given, the tube count follows from the area at this U, whichever
+        # keyword (or the table) it came from. Only specified_U is reported as
+        # the U the area is held to.
+        u_specified = self._user_u("specified_U")
+        u_assumed = self._assume_u(hot, cold)
         area_spec = self.specs.get("area") or self.specs.get("Area")
         if area_spec is not None:
             area = self._safe_float(area_spec.to("m2"), "area") if hasattr(area_spec, "to") else self._safe_float(area_spec, "area")
@@ -3224,7 +3305,7 @@ class ShellAndTubeHX(HeatExchanger):
         else:
             assessment = "OK"
 
-        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_calculated": u_calc, "u_user": u_assumed if user_u is not None else None, "ft": ft, "cltd": cltd, "tube_passes": tube_passes, "shell_passes": shell_passes, "viscosity_correction": self._viscosity_correction_report(tube, shell), "property_basis": self._property_basis(hot, cold), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "dimless": dimless, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "tube_dp_limit": tube_dp_limit, "shell_dp_limit": shell_dp_limit, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
+        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_initial": u_assumed, "u_calculated": u_calc, "u_user": u_specified, "ft": ft, "cltd": cltd, "tube_passes": tube_passes, "shell_passes": shell_passes, "viscosity_correction": self._viscosity_correction_report(tube, shell), "property_basis": self._property_basis(hot, cold), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "dimless": dimless, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "tube_dp_limit": tube_dp_limit, "shell_dp_limit": shell_dp_limit, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
 
         return self._finalize_results(payload)
     def design(self) -> Dict[str, Any]:
