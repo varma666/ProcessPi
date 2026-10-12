@@ -74,7 +74,7 @@ def _water_heats_benzene():
 _HOT_WATER_CORROSIVE = dict(hot_corrosion_level="high")
 
 
-_DESIGN_SPECS = dict(U=HeatTransferCoefficient(575, "W/m2K"),
+_DESIGN_SPECS = dict(specified_U=HeatTransferCoefficient(575, "W/m2K"),
                      shell_dp=Pressure(1, "bar"), tube_dp=Pressure(1, "bar"))
 
 

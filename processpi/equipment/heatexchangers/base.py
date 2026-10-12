@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import copy
 import logging
+import sys
+import warnings
 from typing import Any, Dict, Optional
 
 from processpi.calculations.heat_transfer import HeatExchangerArea, LMTD, OverallHeatTransferCoefficient
@@ -9,6 +11,43 @@ from processpi.calculations.heat_transfer.hx_kern import LatentDuty, SensibleDut
 from processpi.equipment.base import Equipment
 from processpi.streams.material import MaterialStream
 from processpi.units.temperature import Temperature
+
+
+def resolve_u_keywords(specs: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Return a copy of `specs` with the overall U given under one of its two keywords.
+
+    ``specified_U`` fixes U: the area is sized at it and U is not iterated.
+    ``assumed_U`` is only the starting guess of the U iteration, which then
+    resizes the area at the U calculated from the film coefficients. ``U`` is
+    the older name; it is read as ``assumed_U`` and warns with a
+    ``DeprecationWarning``. More than one of the three is a ValueError.
+    """
+    specs = dict(specs)
+    given = [key for key in ("specified_U", "assumed_U", "U") if specs.get(key) is not None]
+    if len(given) > 1:
+        raise ValueError(
+            f"Pass only one of specified_U (U fixed) and assumed_U (starting "
+            f"guess, U is iterated); got {', '.join(given)}. U is the "
+            f"deprecated name of assumed_U."
+        )
+    u_value = specs.pop("U", None)
+    if u_value is not None:
+        # The level of the first frame outside processpi, so the warning names
+        # the caller's line (and is shown by the default filters in a script).
+        level, frame = 1, sys._getframe(0)
+        while frame is not None and frame.f_globals.get("__name__", "").startswith("processpi"):
+            frame, level = frame.f_back, level + 1
+        warnings.warn(
+            "The U keyword is deprecated and is read as assumed_U, a starting "
+            "guess that the design iterates from the film coefficients. Pass "
+            "assumed_U=... for that, or specified_U=... to fix U and size the "
+            "area at it.",
+            DeprecationWarning,
+            stacklevel=level,
+        )
+        specs["assumed_U"] = u_value
+    return specs
 
 
 class HeatExchangerBaseMixin:
@@ -74,7 +113,7 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
         self.cold_in = cold_in
         self.hot_out = hot_out
         self.cold_out = cold_out
-        self.specs = specs
+        self.specs = resolve_u_keywords(specs)
         self._init_runtime()
 
     # ------------------------
@@ -132,6 +171,28 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
     def _safe_positive(self, x: Any, name: str, minimum: float = 1e-12) -> float:
         value = self._safe_float(x, name)
         return max(value, minimum)
+
+    def _user_u(self, key: str) -> float | None:
+        """The `specified_U` or `assumed_U` spec in W/m2K, or None when not given."""
+        raw = self.specs.get(key)
+        if raw is None:
+            return None
+        value = self._safe_float(raw.to("W/m2K"), key) if hasattr(raw, "to") else self._safe_float(raw, key)
+        if not value > 0.0:
+            raise ValueError(f"{key} must be a positive heat transfer coefficient, got {raw!r}")
+        return value
+
+    def _u_basis(self, default: str = "calculated") -> str:
+        """
+        How the run treats U: "specified" (fixed by specified_U), "assumed"
+        (assumed_U or the deprecated U, the starting guess) or `default` when
+        neither is given.
+        """
+        if self.specs.get("specified_U") is not None:
+            return "specified"
+        if self.specs.get("assumed_U") is not None:
+            return "assumed"
+        return default
 
     def _safe_nonzero(self, x: Any, name: str, eps: float = 1e-12) -> float:
         value = self._safe_float(x, name)
