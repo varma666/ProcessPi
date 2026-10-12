@@ -62,12 +62,51 @@ _GRAPH_DISCONNECTED = (
     "The network built with add_edge is not connected, so its flows cannot be "
     "found from its nodes."
 )
+_GRAPH_NOT_CONVERGED = (
+    "The flows in the loops of the network did not converge; the last "
+    "iteration is reported."
+)
+_GRAPH_LOOP_WITHOUT_PIPE = (
+    "A loop of the network has no pipe in it (only pumps, equipment, vessels "
+    "or outlets without a demand), so how the flow splits around it is not "
+    "defined. Put the pipe that connects each item in the loop."
+)
+# Graph solver: relative loop residual (a loop's pressure imbalance over its
+# total loss) at which the flows count as converged, and the iteration limit.
+GRAPH_LOOP_TOL = 1e-6
+GRAPH_MAX_ITER = 100
 _GRAPH_REVERSE_FLOW = (
     "A pump or equipment item of the network carries flow against its "
     "direction; its fixed head or pressure drop is applied as given."
 )
 
 # ------------------------------- Helpers -----------------------------------
+
+
+def _solve_linear(matrix: List[List[float]], rhs: List[float]) -> Optional[List[float]]:
+    """
+    Solves matrix x = rhs by Gaussian elimination with partial pivoting, for
+    the small systems of the loop solver. Returns None for a singular matrix.
+    """
+    n = len(rhs)
+    a = [list(row) + [b] for row, b in zip(matrix, rhs)]
+    scale = max((abs(x) for row in matrix for x in row), default=0.0)
+    if scale == 0.0:
+        return None
+    for col in range(n):
+        pivot = max(range(col, n), key=lambda r: abs(a[r][col]))
+        if abs(a[pivot][col]) <= 1e-12 * scale:
+            return None
+        a[col], a[pivot] = a[pivot], a[col]
+        for r in range(col + 1, n):
+            factor = a[r][col] / a[col][col]
+            if factor:
+                for k in range(col, n + 1):
+                    a[r][k] -= factor * a[col][k]
+    x = [0.0] * n
+    for r in reversed(range(n)):
+        x[r] = (a[r][n] - sum(a[r][k] * x[k] for k in range(r + 1, n))) / a[r][r]
+    return x
 
 
 def _elevation_m(node: Any) -> float:
@@ -1066,8 +1105,13 @@ class PipelineEngine:
         to `fit()` enters there. An edge's direction is the direction of
         positive flow; a flow against it comes out negative. The flow leaves
         at the node demands (`Node.demand`) and at the outlets, the nodes that
-        no edge leaves. An outlet without a demand takes what the demands
-        leave.
+        no edge leaves. The outlets without a demand take what the demands
+        leave, at one common pressure: they are joined to a virtual node by
+        edges without loss, so their split is solved like any other loop.
+
+        Each edge outside the spanning tree closes one independent loop,
+        listed as (edge, +1 or -1) pairs, +1 where the loop runs along the
+        edge's direction.
 
         Returns:
             (graph, None), or (None, reason) when the topology does not define
@@ -1127,9 +1171,15 @@ class PipelineEngine:
         if len(free) == 1:
             outflow[free[0]] += q_free
         elif free:
-            return None, (
-                "The network built with add_edge has loops, which are not solved yet."
-            )
+            common = "(outlets)"
+            while common in network.nodes:
+                common = f"({common})"
+            nodes.append(common)
+            outflow[common] = q_free
+            for name in free:
+                graph_edges.append(
+                    {"element": None, "start": name, "end": common, "virtual": True}
+                )
 
         # Spanning tree, breadth first from the inlet.
         incident: Dict[str, List[int]] = {name: [] for name in nodes}
@@ -1137,6 +1187,7 @@ class PipelineEngine:
             incident[edge["start"]].append(i)
             incident[edge["end"]].append(i)
         parent: Dict[str, Optional[int]] = {source: None}
+        depth = {source: 0}
         order = [source]
         k = 0
         while k < len(order):
@@ -1147,14 +1198,39 @@ class PipelineEngine:
                 other = edge["end"] if edge["start"] == name else edge["start"]
                 if other not in parent:
                     parent[other] = i
+                    depth[other] = depth[name] + 1
                     order.append(other)
         if len(order) != len(nodes):
             return None, _GRAPH_DISCONNECTED
         tree = {i for i in parent.values() if i is not None}
         chords = [i for i in range(len(graph_edges)) if i not in tree]
-        if chords:
-            return None, (
-                "The network built with add_edge has loops, which are not solved yet."
+
+        def up(name: str) -> Tuple[str, int, int]:
+            """Parent node, tree edge, and +1 if going up runs along the edge."""
+            i = parent[name]
+            edge = graph_edges[i]
+            if edge["end"] == name:
+                return edge["start"], i, -1
+            return edge["end"], i, 1
+
+        loops = []
+        for chord in chords:
+            # chord start -> chord end, then back along the tree to the start
+            a, b = graph_edges[chord]["end"], graph_edges[chord]["start"]
+            from_end, from_start = [], []
+            while depth[a] > depth[b]:
+                a, i, sign = up(a)
+                from_end.append((i, sign))
+            while depth[b] > depth[a]:
+                b, i, sign = up(b)
+                from_start.append((i, sign))
+            while a != b:
+                a, i, sign = up(a)
+                from_end.append((i, sign))
+                b, i, sign = up(b)
+                from_start.append((i, sign))
+            loops.append(
+                [(chord, 1)] + from_end + [(i, -sign) for i, sign in reversed(from_start)]
             )
 
         outlets = [n for n in used if n != source and (n in demands or n in free)]
@@ -1167,6 +1243,7 @@ class PipelineEngine:
             "order": order,
             "parent": parent,
             "chords": chords,
+            "loops": loops,
             "elevation": {name: _elevation_m(network.nodes[name]) for name in used},
         }, None
 
@@ -1232,6 +1309,57 @@ class PipelineEngine:
             return self._equipment_dp_pa(elem).to("Pa").value + static, 0.0, static
         return static, 0.0, static
 
+    def _graph_balance_loops(
+        self, graph: Dict[str, Any], chord_flows: Dict[int, float], rho: float, q_floor: float
+    ) -> Tuple[bool, int]:
+        """
+        Newton iteration on the loop flows (see `_solve_graph_network`),
+        updating the flows of the loop-closing edges in `chord_flows` in place.
+
+        Returns:
+            (converged, iterations)
+
+        Raises:
+            ValueError: If a loop has no pipe, so its flow is not defined.
+        """
+        edges, loops, chords = graph["edges"], graph["loops"], graph["chords"]
+        for loop in loops:
+            if not any(isinstance(edges[i]["element"], Pipe) for i, _ in loop):
+                raise ValueError(_GRAPH_LOOP_WITHOUT_PIPE)
+        converged = False
+        iterations = 0
+        for iterations in range(1, GRAPH_MAX_ITER + 1):
+            flows = self._graph_tree_flows(graph, chord_flows)
+            evaluated = [
+                self._graph_edge_drop(graph, edge, q, rho, q_floor)
+                for edge, q in zip(edges, flows)
+            ]
+            residual = [sum(sign * evaluated[i][0] for i, sign in loop) for loop in loops]
+            # Static heads cancel around a loop; the losses set the scale.
+            scale = [
+                sum(abs(evaluated[i][0] - evaluated[i][2]) for i, _ in loop) for loop in loops
+            ]
+            if all(abs(r) <= GRAPH_LOOP_TOL * max(sc, 1e-9) for r, sc in zip(residual, scale)):
+                converged = True
+                break
+            sign_in = [dict(loop) for loop in loops]
+            jacobian = [
+                [
+                    sum(
+                        sign * sign_in[b][i] * evaluated[i][1]
+                        for i, sign in loops[a] if i in sign_in[b]
+                    )
+                    for b in range(len(loops))
+                ]
+                for a in range(len(loops))
+            ]
+            delta = _solve_linear(jacobian, [-r for r in residual])
+            if delta is None:
+                raise ValueError(_GRAPH_LOOP_WITHOUT_PIPE)
+            for chord, d in zip(chords, delta):
+                chord_flows[chord] += d
+        return converged, iterations
+
     @staticmethod
     def _graph_node_pressures(graph: Dict[str, Any], drops: List[float]) -> Dict[str, float]:
         """Pressure at each node relative to the inlet (Pa), along the tree."""
@@ -1284,6 +1412,17 @@ class PipelineEngine:
         governing drop: from the inlet to the outlet with the lowest
         pressure.
 
+        A tree network's flows follow from the mass balance alone. In a
+        looped one the flow around each loop is found so that the pressure
+        drops around every loop add up to zero, by Newton's method on all
+        loops at once (Hardy Cross corrects one loop at a time with the same
+        terms): the correction dq solves J dq = -r, r the pressure imbalance
+        of each loop and J[a][b] the sum over the edges shared by loops a and
+        b of their slopes 2 dp/q, with the signs of the two loops. The drops
+        are those of `_pipe_calculation`, so the result matches single-pipe
+        runs. Converged when every loop's imbalance is below `GRAPH_LOOP_TOL`
+        of the sum of the losses around it.
+
         Returns:
             Dict with the element `reports` (in the order the elements were
             added, each with its `start_node`, `end_node` and signed
@@ -1295,8 +1434,15 @@ class PipelineEngine:
         q_floor = max(1e-9 * q_in_m3s, 1e-15)
         edges = graph["edges"]
 
-        flows = self._graph_tree_flows(graph, {})
+        chord_flows = {i: 0.0 for i in graph["chords"]}
         iterations, converged = 0, True
+        if graph["loops"]:
+            converged, iterations = self._graph_balance_loops(
+                graph, chord_flows, rho, q_floor
+            )
+            if not converged:
+                _warn_at_caller(_GRAPH_NOT_CONVERGED)
+        flows = self._graph_tree_flows(graph, chord_flows)
 
         drops, statics = [], []
         for edge, q in zip(edges, flows):

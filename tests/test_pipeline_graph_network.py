@@ -283,6 +283,237 @@ def test_a_series_chain_of_edges_matches_the_series_block():
 
 
 # --------------------------------------------------------------------------
+# Looped networks: the drops around every loop add up to zero
+# --------------------------------------------------------------------------
+
+def _two_paths(first, second, flow_m3h, reverse_second=False, **kwargs):
+    """S -> A (6 in, 10 m), then A -> B through two pipes in parallel."""
+    net = PipelineNetwork("TwoPaths")
+    for name in ("S", "A", "B"):
+        net.add_node(name)
+    net.add_edge(_pipe("SA", 6, 10), "S", "A")
+    net.add_edge(first, "A", "B")
+    if reverse_second:
+        net.add_edge(second, "B", "A")
+    else:
+        net.add_edge(second, "A", "B")
+    return _run(net, flow_m3h, **kwargs)
+
+
+def test_identical_parallel_pipes_share_the_flow_equally():
+    """
+    Two equal 4 in, 20 m pipes between A and B, 100 m3/h: by symmetry
+    50 m3/h each, with the same drop. Before: both carried 100 m3/h and
+    their drops were added.
+    """
+    results, _ = _two_paths(_pipe("P1", 4, 20), _pipe("P2", 4, 20), 100)
+    comps = _by_name(results)
+    assert results["summary"]["number_of_loops"] == 1
+    assert results["summary"]["solver_converged"] is True
+    assert comps["P1"]["flow_m3s"] == pytest.approx(_m3s(50), rel=1e-6)
+    assert comps["P2"]["flow_m3s"] == pytest.approx(_m3s(50), rel=1e-6)
+    assert comps["P1"]["pressure_drop_Pa"] == pytest.approx(
+        comps["P2"]["pressure_drop_Pa"], rel=1e-6
+    )
+    # The network drop is S-A plus one path, not both.
+    assert results["summary"]["total_pressure_drop_Pa"] == pytest.approx(
+        comps["SA"]["pressure_drop_Pa"] + comps["P1"]["pressure_drop_Pa"], rel=1e-6
+    )
+
+
+def test_laminar_split_matches_hagen_poiseuille():
+    """
+    Laminar flow (f = 64 / Re) has dp = 128 mu L q / (pi D^4), linear in q,
+    so two pipes of one bore split the flow in inverse ratio to their
+    lengths: 1 in (26.64 mm), 10 m and 20 m, 0.1 m3/h in total:
+      q1 = 0.1 * 20 / 30 = 0.06667 m3/h, q2 = 0.03333 m3/h.
+    Re of the larger: 4 rho q / (pi mu D) = 4 * 994.679 * 1.852e-5
+      / (pi * 0.000913 * 0.02664) = 964, laminar.
+    dp = 128 * 0.000913 * 10 * 1.852e-5 / (pi * 0.02664^4) = 13.67 Pa.
+    """
+    _, rho, mu = _water()
+    p1, p2 = _pipe("P1", 1, 10), _pipe("P2", 1, 20)
+    results, _ = _two_paths(p1, p2, 0.1)
+    comps = _by_name(results)
+    bore = 0.02664
+    assert p1.internal_diameter.to("m").value == pytest.approx(bore)
+    q1 = comps["P1"]["flow_m3s"]
+    assert q1 == pytest.approx(_m3s(0.1) * 2.0 / 3.0, rel=1e-6)
+    assert comps["P2"]["flow_m3s"] == pytest.approx(_m3s(0.1) / 3.0, rel=1e-6)
+    assert comps["P1"]["reynolds"].value < 2000
+    hagen_poiseuille = 128.0 * mu * 10.0 * q1 / (math.pi * bore ** 4)
+    assert comps["P1"]["pressure_drop_Pa"] == pytest.approx(hagen_poiseuille, rel=1e-6)
+    assert comps["P1"]["pressure_drop_Pa"] == pytest.approx(13.67, rel=1e-3)
+
+
+def test_hazen_williams_split_matches_the_power_law():
+    """
+    Hazen-Williams: h = 10.67 L q^1.852 / (C^1.852 D^4.87). For one bore and
+    C, equal drops give q1 / q2 = (L2 / L1)^(1 / 1.852): 4 in, 10 m and
+    30 m, 100 m3/h: q1 / q2 = 3^0.53996 = 1.8102,
+      q1 = 100 * 1.8102 / 2.8102 = 64.41 m3/h, q2 = 35.59 m3/h.
+    """
+    results, _ = _two_paths(
+        _pipe("P1", 4, 10), _pipe("P2", 4, 30), 100, method="hazen_williams"
+    )
+    comps = _by_name(results)
+    ratio = 3.0 ** (1.0 / 1.852)
+    q1 = _m3s(100) * ratio / (1.0 + ratio)
+    assert comps["P1"]["flow_m3s"] == pytest.approx(q1, rel=1e-6)
+    assert comps["P1"]["flow_m3s"] == pytest.approx(_m3s(64.41), rel=1e-4)
+    assert comps["P2"]["flow_m3s"] == pytest.approx(_m3s(100) - q1, rel=1e-6)
+
+
+def test_turbulent_split_matches_a_hand_balance():
+    """
+    Darcy with Colebrook: 4 in, 10 m and 30 m, 100 m3/h. The hand balance
+    finds q1 with dp(q1, 10 m) = dp(100 - q1, 30 m) by bisection on the
+    independent Darcy drop: q1 = 64.09 m3/h, q2 = 35.91 m3/h, 4.16 kPa on
+    both. (Friction falls slightly with Re, so the split is a little less
+    uneven than the q^2 law's sqrt(3) = 1.732: 64.09 / 35.91 = 1.785.)
+    """
+    _, rho, mu = _water()
+    q_total = _m3s(100)
+    lo, hi = 0.0, q_total
+    for _ in range(200):
+        mid = 0.5 * (lo + hi)
+        gap = _darcy_dp(mid, BORE_4IN, 10, rho, mu) - _darcy_dp(q_total - mid, BORE_4IN, 30, rho, mu)
+        lo, hi = (lo, mid) if gap > 0 else (mid, hi)
+    q1_hand = 0.5 * (lo + hi)
+    assert q1_hand == pytest.approx(_m3s(64.09), rel=1e-4)
+
+    results, _ = _two_paths(_pipe("P1", 4, 10), _pipe("P2", 4, 30), 100)
+    comps = _by_name(results)
+    assert comps["P1"]["flow_m3s"] == pytest.approx(q1_hand, rel=1e-4)
+    # Converged to 1e-6 of the loss around the loop (both drops).
+    assert comps["P1"]["pressure_drop_Pa"] == pytest.approx(
+        comps["P2"]["pressure_drop_Pa"], rel=2e-6
+    )
+    assert comps["P1"]["pressure_drop_Pa"] == pytest.approx(4156, rel=1e-3)
+
+
+def test_an_edge_drawn_against_the_flow_carries_a_negative_flow():
+    """
+    The ring main below with its cross-connection added as D -> B instead
+    of B -> D: the same solution, the flow and drop of that pipe negative.
+    """
+    forward, _ = _run(_ring_main(), 80)
+    backward, _ = _run(_ring_main(cross_from="D"), 80)
+    f, b = _by_name(forward), _by_name(backward)
+    assert f["BD"]["flow_m3s"] > 0
+    assert b["BD"]["start_node"] == "D"
+    assert b["BD"]["flow_m3s"] == pytest.approx(-f["BD"]["flow_m3s"], rel=1e-5)
+    assert b["BD"]["pressure_drop_Pa"] == pytest.approx(-f["BD"]["pressure_drop_Pa"], rel=1e-5)
+    assert b["BD"]["velocity"].to("m/s").value == pytest.approx(
+        f["BD"]["velocity"].to("m/s").value, rel=1e-5
+    )
+    for name in ("SA", "AB", "BC", "AD", "DC"):
+        assert b[name]["flow_m3s"] == pytest.approx(f[name]["flow_m3s"], rel=1e-5)
+
+
+def test_outlets_without_a_demand_share_one_pressure():
+    """
+    S -> A, then A -> B (4 in, 10 m) and A -> C (3 in, 30 m), both open
+    outlets: the flow splits so that B and C end at the same pressure.
+    """
+    net = PipelineNetwork("Outlets")
+    for name in ("S", "A", "B", "C"):
+        net.add_node(name)
+    net.add_edge(_pipe("SA", 6, 10), "S", "A")
+    net.add_edge(_pipe("AB", 4, 10), "A", "B")
+    net.add_edge(_pipe("AC", 3, 30), "A", "C")
+    results, _ = _run(net, 100)
+    summary, comps = results["summary"], _by_name(results)
+    drops = summary["node_pressure_drop_Pa"]
+    assert drops["B"] == pytest.approx(drops["C"], rel=1e-6)
+    assert "(outlets)" not in drops
+    q_b, q_c = summary["outlet_flows_m3s"]["B"], summary["outlet_flows_m3s"]["C"]
+    assert q_b + q_c == pytest.approx(_m3s(100), rel=1e-12)
+    assert comps["AB"]["flow_m3s"] == pytest.approx(q_b, rel=1e-12)
+    assert q_b > q_c > 0
+    _assert_mass_balance(results, net, _m3s(100))
+
+
+def _ring_main(cross_from="B"):
+    """
+    A ring with a cross-connection: two independent loops.
+
+        S -> A -> B -> C
+             A -> D -> C,  B -> D
+    B takes 20 m3/h, D takes 30 m3/h, C (the outlet) the rest of 80 m3/h.
+    """
+    net = PipelineNetwork("Ring")
+    net.add_node("S", elevation=0)
+    net.add_node("A", elevation=2)
+    net.add_node("B", elevation=3, demand=VolumetricFlowRate(20, "m3/h"))
+    net.add_node("C", elevation=1)
+    net.add_node("D", elevation=5, demand=VolumetricFlowRate(30, "m3/h"))
+    net.add_edge(_pipe("SA", 6, 20), "S", "A")
+    net.add_edge(_pipe("AB", 4, 60), "A", "B")
+    net.add_edge(_pipe("BC", 3, 40), "B", "C")
+    net.add_edge(_pipe("AD", 4, 80), "A", "D")
+    net.add_edge(_pipe("DC", 3, 50), "D", "C")
+    if cross_from == "B":
+        net.add_edge(_pipe("BD", 3, 30), "B", "D")
+    else:
+        net.add_edge(_pipe("BD", 3, 30), "D", "B")
+    return net
+
+
+def test_ring_main_meets_mass_and_loop_balances():
+    """
+    Mass: flow in - flow out at every node is what leaves there.
+    Energy: each edge's drop equals the difference of its node pressures,
+    so the drops around both loops add up to zero (static heads included).
+    """
+    net = _ring_main()
+    results, _ = _run(net, 80)
+    summary, comps = results["summary"], _by_name(results)
+    assert summary["number_of_loops"] == 2
+    assert summary["solver_converged"] is True
+    _assert_mass_balance(results, net, _m3s(80))
+    assert summary["outlet_flows_m3s"]["C"] == pytest.approx(_m3s(30), rel=1e-9)
+
+    pressure = {n: -dp for n, dp in summary["node_pressure_drop_Pa"].items()}
+    scale = sum(abs(c["pressure_drop_Pa"]) for c in comps.values())
+    for c in comps.values():
+        assert c["pressure_drop_Pa"] == pytest.approx(
+            pressure[c["start_node"]] - pressure[c["end_node"]], abs=1e-6 * scale
+        )
+    # Loop A-B-D-A and loop B-C-D-B, written out.
+    assert comps["AB"]["pressure_drop_Pa"] + comps["BD"]["pressure_drop_Pa"] - comps["AD"][
+        "pressure_drop_Pa"] == pytest.approx(0.0, abs=1e-6 * scale)
+    assert comps["BC"]["pressure_drop_Pa"] - comps["DC"]["pressure_drop_Pa"] - comps["BD"][
+        "pressure_drop_Pa"] == pytest.approx(0.0, abs=1e-6 * scale)
+    # Each pipe's drop is a single-pipe run at its flow, static head added.
+    _, rho, _ = _water()
+    elevation = {"S": 0, "A": 2, "B": 3, "C": 1, "D": 5}
+    for name in ("AB", "AD", "BD"):
+        c = comps[name]
+        q = abs(c["flow_m3s"])
+        static = rho * G * (elevation[c["end_node"]] - elevation[c["start_node"]])
+        pipe = next(p for p in net.get_all_pipes() if p.name == name)
+        # A copy without nodes: the friction and fitting losses alone.
+        friction = _single_pipe_dp(Pipe(name, nominal_diameter=pipe.nominal_diameter,
+                                        length=pipe.length), q)
+        assert c["pressure_drop_Pa"] == pytest.approx(
+            math.copysign(friction, c["flow_m3s"]) + static, rel=1e-9
+        )
+
+
+def test_a_loop_without_a_pipe_raises():
+    """Two fixed-drop items in parallel: nothing sets how they share the flow."""
+    net = PipelineNetwork("NoPipe")
+    for name in ("S", "A", "B"):
+        net.add_node(name)
+    net.add_edge(_pipe("SA", 4, 10), "S", "A")
+    net.add_edge(Equipment("HX1", pressure_drop=0.2), "A", "B")
+    net.add_edge(Equipment("HX2", pressure_drop=0.2), "A", "B")
+    with pytest.raises(ValueError, match="has no pipe"):
+        _run(net, 40)
+
+
+# --------------------------------------------------------------------------
 # Demands that do not fit, and graphs that cannot be solved
 # --------------------------------------------------------------------------
 
