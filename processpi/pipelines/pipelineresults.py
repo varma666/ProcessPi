@@ -1,7 +1,6 @@
 from typing import Dict, Any, List, Optional
 from tabulate import tabulate
 
-from processpi.pipelines.standards import get_nearest_diameter
 from ..units import Diameter, Velocity, Pressure, Power, Length, VolumetricFlowRate, Dimensionless
 
 
@@ -71,11 +70,22 @@ class PipelineResults:
             diam_value if isinstance(diam_value, Diameter)
             else Diameter(_to_number(diam_value)) if diam_value else None
         )
+        # The pipe size, when the result has one (None for a bore given alone).
+        nominal_value = first_component.get("nominal_diameter")
+        self._nominal_diameter: Optional[Diameter] = (
+            nominal_value if isinstance(nominal_value, Diameter) else None
+        )
 
     # -------------------- Properties --------------------
     @property
     def pipe_diameter(self) -> Optional[Diameter]:
+        """The internal diameter (bore) the calculation used."""
         return self._pipe_diameter
+
+    @property
+    def nominal_diameter(self) -> Optional[Diameter]:
+        """The nominal pipe size, or None when only a bore was given."""
+        return self._nominal_diameter
 
     # -------------------- Summaries --------------------
     def summary(self) -> List[Dict[str, Any]]:
@@ -87,13 +97,17 @@ class PipelineResults:
         summaries = []
         for idx, result in enumerate(self._all_simulation_results):
             diameter = self.pipe_diameter
+            nominal = self.nominal_diameter
 
             print(f"\n=== Pipeline Result {idx+1} ({result.get('network_name', 'N/A')}) ===")
             print(f"Mode: {self.mode.capitalize()}")
+            # The size and the bore are reported apart; this line used to show the
+            # standard size nearest to the bore, as "Calculated Pipe Diameter".
+            print(f"Nominal Pipe Size: {nominal if nominal else 'N/A'}")
             if diameter:
-                print(f"Calculated Pipe Diameter: {get_nearest_diameter(diameter)} ")
+                print(f"Internal Diameter: {diameter.to('mm'):.2f}")
             else:
-                print(f"Calculated Pipe Diameter: N/A")
+                print(f"Internal Diameter: N/A")
             print(f"Inlet Flow: {self.inlet_flow.to('m3/s'):.3f} ")
             print(f"Outlet Flow: {self.outlet_flow.to('m3/s'):.3f} ")
             print(f"Total Pressure Drop: {self.total_pressure_drop.to('kPa'):.2f}")
@@ -110,6 +124,7 @@ class PipelineResults:
                 "simulation_mode": self.mode,
                 "pipe_diameter_in": diameter.to('in').original_value if diameter else None,
                 "pipe_diameter_m": diameter.to('m').value if diameter else None,
+                "nominal_diameter_in": nominal.to('in').original_value if nominal else None,
                 "inlet_flow_m3s": self.inlet_flow.to('m3/s').value,
                 "outlet_flow_m3s": self.outlet_flow.to('m3/s').value,
                 "total_pressure_drop_kPa": self.total_pressure_drop.to('kPa').original_value,
@@ -186,6 +201,7 @@ class PipelineResults:
                 reynolds_var = get_val(["reynolds"])
                 friction_var = get_val(["friction_factor"])
                 diameter_var = get_val(["diameter"])
+                nominal_var = get_val(["nominal_diameter"])
                 
                 # Extract names and types
                 name = comp.get("name") or comp.get("type", "Component")
@@ -203,10 +219,12 @@ class PipelineResults:
                 reynolds_val, reynolds_unit = _get_value_and_unit(reynolds_var)
                 friction_val, friction_unit = _get_value_and_unit(friction_var)
                 
-                # Handle diameter conversion and display
+                # Nominal size and bore in their own columns; the one column used
+                # to show the standard size nearest to the bore.
+                nominal_display = str(nominal_var) if isinstance(nominal_var, Diameter) else "N/A"
                 diameter_display = "N/A"
                 if isinstance(diameter_var, Diameter):
-                    diameter_display = f"{get_nearest_diameter(diameter_var)}"
+                    diameter_display = f"{diameter_var.to('mm'):.2f}"
                 elif diameter_var is not None:
                     diameter_val, diameter_unit = _get_value_and_unit(diameter_var)
                     diameter_display = f"{diameter_val:.2f} {diameter_unit}"
@@ -219,9 +237,11 @@ class PipelineResults:
                     f"{velocity_val:.2f} {velocity_unit}",
                     f"{reynolds_val:.2f} {reynolds_unit}",
                     f"{friction_val:.4f} {friction_unit}",
+                    nominal_display,
                     diameter_var if isinstance(diameter_var, str) else diameter_display
                 ])
 
-            headers = ["Name", "Type", "Pressure Drop", "Velocity", "Reynolds", "Friction Factor", "Diameter"]
+            headers = ["Name", "Type", "Pressure Drop", "Velocity", "Reynolds", "Friction Factor",
+                       "Nominal Size", "Internal Diameter"]
             print(tabulate(rows, headers=headers, tablefmt="grid"))
 

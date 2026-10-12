@@ -15,9 +15,10 @@ from .nozzle import Nozzle
 from ..components import Component
 from .standards import (
     get_k_factor, get_roughness, list_available_pipe_diameters, get_standard_pipe_data,
-    get_recommended_velocity, get_next_standard_nominal, get_next_next_standard_nominal, get_previous_standard_nominal,get_equivalent_length,get_internal_diameter,get_nominal_dia_from_internal_dia
+    get_recommended_velocity, get_next_standard_nominal, get_next_next_standard_nominal, get_previous_standard_nominal,get_equivalent_length,get_internal_diameter,get_nominal_dia_from_internal_dia,
+    normalize_schedule
 )
-from .pipes import Pipe
+from .pipes import Pipe, as_diameter, as_length, resolve_diameters, _warn_at_caller
 from .pumps import Pump
 from .vessel import Vessel
 from .fittings import Fitting
@@ -153,14 +154,33 @@ class PipelineEngine:
         """
         Configures engine inputs with unit-aware conversions and normalized keys.
 
+        Pipe size inputs (varma666/ProcessPi#108):
+
+        - `nominal_diameter`: the pipe size, an NPS (Diameter(4, "in")) or a DN in
+          millimetres (Diameter(100, "mm")), looked up with `schedule` (default
+          "STD") in the ASME B36.10M / B36.19M table for the internal diameter.
+        - `internal_diameter`: the bore, used as given.
+        - Both: the internal diameter is used and must fit inside the nominal
+          size's outside diameter (ValueError otherwise).
+        - `diameter` (and `dia`, `D`): the internal diameter, as before, with a
+          DeprecationWarning; it used to take `nominal_diameter` and
+          `internal_diameter` as aliases, so a nominal 4 in was used as a
+          101.6 mm bore instead of 102.26 mm.
+
+        A bare number for a diameter is read in millimetres
+        (`assume_mm_for_numbers=False`: metres), a bare length in metres, as
+        before, each with a UserWarning naming the unit.
+
         Args:
-            **kwargs: Input parameters (e.g., flowrate, diameter, network).
+            **kwargs: Input parameters (e.g., flowrate, internal_diameter, network).
 
         Returns:
             PipelineEngine: The configured engine instance.
 
         Raises:
             TypeError: If the provided network is not a PipelineNetwork.
+            ValueError: If the diameter inputs contradict each other, or the
+                schedule is not tabulated for the nominal size.
         """
         self.data = dict(kwargs)
 
@@ -169,7 +189,6 @@ class PipelineEngine:
             "flowrate": ["flow_rate", "q", "Q", "flowrate"],
             "mass_flowrate": ["mass_flow", "m_dot", "mdot"],
             "velocity": ["v"],
-            "diameter": ["dia", "D", "nominal_diameter", "internal_diameter"],
             "length": ["len", "L"],
             "inlet_pressure": ["in_pressure", "pin", "p_in"],
             "outlet_pressure": ["out_pressure", "pout", "p_out"],
@@ -196,13 +215,63 @@ class PipelineEngine:
         if net is not None and not isinstance(net, PipelineNetwork):
             raise TypeError("`network` must be a PipelineNetwork instance.")
 
+        self._fit_diameters()
+        if self.data.get("length") is not None:
+            self.data["length"] = as_length(self.data["length"], "m", "PipelineEngine length")
+
         # Bind normalized attributes
         self.flowrate = self.data.get("flowrate")
         self.mass_flowrate = self.data.get("mass_flowrate")
         self.velocity = self.data.get("velocity")
+        self.nominal_diameter = self.data.get("nominal_diameter")
+        self.internal_diameter = self.data.get("internal_diameter")
+        # The bore; every calculation reads this one.
         self.diameter = self.data.get("diameter")
 
         return self
+
+    def _fit_diameters(self) -> None:
+        """
+        Resolves the diameter inputs of `fit()` into `data["nominal_diameter"]`
+        (the pipe size, or None), `data["internal_diameter"]` (the bore, or None)
+        and `data["diameter"]`, the same bore, which the calculations read.
+        """
+        bare_unit = "mm" if self.data.get("assume_mm_for_numbers", True) else "m"
+        internal = as_diameter(
+            self.data.get("internal_diameter"), bare_unit, "PipelineEngine internal_diameter"
+        )
+        nominal = as_diameter(
+            self.data.get("nominal_diameter"), bare_unit, "PipelineEngine nominal_diameter"
+        )
+
+        legacy_key = next(
+            (k for k in ("diameter", "dia", "D") if self.data.get(k) is not None), None
+        )
+        if legacy_key is not None:
+            # `diameter` has always been the bore here; the name says neither.
+            _warn_at_caller(
+                "PipelineEngine `diameter` (or `dia`, `D`) is taken as the internal "
+                "diameter (the bore), as before. Pass internal_diameter for the "
+                "bore, or nominal_diameter with schedule for a standard pipe size.",
+                DeprecationWarning,
+            )
+            legacy = as_diameter(
+                self.data[legacy_key], bare_unit, f"PipelineEngine {legacy_key}"
+            )
+            if internal is None:
+                internal = legacy
+            elif abs(internal.to_base() - legacy.to_base()) > 1e-12:
+                raise ValueError(
+                    f"`{legacy_key}` ({legacy}) and `internal_diameter` ({internal}) "
+                    "disagree; `diameter` is the internal diameter, pass only one."
+                )
+
+        schedule = normalize_schedule(self.data.get("schedule") or "STD")
+        nominal, internal = resolve_diameters(nominal, internal, schedule, "PipelineEngine")
+        self.data["schedule"] = schedule
+        self.data["nominal_diameter"] = nominal
+        self.data["internal_diameter"] = internal
+        self.data["diameter"] = internal
 
 
     # ---------------------- Fluid properties --------------------------------
@@ -627,6 +696,7 @@ class PipelineEngine:
                 "name": getattr(block, "name", f"Pipe_{id(block)}"),
                 "type": "pipe",
                 "diameter": calc["diameter"],
+                "nominal_diameter": getattr(block, "nominal_diameter", None),
                 "velocity": calc["velocity"],
                 "reynolds": calc["reynolds"],
                 "friction_factor": calc["friction_factor"],
@@ -1156,8 +1226,13 @@ class PipelineEngine:
                 self._results = pr
                 return pr
 
-            # Diameter provided → calculate
+            # Diameter provided → calculate on the bore that fit() resolved. The
+            # nominal size goes with it, so the pipe does not keep a size the
+            # bore does not belong to.
             pipe_instance.internal_diameter = _ensure_diameter_obj(diameter)
+            pipe_instance.nominal_diameter = self.data.get("nominal_diameter")
+            if pipe_instance.nominal_diameter is not None:
+                pipe_instance.schedule = self.data.get("schedule", pipe_instance.schedule)
             calc = self._pipe_calculation(pipe_instance, q_in)
 
             D_final = self._resolve_internal_diameter(pipe_instance)
@@ -1181,12 +1256,14 @@ class PipelineEngine:
                     "reynolds": calc.get("reynolds"),
                     "friction_factor": calc.get("friction_factor"),
                     "calculated_diameter_m": D_final.value,
+                    "nominal_diameter": pipe_instance.nominal_diameter,
                 },
                 "components": [{
                     "type": "pipe",
                     "name": pipe_instance.name,
                     "length": pipe_instance.length,
                     "diameter": D_final,
+                    "nominal_diameter": pipe_instance.nominal_diameter,
                     "velocity": velocity_val,
                     "reynolds": calc.get("reynolds"),
                     "friction_factor": calc.get("friction_factor"),
@@ -1229,7 +1306,8 @@ class PipelineEngine:
             return p
         if not isinstance(d, Diameter):
             d = _ensure_diameter_obj(d, self.data.get("assume_mm_for_numbers", True))
-        p = Pipe(name="Main Pipe", internal_diameter=d, length=L)
+        p = Pipe(name="Main Pipe", nominal_diameter=self.data.get("nominal_diameter"),
+                 schedule=self.data.get("schedule") or "STD", internal_diameter=d, length=L)
         self.data["pipe"] = p
         return p
 
@@ -1247,8 +1325,17 @@ class PipelineEngine:
         if getattr(pipe, "internal_diameter", None):
             return pipe.internal_diameter
         if getattr(pipe, "nominal_diameter", None):
-            d = pipe.nominal_diameter
-            return d if isinstance(d, Diameter) else Diameter(float(d), "m")
+            # A nominal size set on the pipe after it was built: look its bore up.
+            d = as_diameter(pipe.nominal_diameter, "m", "Pipe nominal_diameter")
+            bore = get_internal_diameter(d, getattr(pipe, "schedule", "STD") or "STD")
+            if bore is not None:
+                return bore
+            _warn_at_caller(
+                "Pipe nominal_diameter has no tabulated bore for its schedule, so it "
+                "is used as the internal diameter, as before. Set internal_diameter "
+                "for a non-standard bore."
+            )
+            return d
         if getattr(self, "diameter", None):
             d = self.diameter
             return d if isinstance(d, Diameter) else Diameter(float(d), "m")

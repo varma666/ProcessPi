@@ -271,6 +271,23 @@ def _check_pipe_schedule_table() -> None:
 _check_pipe_schedule_table()
 
 # --------------------------
+# 🔹 Nominal sizes: NPS and DN
+# --------------------------
+# The DN (metric designation) listed beside each NPS in Table 1 of ASME
+# B36.10M-2015 and ASME B36.19M-2004. DN is a label in millimetres, not a
+# dimension: DN 100 is NPS 4, whose outside diameter is 114.3 mm.
+_NPS_TO_DN: Dict[float, int] = {
+    0.125: 6, 0.25: 8, 0.375: 10, 0.5: 15, 0.75: 20, 1: 25, 1.25: 32,
+    1.5: 40, 2: 50, 2.5: 65, 3: 80, 3.5: 90, 4: 100, 5: 125, 6: 150,
+    8: 200, 10: 250, 12: 300, 14: 350, 16: 400, 18: 450, 20: 500,
+    22: 550, 24: 600, 26: 650, 28: 700, 30: 750, 32: 800, 34: 850,
+    36: 900, 38: 950, 40: 1000, 42: 1050, 44: 1100, 46: 1150, 48: 1200,
+}
+
+# Two nominal sizes are the same size when they agree to within a nanometre.
+_NOMINAL_MATCH_TOL_M = 1e-9
+
+# --------------------------
 # 🔹 Recommended Fluid Velocities (m/s)
 # --------------------------
 RECOMMENDED_VELOCITIES = {
@@ -415,13 +432,50 @@ def normalize_schedule(schedule: Any) -> str:
     return s
 
 
+def find_nominal_size(nominal_diameter: Any) -> Optional[Diameter]:
+    """
+    The PIPE_SCHEDULES key of a nominal pipe size, or None when it is not a
+    standard size.
+
+    The size is a Diameter holding either the NPS, in any length unit
+    (Diameter(4, "in") and Diameter(101.6, "mm") are both NPS 4), or the DN
+    in millimetres (Diameter(100, "mm") is DN 100, which is NPS 4). No NPS
+    and DN of the table share a value, so the two cannot be confused.
+    """
+    if not isinstance(nominal_diameter, Diameter):
+        return None
+    d_m = nominal_diameter.to_base()
+    for nps in _PIPE_DIMENSIONS_MM:
+        if abs(d_m - nps * 0.0254) < _NOMINAL_MATCH_TOL_M:
+            return Diameter(nps, "in")
+    for nps, dn in _NPS_TO_DN.items():
+        if abs(d_m - dn * 0.001) < _NOMINAL_MATCH_TOL_M:
+            return Diameter(nps, "in")
+    return None
+
+
+def get_outside_diameter(nominal_diameter: Any) -> Optional[Diameter]:
+    """Outside diameter of a standard nominal size (NPS or DN), else None."""
+    size = find_nominal_size(nominal_diameter)
+    if size is None:
+        return None
+    return Diameter(_PIPE_DIMENSIONS_MM[size.original_value][0], "mm")
+
+
 def get_internal_diameter(
     nominal_diameter: Diameter, schedule: str = "STD"
 ) -> Optional[Diameter]:
-    """Returns internal diameter for a given nominal diameter and schedule."""
-    if nominal_diameter not in PIPE_SCHEDULES:
+    """
+    Returns internal diameter for a given nominal diameter and schedule.
+
+    The nominal size may be an NPS or a DN (see `find_nominal_size`), and the
+    schedule any spelling `normalize_schedule` accepts. None when the size or
+    the schedule is not tabulated.
+    """
+    size = find_nominal_size(nominal_diameter)
+    if size is None:
         return None
-    return PIPE_SCHEDULES[nominal_diameter].get(schedule, (None, None, None))[2]
+    return PIPE_SCHEDULES[size].get(normalize_schedule(schedule), (None, None, None))[2]
 
 def get_thickness(nominal_diameter: Diameter, schedule: str = "STD") -> Optional[Length]:
     """Returns wall thickness for a given nominal diameter and schedule."""

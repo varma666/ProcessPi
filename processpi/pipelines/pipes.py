@@ -1,9 +1,147 @@
 # processpi/pipelines/pipes.py
 
-from typing import Optional, Dict, Any
+import numbers
+import os
+import sys
+import warnings
+from typing import Optional, Dict, Any, Tuple
 from .base import PipelineBase
 from ..units import *
-from .standards import PIPE_SCHEDULES, get_roughness, get_internal_diameter, normalize_schedule
+from .standards import (
+    PIPE_SCHEDULES, get_roughness, normalize_schedule, find_nominal_size, get_outside_diameter
+)
+
+# The processpi package directory: warnings about inputs are reported at the
+# first caller outside it (the user's line), see `_warn_at_caller`.
+_PACKAGE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+_UNIT_NAMES = {"m": "metres", "mm": "millimetres"}
+
+
+def _warn_at_caller(message: str, category: type = UserWarning) -> None:
+    """
+    Warn at the first frame outside the processpi package.
+
+    A warning about an input then points at the line that passed it, however
+    deep in the package it is noticed, and Python's default filter shows it once
+    for that line rather than once per pipe or per solver iteration. The
+    messages are fixed texts for the same reason (the filter keys on the text).
+    """
+    frame = sys._getframe(1)
+    level = 2
+    while frame is not None and os.path.abspath(frame.f_code.co_filename).startswith(
+        _PACKAGE_DIR + os.sep
+    ):
+        frame = frame.f_back
+        level += 1
+    warnings.warn(message, category, stacklevel=level)
+
+
+def _is_bare_number(value: Any) -> bool:
+    return isinstance(value, numbers.Real) and not isinstance(value, bool)
+
+
+def as_diameter(value: Any, bare_unit: str, what: str) -> Optional[Diameter]:
+    """
+    A diameter input as a Diameter.
+
+    A Length is converted. A bare number keeps the unit the package has always
+    read it in (`bare_unit`), with a UserWarning naming that unit.
+
+    Raises:
+        TypeError: For anything else (a string such as "100 mm" included).
+    """
+    if value is None or isinstance(value, Diameter):
+        return value
+    if isinstance(value, Length):
+        return Diameter(value.value, "m")
+    if _is_bare_number(value):
+        _warn_at_caller(
+            f"{what} was given as a bare number and is taken in "
+            f"{_UNIT_NAMES.get(bare_unit, bare_unit)}. Pass a Diameter to state "
+            f"the unit, e.g. Diameter(4, \"in\") or Diameter(102.26, \"mm\")."
+        )
+        return Diameter(float(value), bare_unit)
+    raise TypeError(f"{what} must be a Diameter or a Length, not {value!r}")
+
+
+def as_length(value: Any, bare_unit: str, what: str) -> Optional[Length]:
+    """
+    A length input as a Length; a bare number is read in `bare_unit` with a
+    UserWarning naming that unit.
+
+    Raises:
+        TypeError: For anything that is neither a Length nor a number.
+    """
+    if value is None or isinstance(value, Length):
+        return value
+    if _is_bare_number(value):
+        _warn_at_caller(
+            f"{what} was given as a bare number and is taken in "
+            f"{_UNIT_NAMES.get(bare_unit, bare_unit)}. Pass a Length to state "
+            f"the unit, e.g. Length(100, \"m\")."
+        )
+        return Length(float(value), bare_unit)
+    raise TypeError(f"{what} must be a Length, not {value!r}")
+
+
+def resolve_diameters(
+    nominal_diameter: Optional[Diameter],
+    internal_diameter: Optional[Diameter],
+    schedule: str,
+    owner: str,
+) -> Tuple[Optional[Diameter], Optional[Diameter]]:
+    """
+    The (nominal, internal) diameter pair of a pipe.
+
+    - A standard nominal size (NPS or DN, see `find_nominal_size`) is returned
+      as the table's NPS, and gives the internal diameter of its `schedule`
+      (ASME B36.10M / B36.19M) unless an internal diameter is given.
+    - A given internal diameter is the bore used in the calculations (a lined
+      or corroded pipe, a wall the table does not list). With a standard
+      nominal size it must be smaller than that size's outside diameter.
+    - A nominal size that is not a standard size cannot be looked up, so, as
+      before, it is used as the internal diameter, with a UserWarning.
+
+    Raises:
+        ValueError: If the schedule is not tabulated for the nominal size, or
+            the internal diameter does not fit inside the nominal size.
+    """
+    if nominal_diameter is None:
+        return None, internal_diameter
+
+    size = find_nominal_size(nominal_diameter)
+    if size is None:
+        if internal_diameter is None:
+            _warn_at_caller(
+                f"{owner} nominal_diameter is not a standard pipe size (an NPS or "
+                f"DN of ASME B36.10M), so it cannot be looked up and is used as "
+                f"the internal diameter, as before. Pass internal_diameter for a "
+                f"non-standard bore."
+            )
+            internal_diameter = nominal_diameter
+        return nominal_diameter, internal_diameter
+
+    if internal_diameter is None:
+        # A schedule the table does not have for this size used to give no
+        # internal diameter, and the engine then used the nominal size as
+        # the bore ("40" or "Sch40" for a 4 in pipe: 101.6 mm, not 102.26).
+        available = PIPE_SCHEDULES[size]
+        if schedule not in available:
+            raise ValueError(
+                f"Schedule {schedule!r} is not tabulated for "
+                f"{size}; available: {', '.join(available)}"
+            )
+        return size, available[schedule][2]
+
+    outside = get_outside_diameter(size)
+    if internal_diameter.to_base() >= outside.to_base():
+        raise ValueError(
+            f"{owner}: internal_diameter {internal_diameter} does not fit in "
+            f"nominal size {size} (outside diameter {outside}). Give the bore as "
+            f"internal_diameter and the pipe size as nominal_diameter."
+        )
+    return size, internal_diameter
 
 
 class Pipe(PipelineBase):
@@ -33,20 +171,36 @@ class Pipe(PipelineBase):
 
         Args:
             name (str): Unique name of the pipe.
-            nominal_diameter (Optional[Diameter]): Nominal pipe size. If `None`,
-                this pipe is a candidate for optimization.
+            nominal_diameter (Optional[Diameter]): Nominal pipe size, a label:
+                the NPS (Diameter(4, "in")) or the DN in millimetres
+                (Diameter(100, "mm")). The internal diameter is looked up for
+                `schedule` in the ASME B36.10M / B36.19M table. If neither
+                diameter is given, this pipe is a candidate for optimization.
             schedule (str, optional): Pipe schedule. Defaults to "STD".
             material (str, optional): Pipe material. Defaults to "CS".
             length (Optional[Length], optional): Pipe length (default 1 meter).
             inlet_pressure (Optional[Pressure], optional): Inlet pressure.
             outlet_pressure (Optional[Pressure], optional): Outlet pressure.
-            internal_diameter (Optional[Diameter], optional): Overrides the
-                calculated internal diameter if provided.
+            internal_diameter (Optional[Diameter], optional): The bore used in
+                the calculations. Given with a nominal size, it replaces the
+                tabulated bore (a lined pipe, a non-standard wall) and must fit
+                inside that size's outside diameter.
+
+            A bare number for a diameter or the length is read in metres, as
+            before, with a UserWarning. `Pipe` has no `diameter` input: a
+            `diameter` keyword is ignored (kept in `params`) with a UserWarning.
             flow_rate (Optional[VolumetricFlowRate], optional): Initial flow rate
                 for solver. Defaults to 0.001 m³/s.
             **kwargs: Additional custom parameters to store in the base class.
         """
         super().__init__(name=name, **kwargs)
+        if "diameter" in kwargs:
+            # It never set a diameter: the pipe was sized as if none was given.
+            _warn_at_caller(
+                "Pipe has no `diameter` input; it is ignored, as before (the "
+                "value stays in `params`). Pass nominal_diameter (with schedule) "
+                "for a standard pipe size, or internal_diameter for the bore."
+            )
 
         # Optimization flag
         self.is_optimization_target: bool = (
@@ -54,31 +208,22 @@ class Pipe(PipelineBase):
         )
 
         # Core attributes
-        self.nominal_diameter: Optional[Diameter] = nominal_diameter
         self.schedule: str = normalize_schedule(schedule)
         self.material: str = material
-        self.length: Length = length or Length(1.0, "m")
+        self.length: Length = as_length(length, "m", "Pipe length") or Length(1.0, "m")
 
         # Physical properties from standards
         self.roughness: Variable = get_roughness(self.material)
-        self.internal_diameter: Optional[Variable] = None
 
-        if internal_diameter:
-            self.internal_diameter = internal_diameter
-            #self.nominal_diameter = internal_diameter + ( 2 * get_thickness(internal_diameter, self.schedule))
-        elif nominal_diameter:
-            # A schedule the table does not have for this size used to give no
-            # internal diameter, and the engine then used the nominal size as
-            # the bore ("40" or "Sch40" for a 4 in pipe: 101.6 mm, not 102.26).
-            available = PIPE_SCHEDULES.get(self.nominal_diameter)
-            if available is not None and self.schedule not in available:
-                raise ValueError(
-                    f"Schedule {schedule!r} is not tabulated for "
-                    f"{self.nominal_diameter}; available: {', '.join(available)}"
-                )
-            self.internal_diameter = get_internal_diameter(
-                self.nominal_diameter, self.schedule
-            )
+        # Nominal size and bore are separate inputs; the calculations use the bore.
+        self.nominal_diameter: Optional[Diameter]
+        self.internal_diameter: Optional[Diameter]
+        self.nominal_diameter, self.internal_diameter = resolve_diameters(
+            as_diameter(nominal_diameter, "m", "Pipe nominal_diameter"),
+            as_diameter(internal_diameter, "m", "Pipe internal_diameter"),
+            self.schedule,
+            "Pipe",
+        )
 
         # Optional pressures
         self.inlet_pressure: Optional[Pressure] = inlet_pressure
@@ -105,10 +250,15 @@ class Pipe(PipelineBase):
         return Variable(area_m2, "m²")
 
     def surface_area(self) -> Optional[Variable]:
-        """Calculate external surface area (m²)."""
+        """
+        Calculate external surface area (m²), on the outside diameter of the
+        nominal size (the nominal size itself when it is not a standard size;
+        it used to be the nominal size always: 4 in for a 114.3 mm pipe).
+        """
         if self.nominal_diameter is None:
             return None
-        d_m = self.nominal_diameter.to("m").value
+        outside = get_outside_diameter(self.nominal_diameter) or self.nominal_diameter
+        d_m = outside.to("m").value
         area_m2 = 3.14159 * d_m * self.length.to("m").value
         return Variable(area_m2, "m²")
 
@@ -122,41 +272,45 @@ class Pipe(PipelineBase):
     # Export and representation
     # -------------------------------------------------------------------------
     def to_dict(self) -> Dict[str, Any]:
-        """Export all key pipe data as a dictionary."""
+        """
+        Export all key pipe data as a dictionary. Each quantity is
+        {"value": ..., "units": ...} in the unit it was given in, or None.
+        (The unit classes have no `to_dict`, so this used to raise.)
+        """
+        def _q(x: Any) -> Optional[Dict[str, Any]]:
+            if x is None:
+                return None
+            return {
+                "value": getattr(x, "original_value", x.value),
+                "units": getattr(x, "original_unit", x.units),
+            }
+
         return {
             "name": self.name,
-            "nominal_diameter": self.nominal_diameter.to_dict()
-            if self.nominal_diameter
-            else None,
+            "nominal_diameter": _q(self.nominal_diameter),
             "is_optimization_target": self.is_optimization_target,
             "schedule": self.schedule,
             "material": self.material,
-            "length": self.length.to_dict(),
-            "roughness": self.roughness.to_dict(),
-            "internal_diameter": self.internal_diameter.to_dict()
-            if self.internal_diameter
-            else None,
-            "cross_sectional_area": self.cross_sectional_area().to_dict()
-            if self.cross_sectional_area()
-            else None,
-            "flow_rate": self.flow_rate.to_dict() if self.flow_rate else None,  # <-- NEW
-            "inlet_pressure": self.inlet_pressure.to_dict()
-            if self.inlet_pressure
-            else None,
-            "outlet_pressure": self.outlet_pressure.to_dict()
-            if self.outlet_pressure
-            else None,
-            "pressure_difference": self.pressure_difference().to_dict()
-            if self.pressure_difference()
-            else None,
+            "length": _q(self.length),
+            "roughness": _q(self.roughness),
+            "internal_diameter": _q(self.internal_diameter),
+            "cross_sectional_area": _q(self.cross_sectional_area()),
+            "flow_rate": _q(self.flow_rate),  # <-- NEW
+            "inlet_pressure": _q(self.inlet_pressure),
+            "outlet_pressure": _q(self.outlet_pressure),
+            "pressure_difference": _q(self.pressure_difference()),
         }
 
     def __repr__(self) -> str:
-        dia_repr = (
-            f"nominal_diameter={self.nominal_diameter}"
-            if self.nominal_diameter
-            else "OPTIMIZE"
-        )
+        if self.nominal_diameter is not None:
+            dia_repr = (
+                f"nominal_diameter={self.nominal_diameter}, "
+                f"internal_diameter={self.internal_diameter}"
+            )
+        elif self.internal_diameter is not None:
+            dia_repr = f"internal_diameter={self.internal_diameter}"
+        else:
+            dia_repr = "OPTIMIZE"
         return (
             f"Pipe(name='{self.name}', {dia_repr}, "
             f"schedule='{self.schedule}', length={self.length}, "

@@ -36,7 +36,7 @@ def _water():
 
 def test_single_pipe_reynolds():
     """Re = rho v D / mu, with v = Q / (pi D^2 / 4); 0.01 m3/s in 4 in S40 is turbulent."""
-    results = _run(flowrate=VolumetricFlowRate(0.01, "m3/s"), diameter=D_4IN_S40,
+    results = _run(flowrate=VolumetricFlowRate(0.01, "m3/s"), internal_diameter=D_4IN_S40,
                    length=Length(50, "m"))
     rho, mu = _water()
     d = 0.10226
@@ -50,7 +50,7 @@ def test_single_pipe_reynolds():
 
 def test_pressure_drop_from_inputs():
     """Darcy-Weisbach with the reported friction factor: dp = f (L/D) rho v^2 / 2."""
-    results = _run(flowrate=VolumetricFlowRate(0.005, "m3/s"), diameter=D_4IN_S40,
+    results = _run(flowrate=VolumetricFlowRate(0.005, "m3/s"), internal_diameter=D_4IN_S40,
                    length=Length(100, "m"))
     rho, _ = _water()
     d = 0.10226

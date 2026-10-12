@@ -22,7 +22,7 @@ def _single_pipe_engine(**extra):
     return PipelineEngine().fit(
         fluid=Water(),
         flowrate=VolumetricFlowRate(50, "m3/h"),
-        diameter=Diameter(102.3, "mm"),
+        internal_diameter=Diameter(102.3, "mm"),
         length=Length(100, "m"),
         **extra,
     )
