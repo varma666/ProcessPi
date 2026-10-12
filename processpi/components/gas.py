@@ -7,6 +7,8 @@ class Gas(Component):
     hx_type = "gas_low_pressure"
     formula = "Gas"
     molecular_weight = 28.0  # g/mol
+    # Gas phase unless a phase is given (viscosity, Cp and k follow phase()).
+    _default_phase = "gas"
 
     _critical_temperature = Temperature(350, "K")
     _critical_pressure = Pressure(4.0, "MPa")

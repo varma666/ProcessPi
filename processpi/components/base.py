@@ -33,6 +33,9 @@ class Component(ABC):
     Abstract base class for a chemical component with DIPPR-style property methods.
     """
 
+    # Phase reported when none is given, instead of the vapour-pressure test.
+    _default_phase = None
+
     def __init__(
         self,
         temperature: Temperature = None,
@@ -100,6 +103,12 @@ class Component(ABC):
         forced = getattr(self, "_phase", None)
         if forced:
             return "gas" if str(forced).lower() in {"gas", "vapor", "vapour", "steam"} else "liquid"
+        # A placeholder that stands for a gas or a vapour (Gas, Vapor) is one
+        # unless a phase is given. Its vapour-pressure constants are not data
+        # for any substance (Vapor's give 0.05 Pa at 100 C), so the test below
+        # called it a liquid and took the liquid density correlation.
+        if self._default_phase:
+            return self._default_phase
         P = self.pressure.to("Pa").value
         Pvap = self.vapor_pressure().to("Pa").value
         return "gas" if P < Pvap else "liquid"
