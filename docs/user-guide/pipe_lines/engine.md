@@ -77,6 +77,8 @@ Chooses between **Network Mode** or **Single Pipe Mode**.
   - If no diameter (in `fit()` or on the `pipe`) → Solves for optimum diameter  
   - If diameter present → Standard hydraulic calculation  
 
+- **Sizing:** without `available_dp`, the size is the standard bore at or above the one for the middle of the fluid's recommended velocity range; when that size is below the range and the next smaller size is within the maximum, the smaller size is used. With `available_dp`, it is the smallest size whose drop fits in it and whose velocity is at or below the maximum. When the velocity is still outside the range, the warning says which limit governs.
+
 **Results Output**  
 - Consolidates into `results_out` → returned as `PipelineResults`.
 

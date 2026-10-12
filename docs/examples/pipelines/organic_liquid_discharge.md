@@ -47,6 +47,7 @@ results.detailed_summary()
    Selected Diameter: 1.25 in 
    Calculated Pressure Drop: 58487.11 Pa
 ⚠️ Warning: Final velocity 1.55 m/s outside recommended range (1.80-2.00 m/s) for Organic Liquid.
+   No standard size is in the range: the next smaller size would exceed the maximum (2.68 m/s), so the maximum governs.
 
 # Summary
 === Pipeline Result 1 (Organic Liquid Pipe) ===

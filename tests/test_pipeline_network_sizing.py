@@ -7,6 +7,8 @@
   resize every pipe.
 - `fit(pipe=...)` uses the diameter of that pipe; only fit() diameters were
   read, so the pipe was sized all over again.
+- Sizing keeps the velocity in the recommended range of the fluid when a
+  standard size allows it (chlorine at 10 000 kg/h: 6 in, not 8 in).
 
 Hand calculations: v = Q / A on the ASME B36.10M STD bore, and the Darcy drop
 dp = f (L/D) rho v^2 / 2 with the Colebrook friction factor (CS, 0.045 mm).
@@ -19,11 +21,13 @@ import math
 
 import pytest
 
-from processpi.components import Water
+from processpi.components import Chlorine, Water
 from processpi.pipelines.engine import PipelineEngine
 from processpi.pipelines.network import PipelineNetwork
 from processpi.pipelines.pipes import Pipe
-from processpi.units import Diameter, Length, VolumetricFlowRate
+from processpi.units import (
+    Diameter, Length, MassFlowRate, Pressure, Temperature, VolumetricFlowRate
+)
 
 # ASME B36.10M STD bores (m)
 BORE_3IN = 0.07792
@@ -258,3 +262,104 @@ def test_fit_pipe_without_diameter_is_still_sized():
     assert "Found optimal diameter based on recommended velocity" in printed
     assert _inches(results["summary"]["nominal_diameter"]) == pytest.approx(1.25)
     assert results["summary"]["velocity"] == pytest.approx(1.035, rel=1e-3)
+
+
+# --------------------------------------------------------------------------
+# Sizing keeps the velocity in the recommended range
+# --------------------------------------------------------------------------
+
+def _chlorine():
+    return Chlorine(temperature=Temperature(20, "C"), pressure=Pressure(6, "atm"))
+
+
+def test_chlorine_is_sized_inside_its_velocity_range():
+    """
+    Chlorine 10 000 kg/h at 6 atm(a), 20 C: 17.686 kg/m3, Q = 0.15706 m3/s.
+    Recommended 5 to 10 m/s; the middle (7.5 m/s) needs D = 163.3 mm, which
+    rounds up to 8 in (202.74 mm): v = 0.15706 / 0.032283 = 4.87 m/s, below
+    the range. 6 in (154.08 mm): v = 0.15706 / 0.018646 = 8.42 m/s, in it.
+    """
+    engine = PipelineEngine()
+    engine.fit(fluid=_chlorine(), mass_flow=MassFlowRate(10000, "kg/h"))
+    results, printed = _run(engine)
+
+    summary = results["summary"]
+    assert _inches(summary["nominal_diameter"]) == pytest.approx(6)
+    assert summary["calculated_diameter_m"] == pytest.approx(BORE_6IN)
+    assert summary["velocity"] == pytest.approx(8.42, rel=1e-3)
+    assert "outside recommended range" not in printed
+
+
+def test_chlorine_network_pipe_is_sized_inside_its_velocity_range():
+    """The same pipe in a network: 6 in, 8.42 m/s."""
+    pipe = Pipe("Cl2", length=Length(10, "m"))
+    net = PipelineNetwork.series("S", pipe)
+    engine = PipelineEngine()
+    engine.fit(fluid=_chlorine(), mass_flow=MassFlowRate(10000, "kg/h"), network=net)
+    results, _ = _run(engine)
+
+    assert _inches(pipe.nominal_diameter) == pytest.approx(6)
+    assert _by_name(results)["Cl2"]["velocity"].to("m/s").value == pytest.approx(
+        8.42, rel=1e-3
+    )
+
+
+def test_available_dp_sizing_keeps_the_velocity_at_or_below_the_maximum():
+    """
+    Water 100 m3/h through 100 m with 2 bar available, maximum 2.5 m/s.
+    4 in: v = 3.382 m/s, dp = 0.0170 x (100 / 0.10226) x 994.7 x 3.382^2 / 2
+          = about 95 kPa, within 2 bar but over the maximum velocity.
+    5 in: v = 2.152 m/s, the smallest size within both.
+    Before: 4 in.
+    """
+    pipe = Pipe("Main Pipe", length=Length(100, "m"))
+    engine = PipelineEngine()
+    engine.fit(
+        flowrate=VolumetricFlowRate(100, "m3/h"), pipe=pipe, fluid=Water(),
+        available_dp=Pressure(2, "bar"),
+    )
+    results, _ = _run(engine)
+
+    water = Water()
+    dp_4in = _darcy_dp(100 / 3600, BORE_4IN, 100, water.density().value, water.viscosity().value)
+    assert dp_4in < 2e5  # the drop alone would allow 4 in
+
+    summary = results["summary"]
+    assert summary["available_dp_met"] is True
+    assert _inches(summary["nominal_diameter"]) == pytest.approx(5)
+    assert summary["velocity"] == pytest.approx(2.152, rel=1e-3)
+
+
+def test_available_dp_that_forces_a_low_velocity_says_it_governs():
+    """
+    Water 100 m3/h through 1000 m with 5 kPa available: only a large pipe
+    meets the drop, and its velocity is below 1 m/s. 6 in (1.49 m/s, in range)
+    is far over 5 kPa, so the drop governs and the warning says so.
+    """
+    pipe = Pipe("Main Pipe", length=Length(1000, "m"))
+    engine = PipelineEngine()
+    engine.fit(
+        flowrate=VolumetricFlowRate(100, "m3/h"), pipe=pipe, fluid=Water(),
+        available_dp=Pressure(5, "kPa"),
+    )
+    results, printed = _run(engine)
+
+    assert results["summary"]["velocity"] < 1.0
+    assert "outside recommended range" in printed
+    assert "The available pressure drop governs" in printed
+
+
+def test_velocity_sizing_says_when_no_standard_size_is_in_range():
+    """
+    A tiny water flow, 1e-6 m3/s: even the smallest size (0.125 in, 6.84 mm)
+    gives v = 1e-6 / 3.675e-5 = 0.027 m/s, below 1 m/s.
+    """
+    engine = PipelineEngine()
+    engine.fit(
+        flowrate=VolumetricFlowRate(1e-6, "m3/s"), fluid=Water(), length=Length(1, "m")
+    )
+    results, printed = _run(engine)
+
+    assert _inches(results["summary"]["nominal_diameter"]) == pytest.approx(0.125)
+    assert "No standard size is in the range" in printed
+    assert "too small for the smallest size" in printed
