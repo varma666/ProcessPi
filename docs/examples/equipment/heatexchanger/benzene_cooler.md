@@ -11,7 +11,7 @@ Design a **Shell & Tube Heat Exchanger** to cool liquid benzene under the follow
 - Cold fluid: **Cooling Water**
 - Cooling water flow rate: **60,500 kg/h**
 - Cooling water inlet temperature: **15°C**
-- Overall heat-transfer coefficient (U): **575 W/m²·K**
+- Starting estimate of the overall heat-transfer coefficient (`assumed_U`): **575 W/m²·K**
 - Maximum allowable tube-side pressure drop: **1 bar**
 - Maximum allowable shell-side pressure drop: **1 bar**
 - Heat exchanger mode: **Design**
@@ -77,7 +77,7 @@ hx.fit(
     hot_out=hot_out,
     cold_in=cold_in,
     cold_out=cold_out,
-    U=HeatTransferCoefficient(575, "W/m2K"),
+    assumed_U=HeatTransferCoefficient(575, "W/m2K"),
     shell_dp=Pressure(1, "bar"),
     tube_dp=Pressure(1, "bar"),
     mode="design"
@@ -95,6 +95,10 @@ print(results.summary())
 # Complete calculation dictionary
 results.detailed_summary()
 ```
+
+`assumed_U` is only the first guess: the engine calculates U from the film
+coefficients and resizes the area until U converges. Pass `specified_U`
+instead to size the area at a fixed U.
 
 ---
 
