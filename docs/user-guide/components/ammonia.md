@@ -33,7 +33,9 @@ The properties of the `Ammonia` class are calculated using the following methods
 * **`density()`**:  
     * **Gas Phase**: Calculates density using the Ideal Gas Law  
     * **Liquid Phase**: Calculates density using the DIPPR correlation  
-* **`specific_heat()`**: Calculates specific heat capacity (Cp​) as a polynomial function of temperature  
+* **`specific_heat()`**:  
+    * **Gas Phase**: Ideal-gas heat capacity (Cp), DIPPR Eq. 107 with the constants of Perry's Chemical Engineers' Handbook, 8th ed., Table 2-156  
+    * **Liquid Phase**: Perry's Table 2-153, Eq. (2), a function of reduced temperature  
 * **`viscosity()`**:  
     * **Liquid Phase**: Calculates viscosity (μ) using the DIPPR correlation  
     * **Gas Phase**: Calculates viscosity using Sutherland's Law  

@@ -1,4 +1,4 @@
-from .base import Component
+from .base import Component, PropertyMethod
 from processpi.units import *
 
 class _13Butanediol(Component):
@@ -45,6 +45,8 @@ class _13Butanediol(Component):
     _critical_acentric_factor = 0.7043
 
     _density_constants = [0.81856, 0.24967, 676.0, 0.22023]
+    # Liquid Cp, Perry's Chemical Engineers' Handbook, 8th ed., Table 2-153,
+    # p. 2-165, "use Eq. (2)", 196.15-670 K (see specific_heat below).
     _specific_heat_constants = [42.152,324580,517.35,1449.50,0]
     _viscosity_constants = [-390.03, 18609.0, 60.014, -0.055844, 1.0]
     _thermal_conductivity_constants = [-0.0032865, 0.0011463, -1.55e-06,0,0]
@@ -52,13 +54,16 @@ class _13Butanediol(Component):
     _enthalpy_constants = [9.2247e-7, 0.42442,0,0,0]
 
 
-    #@PropertyMethod
+    @PropertyMethod
     def specific_heat(self) -> SpecificHeat:
         if self._specific_heat is not None:
             return self._specific_heat
-        T = self.temperature.value
-        Tr = T / self._critical_temperature.value
-        t = 1 - Tr
-        cp = (self._specific_heat_constants[0] / t ) + (self._specific_heat_constants[1]) - ( 2 * self._specific_heat_constants[0] * self._specific_heat_constants[2] * t) - (self._specific_heat_constants[0] * self._specific_heat_constants[3] * (t**2)) - ((self._specific_heat_constants[2]**2)*(t**3)/3) - ((self._specific_heat_constants[2] * self._specific_heat_constants[3] * (t**4))/2) - ((self._specific_heat_constants[0]**2) * (t**5)/5) 
-        return SpecificHeat(cp, "J/kgK")
+        # Liquid: Perry's 8th ed., Table 2-153, Eq. (2), J/(kmol K):
+        # Cp = C1^2/t + C2 - 2*C1*C3*t - C1*C4*t^2 - C3^2*t^3/3 - C3*C4*t^4/2 - C4^2*t^5/5
+        # with t = 1 - T/Tc. Gives the table's 0.6251E5 at 196.15 K and 5.2437E5 at 670 K.
+        C1, C2, C3, C4 = self._specific_heat_constants[:4]
+        T = self.temperature.to("K").value
+        t = 1 - T / self._critical_temperature.to("K").value
+        cp = (C1 ** 2 / t) + C2 - (2 * C1 * C3 * t) - (C1 * C4 * t ** 2) - (C3 ** 2 * t ** 3 / 3) - (C3 * C4 * t ** 4 / 2) - (C4 ** 2 * t ** 5 / 5)
+        return SpecificHeat(cp / self.molecular_weight, "J/kgK")
 

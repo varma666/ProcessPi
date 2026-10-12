@@ -33,7 +33,9 @@ The properties of the `Ethane` class are calculated using the following methods,
 * **`density()`**:  
   * **Gas Phase**: Uses the Ideal Gas Law  
   * **Liquid Phase**: Uses DIPPR or experimental correlation  
-* **`specific_heat()`**: Calculates specific heat capacity (Cp​) as a polynomial function of temperature  
+* **`specific_heat()`**:  
+  * **Gas Phase**: Ideal-gas heat capacity (Cp), DIPPR Eq. 107 with the constants of Perry's Chemical Engineers' Handbook, 8th ed., Table 2-156  
+  * **Liquid Phase**: Perry's Table 2-153, Eq. (2), a function of reduced temperature  
 * **`viscosity()`**:  
   * **Gas Phase**: Uses Sutherland’s Law  
   * **Liquid Phase**: Uses DIPPR correlation  
