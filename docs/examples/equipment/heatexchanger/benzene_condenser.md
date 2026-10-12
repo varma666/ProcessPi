@@ -117,32 +117,49 @@ results.detailed_summary()
 
 ```text
 Heat Exchanger Summary
-------------------------------
+==============================
 Type                  : condenser
+Type Selection        : explicit
 Method                : bell_delaware
 Heat Duty             : 1313.333 kW
-Area                  : 47.275 m²
-U Calculated          : 466.475 W/m²·K
-Tube Velocity         : 0.575 m/s
-Shell Velocity        : 0.905 m/s
-Tube Pressure Drop    : 0.000 psi
-Shell Pressure Drop   : 0.000
-Tube Count            : 264
-Tube Length           : 3.0 m
-Status                : UNKNOWN
+Area                  : 35.814 m2
+U Calculated          : 714.751 W/m2K
+U Basis               : calculated
+Tube Velocity         : 2.330 m/s
+Shell Velocity        : 29.066 m/s
+Tube Pressure Drop    : 111.711 kPa
+Shell Pressure Drop   : 256.693 kPa
+Tube Count            : 120
+Tube Length           : 5.000 m
+Status                : PRESSURE_DROP_FAILURE
+
+Pressure Drop Assessment
+------------------------------
+Tube ΔP Limit        : 50.000 kPa
+Tube ΔP Actual       : 111.711 kPa
+Shell ΔP Limit       : 50.000 kPa
+Shell ΔP Actual      : 256.693 kPa
+
+Engineering Feasibility
+------------------------------
+Thermal Performance  : PASS
+Hydraulic Performance: PASS
+Pressure Drop        : FAIL
 
 Engineering Insights
 ------------------------------
 • Heat-transfer coefficient within acceptable range.
-• Tube-side velocity acceptable but below ideal turbulent range.
-• Shell-side velocity acceptable.
+• Tube-side velocity within recommended range.
+• Shell-side velocity very high. Potential shell-side erosion risk.
+• Tube-side pressure drop exceeds allowable limit.
+• Shell-side pressure drop exceeds allowable limit.
 
 Warnings
 ------------------------------
-• Tube velocity low (0.58 m/s)
-• Area slightly undersized — acceptable.
-• [HYDRAULIC_WARNING] Thermal area pushes tube count above hydraulic velocity target; using capped thermo-hydraulic count.
-• [CONVERGENCE_WARNING] Geometry stagnation detected.
+• [ASSUMPTION_WARNING] Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the shell side: no hot_wall_viscosity given
+• [ASSUMPTION_WARNING] Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the tube side: no cold_wall_viscosity given
+• Tube-side pressure drop 111711.3 Pa exceeds limit 50000.0 Pa
+• Shell-side pressure drop 256693.1 Pa exceeds limit 50000.0 Pa
 ```
 
 ---
@@ -173,22 +190,20 @@ The HeatExchangerEngine automatically performs:
 | Design Method | Bell–Delaware |
 | Orientation | Horizontal |
 | Heat Duty | 1313.33 kW |
-| Required Area | 47.27 m² |
-| Calculated Overall U | 466.48 W/m²·K |
-| Tube Count | 264 |
-| Tube Length | 3.0 m |
-| Tube Velocity | 0.575 m/s |
-| Shell Velocity | 0.905 m/s |
+| Heat Transfer Area | 35.81 m² |
+| Calculated Overall U | 714.75 W/m²·K |
+| Tube Count | 120 |
+| Tube Length | 5.0 m |
+| Tube Velocity | 2.330 m/s |
+| Shell Velocity | 29.066 m/s |
 
 The calculated overall heat-transfer coefficient is within the expected range for a shell-and-tube condenser operating with water as the cooling medium.
 
-The shell-side velocity is acceptable for efficient heat transfer. The tube-side velocity is lower than the preferred turbulent range, and the engine highlights this through engineering warnings while still producing a feasible design.
+The tube-side velocity is within the recommended range. The shell-side vapor velocity is high, and both pressure drops exceed the 0.5 bar limits (111.7 kPa on the tube side, 256.7 kPa on the shell side), so the engine reports the status as PRESSURE_DROP_FAILURE instead of a feasible design.
 
 ### Engineering Assessment
 
-The generated warnings indicate that the thermal design required a relatively large number of tubes, reducing the tube-side velocity. Rather than sacrificing thermal performance, ProcessPI applies a thermo-hydraulic balancing strategy to produce a practical design and clearly reports the associated engineering considerations.
-
-The convergence warning indicates that the geometry optimization reached a stable solution without further meaningful improvements, which is common during iterative equipment sizing.
+The thermal check passes, but the pressure-drop check fails on both sides, and the warnings list the two exceedances. The warnings also record that the Sieder-Tate viscosity ratio was taken as 1 on both sides because no wall viscosities were given.
 
 For a complete engineering report, use:
 
