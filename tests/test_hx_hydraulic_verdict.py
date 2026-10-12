@@ -144,9 +144,13 @@ def test_vapour_shell_inside_its_band_is_not_an_erosion_risk():
 
     # Benzene vapour at 1.2 bar: Sinnott's atmospheric-pressure vapour band.
     assert results["shell_velocity_band"] == (10.0, 30.0)
-    # The docs page prints Shell Velocity 29.066 m/s.
+    # The docs page prints Shell Velocity 25.587 m/s. It was 29.066 m/s
+    # (approx(29.07, abs=0.01)) while design() sized this condenser as a
+    # heater, on the 1.0-2.5 m/s liquid band for its cooling-water tubes in
+    # place of the 0.6-2.0 m/s condenser band
+    # (tests/test_hx_design_phase_change_service.py).
     assert 10.0 <= v_shell <= 30.0
-    assert v_shell == pytest.approx(29.07, abs=0.01)
+    assert v_shell == pytest.approx(25.59, abs=0.01)
     assert results["feasibility_summary"]["hydraulic_ok"] is True
 
     # Before: "Shell-side velocity very high. Potential shell-side erosion risk."

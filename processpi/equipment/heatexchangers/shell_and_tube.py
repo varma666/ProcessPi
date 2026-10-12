@@ -92,6 +92,15 @@ _BELL_IDEAL_J = {
 _BELL_DEFAULT_BAFFLE_CUT = 0.25
 _BELL_TUBE_BAFFLE_CLEARANCE_M = 0.8e-3
 
+# `service` specs that name a variant of a service, and the service the
+# assumed-U table, the velocity bands and the phase-change LMTD know it as.
+_SERVICE_FAMILY = {
+    "total_condenser": "condenser",
+    "partial_condenser": "condenser",
+    "kettle_reboiler": "reboiler",
+    "thermosyphon_reboiler": "reboiler",
+}
+
 # Bundle diameter constants K1, n1 in Db = do (Nt / K1)^(1/n1), keyed by the
 # number of tube passes, for a tube pitch of 1.25 do. R. K. Sinnott, Coulson and
 # Richardson's Chemical Engineering Vol. 6, Chemical Engineering Design, 4th ed.
@@ -120,9 +129,10 @@ class ShellAndTubeHX(HeatExchanger):
     # force_cold_in_tubes) decide. The phase-change subclasses pin it.
     _FIXED_TUBE_SIDE: str | None = None
     # The phase-change service the exchanger class itself stands for
-    # ("condenser", "evaporator", "reboiler"), or None. rate() reads it when
-    # no `service` spec is given; `service_type` cannot carry it, since design()
-    # and rate() overwrite that with the service of the run.
+    # ("condenser", "evaporator", "reboiler"), or None. design() and rate()
+    # read it, through `_infer_service_type`, when no `service` spec is given;
+    # `service_type` cannot carry it, since both overwrite that with the
+    # service of the run.
     _PHASE_CHANGE_SERVICE: str | None = None
 
     def __init__(self, *args: Any, method: str = "kern", **kwargs: Any):
@@ -2791,6 +2801,13 @@ class ShellAndTubeHX(HeatExchanger):
         if cold_category == "steam":
             cold["phase"] = "vapor"
         self._validate_inputs(hot, cold)
+        # The service rate() would rate this exchanger as, from the inlet
+        # phases resolved above, set before the energy balance below reads it.
+        # design() classified it itself: a condenser, reboiler or evaporator
+        # with no `service` spec was designed as a heater or cooler (and a
+        # `service` of "reboiler" was ignored), so its velocity bands and
+        # assumed U were not those rate() judged the same exchanger by.
+        self.service_type = self._infer_service_type(hot, cold)
         # Physical properties at each side's mean temperature, in the phase
         # resolved above. The outlets follow from the energy balance, which
         # depends on cp, so the two are iterated from the inlet properties
@@ -2813,22 +2830,6 @@ class ShellAndTubeHX(HeatExchanger):
         # Duty, LMTD and Ft are side-independent and stay on (hot, cold); the
         # geometry, film coefficients and hydraulics use the resolved sides.
         tube, shell = self._side_props(hot, cold)
-
-        # Classify service from the actual stream state, not just the
-        # component's default phase. Superheated steam cooling sensibly is a
-        # heater/cooler service, not a condenser unless condensation is intended.
-        hot_type_for_service = self._assumed_u_fluid_type("hot", hot)
-        cold_type_for_service = self._assumed_u_fluid_type("cold", cold)
-        hot_is_vapor = hot_type_for_service in {"steam", "gas_low_pressure", "gas_high_pressure", "vapor"}
-        cold_is_vapor = cold_type_for_service in {"steam", "gas_low_pressure", "gas_high_pressure", "vapor"}
-        if hot_is_vapor and self.specs.get("service") in {"condenser", "total_condenser", "partial_condenser"}:
-            self.service_type = "condenser"
-        elif cold_is_vapor and self.specs.get("service") in {"vaporizer", "evaporator"}:
-            self.service_type = "vaporizer"
-        elif hot["t_k"] > cold["t_k"]:
-            self.service_type = "heater" if hot_is_vapor else "cooler"
-        else:
-            self.service_type = "heater"
 
         q_watts, th_out, tc_out = self._calculate_heat_duty(hot, cold)
         self._trace_step("THERMAL", "Heat duty (W)", q_watts)
@@ -2942,6 +2943,9 @@ class ShellAndTubeHX(HeatExchanger):
             "viscosity_correction": self._viscosity_correction_report(tube, shell),
             "property_basis": self._property_basis(hot, cold),
             "method": self.method,
+            # rate() reports the service it rated; design() reported none, so
+            # its results carried `_finalize_results`'s "unknown".
+            "service": self.service_type,
             "tube_dp": tube_dp,
             "shell_dp": shell_dp,
             "area": state["geometry"]["area"],
@@ -3119,9 +3123,20 @@ class ShellAndTubeHX(HeatExchanger):
         return self._design_kern()
 
     def _infer_service_type(self, hot: Dict[str, float], cold: Dict[str, float]) -> str:
+        """
+        The service design() and rate() run the exchanger as, and so the one
+        `service_type` keys the assumed-U table, the velocity bands and the
+        phase-change LMTD on. Both modes call it, so they cannot judge the same
+        exchanger as two different services.
+
+        In order: the `service` spec; the phase-change service of the class
+        (`_PHASE_CHANGE_SERVICE`); a phase change the outlet phases prove;
+        otherwise a sensible heater or cooler.
+        """
         explicit = str(self.specs.get("service") or "").lower()
         if explicit:
-            return explicit
+            # A variant of a service is looked up as the service itself.
+            return _SERVICE_FAMILY.get(explicit, explicit)
 
         # A condenser, evaporator or reboiler is rated as one. Rated as a
         # sensible cooler, a condensing stream in and out at the same
