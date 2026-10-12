@@ -1,6 +1,6 @@
 """Regression tests for component data follow-ups: the liquid Cp Eq. (2) of
 Ammonia, Ethane, 1,2-Butanediol and 1,3-Butanediol, the Ethylene class name,
-and the 1-Propanol constants.
+the 1-Propanol constants, and the new Cyclohexane component.
 
 Reference values:
 - Perry's Chemical Engineers' Handbook, 8th ed. (2008), Section 2: Table 2-153
@@ -12,6 +12,9 @@ Reference values:
 - NIST Chemistry WebBook, SRD 69, fluid properties (fetched 2026-10-12):
   saturated liquid Cp of ammonia and ethane, and Cp on the 0.101325 MPa isobar.
   1-Propanol (CAS 71-23-8) phase-change and condensed-phase pages.
+  Cyclohexane (CAS 110-82-7): fluid properties and gas-phase Cp.
+- Cyclohexane constants: Perry's 8th ed., compound no. 65, Tables 2-8, 2-32,
+  2-141, 2-150, 2-153, 2-156, 2-313, 2-314 and 2-315.
 """
 import warnings
 
@@ -173,3 +176,111 @@ def test_propanol_is_liquid_at_25_c():
     assert c3.phase() == "liquid"
     assert c3.formula == "C3H8O"
     assert c3.density().value == pytest.approx(799.5, rel=1e-3)
+
+
+# ----------------------------------------------------------------------
+# Cyclohexane: new component, Perry's 8th ed. constants
+# ----------------------------------------------------------------------
+def _cyclohexane(T, phase=None):
+    from processpi.components import Cyclohexane
+
+    return Cyclohexane(temperature=Temperature(T, "K"), pressure=Pressure(101325, "Pa"), phase=phase)
+
+
+# (property, T in K, phase, value printed at Tmin or Tmax, scale to the
+# printed unit). Densities in mol/dm3 and Cp and Hv in J/kmol(K), as printed.
+CYCLOHEXANE_PERRY = [
+    ("density", 279.69, "liquid", 9.380, "per_kmol"),        # Table 2-32, p. 2-99
+    ("density", 553.80, "liquid", 3.2509, "per_kmol"),
+    ("specific_heat", 279.69, "liquid", 1.4836e5, "kmol"),  # Table 2-153, p. 2-166
+    ("specific_heat", 400.00, "liquid", 2.0323e5, "kmol"),
+    ("viscosity", 279.69, "liquid", 1.260e-3, None),        # Table 2-313, p. 2-428
+    ("viscosity", 443.04, "liquid", 2.070e-4, None),
+    ("thermal_conductivity", 279.69, "liquid", 0.1281, None),  # Table 2-315, p. 2-440
+    ("thermal_conductivity", 353.87, "liquid", 0.1095, None),
+    ("vapor_pressure", 279.69, "liquid", 5.36e3, None),     # Table 2-8, p. 2-56
+    ("vapor_pressure", 553.80, "liquid", 4.094e6, None),
+    ("enthalpy", 279.69, "liquid", 3.3920e7, "kmol"),       # Table 2-150, p. 2-151
+    ("specific_heat", 100, "gas", 0.4366e5, "kmol"),        # Table 2-156, p. 2-177
+    ("specific_heat", 1500, "gas", 3.6516e5, "kmol"),
+    ("thermal_conductivity", 325, "gas", 0.01380, None),    # Table 2-314, p. 2-434
+    ("thermal_conductivity", 1000, "gas", 0.14198, None),
+]
+
+
+@pytest.mark.parametrize("prop, T, phase, expected, scale", CYCLOHEXANE_PERRY)
+def test_cyclohexane_matches_perry_tables(prop, T, phase, expected, scale):
+    c6h12 = _cyclohexane(T, phase)
+    value = getattr(c6h12, prop)().value
+    if scale == "kmol":
+        value *= c6h12.molecular_weight
+    elif scale == "per_kmol":
+        value /= c6h12.molecular_weight
+    # The tables print 4 or 5 significant figures, computed from unrounded
+    # constants; the largest gap is the viscosity at Tmin, 0.28 %.
+    assert value == pytest.approx(expected, rel=3e-3)
+
+
+def test_cyclohexane_constants_match_perry_table_2_141():
+    from processpi.components import Cyclohexane
+
+    assert Cyclohexane.formula == "C6H12"
+    assert Cyclohexane.molecular_weight == 84.159
+    assert Cyclohexane._critical_temperature.to("K").value == 553.8
+    assert Cyclohexane._critical_pressure.value == pytest.approx(4.08e6)  # Pa
+    assert Cyclohexane._critical_acentric_factor == 0.2081
+
+
+# NIST WebBook fluid properties (fetched 2026-10-12), isobar at 0.101325 MPa.
+@pytest.mark.parametrize("T, rho, cp, mu, k", [
+    (300, 772.218, 1867.60, 8.63709e-4, 0.117611),
+    (350, 723.390, 2108.52, 4.30496e-4, 0.105872),
+])
+def test_cyclohexane_liquid_matches_nist(T, rho, cp, mu, k):
+    c6h12 = _cyclohexane(T)
+    assert c6h12.phase() == "liquid"
+    assert c6h12.density().value == pytest.approx(rho, rel=0.005)
+    assert c6h12.specific_heat().value == pytest.approx(cp, rel=0.02)
+    assert c6h12.viscosity().value == pytest.approx(mu, rel=0.01)
+    # Perry's DIPPR k is 4.3-4.6 % above the NIST correlation here.
+    assert c6h12.thermal_conductivity().value == pytest.approx(k, rel=0.05)
+
+
+@pytest.mark.parametrize("T, P", [
+    (296.611, 0.0121406e6),
+    (325.330, 0.0393083e6),
+    (353.865, 0.101325e6),  # normal boiling point
+])
+def test_cyclohexane_vapor_pressure_matches_nist(T, P):
+    assert _cyclohexane(T, "liquid").vapor_pressure().value == pytest.approx(P, rel=0.005)
+
+
+@pytest.mark.parametrize("T, hv", [(296.611, 393.481e3), (353.865, 356.362e3)])
+def test_cyclohexane_heat_of_vaporization_matches_nist(T, hv):
+    # NIST saturated vapour minus saturated liquid enthalpy, J/kg.
+    assert _cyclohexane(T, "liquid").enthalpy().value == pytest.approx(hv, rel=0.005)
+
+
+@pytest.mark.parametrize("T, cp_mol", [(400, 148.64), (500, 188.68), (1000, 314.42)])
+def test_cyclohexane_ideal_gas_cp_matches_nist(T, cp_mol):
+    # NIST gas-phase Cp, J/(mol K) (Dorofeeva, 1986).
+    c6h12 = _cyclohexane(T)
+    assert c6h12.phase() == "gas"
+    assert c6h12.specific_heat().value * c6h12.molecular_weight / 1000 == pytest.approx(cp_mol, rel=0.01)
+
+
+@pytest.mark.parametrize("T, k", [(400, 0.0218486), (500, 0.0352067), (600, 0.0503773)])
+def test_cyclohexane_vapor_k_matches_nist(T, k):
+    c6h12 = _cyclohexane(T)
+    assert c6h12.phase() == "gas"
+    assert c6h12.thermal_conductivity().value == pytest.approx(k, rel=0.015)
+
+
+def test_cyclohexane_docs_example_runs():
+    from processpi.components import Cyclohexane
+
+    c6h12 = Cyclohexane(temperature=Temperature(25, "C"))
+    assert c6h12.phase() == "liquid"
+    # NIST WebBook, 298.15 K and 0.101325 MPa: 773.966 kg/m3.
+    assert c6h12.density().value == pytest.approx(773.966, rel=0.005)
+    assert c6h12.enthalpy().value > 0

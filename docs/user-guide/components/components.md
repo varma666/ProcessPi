@@ -17,6 +17,7 @@ These components can be used in calculations, simulations, and design workflows 
 - [Chloroform](chloroform.md)  
 - [Carbon Tetrachloride](carbon_tetrachloride.md)  
 - [Chloro Methane](chloromethane.md)  
+- [Cyclohexane](cyclohexane.md)  
 - [Cyclohexene](cyclohexene.md)  
 - [Ethane](ethane.md)  
 - [Ethanol](ethanol.md)  
