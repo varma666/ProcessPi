@@ -45,7 +45,11 @@ def test_available_dp_sizing_meets_the_drop_with_the_fittings():
     summary = _run(available_dp=Pressure(50000, "Pa"), fittings=_fittings())
     assert summary["available_dp_met"] is True
     assert summary["total_pressure_drop_Pa"] <= 50000.0
-    assert summary["nominal_diameter"] == Diameter(4, "in")
+    # Was 4 in (48.7 kPa) while the fittings used Le/D only. Each fitting now
+    # takes the higher of its K and Le/D losses (#108); K governs both here
+    # (globe 10 > 340 f, elbow 0.9 > 30 f, f = 0.0186), so 4 in is 62.0 kPa
+    # and 5 in (23.0 kPa) is the smallest that fits.
+    assert summary["nominal_diameter"] == Diameter(5, "in")
 
 
 def test_the_selected_size_is_the_smallest_that_fits():

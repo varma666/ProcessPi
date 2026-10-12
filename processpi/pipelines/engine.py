@@ -331,71 +331,124 @@ class PipelineEngine:
             velocity=v
         ).calculate()
 
-    def _minor_dp_pa(self, fitting: Fitting, v: Velocity, f: Optional[float], d: Diameter) -> Pressure:
-        """
-        Calculates the minor pressure drop (fitting loss).
+    @staticmethod
+    def _given_value(fitting: Any, names: Tuple[str, ...]) -> Any:
+        """First of `names` set on the fitting as a value (methods are skipped)."""
+        for name in names:
+            val = getattr(fitting, name, None)
+            if val is not None and not callable(val):
+                return val
+        return None
 
-        It prioritizes the K-factor method and falls back to the equivalent length method,
-        then to standards lookup.
+    def _fitting_loss(self, fitting: Any, v: Velocity, f: Optional[float], d: Diameter) -> Dict[str, Any]:
+        """
+        Calculates the pressure loss of one fitting entry (all `quantity` units).
+
+        Both standard methods are worked out when the data exist:
+
+        - K-factor:          dp = K * rho v^2 / 2
+        - equivalent length: dp = f * (Le/D) * rho v^2 / 2, with the Darcy f of
+          the pipe the fitting sits in
+
+        and the higher loss is used (varma666/ProcessPi#108; the K_FACTORS and
+        EQUIVALENT_LENGTHS tables disagree by up to about 60% for some fittings).
+        The choice is made for each fitting. A fitting found in only one table
+        uses that one; a fitting found in neither adds no loss and warns.
+
+        Values set on the fitting itself replace the tables: `K`, `K_factor` and
+        `Le` are per unit, `total_K` and `total_Le` already cover the quantity.
+        An `Le` given as a `Length` is an equivalent length, a plain number is an
+        Le/D ratio. When both a K and an Le are given, the higher loss is used.
+
+        Returns:
+            Dict with the per-unit `k_factor` and `le_over_d` used (None when that
+            method had no data), the loss by each method (`dp_k_Pa`, `dp_le_Pa`),
+            the loss counted (`dp_Pa`), `fitting_method` ("K", "Le/D" or None) and
+            `data_source` ("standards" or "given").
         """
         rho = self._get_density().value
         v_val = v.value if hasattr(v, "value") else float(v)
-
-        # 1. Try explicit K-factor first
-        K = getattr(fitting, "K", None) or getattr(fitting, "K_factor", None) or getattr(fitting, "total_K", None)
-        if K is not None:
-            return Pressure(0.5 * rho * v_val * v_val * float(K), "Pa")
-        
-        # 2. Try explicit equivalent length on the fitting
-        Le_candidate = getattr(fitting, "Le", None) or getattr(fitting, "equivalent_length", None) or getattr(fitting, "total_Le", None)
-        # Perform the Le/D calculation if an equivalent length value was found
-        if Le_candidate is not None:
-            le_val = None
-            if isinstance(Le_candidate, Length):
-                le_val = Le_candidate.to("m").value
-            elif callable(Le_candidate):
-                # Check if the method call returns a value before using it
-                le_result = Le_candidate()
-                if le_result is not None:
-                    le_val = le_result * d.to("m").value
-            else:
-                # Assumes Le is a numerical value representing the Le/D ratio.
-                le_val = float(Le_candidate) * d.to("m").value
-                
-            
-            # If a valid equivalent length value was found, perform the calculation
-            if le_val is not None:
-                if f is None:
-                    Re = self._reynolds(v, d)
-                    friction_factor_obj = self._friction_factor(Re, d)
-                    f_val = friction_factor_obj.value
-                else:
-                    f_val = float(f.value) if isinstance(f, Variable) else float(f)
-                return Length(le_val, "m")
-
-        # 3. Fallback to standards lookup (for K-factor) if no explicit Le/D was found
+        d_m = d.to("m").value
+        quantity = getattr(fitting, "quantity", 1) or 1
         fitting_type = getattr(fitting, "fitting_type", None)
-        if fitting_type is not None:
-            Re = self._reynolds(v, d)
-            pipe = self.data.get("pipe")
-            roughness = get_roughness(getattr(pipe, "material", None))
-            
-            d_m = d.to("m").value
-            # get_roughness gives a plain Variable in mm.
-            eps_m = float(getattr(roughness, "value", roughness)) / 1000.0
-            relative_roughness = eps_m / d_m if d_m > 0 else None
-            K_from_standards = get_k_factor(fitting_type, Re, relative_roughness, d_m)
-            if K_from_standards is not None:
-                return Pressure(0.5 * rho * v_val * v_val * float(K_from_standards), "Pa")
-            else:
+
+        # Per-unit K and Le/D, from the fitting itself or from the tables.
+        k_unit = None
+        le_d_unit = None
+
+        k_given = self._given_value(fitting, ("K", "K_factor"))
+        k_all = self._given_value(fitting, ("total_K",))
+        le_given = self._given_value(fitting, ("Le", "equivalent_length"))
+        le_all = self._given_value(fitting, ("total_Le",))
+        given = any(x is not None for x in (k_given, k_all, le_given, le_all))
+
+        def _le_over_d(le: Any) -> float:
+            return le.to("m").value / d_m if isinstance(le, Length) else float(le)
+
+        if given:
+            if k_given is not None:
+                k_unit = float(k_given)
+            elif k_all is not None:
+                k_unit = float(k_all) / quantity
+            if le_given is not None:
+                le_d_unit = _le_over_d(le_given)
+            elif le_all is not None:
+                le_d_unit = _le_over_d(le_all) / quantity
+        else:
+            k_lookup = getattr(fitting, "k_factor", None)
+            le_lookup = getattr(fitting, "equivalent_length", None)
+            if callable(k_lookup):
+                k_unit = k_lookup()
+            elif fitting_type is not None:
+                k_unit = get_k_factor(fitting_type)
+            if callable(le_lookup):
+                le_d_unit = le_lookup()
+            elif fitting_type is not None:
+                le_d_unit = get_equivalent_length(fitting_type)
+
+        k_total = float(k_unit) * quantity if k_unit is not None else None
+        le_total_m = float(le_d_unit) * d_m * quantity if le_d_unit is not None else None
+
+        dp_k = 0.5 * rho * v_val * v_val * k_total if k_total is not None else None
+        dp_le = None
+        if le_total_m is not None:
+            if f is None:
+                f = self._friction_factor(self._reynolds(v, d), d)
+            dp_le = self._major_dp_pa(f, Length(le_total_m, "m"), d, v).value
+
+        if dp_k is None and dp_le is None:
+            method, dp = None, 0.0
+            if fitting_type is not None:
                 warnings.warn(
                     f"No standard K-factor or equivalent length found for fitting type "
                     f"'{fitting_type}'; it adds no pressure drop.",
                     UserWarning,
                     stacklevel=2,
                 )
+        elif dp_le is None or (dp_k is not None and dp_k >= dp_le):
+            method, dp = "K", dp_k
+        else:
+            method, dp = "Le/D", dp_le
 
-        return Pressure(0.0, "Pa")
+        return {
+            "fitting_type": fitting_type,
+            "quantity": quantity,
+            "k_factor": k_unit,
+            "le_over_d": le_d_unit,
+            "dp_k_Pa": dp_k,
+            "dp_le_Pa": dp_le,
+            "dp_Pa": dp,
+            "fitting_method": method,
+            "data_source": "given" if given else "standards",
+        }
+
+    def _minor_dp_pa(self, fitting: Fitting, v: Velocity, f: Optional[float], d: Diameter) -> Pressure:
+        """
+        Calculates the minor pressure drop (fitting loss) of one fitting entry:
+        the higher of the K-factor and equivalent-length losses, see
+        `_fitting_loss`.
+        """
+        return Pressure(self._fitting_loss(fitting, v, f, d)["dp_Pa"], "Pa")
     # ---------------------- Pipe calculation (major+minor+elevation) ---------
     def _pipe_calculation(self, pipe: Pipe, flow_rate: Optional[VolumetricFlowRate]) -> Dict[str, Any]:
         """
@@ -452,18 +505,14 @@ class PipelineEngine:
         f_minor = f
         if f_minor is None and ft:
             f_minor = self._friction_factor(Re, d, material=pipe.material)
-        for ft in ft:
-            ft.diameter = d
-            le_val = self._minor_dp_pa(ft, v, f_minor, d)
-            equivalent_length = Length(0.0, "m")
-            if isinstance(le_val, Length):
-                equivalent_length = le_val.value * ft.quantity
-                dp_minor += self._major_dp_pa(f_minor, equivalent_length, d, v)
-            elif isinstance(le_val, Pressure):
-                dp_minor += le_val
-            else:
-                # If neither Length nor Pressure, skip or handle as needed
-                pass
+        # Every route (single pipe, sizing, networks) gets its fitting losses
+        # here, each fitting taking the higher of its K and Le/D losses.
+        fitting_losses = []
+        for fitting in ft:
+            fitting.diameter = d
+            fitting_losses.append(self._fitting_loss(fitting, v, f_minor, d))
+        if fitting_losses:
+            dp_minor = Pressure(sum(x["dp_Pa"] for x in fitting_losses), "Pa")
         # ---------------------------
         # Elevation Loss
         # ---------------------------
@@ -492,6 +541,7 @@ class PipelineEngine:
             "major_dp_pa": getattr(dp_major, "value", dp_major),
             "minor_dp_pa": getattr(dp_minor, "value", dp_minor),
             "elevation_dp_pa": getattr(elev_loss, "value", elev_loss),
+            "fitting_losses": fitting_losses,
         }
 
 
@@ -583,6 +633,7 @@ class PipelineEngine:
                 "major_dp": calc["major_dp"],
                 "minor_dp": calc["minor_dp"],
                 "elevation_dp": calc["elevation_dp"],
+                "fitting_losses": calc["fitting_losses"],
                 "total_dp": calc["pressure_drop"],
                 "pressure_drop_Pa": dp_pa,
                 "flow_m3s": getattr(flow_rate, "value", flow_rate),
@@ -1142,6 +1193,7 @@ class PipelineEngine:
                     "major_dp": calc.get("major_dp"),
                     "minor_dp": calc.get("minor_dp"),
                     "elevation_dp": calc.get("elevation_dp"),
+                    "fitting_losses": calc.get("fitting_losses", []),
                     "total_dp": total_dp_pa,
                 }],
             })
@@ -1448,6 +1500,7 @@ class PipelineEngine:
                     "major_dp": final_calc.get("major_dp"),
                     "minor_dp": final_calc.get("minor_dp"),
                     "elevation_dp": final_calc.get("elevation_dp"),
+                    "fitting_losses": final_calc.get("fitting_losses", []),
                     "pressure_drop": final_calc.get("pressure_drop"),
                 }
             ],
@@ -1589,6 +1642,7 @@ class PipelineEngine:
                     "major_dp": final_calc.get("major_dp"),
                     "minor_dp": final_calc.get("minor_dp"),
                     "elevation_dp": final_calc.get("elevation_dp"),
+                    "fitting_losses": final_calc.get("fitting_losses", []),
                     "total_dp": final_calc.get("pressure_drop"),
                 }],
             })
