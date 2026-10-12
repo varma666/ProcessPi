@@ -1608,6 +1608,17 @@ class ShellAndTubeHX(HeatExchanger):
                 state["converged"] = True
                 break
 
+            # With the user's U as the design basis the area is the same on every
+            # pass, so only the geometry adjustments can still move. Once the
+            # geometry comes out as on the previous pass the design has settled;
+            # the error above is then U_calc against U_user, which no further
+            # pass changes. Before, the loop ran on until the cycle rule below
+            # reported a cycle of one tube count.
+            if u_user is not None and len(state["geometry_history"]) > 1 and state["geometry_history"][-2] == geometry_key:
+                self._debug("Geometry settled at the user-specified U")
+                state["converged"] = True
+                break
+
             # The tube count is a step function of the assumed U, so the loop can
             # cycle between geometries that each call for the other. A geometry
             # seen before (other than on the pass just gone, handled above) means

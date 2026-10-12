@@ -34,8 +34,10 @@ def _quiet(fn, *args, **kwargs):
         return fn(*args, **kwargs)
 
 
-def _benzene_cooler(cold_out=None, **specs):
+def _benzene_cooler(cold_out=None, U=HeatTransferCoefficient(575, "W/m2K"), **specs):
     """docs/examples benzene cooler: benzene 21 000 kg/h 90 to 30 C, water 60 500 kg/h from 15 C."""
+    if U is not None:
+        specs["U"] = U
     engine = HeatExchangerEngine().fit(
         hot_in=MaterialStream("hot_in", component=Benzene(),
                               temperature=Temperature(90, "C"),
@@ -46,7 +48,6 @@ def _benzene_cooler(cold_out=None, **specs):
                                temperature=Temperature(15, "C"),
                                mass_flow=MassFlowRate(60500, "kg/h")),
         cold_out=cold_out if cold_out is not None else MaterialStream("cold_out", component=Water()),
-        U=HeatTransferCoefficient(575, "W/m2K"),
         shell_dp=Pressure(1, "bar"), tube_dp=Pressure(1, "bar"),
         mode="design", **specs,
     )
@@ -101,7 +102,10 @@ def _assert_velocity_warnings_match(data):
 # ----------------------------------------------------------------------------
 
 def test_cooler_warnings_describe_the_reported_geometry():
-    data = _benzene_cooler()
+    # Without a user U the design iterates through several geometries (with a
+    # user U, the design basis since 9f419f2, the area is fixed), which is
+    # where warnings of a geometry not reported used to pile up.
+    data = _benzene_cooler(U=None)
     assert 0.5 <= _velocity(data, "shell") <= 1.5
     _assert_velocity_warnings_match(data)
     assert not [w for w in data["warnings"] if "Shell velocity" in w]
