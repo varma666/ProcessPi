@@ -76,8 +76,21 @@ class DoublePipeHX(HeatExchanger):
         # U
         # ======================================================
 
-        u_spec = self.specs.get("U", 350.0)
-        u_assumed = self._safe_float(u_spec.to("W/m2K"), "U") if hasattr(u_spec, "to") else self._safe_float(u_spec, "U")
+        # The double-pipe design has no film-coefficient model, so U is never
+        # iterated: specified_U or assumed_U is the design U, else 350 W/m2K.
+        # An assumed_U is therefore used as given, and the results say so.
+        u_basis = self._u_basis(default="default")
+        u_specified = self._user_u("specified_U")
+        u_assumed = u_specified if u_specified is not None else self._user_u("assumed_U")
+        if u_assumed is None:
+            u_assumed = 350.0
+        u_warnings: list[str] = []
+        if u_basis == "assumed":
+            u_warnings.append(
+                "[U_BASIS_WARNING] The double-pipe design does not calculate U from "
+                "film coefficients, so assumed_U is not iterated; the area is sized "
+                "at it as given"
+            )
 
         # ======================================================
         # AREA
@@ -189,6 +202,9 @@ class DoublePipeHX(HeatExchanger):
             "property_basis": self._property_basis(hot, cold),
             "Area": Area(area, "m2"),
             "U_assumed": HeatTransferCoefficient(u_assumed, "W/m2K"),
+            "u_basis": u_basis,
+            "U_specified": HeatTransferCoefficient(u_specified, "W/m2K") if u_specified is not None else None,
+            "U_initial": HeatTransferCoefficient(u_assumed, "W/m2K"),
             "U_clean": HeatTransferCoefficient(u_assumed, "W/m2K"),
             "U_dirty": HeatTransferCoefficient(u_assumed, "W/m2K"),
             "U_calculated": HeatTransferCoefficient(u_assumed, "W/m2K"),
@@ -205,7 +221,7 @@ class DoublePipeHX(HeatExchanger):
             "shell_dp": Pressure(annulus_dp, "Pa"),
             "iterations": 1,
             "status": "OK",
-            "warnings": self._double_pipe_warnings(tube_velocity, annulus_velocity),
+            "warnings": [*u_warnings, *self._double_pipe_warnings(tube_velocity, annulus_velocity)],
         }
 
     def _double_pipe_warnings(self, tube_velocity: float, annulus_velocity: float) -> list[str]:
@@ -366,6 +382,15 @@ class DoublePipeHX(HeatExchanger):
 
         u_dirty = 1.0 / r_total
 
+        # A specified_U or assumed_U has no part in the rating; say so rather
+        # than drop it silently.
+        u_warnings = [
+            f"[U_BASIS_WARNING] Double-pipe rating calculates U from the film "
+            f"coefficients; {key} is not used"
+            for key in ("specified_U", "assumed_U")
+            if self.specs.get(key) is not None
+        ]
+
         # ======================================================
         # UA
         # ======================================================
@@ -474,6 +499,8 @@ class DoublePipeHX(HeatExchanger):
             "Area": Area(area, "m2"),
             "U_assumed": HeatTransferCoefficient(u_dirty, "W/m2K"),
             "U_calculated": HeatTransferCoefficient(u_dirty, "W/m2K"),
+            # Rating takes U from the film coefficients of the given geometry.
+            "u_basis": "calculated",
             "LMTD": None,
             "tube_count": parallel_paths,
             "parallel_paths": parallel_paths,
@@ -487,7 +514,7 @@ class DoublePipeHX(HeatExchanger):
             "shell_dp": Pressure(annulus_dp, "Pa"),
             "iterations": 1,
             "status": "OK",
-            "warnings": self._double_pipe_warnings(tube_velocity, annulus_velocity),
+            "warnings": [*u_warnings, *self._double_pipe_warnings(tube_velocity, annulus_velocity)],
             "NTU": NTU,
             "effectiveness": effectiveness,
         }

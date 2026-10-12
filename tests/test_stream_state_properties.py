@@ -105,7 +105,7 @@ def _benzene_cooler_engine(**specs):
         hot_out=_stream("hot_out", Benzene, 30),
         cold_in=_stream("cold_in", Water, 15, 60500),
         cold_out=specs.pop("cold_out", _stream("cold_out", Water)),
-        U=HeatTransferCoefficient(575, "W/m2K"),
+        specified_U=HeatTransferCoefficient(575, "W/m2K"),
         shell_dp=Pressure(1, "bar"), tube_dp=Pressure(1, "bar"),
         **specs,
     )

@@ -46,7 +46,7 @@ def _benzene_cooler():
     return dict(hot_in=hot_in, hot_out=hot_out, cold_in=cold_in, cold_out=cold_out)
 
 
-_SPECS = dict(U=HeatTransferCoefficient(575, "W/m2K"),
+_SPECS = dict(specified_U=HeatTransferCoefficient(575, "W/m2K"),
               shell_dp=Pressure(1, "bar"), tube_dp=Pressure(1, "bar"))
 
 
@@ -451,7 +451,7 @@ def test_rating_refuses_an_undefined_ft(monkeypatch):
 def test_bell_results_carry_units_like_kern():
     """_design_bell_delaware overwrote the unit-wrapped Kern U_calculated with a
     bare float and added U_clean as one. Both designs now go through the same
-    results, with units. With the user's U both are sized at 575 W/m2K, so the
+    results, with units. With specified_U both are sized at 575 W/m2K, so the
     geometry is the same and only the calculated U differs."""
     from processpi.units import Pressure as P
     from processpi.units.heat_transfer_coefficient import HeatTransferCoefficient as HTC

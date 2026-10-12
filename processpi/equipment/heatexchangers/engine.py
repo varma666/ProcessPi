@@ -11,7 +11,7 @@ from processpi.units.length import Length
 from processpi.units.pressure import Pressure
 from processpi.units.velocity import Velocity
 
-from .base import HeatExchanger
+from .base import HeatExchanger, resolve_u_keywords
 from .condenser import CondenserHX
 from .double_pipe import DoublePipeHX
 from .evaporator import EvaporatorHX
@@ -105,6 +105,8 @@ class HeatExchangerResults:
         q = data.get("Q")
         area = data.get("Area")
         ucalc = data.get("U_calculated")
+        u_basis = data.get("u_basis")
+        u_specified = data.get("U_specified")
     
         tube_velocity = data.get("tube_velocity")
         shell_velocity = data.get("shell_velocity")
@@ -185,6 +187,16 @@ class HeatExchangerResults:
             f"Heat Duty             : {format_value(q, 'kW', 3)}\n"
             f"Area                  : {format_area(area)}\n"
             f"U Calculated          : {format_value(ucalc, 'W/m2K', 3)}\n"
+        )
+
+        # How the run treated U: a fixed specified_U, an assumed_U starting
+        # guess, or neither given (the exchanger's `u_basis` result).
+        if u_basis is not None:
+            output += f"U Basis               : {u_basis}\n"
+        if u_specified is not None:
+            output += f"U Specified           : {format_value(u_specified, 'W/m2K', 3)}\n"
+
+        output += (
             f"Tube Velocity         : {format_value(tube_velocity, 'm/s', 3)}\n"
             f"Shell Velocity        : {format_value(shell_velocity, 'm/s', 3)}\n"
             f"Tube Pressure Drop    : {format_pressure(tube_dp)}\n"
@@ -351,7 +363,10 @@ class HeatExchangerResults:
         return {
             "status": self.data.get("status"),
             "iterations": self.data.get("iterations"),
+            "u_basis": self.data.get("u_basis"),
             "u_values": {
+                "U_specified": self.data.get("U_specified"),
+                "U_initial": self.data.get("U_initial"),
                 "U_user": self.data.get("U_user"),
                 "U_assumed": self.data.get("U_assumed"),
                 "U_calculated": self.data.get("U_calculated"),
@@ -448,6 +463,11 @@ class HeatExchangerEngine:
                     "'kern' or 'bell_delaware'"
                 )
     
+        # specified_U / assumed_U: a conflict is reported here, where they are
+        # passed, and the deprecated U is stored as assumed_U so the exchanger
+        # built in run() does not warn a second time.
+        kwargs = resolve_u_keywords(kwargs)
+
         # ======================================================
         # STORE DATA
         # ======================================================

@@ -11,7 +11,7 @@ Design a **horizontal counter-current double pipe heat exchanger** to cool hot o
 - Cold fluid: **Water**
 - Cooling water flow rate: **12,000 kg/h**
 - Cooling water inlet temperature: **25°C**
-- Overall heat-transfer coefficient (U): **350 W/m²·K**
+- Overall heat-transfer coefficient (`specified_U`): **350 W/m²·K**
 - Maximum allowable tube-side pressure drop: **0.2 bar**
 - Maximum allowable annulus-side pressure drop: **0.2 bar**
 - Flow arrangement: **Counter Current**
@@ -89,7 +89,7 @@ hx.fit(
     cold_in=cold_in,
     cold_out=cold_out,
 
-    U=HeatTransferCoefficient(350, "W/m2K"),
+    specified_U=HeatTransferCoefficient(350, "W/m2K"),
 
     shell_dp=Pressure(0.2, "bar"),
     tube_dp=Pressure(0.2, "bar"),

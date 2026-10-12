@@ -53,7 +53,7 @@ def _hx(hot_flow_kg_h=21000.0, cold_flow_kg_h=60500.0, **specs):
                              temperature=Temperature(15, "C"),
                              mass_flow=MassFlowRate(cold_flow_kg_h, "kg/h"))
     cold_out = MaterialStream("cold_out", component=Water())
-    defaults = dict(U=HeatTransferCoefficient(575, "W/m2K"),
+    defaults = dict(specified_U=HeatTransferCoefficient(575, "W/m2K"),
                     shell_dp=Pressure(1, "bar"), tube_dp=Pressure(1, "bar"),
                     mode="design")
     defaults.update(specs)
