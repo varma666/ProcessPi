@@ -147,10 +147,13 @@ Determines the internal diameter of a pipe using a priority order:
 
 **`_minor_dp_pa`**
 - **Purpose:** Minor losses due to fittings (elbows, valves, etc.).  
-- **Priority Order:**  
-  1. **K-Factor** (explicit)  
-  2. **Equivalent Length**  
-  3. **Standards Lookup** (fallback)  
+- **Rule (per fitting):** both methods are worked out and the higher loss is used:  
+  1. **K-Factor:** `K * rho v^2 / 2` (`K_FACTORS`)  
+  2. **Equivalent Length:** `f * (Le/D) * rho v^2 / 2` with the pipe's Darcy `f` (`EQUIVALENT_LENGTHS`)  
+  A fitting found in only one table uses that one; one found in neither adds nothing and warns.
+  A `K`, `K_factor`, `Le` (per unit) or `total_K`, `total_Le` (whole quantity) set on the fitting replaces the tables.  
+- **Details:** `_fitting_loss` returns both losses and `fitting_method` (`"K"` or `"Le/D"`);
+  `_pipe_calculation` lists them under `fitting_losses`, and the component reports carry that list.  
 
 - **Parameters:** `fitting (Fitting)`, `v (Velocity)`, `f (Optional[float])`, `d (Diameter)`  
 - **Returns:** `Pressure (Pa)`  
