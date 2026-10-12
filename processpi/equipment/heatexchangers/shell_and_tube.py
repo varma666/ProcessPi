@@ -2057,6 +2057,36 @@ class ShellAndTubeHX(HeatExchanger):
             return 60_000.0
         return 70_000.0
 
+    def _velocity_bands(self) -> Dict[str, tuple[float, float]]:
+        """(min, max) velocity band of each side in m/s, from `_get_velocity_limits`.
+
+        The one set of limits behind the hydraulic verdict, the velocity
+        warnings and the velocity lines of the engineering insights.
+        """
+        tube_stream, shell_stream = self._side_streams()
+        return {
+            "tube": self._get_velocity_limits("tube", tube_stream.component),
+            "shell": self._get_velocity_limits("shell", shell_stream.component),
+        }
+
+    @staticmethod
+    def _velocity_insight(side: str, velocity: float, band: tuple[float, float]) -> str:
+        """Insight line for one side, judged against the band the verdict uses."""
+        vmin, vmax = band
+        label = f"{side}-side velocity {velocity:.2f} m/s"
+        limits = f"{vmin:g}-{vmax:g} m/s"
+        if velocity < vmin:
+            return (
+                f"{label} is below the {limits} range. "
+                "Higher fouling risk and a lower film coefficient."
+            )
+        if velocity > vmax:
+            return (
+                f"{label} is above the {limits} range. "
+                f"Potential {side.lower()}-side erosion/vibration risk."
+            )
+        return f"{label} is within the {limits} range."
+
     def _velocity_warnings(
         self,
         tube_v: float,
@@ -2066,12 +2096,9 @@ class ShellAndTubeHX(HeatExchanger):
     ) -> List[str]:
     
         warnings = []
-        tube_stream, shell_stream = self._side_streams()
+        bands = self._velocity_bands()
     
-        vmin, vmax = self._get_velocity_limits(
-            side="tube",
-            component=tube_stream.component,
-        )
+        vmin, vmax = bands["tube"]
     
         if tube_v > vmax:
             warnings.append(
@@ -2085,10 +2112,7 @@ class ShellAndTubeHX(HeatExchanger):
                 f"({tube_v:.2f} m/s)"
             )
     
-        smin, smax = self._get_velocity_limits(
-            side="shell",
-            component=shell_stream.component,
-        )
+        smin, smax = bands["shell"]
     
         if shell_v > smax:
             warnings.append(
@@ -2286,75 +2310,40 @@ class ShellAndTubeHX(HeatExchanger):
             )
     
         # ----------------------------------------------------------
-        # TUBE VELOCITY
+        # TUBE AND SHELL VELOCITY
         # ----------------------------------------------------------
-    
+
+        # Judged against the band the hydraulic verdict used. Fixed cut-offs
+        # used to sit here whatever the phase (tube 0.3/1.0/3.0 m/s, shell
+        # 0.2/0.5/2.0 m/s), so a vapour shell at 29 m/s, inside the 10-30 m/s
+        # band the verdict passed, was reported as an erosion risk next to
+        # "Hydraulic Performance: PASS", and a 2.27 m/s coolant the verdict
+        # failed against its 0.6-2.0 m/s band was "within recommended range".
+        velocity_bands = {
+            side: payload.get(f"{side}_velocity_band")
+            for side in ("tube", "shell")
+        }
+        if None in velocity_bands.values():
+            velocity_bands = self._velocity_bands()
+
         v_tube = payload.get(
             "v_tube",
             0.0,
         )
-    
-        if v_tube < 0.3:
-    
-            engineering_insights.append(
-                "Tube-side velocity extremely low. "
-                "High fouling risk and poor turbulence expected."
-            )
-    
-        elif v_tube < 1.0:
-    
-            engineering_insights.append(
-                "Tube-side velocity acceptable but below ideal turbulent range."
-            )
-    
-        elif v_tube > 3.0:
-    
-            engineering_insights.append(
-                "Tube-side velocity very high. "
-                "Potential erosion/vibration risk."
-            )
-    
-        else:
-    
-            engineering_insights.append(
-                "Tube-side velocity within recommended range."
-            )
-    
-        # ----------------------------------------------------------
-        # SHELL VELOCITY
-        # ----------------------------------------------------------
-    
+
         v_shell = payload.get(
             "v_shell",
             0.0,
         )
-    
-        if v_shell < 0.2:
-    
-            engineering_insights.append(
-                "Shell-side velocity extremely low. "
-                "Possible vapor blanketing and poor shell-side heat transfer."
-            )
-    
-        elif v_shell < 0.5:
-    
-            engineering_insights.append(
-                "Shell-side velocity slightly low."
-            )
-    
-        elif v_shell > 2.0:
-    
-            engineering_insights.append(
-                "Shell-side velocity very high. "
-                "Potential shell-side erosion risk."
-            )
-    
-        else:
-    
-            engineering_insights.append(
-                "Shell-side velocity acceptable."
-            )
-    
+
+        engineering_insights.append(
+            self._velocity_insight("Tube", v_tube, velocity_bands["tube"])
+        )
+
+        engineering_insights.append(
+            self._velocity_insight("Shell", v_shell, velocity_bands["shell"])
+        )
+
         # ----------------------------------------------------------
         # PRESSURE DROP
         # ----------------------------------------------------------
@@ -2629,6 +2618,11 @@ class ShellAndTubeHX(HeatExchanger):
                 payload["v_shell"],
                 "m/s",
             ),
+
+            # (min, max) m/s each side was judged against.
+            "tube_velocity_band": velocity_bands["tube"],
+
+            "shell_velocity_band": velocity_bands["shell"],
     
             "tube_dp": Pressure(
                 payload["tube_dp"],
@@ -2918,6 +2912,7 @@ class ShellAndTubeHX(HeatExchanger):
         hydraulic_feasible = not self._velocity_warnings(
             state["v_tube"], state["v_shell"], tube, shell
         )
+        velocity_bands = self._velocity_bands()
 
         payload = {
             **state,
@@ -2927,6 +2922,8 @@ class ShellAndTubeHX(HeatExchanger):
             "thermal_feasible": thermal_feasible,
             "pressure_drop_feasible": pressure_drop_feasible,
             "hydraulic_feasible": hydraulic_feasible,
+            "tube_velocity_band": velocity_bands["tube"],
+            "shell_velocity_band": velocity_bands["shell"],
             "tube_dp_limit": tube_limit,
             "shell_dp_limit": shell_limit,
             "oversize_ratio": area_designed / max(area_required, 1e-12),
@@ -3343,8 +3340,9 @@ class ShellAndTubeHX(HeatExchanger):
 
         thermal_feasible = actual_area >= area
         pressure_drop_feasible = tube_dp <= tube_dp_limit and shell_dp <= shell_dp_limit
-        tube_vmin, tube_vmax = self._get_velocity_limits("tube", tube_stream.component)
-        shell_vmin, shell_vmax = self._get_velocity_limits("shell", shell_stream.component)
+        velocity_bands = self._velocity_bands()
+        tube_vmin, tube_vmax = velocity_bands["tube"]
+        shell_vmin, shell_vmax = velocity_bands["shell"]
         hydraulic_feasible = tube_vmin <= v_tube <= tube_vmax and shell_vmin <= v_shell <= shell_vmax
         oversize_ratio = actual_area / max(area, 1e-12)
         if not thermal_feasible:
@@ -3360,7 +3358,7 @@ class ShellAndTubeHX(HeatExchanger):
         else:
             assessment = "OK"
 
-        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_initial": u_assumed, "u_calculated": u_calc, "u_user": u_specified, "ft": ft, "cltd": cltd, "tube_passes": tube_passes, "shell_passes": shell_passes, "viscosity_correction": self._viscosity_correction_report(tube, shell), "property_basis": self._property_basis(hot, cold), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "dimless": dimless, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "pressure_drop_feasible": pressure_drop_feasible, "tube_dp_limit": tube_dp_limit, "shell_dp_limit": shell_dp_limit, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
+        payload = {"method": self.method, "service": service, "Q": q_actual / 1000.0, "q_watts_original": q_actual, "q_watts_effective": q_actual, "lmtd": lmtd, "LMTD": lmtd, "u_assumed": u_assumed, "u_initial": u_assumed, "u_calculated": u_calc, "u_user": u_specified, "ft": ft, "cltd": cltd, "tube_passes": tube_passes, "shell_passes": shell_passes, "viscosity_correction": self._viscosity_correction_report(tube, shell), "property_basis": self._property_basis(hot, cold), "area": actual_area, "required_area": area, "geometry": geometry, "tube_count": tube_count, "tube_od": tube_od, "tube_id": tube_id, "tube_length": tube_length, "tube_pitch": tube_pitch, "shell_diameter": shell_diameter, "baffle_spacing": baffle_spacing, "v_tube": v_tube, "v_shell": v_shell, "tube_velocity": v_tube, "shell_velocity": v_shell, "tube_dp": tube_dp, "shell_dp": shell_dp, "h_t": h_t, "h_s": h_s, "dimless": dimless, "re_shell": dimless.get("re_s", 0.0), "engineering_assessment": assessment, "thermal_feasible": thermal_feasible, "hydraulic_feasible": hydraulic_feasible, "tube_velocity_band": velocity_bands["tube"], "shell_velocity_band": velocity_bands["shell"], "pressure_drop_feasible": pressure_drop_feasible, "tube_dp_limit": tube_dp_limit, "shell_dp_limit": shell_dp_limit, "warnings": list(dict.fromkeys([*self._warnings, *self._velocity_warnings(v_tube, v_shell, tube, shell)])), "assignment": assignment, "tube_side_fluid": assignment.get("tube_side_fluid"), "shell_side_fluid": assignment.get("shell_side_fluid"), "assignment_reason": assignment.get("assignment_reason", [])}
 
         return self._finalize_results(payload)
     def design(self) -> Dict[str, Any]:
