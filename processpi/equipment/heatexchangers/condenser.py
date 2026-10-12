@@ -10,6 +10,8 @@ from .shell_and_tube import ShellAndTubeHX
 class CondenserHX(ShellAndTubeHX):
     """Production-oriented shell-and-tube condenser with phase-change safeguards."""
 
+    _PHASE_CHANGE_SERVICE = "condenser"
+
     def __init__(self, *args: Any, method: str = "kern", **kwargs: Any):
         super().__init__(*args, method=method, **kwargs)
         self.service_type = "condenser"

@@ -8,6 +8,8 @@ from .evaporator import EvaporatorHX
 class ReboilerHX(EvaporatorHX):
     """Shell-and-tube reboiler built from Evaporator phase-change architecture."""
 
+    _PHASE_CHANGE_SERVICE = "reboiler"
+
     def __init__(self, *args: Any, method: str = "kern", **kwargs: Any):
         super().__init__(*args, method=method, **kwargs)
         self.service_type = "reboiler"
