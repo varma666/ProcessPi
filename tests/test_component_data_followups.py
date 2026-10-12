@@ -1,6 +1,6 @@
 """Regression tests for component data follow-ups: the liquid Cp Eq. (2) of
-Ammonia, Ethane, 1,2-Butanediol and 1,3-Butanediol, and the Ethylene class
-name.
+Ammonia, Ethane, 1,2-Butanediol and 1,3-Butanediol, the Ethylene class name,
+and the 1-Propanol constants.
 
 Reference values:
 - Perry's Chemical Engineers' Handbook, 8th ed. (2008), Section 2: Table 2-153
@@ -8,8 +8,10 @@ Reference values:
   (ideal-gas Cp, DIPPR Eq. 107, pp. 2-176 and 2-178). Each table lists the
   property at its own Tmin and Tmax, which checks the equation form and the
   constants.
+  1-Propanol: Tables 2-8 (p. 2-59), 2-150 (p. 2-154) and 2-153 (p. 2-169).
 - NIST Chemistry WebBook, SRD 69, fluid properties (fetched 2026-10-12):
   saturated liquid Cp of ammonia and ethane, and Cp on the 0.101325 MPa isobar.
+  1-Propanol (CAS 71-23-8) phase-change and condensed-phase pages.
 """
 import warnings
 
@@ -123,3 +125,51 @@ def test_new_ethylene_name_does_not_warn():
     with warnings.catch_warnings():
         warnings.simplefilter("error", DeprecationWarning)
         Ethylene()
+
+
+# ----------------------------------------------------------------------
+# 1-Propanol: enthalpy, Cp and vapour-pressure constants
+# ----------------------------------------------------------------------
+def _propanol(T):
+    from processpi.components import _1Propanol
+
+    return _1Propanol(temperature=Temperature(T, "K"))
+
+
+def test_propanol_enthalpy_runs_and_matches_perry_table_2_150():
+    # Used to raise "not enough values to unpack (expected 5, got 4)".
+    # Table 2-150, p. 2-154: Hv = 5.8356E7 J/kmol at Tmin = 146.95 K.
+    c3 = _propanol(146.95)
+    assert c3.enthalpy().value * c3.molecular_weight == pytest.approx(5.8356e7, rel=5e-4)
+
+
+def test_propanol_enthalpy_matches_nist():
+    # NIST WebBook: 41.44 kJ/mol at 370.3 K (Majer and Svoboda, 1985).
+    c3 = _propanol(370.3)
+    assert c3.enthalpy().value * c3.molecular_weight / 1e6 == pytest.approx(41.44, rel=0.01)
+
+
+@pytest.mark.parametrize("T, cp_kmol", [(146.95, 1.0797e5), (400.00, 2.1980e5)])
+def test_propanol_cp_matches_perry_table_2_153(T, cp_kmol):
+    # Used to raise "too many values to unpack (expected 5)".
+    c3 = _propanol(T)
+    assert _cp_kmol(c3) == pytest.approx(cp_kmol, rel=5e-4)
+
+
+def test_propanol_cp_matches_nist():
+    # NIST WebBook: 143.96 J/(mol K) at 298.15 K (Tanaka, Toyama, et al., 1986).
+    assert _cp_kmol(_propanol(298.15)) / 1000 == pytest.approx(143.96, rel=0.01)
+
+
+@pytest.mark.parametrize("T, P", [(536.8, 5.170e6), (370.3, 101325)])
+def test_propanol_vapor_pressure(T, P):
+    # Table 2-8, p. 2-59, P at Tmax; and 1 atm at the normal boiling point,
+    # 370.3 +/- 0.5 K (NIST WebBook). With C2 = 0.0 it gave 3.5E15 Pa at 25 C.
+    assert _propanol(T).vapor_pressure().value == pytest.approx(P, rel=0.01)
+
+
+def test_propanol_is_liquid_at_25_c():
+    c3 = _propanol(298.15)
+    assert c3.phase() == "liquid"
+    assert c3.formula == "C3H8O"
+    assert c3.density().value == pytest.approx(799.5, rel=1e-3)
