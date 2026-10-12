@@ -100,14 +100,10 @@ print(results.total_pressure_drop.to("atm"))
 Example output:
 
 ```text
-PIPELINE SUMMARY
-----------------------------------
-Fluid              : Carbon Monoxide
-Mass Flow          : 1500 kg/h
-Pipe Length        : 4 km
-Available ΔP       : 50 kPa
-
-Total Pressure Drop: 0.31 atm
+✅ Found optimal diameter for available pressure drop.
+   Selected Diameter: 8.0 in (0.2027 m internal)
+   Calculated Pressure Drop: 28730.31 Pa (allowed: 50000.00 Pa)
+0.283546 atm
 ```
 
 ---

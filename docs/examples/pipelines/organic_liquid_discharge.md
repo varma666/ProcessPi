@@ -44,29 +44,30 @@ results.detailed_summary()
 ```py
 
 ✅ Found optimal diameter based on recommended velocity.
-   Selected Diameter: 1.5 in 
-   Calculated Pressure Drop: 27024.74 Pa
-⚠️ Warning: Final velocity 1.14 m/s outside recommended range (1.80-2.00 m/s) for Organic Liquid.
+   Selected Diameter: 1.25 in 
+   Calculated Pressure Drop: 58487.11 Pa
+⚠️ Warning: Final velocity 1.55 m/s outside recommended range (1.80-2.00 m/s) for Organic Liquid.
 
 # Summary
 === Pipeline Result 1 (Organic Liquid Pipe) ===
 Mode: Single_pipe
-Calculated Pipe Diameter: 1.5 in 
+Nominal Pipe Size: 1.25 in
+Internal Diameter: 35.08 mm
 Inlet Flow: 0.001 m3/s 
 Outlet Flow: 0.001 m3/s 
-Total Pressure Drop: 27.02 kPa
-Total Head Loss: 2.96 m
-Total Power Required: 0.06 kW
-Velocity: 1.139 m/s
-Reynolds Number: 47546 (dimensionless)
+Total Pressure Drop: 58.49 kPa
+Total Head Loss: 6.41 m
+Total Power Required: 0.12 kW
+Velocity: 1.545 m/s
+Reynolds Number: 55396 (dimensionless)
 Friction Factor: 0.0245 (dimensionless)
 
 # Detailed Summary
 === Detailed Components for Result 1 (Organic Liquid Pipe) ===
-+---------------------+--------+-----------------+------------+------------+-------------------+------------+
-| Name                | Type   |   Pressure Drop |   Velocity |   Reynolds |   Friction Factor | Diameter   |
-+=====================+========+=================+============+============+===================+============+
-| Organic Liquid Pipe | pipe   |         27024.7 |       1.14 |    47545.9 |            0.0245 | 1.5 in     |
-+---------------------+--------+-----------------+------------+------------+-------------------+------------+
++---------------------+--------+-----------------+------------+------------+-------------------+----------------+---------------------+
+| Name                | Type   |   Pressure Drop |   Velocity |   Reynolds |   Friction Factor | Nominal Size   | Internal Diameter   |
++=====================+========+=================+============+============+===================+================+=====================+
+| Organic Liquid Pipe | pipe   |         58487.1 |       1.55 |    55395.8 |            0.0245 | 1.25 in        | 35.08 mm            |
++---------------------+--------+-----------------+------------+------------+-------------------+----------------+---------------------+
 
 ```
