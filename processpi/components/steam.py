@@ -1,6 +1,19 @@
 from .base import Component
 from processpi.units import *
-import CoolProp.CoolProp as CP
+
+
+class _LazyCoolProp:
+    """CoolProp, imported on first use. Importing it takes about 4.6 s, and
+    every `import processpi` paid that through this module even when Steam
+    was never used."""
+
+    def __getattr__(self, name):
+        import CoolProp.CoolProp as module
+
+        return getattr(module, name)
+
+
+CP = _LazyCoolProp()
 from typing import Literal
 
 class Steam(Component):

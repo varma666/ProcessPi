@@ -24,6 +24,9 @@ dependencies = [
     "plotly>=5.18.0"
 ]
 
+[project.scripts]
+processpi = "processpi.cli:main"
+
 [project.urls]
 Homepage = "https://processpi.org"
 Repository = "https://github.com/varma666/ProcessPi"
