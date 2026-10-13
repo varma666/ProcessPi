@@ -122,23 +122,23 @@ Type                  : condenser
 Type Selection        : explicit
 Method                : bell_delaware
 Heat Duty             : 1313.333 kW
-Area                  : 35.814 m2
-U Calculated          : 714.751 W/m2K
+Area                  : 41.783 m2
+U Calculated          : 707.075 W/m2K
 U Basis               : calculated
-Tube Velocity         : 2.330 m/s
-Shell Velocity        : 29.066 m/s
-Tube Pressure Drop    : 111.711 kPa
-Shell Pressure Drop   : 256.693 kPa
-Tube Count            : 120
+Tube Velocity         : 1.997 m/s
+Shell Velocity        : 25.587 m/s
+Tube Pressure Drop    : 84.059 kPa
+Shell Pressure Drop   : 205.147 kPa
+Tube Count            : 140
 Tube Length           : 5.000 m
 Status                : PRESSURE_DROP_FAILURE
 
 Pressure Drop Assessment
 ------------------------------
 Tube ΔP Limit        : 50.000 kPa
-Tube ΔP Actual       : 111.711 kPa
+Tube ΔP Actual       : 84.059 kPa
 Shell ΔP Limit       : 50.000 kPa
-Shell ΔP Actual      : 256.693 kPa
+Shell ΔP Actual      : 205.147 kPa
 
 Engineering Feasibility
 ------------------------------
@@ -149,8 +149,8 @@ Pressure Drop        : FAIL
 Engineering Insights
 ------------------------------
 • Heat-transfer coefficient within acceptable range.
-• Tube-side velocity within recommended range.
-• Shell-side velocity very high. Potential shell-side erosion risk.
+• Tube-side velocity 2.00 m/s is within the 0.6-2 m/s range.
+• Shell-side velocity 25.59 m/s is within the 10-30 m/s range.
 • Tube-side pressure drop exceeds allowable limit.
 • Shell-side pressure drop exceeds allowable limit.
 
@@ -158,8 +158,8 @@ Warnings
 ------------------------------
 • [ASSUMPTION_WARNING] Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the shell side: no hot_wall_viscosity given
 • [ASSUMPTION_WARNING] Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the tube side: no cold_wall_viscosity given
-• Tube-side pressure drop 111711.3 Pa exceeds limit 50000.0 Pa
-• Shell-side pressure drop 256693.1 Pa exceeds limit 50000.0 Pa
+• Tube-side pressure drop 84059.4 Pa exceeds limit 50000.0 Pa
+• Shell-side pressure drop 205147.0 Pa exceeds limit 50000.0 Pa
 ```
 
 ---
@@ -190,16 +190,16 @@ The HeatExchangerEngine automatically performs:
 | Design Method | Bell–Delaware |
 | Orientation | Horizontal |
 | Heat Duty | 1313.33 kW |
-| Heat Transfer Area | 35.81 m² |
-| Calculated Overall U | 714.75 W/m²·K |
-| Tube Count | 120 |
+| Heat Transfer Area | 41.78 m² |
+| Calculated Overall U | 707.08 W/m²·K |
+| Tube Count | 140 |
 | Tube Length | 5.0 m |
-| Tube Velocity | 2.330 m/s |
-| Shell Velocity | 29.066 m/s |
+| Tube Velocity | 1.997 m/s |
+| Shell Velocity | 25.587 m/s |
 
 The calculated overall heat-transfer coefficient is within the expected range for a shell-and-tube condenser operating with water as the cooling medium.
 
-The tube-side velocity is within the recommended range. The shell-side vapor velocity is high, and both pressure drops exceed the 0.5 bar limits (111.7 kPa on the tube side, 256.7 kPa on the shell side), so the engine reports the status as PRESSURE_DROP_FAILURE instead of a feasible design.
+The tube count is set so that the cooling water stays within the 0.6-2.0 m/s band of condenser service (1.997 m/s), and the benzene vapor crosses the shell at 25.59 m/s, within the 10-30 m/s vapor band. Both pressure drops exceed the 0.5 bar limits (84.1 kPa on the tube side, 205.1 kPa on the shell side), so the engine reports the status as PRESSURE_DROP_FAILURE instead of a feasible design.
 
 ### Engineering Assessment
 

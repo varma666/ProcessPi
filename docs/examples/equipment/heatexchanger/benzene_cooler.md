@@ -139,8 +139,8 @@ Pressure Drop        : PASS
 Engineering Insights
 ------------------------------
 • Heat-transfer coefficient within acceptable range.
-• Tube-side velocity within recommended range.
-• Shell-side velocity acceptable.
+• Tube-side velocity 2.00 m/s is within the 1-2.5 m/s range.
+• Shell-side velocity 0.53 m/s is within the 0.5-1.5 m/s range.
 
 Warnings
 ------------------------------
