@@ -51,54 +51,56 @@ results_concrete.detailed_summary()
 ```py
 
 ✅ Found optimal diameter for available pressure drop.
-   Selected Diameter: 10.0 in (0.254 m)
-   Calculated Pressure Drop: 31967.63 Pa (allowed: 58768.50 Pa)
+   Selected Diameter: 10.0 in (0.2545 m internal)
+   Calculated Pressure Drop: 31993.15 Pa (allowed: 58768.50 Pa)
 ⚠️ Warning: Final velocity 0.55 m/s outside recommended range (1.00-2.50 m/s) for Water.
 ✅ Found optimal diameter for available pressure drop.
-   Selected Diameter: 10.0 in (0.254 m)
-   Calculated Pressure Drop: 41071.98 Pa (allowed: 58768.50 Pa)
+   Selected Diameter: 10.0 in (0.2545 m internal)
+   Calculated Pressure Drop: 41106.19 Pa (allowed: 58768.50 Pa)
 ⚠️ Warning: Final velocity 0.55 m/s outside recommended range (1.00-2.50 m/s) for Water.
 
 # Summary
 === Pipeline Result 1 (Steel Pipe) ===
 Mode: Single_pipe
-Calculated Pipe Diameter: 10 in
-Inlet Flow: 0.028 m3/s
-Outlet Flow: 0.028 m3/s
-Total Pressure Drop: 31.97 kPa
+Nominal Pipe Size: 10 in
+Internal Diameter: 254.46 mm
+Inlet Flow: 0.028 m3/s 
+Outlet Flow: 0.028 m3/s 
+Total Pressure Drop: 31.99 kPa
 Total Head Loss: 3.30 m
 Total Power Required: 1.28 kW
 Velocity: 0.552 m/s
-Reynolds Number: 207071 (dimensionless)
+Reynolds Number: 207106 (dimensionless)
 Friction Factor: 0.0169 (dimensionless)
 
 # Detailed Summary
 === Detailed Components for Result 1 (Steel Pipe) ===
-+------------+--------+-----------------+------------+------------+-------------------+------------+
-| Name       | Type   |   Pressure Drop |   Velocity |   Reynolds |   Friction Factor | Diameter   |
-+============+========+=================+============+============+===================+============+
-| Steel Pipe | pipe   |         31967.6 |       0.55 |     207071 |            0.0169 | 10 in      |
-+------------+--------+-----------------+------------+------------+-------------------+------------+
++------------+--------+-----------------+------------+------------+-------------------+----------------+---------------------+
+| Name       | Type   |   Pressure Drop |   Velocity |   Reynolds |   Friction Factor | Nominal Size   | Internal Diameter   |
++============+========+=================+============+============+===================+================+=====================+
+| Steel Pipe | pipe   |         31993.2 |       0.55 |     207106 |            0.0169 | 10 in          | 254.46 mm           |
++------------+--------+-----------------+------------+------------+-------------------+----------------+---------------------+
 
 # Summary
 === Pipeline Result 1 (Concrete Pipe) ===
 Mode: Single_pipe
-Calculated Pipe Diameter: 10 in
-Inlet Flow: 0.028 m3/s
-Outlet Flow: 0.028 m3/s
-Total Pressure Drop: 41.07 kPa
+Nominal Pipe Size: 10 in
+Internal Diameter: 254.46 mm
+Inlet Flow: 0.028 m3/s 
+Outlet Flow: 0.028 m3/s 
+Total Pressure Drop: 41.11 kPa
 Total Head Loss: 4.24 m
 Total Power Required: 1.65 kW
 Velocity: 0.552 m/s
-Reynolds Number: 207071 (dimensionless)
+Reynolds Number: 207106 (dimensionless)
 Friction Factor: 0.0217 (dimensionless)
 
 # Detailed Summary
 === Detailed Components for Result 1 (Concrete Pipe) ===
-+---------------+--------+-----------------+------------+------------+-------------------+------------+
-| Name          | Type   |   Pressure Drop |   Velocity |   Reynolds |   Friction Factor | Diameter   |
-+===============+========+=================+============+============+===================+============+
-| Concrete Pipe | pipe   |           41072 |       0.55 |     207071 |            0.0217 | 10 in      |
-+---------------+--------+-----------------+------------+------------+-------------------+------------+
++---------------+--------+-----------------+------------+------------+-------------------+----------------+---------------------+
+| Name          | Type   |   Pressure Drop |   Velocity |   Reynolds |   Friction Factor | Nominal Size   | Internal Diameter   |
++===============+========+=================+============+============+===================+================+=====================+
+| Concrete Pipe | pipe   |         41106.2 |       0.55 |     207106 |            0.0217 | 10 in          | 254.46 mm           |
++---------------+--------+-----------------+------------+------------+-------------------+----------------+---------------------+
 
 ```

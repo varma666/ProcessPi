@@ -10,7 +10,7 @@ This class is typically used as a placeholder or for defining user-specified gas
 
 * **`name`** (string): Gas  
 * **`formula`** (string): N/A (mixture or undefined)  
-* **`molecular_weight`** (float): User-defined (default = None)  
+* **`molecular_weight`** (float): class attribute, default 28.0 g/mol; set it on the instance to change it  
 
 ## **Class Reference**
 
@@ -19,7 +19,6 @@ This class is typically used as a placeholder or for defining user-specified gas
 **Parameters:**  
 * `temperature`: `Temperature`, default = `Temperature(25,"C")`  
 * `pressure`: `Pressure`, default = `Pressure(1,"atm")`  
-* `molecular_weight`: `float`, default = `None` (must be set for calculations)  
 * `density`: `Density`, default = `None`  
 * `specific_heat`: `SpecificHeat`, default = `None`  
 * `viscosity`: `Viscosity`, default = `None`  
@@ -46,7 +45,8 @@ from processpi.components import Gas
 from processpi.units import *
 
 # Define a gas with approximate molecular weight (example: Nitrogen ~28.0 g/mol)
-custom_gas = Gas(temperature=Temperature(25, "C"), pressure=Pressure(1, "atm"), molecular_weight=28.0)
+custom_gas = Gas(temperature=Temperature(25, "C"), pressure=Pressure(1, "atm"))
+custom_gas.molecular_weight = 28.0
 
 print(custom_gas.density().to("kg/m3"))
 print(custom_gas.viscosity().to("Pa·s"))

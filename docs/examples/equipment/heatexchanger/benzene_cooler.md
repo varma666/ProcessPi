@@ -106,25 +106,46 @@ instead to size the area at a fixed U.
 
 ```text
 Heat Exchanger Summary
-------------------------------
+==============================
 Type                  : shell_and_tube
-Method                : bell_delaware
-Heat Duty             : 611.560 kW
-Area                  : 24.712 m²
-U Calculated          : 722.780 W/m²·K
-Tube Velocity         : 1.445 m/s
-Shell Velocity        : 1.321 m/s
-Tube Pressure Drop    : 1.156 psi
-Shell Pressure Drop   : 48.53 kPa
-Tube Count            : 138
-Tube Length           : 3.0 m
-Status                : UNKNOWN
+Type Selection        : auto
+Reason                : no hx_type given; larger inlet mass flow 16.81 kg/s > double pipe limit 1 kg/s
+Method                : kern
+Heat Duty             : 649.113 kW
+Area                  : 30.084 m2
+U Calculated          : 706.159 W/m2K
+U Basis               : assumed
+Tube Velocity         : 1.997 m/s
+Shell Velocity        : 0.535 m/s
+Tube Pressure Drop    : 67.313 kPa
+Shell Pressure Drop   : 18.005 kPa
+Tube Count            : 168
+Tube Length           : 3.000 m
+Status                : MARGINAL
+
+Pressure Drop Assessment
+------------------------------
+Tube ΔP Limit        : 100.000 kPa
+Tube ΔP Actual       : 67.313 kPa
+Shell ΔP Limit       : 100.000 kPa
+Shell ΔP Actual      : 18.005 kPa
+
+Engineering Feasibility
+------------------------------
+Thermal Performance  : PASS
+Hydraulic Performance: PASS
+Pressure Drop        : PASS
 
 Engineering Insights
 ------------------------------
 • Heat-transfer coefficient within acceptable range.
 • Tube-side velocity within recommended range.
 • Shell-side velocity acceptable.
+
+Warnings
+------------------------------
+• [ASSUMPTION_WARNING] Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the shell side: no hot_wall_viscosity given
+• [ASSUMPTION_WARNING] Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the tube side: no cold_wall_viscosity given
 ```
 
 ---
@@ -133,25 +154,25 @@ Engineering Insights
 
 The **HeatExchangerEngine** automatically performs a complete thermal and hydraulic design of the exchanger.
 
-For this case, ProcessPI selected a **Shell & Tube Heat Exchanger** using the **Bell–Delaware** design methodology.
+For this case, ProcessPI selected a **Shell & Tube Heat Exchanger** (no `hx_type` was given, and the inlet flow is above the double pipe limit) and sized it with the **Kern** method, the engine's default. Pass `method="bell_delaware"` to `HeatExchangerEngine` for the Bell-Delaware shell-side method.
 
 ### Design Results
 
 | Parameter | Value |
 |-----------|-------|
 | Heat Exchanger Type | Shell & Tube |
-| Design Method | Bell–Delaware |
-| Heat Duty | 611.56 kW |
-| Required Heat Transfer Area | 24.71 m² |
-| Calculated Overall U | 722.78 W/m²·K |
-| Tube Count | 138 |
+| Design Method | Kern |
+| Heat Duty | 649.11 kW |
+| Heat Transfer Area | 30.08 m² (29.57 m² required) |
+| Calculated Overall U | 706.16 W/m²·K |
+| Tube Count | 168 |
 | Tube Length | 3.0 m |
-| Tube Velocity | 1.445 m/s |
-| Shell Velocity | 1.321 m/s |
+| Tube Velocity | 1.997 m/s |
+| Shell Velocity | 0.535 m/s |
 
 The calculated tube and shell velocities fall within commonly recommended industrial design ranges, while the required heat-transfer area satisfies the specified duty.
 
-The engineering assessment also indicates that the calculated overall heat-transfer coefficient is acceptable for this service.
+The engineering assessment also indicates that the calculated overall heat-transfer coefficient is acceptable for this service. The status is MARGINAL because the area, 30.08 m², is less than 5% above the 29.57 m² the duty requires.
 
 For additional design information, use:
 

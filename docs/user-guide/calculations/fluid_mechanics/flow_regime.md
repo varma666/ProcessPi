@@ -76,7 +76,7 @@ Classifies the flow regime based on Reynolds number:
 **Using the `TypeOfFlow`**
 
 ```python
-from processpi.calculations import TypeOfFlow
+from processpi.calculations.fluids.flow_type import TypeOfFlow
 from processpi.units import Dimensionless
 
 # Example Reynolds number
@@ -94,7 +94,7 @@ print(f"Flow Type: {flow_type}")
 **Using the `CalculationEngine`
 
 ```py
-from processpi.engine import CalculationEngine
+from processpi.calculations import CalculationEngine
 from processpi.units import Dimensionless
 
 # Initialize engine

@@ -83,12 +83,12 @@ Performs the Hazen–Williams pressure drop calculation:
 **Using the `PressureDropHazenWilliams`**
 
 ```python
-from processpi.calculations import PressureDropHazenWilliams
-from processpi.units import Pressure, Length, Diameter, Density, FlowRate, Dimensionless
+from processpi.calculations.fluids.pressure_drop_hazen_williams import PressureDropHazenWilliams
+from processpi.units import Pressure, Length, Diameter, Density, VolumetricFlowRate, Dimensionless
 
 # Define pipe and fluid properties
 length = Length(100, "m")                 # Pipe length
-flow_rate = FlowRate(0.05, "m3/s")        # Volumetric flow rate
+flow_rate = VolumetricFlowRate(0.05, "m3/s")        # Volumetric flow rate
 coefficient = Dimensionless(130)          # Hazen–Williams coefficient for water
 diameter = Diameter(0.15, "m")            # Pipe diameter
 density = Density(998, "kg/m3")           # Water density
@@ -110,15 +110,15 @@ print(f"Pressure Drop (Hazen-Williams): {deltaP}")
 
 **Using the `CalculationEngine`
 ```py
-from processpi.engine import CalculationEngine
-from processpi.units import Pressure, Length, Diameter, Density, FlowRate, Dimensionless
+from processpi.calculations import CalculationEngine
+from processpi.units import Pressure, Length, Diameter, Density, VolumetricFlowRate, Dimensionless
 
 # Initialize engine
 engine = CalculationEngine()
 
 # Define pipe and fluid properties
 length = Length(100, "m")
-flow_rate = FlowRate(0.05, "m3/s")
+flow_rate = VolumetricFlowRate(0.05, "m3/s")
 coefficient = Dimensionless(130)
 diameter = Diameter(0.15, "m")
 density = Density(998, "kg/m3")

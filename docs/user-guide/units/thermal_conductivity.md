@@ -76,7 +76,7 @@ Returns a **new** `ThermalConductivity` object converted to the `target_unit`. T
 >>> k_BTU = k_W.to("BTU/hftF")
 
 >>> print(k_BTU)  
-0.289356 BTU/hftF
+0.288895 BTU/hftF
 ```
 ## **String Representation**
 

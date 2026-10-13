@@ -58,36 +58,44 @@ The properties of the `AceticAcid` class are calculated using the following meth
   ​
 ## **Examples**
 
-**1. Acetone at 35 °C**
+**1. Acetic acid at 35 °C**
 
 ```py
-# Importing Acetone
->>> from processpi.components import Acetone
+# Importing AceticAcid
+>>> from processpi.components import AceticAcid
 # Importing Units
 >>> from processpi.units import *
-# Creating Acetone at 35 C Temperature
->>> acetone = Acetone(temperature=Temperature(35, "C"))
->>> print(acetone.density().to("kg/m3"))
+# Creating AceticAcid at 35 C Temperature
+>>> acetic_acid = AceticAcid(temperature=Temperature(35, "C"))
+>>> print(acetic_acid.density().to("kg/m3"))
+1031.768882 kg/m3
 
->>> print(acetone.viscosity().to("Pa·s"))
+>>> print(acetic_acid.viscosity().to("Pa·s"))
+0.000967 Pa·s (dynamic)
 
->>> print(acetone.specific_heat().to("J/kgK"))
+>>> print(acetic_acid.specific_heat().to("J/kgK"))
+2099.910505 J/kgK
 
->>> print(acetone.thermal_conductivity().to("W/mK"))
+>>> print(acetic_acid.thermal_conductivity().to("W/mK"))
+0.157485 W/mK
 
->>> print(acetone.vapor_pressure().to("Pa"))
+>>> print(acetic_acid.vapor_pressure().to("Pa"))
+3588.50083 Pa
 
->>> print(acetone.enthalpy().to("J/kg"))
+>>> print(acetic_acid.enthalpy().to("J/kg"))
+390401.05436 J/kg
 
 ```
 
-**2. Acetone at higher temperature (60 °C) with unit conversion**
+**2. Acetic acid at higher temperature (60 °C) with unit conversion**
 ```py
-# Creating Acetone at 60 C Temperature
->>> acetone_high = Acetone(temperature=Temperature(60, "C"))
->>> print(acetone_high.density().to("lb/ft3"))
+# Creating AceticAcid at 60 C Temperature
+>>> acetic_acid_high = AceticAcid(temperature=Temperature(60, "C"))
+>>> print(acetic_acid_high.density().to("lb/ft3"))
+62.766571 lb/ft3
 
->>> print(acetone_high.viscosity().to("cP"))
+>>> print(acetic_acid_high.viscosity().to("cP"))
+0.702078 cP (dynamic)
 
 ```
 

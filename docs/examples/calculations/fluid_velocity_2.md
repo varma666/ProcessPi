@@ -35,5 +35,5 @@ print(f"Velocity: {velocity}")
 ## Output
 ```py
 # Output
-Velocity: 2.947313761 m/s
+Velocity: 2.947314 m/s
 ```

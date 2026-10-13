@@ -76,7 +76,7 @@ Performs the Darcy–Weisbach pressure drop calculation:
 **Using the `PressureDropDarcy`**
 
 ```python
-from processpi.calculations import PressureDropDarcy
+from processpi.calculations.fluids.pressure_drop_darcy import PressureDropDarcy
 from processpi.units import Pressure, Length, Diameter, Density, Velocity, Dimensionless
 
 # Define pipe and fluid properties
@@ -104,7 +104,7 @@ print(f"Pressure Drop (Darcy–Weisbach): {deltaP}")
 **Using the `CalculationEngine`
 ```py
 
-from processpi.engine import CalculationEngine
+from processpi.calculations import CalculationEngine
 from processpi.units import Pressure, Length, Diameter, Density, Velocity, Dimensionless
 
 # Initialize engine

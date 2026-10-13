@@ -10,7 +10,7 @@ This class is typically used for vapors of liquids, process gases, or user-defin
 
 * **`name`** (string): Vapor  
 * **`formula`** (string): N/A (mixture or undefined)  
-* **`molecular_weight`** (float): User-defined (default = None)  
+* **`molecular_weight`** (float): class attribute, default 28.0 g/mol; set it on the instance to change it  
 
 ## **Class Reference**
 
@@ -19,7 +19,6 @@ This class is typically used for vapors of liquids, process gases, or user-defin
 **Parameters:**  
 * `temperature`: `Temperature`, default = `Temperature(25,"C")`  
 * `pressure`: `Pressure`, default = `Pressure(1,"atm")`  
-* `molecular_weight`: `float`, default = `None` (required for calculations)  
 * `density`: `Density`, default = `None`  
 * `specific_heat`: `SpecificHeat`, default = `None`  
 * `viscosity`: `Viscosity`, default = `None`  
@@ -49,8 +48,8 @@ from processpi.units import *
 water_vapor = Vapor(
     temperature=Temperature(100, "C"),
     pressure=Pressure(1, "atm"),
-    molecular_weight=18.015
 )
+water_vapor.molecular_weight = 18.015
 
 print("Density:", water_vapor.density().to("kg/m3"))
 print("Viscosity:", water_vapor.viscosity().to("Pa·s"))

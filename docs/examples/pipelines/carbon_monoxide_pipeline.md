@@ -51,29 +51,30 @@ results.detailed_summary()
 ## Output
 ```py
 ✅ Found optimal diameter for available pressure drop.
-   Selected Diameter: 8.0 in (0.203 m)
-   Calculated Pressure Drop: 28658.34 Pa (allowed: 50000.00 Pa)
+   Selected Diameter: 8.0 in (0.2027 m internal)
+   Calculated Pressure Drop: 28824.94 Pa (allowed: 50000.00 Pa)
 
 # Summary
 === Pipeline Result 1 (Main Pipe) ===
 Mode: Single_pipe
-Calculated Pipe Diameter: 8 in 
+Nominal Pipe Size: 8 in
+Internal Diameter: 202.74 mm
 Inlet Flow: 0.394 m3/s 
 Outlet Flow: 0.394 m3/s 
-Total Pressure Drop: 28.66 kPa
-Total Head Loss: 2766.55 m
-Total Power Required: 16.15 kW
-Velocity: 12.224 m/s
-Reynolds Number: 137230 (dimensionless)
+Total Pressure Drop: 28.82 kPa
+Total Head Loss: 2782.64 m
+Total Power Required: 16.24 kW
+Velocity: 12.219 m/s
+Reynolds Number: 137203 (dimensionless)
 Friction Factor: 0.0182 (dimensionless)
-Pressure drop (atm): 0.282836 atm
+Pressure drop (atm): 0.28448 atm
 
 # Detailed Summary
 === Detailed Components for Result 1 (Main Pipe) ===
-+-----------+--------+-----------------+------------+------------+-------------------+------------+
-| Name      | Type   |   Pressure Drop |   Velocity |   Reynolds |   Friction Factor | Diameter   |
-+===========+========+=================+============+============+===================+============+
-| Main Pipe | pipe   |         28658.3 |      12.22 |     137230 |            0.0182 | 8 in       |
-+-----------+--------+-----------------+------------+------------+-------------------+------------+
++-----------+--------+-----------------+------------+------------+-------------------+----------------+---------------------+
+| Name      | Type   |   Pressure Drop |   Velocity |   Reynolds |   Friction Factor | Nominal Size   | Internal Diameter   |
++===========+========+=================+============+============+===================+================+=====================+
+| Main Pipe | pipe   |         28824.9 |      12.22 |     137203 |            0.0182 | 8 in           | 202.74 mm           |
++-----------+--------+-----------------+------------+------------+-------------------+----------------+---------------------+
 
 ```

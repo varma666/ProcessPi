@@ -64,5 +64,5 @@ print(f"Pressure Drop: {pressure_drop.to('psi')}")
 ## Output
 ```py
 # Output
-Pressure Drop: 1.859674 psi
+Pressure Drop: 1.859664 psi
 ```

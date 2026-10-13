@@ -35,5 +35,5 @@ print(f"Velocity: {velocity.to('ft/s')}")
 ## Output
 ```py
 # Output
-Velocity: 5.100918717 ft/s
+Velocity: 5.100905 ft/s
 ```

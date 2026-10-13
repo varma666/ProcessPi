@@ -77,7 +77,7 @@ Returns a **new** `SpecificHeat` object converted to the `target_unit`. The orig
 >>> water_cp_btu = water_cp.to("BTU/lbF")
 
 >>> print(water_cp_btu)  
-1.79159 BTU/lbF
+0.999809 BTU/lbF
 ```
 ## **String Representation**
 

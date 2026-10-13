@@ -77,7 +77,7 @@ Returns a **new** `HeatOfVaporization` object converted to the `target_unit`. Th
 >>> water_hv_cal = water_hv.to("cal/g")
 
 >>> print(water_hv_cal)  
-540.057352 cal/g
+539.435946 cal/g
 ```
 ## **String Representation**
 

@@ -82,7 +82,7 @@ Returns a **new** `Area` object converted to the `target_unit`. The original obj
 >>> house_area_ft2 = house_area_m2.to("ft2")
 
 >>> print(house_area_ft2)  
-1076.391 ft2
+1076.391505 ft2
 ```
 
 ## **Arithmetic Operations**

@@ -77,7 +77,7 @@ Returns a **new** `Diameter` object converted to the `target_unit`. The original
 >>> pipe_diameter_ft = pipe_diameter_m.to("ft")
 
 >>> print(pipe_diameter_ft)  
-16.4042 ft
+16.404199 ft
 ```
 ## **String Representation**
 

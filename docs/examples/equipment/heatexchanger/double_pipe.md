@@ -119,18 +119,21 @@ results.detailed_summary()
 
 ```text
 Heat Exchanger Summary
-------------------------------
+==============================
 Type                  : double_pipe
+Type Selection        : explicit
 Method                : basic
-Heat Duty             : 127.915 kW
-Area                  : 4.170 m²
-U Calculated          : 350.000 W/m²·K
-Tube Velocity         : 2.419 m/s
-Shell Velocity        : 0.255 m/s
-Tube Pressure Drop    : 16.63 kPa
-Shell Pressure Drop   : 355.35 Pa
+Heat Duty             : 149.544 kW
+Area                  : 5.142 m2
+U Calculated          : 350.000 W/m2K
+U Basis               : specified
+U Specified           : 350.000 W/m2K
+Tube Velocity         : 2.424 m/s
+Shell Velocity        : 0.277 m/s
+Tube Pressure Drop    : 16.661 kPa
+Shell Pressure Drop   : 0.387 kPa
 Tube Count            : 4
-Tube Length           : 6.0 m
+Tube Length           : 6.000 m
 Status                : OK
 
 Warnings
@@ -170,13 +173,13 @@ During the calculation, the engine automatically determines:
 | Design Method | Basic |
 | Flow Arrangement | Counter Current |
 | Orientation | Horizontal |
-| Heat Duty | 127.92 kW |
-| Required Area | 4.17 m² |
+| Heat Duty | 149.54 kW |
+| Required Area | 5.14 m² |
 | Overall U | 350 W/m²·K |
 | Tube Count | 4 |
 | Tube Length | 6.0 m |
 | Tube Velocity | 2.42 m/s |
-| Annulus Velocity | 0.255 m/s |
+| Annulus Velocity | 0.277 m/s |
 
 The calculated tube-side velocity lies within a desirable operating range, promoting turbulent flow and efficient heat transfer inside the inner tube.
 

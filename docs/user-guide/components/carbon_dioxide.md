@@ -1,8 +1,8 @@
-# **Class: `CarbonDioxide`**
+# **Class: `Carbondioxide`**
 
 ## **Description**
 
-The `CarbonDioxide` class represents the properties and constants for Carbon Dioxide (CO₂).  
+The `Carbondioxide` class represents the properties and constants for Carbon Dioxide (CO₂).  
 It provides physical and thermodynamic properties required in process engineering simulations and calculations.
 
 ## **Properties**
@@ -13,7 +13,7 @@ It provides physical and thermodynamic properties required in process engineerin
 
 ## **Class Reference**
 
-**`class CarbonDioxide()`**
+**`class Carbondioxide()`**
 
 **Parameters:**  
 * `temperature`: `Temperature`, default = `Temperature(25,"C")`  
@@ -27,7 +27,7 @@ It provides physical and thermodynamic properties required in process engineerin
 
 ## **Methods**
 
-The properties of the `CarbonDioxide` class are calculated using the following methods, which are inherited from the base `Component` class.
+The properties of the `Carbondioxide` class are calculated using the following methods, which are inherited from the base `Component` class.
 
 * **`phase()`**: Detects the phase of the substance (`"solid"`, `"gas"`, or `"liquid"`) by comparing the system temperature and pressure to sublimation/vapor pressure.  
 * **`density()`**:  
@@ -44,10 +44,10 @@ The properties of the `CarbonDioxide` class are calculated using the following m
 ## **Examples**
 
 ```py
-from processpi.components import CarbonDioxide
+from processpi.components import Carbondioxide
 from processpi.units import *
 
-co2 = CarbonDioxide(temperature=Temperature(25, "C"))
+co2 = Carbondioxide(temperature=Temperature(25, "C"))
 print(co2.density().to("kg/m3"))
 print(co2.viscosity().to("Pa·s"))
 print(co2.specific_heat().to("J/kgK"))

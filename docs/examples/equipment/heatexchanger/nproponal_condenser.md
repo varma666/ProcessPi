@@ -152,31 +152,49 @@ results.detailed_summary()
 
 ```text
 Heat Exchanger Summary
-------------------------------
+==============================
 Type                  : condenser
+Type Selection        : explicit
 Method                : bell_delaware
-Heat Duty             : 5012.192 kW
-Area                  : 111.784 m²
-U Calculated          : 123.561 W/m²·K
-Tube Velocity         : 0.111 m/s
-Shell Velocity        : 0.022 m/s
-Tube Pressure Drop    : 0.052 psi
-Shell Pressure Drop   : 0.0002 psi
+Heat Duty             : 0.000 kW
+Area                  : 111.784 m2
+U Calculated          : 737.638 W/m2K
+U Basis               : assumed
+Tube Velocity         : 2.272 m/s
+Shell Velocity        : 16.604 m/s
+Tube Pressure Drop    : 69.983 kPa
+Shell Pressure Drop   : 40.319 kPa
 Tube Count            : 766
 Tube Length           : 2.438 m
-Status                : HYDRAULIC_LIMITED
+Status                : PRESSURE_DROP_FAILURE
+
+Pressure Drop Assessment
+------------------------------
+Tube ΔP Limit        : 68.948 kPa
+Tube ΔP Actual       : 69.983 kPa
+Shell ΔP Limit       : 13.790 kPa
+Shell ΔP Actual      : 40.319 kPa
+
+Engineering Feasibility
+------------------------------
+Thermal Performance  : PASS
+Hydraulic Performance: PASS
+Pressure Drop        : FAIL
 
 Engineering Insights
 ------------------------------
-• Moderate heat-transfer coefficient. Thermal performance may be limited.
-• Tube-side velocity extremely low. High fouling risk and poor turbulence expected.
-• Shell-side velocity extremely low. Possible vapor blanketing and poor shell-side heat transfer.
-• Exchanger appears significantly oversized for the current operating conditions.
+• Heat-transfer coefficient within acceptable range.
+• Tube-side velocity within recommended range.
+• Shell-side velocity very high. Potential shell-side erosion risk.
+• Tube-side pressure drop exceeds allowable limit.
+• Shell-side pressure drop exceeds allowable limit.
 
 Warnings
 ------------------------------
-• Tube velocity low (0.11 m/s)
-• Shell velocity low (0.02 m/s)
+• [FLOW_BALANCE_INFO] HeatExchanger: calculated cold-side mass flow 107.035 kg/s from energy balance using hot-side flow 7.55987 kg/s.
+• [GEOMETRY_WARNING] Bundle diameter uses Sinnott Table 12.4, which is for a pitch of 1.25 do; the pitch here is 1.417 do
+• [ASSUMPTION_WARNING] Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the shell side: no hot_wall_viscosity given
+• [ASSUMPTION_WARNING] Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the tube side: no cold_wall_viscosity given
 ```
 
 ---
@@ -216,33 +234,29 @@ During the evaluation, ProcessPI calculates:
 | Service | Total Condenser |
 | Mode | Rating |
 | Method | Bell–Delaware |
-| Heat Duty | 5012.19 kW |
+| Heat Duty | 0.000 kW (as printed; see the note below) |
 | Heat Transfer Area | 111.78 m² |
-| Overall U (Calculated) | 123.56 W/m²·K |
+| Overall U (Calculated) | 737.64 W/m²·K |
 | Tube Count | 766 |
 | Tube Length | 2.438 m |
-| Tube Velocity | 0.111 m/s |
-| Shell Velocity | 0.022 m/s |
-| Tube Pressure Drop | 0.052 psi |
-| Shell Pressure Drop | 0.0002 psi |
-| Status | **HYDRAULIC_LIMITED** |
+| Tube Velocity | 2.272 m/s |
+| Shell Velocity | 16.604 m/s |
+| Tube Pressure Drop | 69.983 kPa |
+| Shell Pressure Drop | 40.319 kPa |
+| Status | **PRESSURE_DROP_FAILURE** |
+
+Note: rating mode currently returns a heat duty of 0 kW for this case, because it rates the vapor as a sensible cooler with no temperature change instead of as a condensing stream. The cooling-water flow (107.0 kg/s) is calculated from the latent duty before rating, so it is right, but with a 0 kW duty the required area is 0 m², and the thermal check below is passed by default.
 
 ---
 
 ## Engineering Assessment
 
-Although the condenser satisfies the required thermal duty, the hydraulic evaluation reveals that the exchanger is **significantly oversized** for the specified operating conditions.
+The thermal check passes (by default, see the note above), and the hydraulic evaluation shows that both pressure drops exceed their limits:
 
-The engine automatically identifies several performance concerns:
+- Tube side: 69.98 kPa against a 10 psi (68.95 kPa) limit
+- Shell side: 40.32 kPa against a 2 psi (13.79 kPa) limit
 
-- Extremely low tube-side velocity
-- Extremely low shell-side velocity
-- Increased fouling potential
-- Reduced turbulence
-- Lower overall heat-transfer coefficient
-- Possible vapor blanketing on the shell side
-
-Because of these hydraulic limitations, the exchanger status is reported as **HYDRAULIC_LIMITED**.
+The engine also flags the shell-side vapor velocity as high. Because of the pressure-drop limits, the exchanger status is reported as **PRESSURE_DROP_FAILURE**.
 
 This demonstrates one of the strengths of the ProcessPI HeatExchangerEngine—it evaluates **both thermal and hydraulic performance**, rather than relying solely on heat duty calculations.
 

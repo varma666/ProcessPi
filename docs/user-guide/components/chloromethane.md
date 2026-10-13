@@ -1,8 +1,8 @@
-# **Class: `Chloromethane`**
+# **Class: `ChloroMethane`**
 
 ## **Description**
 
-The `Chloromethane` class represents the properties and constants for Chloromethane (CH₃Cl).  
+The `ChloroMethane` class represents the properties and constants for Chloromethane (CH₃Cl).  
 It provides physical and thermodynamic properties required in process engineering simulations and calculations.
 
 ## **Properties**
@@ -13,7 +13,7 @@ It provides physical and thermodynamic properties required in process engineerin
 
 ## **Class Reference**
 
-**`class Chloromethane()`**
+**`class ChloroMethane()`**
 
 **Parameters:**  
 * `temperature`: `Temperature`, default = `Temperature(25,"C")`  
@@ -27,7 +27,7 @@ It provides physical and thermodynamic properties required in process engineerin
 
 ## **Methods**
 
-The properties of the `Chloromethane` class are calculated using the following methods, inherited from the base `Component` class.
+The properties of the `ChloroMethane` class are calculated using the following methods, inherited from the base `Component` class.
 
 * **`phase()`**: Detects the phase of the substance (`"gas"` or `"liquid"`) by comparing the system temperature and vapor pressure.  
 * **`density()`**:  
@@ -44,10 +44,10 @@ The properties of the `Chloromethane` class are calculated using the following m
 ## **Examples**
 
 ```py
-from processpi.components import Chloromethane
+from processpi.components import ChloroMethane
 from processpi.units import *
 
-ch3cl = Chloromethane(temperature=Temperature(25, "C"))
+ch3cl = ChloroMethane(temperature=Temperature(25, "C"))
 print(ch3cl.density().to("kg/m3"))
 print(ch3cl.viscosity().to("Pa·s"))
 print(ch3cl.specific_heat().to("J/kgK"))

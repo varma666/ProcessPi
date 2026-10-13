@@ -136,6 +136,7 @@ writes the products (composition, molar and mass flow, pressure, and the
 condenser and reboiler temperatures) to the outlet streams.
 
 ```python
+from processpi.equipment import DistillationColumn
 from processpi.integration.flowsheet import Flowsheet
 
 distillate, bottoms = MaterialStream("Distillate"), MaterialStream("Bottoms")

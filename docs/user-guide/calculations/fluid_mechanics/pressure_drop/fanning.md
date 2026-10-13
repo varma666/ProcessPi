@@ -74,7 +74,7 @@ $$
 **Using the `PressureDropFanning`**
 
 ```python
-from processpi.calculations import PressureDropFanning
+from processpi.calculations.fluids.pressure_drop_fanning import PressureDropFanning
 from processpi.units import Pressure, Length, Diameter, Density, Velocity, Dimensionless
 
 # Define fluid and pipe properties
@@ -102,7 +102,7 @@ print(f"Pressure Drop (Fanning): {deltaP}")
 **Using the `CalculationEngine`**
 
 ```py
-from processpi.engine import CalculationEngine
+from processpi.calculations import CalculationEngine
 from processpi.units import Pressure, Length, Diameter, Density, Velocity, Dimensionless
 
 # Initialize engine

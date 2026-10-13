@@ -10,7 +10,7 @@ This class is typically used for alcohols, ketones, esters, or user-defined orga
 
 * **`name`** (string): Organic Liquid  
 * **`formula`** (string): N/A (mixture or undefined)  
-* **`molecular_weight`** (float): User-defined (default = None)  
+* **`molecular_weight`** (float): class attribute, default 100.0 g/mol; set it on the instance to change it  
 
 ## **Class Reference**
 
@@ -48,8 +48,8 @@ from processpi.units import *
 organic_liquid = OrganicLiquid(
     temperature=Temperature(25, "C"),
     pressure=Pressure(1, "atm"),
-    molecular_weight=60.05  # Example molecular weight
 )
+organic_liquid.molecular_weight = 60.05  # Example molecular weight
 
 print(organic_liquid.density().to("kg/m3"))
 print(organic_liquid.viscosity().to("Pa·s"))

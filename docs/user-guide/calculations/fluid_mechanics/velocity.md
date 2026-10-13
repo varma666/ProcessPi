@@ -68,11 +68,11 @@ Performs the fluid velocity calculation:
 **Using the `FluidVelocity`**
 
 ```python
-from processpi.calculations import FluidVelocity
-from processpi.units import Velocity, FlowRate, Diameter
+from processpi.calculations.fluids.velocity import FluidVelocity
+from processpi.units import Velocity, VolumetricFlowRate, Diameter
 
 # Define pipe and flow properties
-Q = FlowRate(0.05, "m3/s")   # Volumetric flow rate
+Q = VolumetricFlowRate(0.05, "m3/s")   # Volumetric flow rate
 D = Diameter(0.1, "m")       # Pipe diameter
 
 # Create calculation instance
@@ -90,14 +90,14 @@ print(f"Fluid Velocity: {v}")
 **Using the `CalculationEngine`
 ```py
 
-from processpi.engine import CalculationEngine
-from processpi.units import FlowRate, Diameter
+from processpi.calculations import CalculationEngine
+from processpi.units import VolumetricFlowRate, Diameter
 
 # Initialize engine
 engine = CalculationEngine()
 
 # Define pipe and flow properties
-Q = FlowRate(0.05, "m3/s")
+Q = VolumetricFlowRate(0.05, "m3/s")
 D = Diameter(0.1, "m")
 
 # Perform fluid velocity calculation using the engine

@@ -23,7 +23,7 @@ from processpi.units import Velocity
 
 v = Velocity(1.55, "m/s")
 print(v.to("ft/s"))
-# Output: 5.085 ft/s
+# Output: 5.085302 ft/s
 ```
 
 ## 2. Diameter
@@ -142,13 +142,7 @@ print(Q.to("m3/s"))
 ## ✨ Bonus Examples
 ---
 ## 18. Time
-```python
-from processpi.units import Time
-
-t = Time(3600, "s")
-print(t.to("h"))
-# Output: 1 h
-```
+Not available yet: `processpi.units` has no `Time` class, so `from processpi.units import Time` raises `ImportError`.
 
 ## 19. Molar Flow Rate
 ```python
