@@ -37,8 +37,83 @@ DEFAULT_PUMP_EFFICIENCY = 0.70
 DEFAULT_FLOW_TOL = 1e-6  # m3/s, Absolute flow tolerance for solvers
 # Element types that can sit inline in a branch and be evaluated by the engine.
 INLINE_ELEMENTS = (Pipe, Pump, Equipment, Vessel, Fitting)
+# A network built with add_edge that cannot be solved from its nodes is run as
+# before. Fixed texts, so Python shows the warning once for the calling line.
+_GRAPH_NOT_SOLVED = (
+    "{} It is evaluated as a series chain of its elements, in the order they "
+    "were added, as before."
+)
+_GRAPH_MIXED = (
+    "The network mixes edges added with add_edge and elements that are not "
+    "edges (a subnetwork, or a component without nodes), so its flows cannot "
+    "be found from its nodes."
+)
+_GRAPH_NO_INLET = (
+    "The network built with add_edge does not have exactly one inlet (a node "
+    "that no edge enters), so its flows cannot be found from its nodes."
+)
+_GRAPH_NO_OUTLET = (
+    "The network built with add_edge has no outlet (a node that no edge "
+    "leaves, or a node with a demand), so its flows cannot be found from its "
+    "nodes. A closed circuit is solved by opening it at its tank: the tank "
+    "outlet as the inlet node, the tank return as the outlet node."
+)
+_GRAPH_DISCONNECTED = (
+    "The network built with add_edge is not connected, so its flows cannot be "
+    "found from its nodes."
+)
+_GRAPH_NOT_CONVERGED = (
+    "The flows in the loops of the network did not converge; the last "
+    "iteration is reported."
+)
+_GRAPH_LOOP_WITHOUT_PIPE = (
+    "A loop of the network has no pipe in it (only pumps, equipment, vessels "
+    "or outlets without a demand), so how the flow splits around it is not "
+    "defined. Put the pipe that connects each item in the loop."
+)
+# Graph solver: relative loop residual (a loop's pressure imbalance over its
+# total loss) at which the flows count as converged, and the iteration limit.
+GRAPH_LOOP_TOL = 1e-6
+GRAPH_MAX_ITER = 100
+# Sizing a looped graph network: the split depends on the sizes, so sizing and
+# solving alternate until the sizes no longer change, at most this many times.
+GRAPH_MAX_SIZING_PASSES = 10
+_GRAPH_SIZES_NOT_SETTLED = (
+    "The pipe sizes of the looped network did not settle: sizing a pipe for "
+    "its flow changes the split that set that flow. The last sizes are used."
+)
+_GRAPH_REVERSE_FLOW = (
+    "A pump or equipment item of the network carries flow against its "
+    "direction; its fixed head or pressure drop is applied as given."
+)
 
 # ------------------------------- Helpers -----------------------------------
+
+
+def _solve_linear(matrix: List[List[float]], rhs: List[float]) -> Optional[List[float]]:
+    """
+    Solves matrix x = rhs by Gaussian elimination with partial pivoting, for
+    the small systems of the loop solver. Returns None for a singular matrix.
+    """
+    n = len(rhs)
+    a = [list(row) + [b] for row, b in zip(matrix, rhs)]
+    scale = max((abs(x) for row in matrix for x in row), default=0.0)
+    if scale == 0.0:
+        return None
+    for col in range(n):
+        pivot = max(range(col, n), key=lambda r: abs(a[r][col]))
+        if abs(a[pivot][col]) <= 1e-12 * scale:
+            return None
+        a[col], a[pivot] = a[pivot], a[col]
+        for r in range(col + 1, n):
+            factor = a[r][col] / a[col][col]
+            if factor:
+                for k in range(col, n + 1):
+                    a[r][k] -= factor * a[col][k]
+    x = [0.0] * n
+    for r in reversed(range(n)):
+        x[r] = (a[r][n] - sum(a[r][k] * x[k] for k in range(r + 1, n))) / a[r][r]
+    return x
 
 
 def _elevation_m(node: Any) -> float:
@@ -974,6 +1049,537 @@ class PipelineEngine:
         return flows, dps, False, iterations
 
 
+    # ---------------------- Graph networks (add_node / add_edge) -------------
+
+    def _graph_edges(self, network: PipelineNetwork) -> Optional[List[Tuple[Any, str, str]]]:
+        """
+        The edges of a network built with `add_node` and `add_edge`, as
+        (element, start node, end node) in the order they were added, or None
+        for a block network (`series`, `parallel`, `add_series`,
+        `add_parallel`), which is evaluated as before.
+
+        Fittings added at a node with `add_fitting` are not edges. A network
+        that mixes edges with elements that are not edges (a subnetwork, a
+        component without nodes) cannot be read as a graph: None, with a
+        UserWarning.
+        """
+        if not network.nodes:
+            return None
+        edges: List[Tuple[Any, str, str]] = []
+        seen = set()
+        mixed = False
+        for elem in network.elements:
+            if isinstance(elem, Fitting) and getattr(elem, "node", None) is not None:
+                continue
+            ends = None
+            if isinstance(elem, (Pipe, Pump)):
+                ends = (getattr(elem, "start_node", None), getattr(elem, "end_node", None))
+            elif isinstance(elem, (Vessel, Equipment)):
+                ins = getattr(elem, "inlet_nodes", [])
+                outs = getattr(elem, "outlet_nodes", [])
+                if len(ins) == 1 and len(outs) == 1:
+                    ends = (ins[0], outs[0])
+            if (
+                ends is None
+                or id(elem) in seen
+                or any(
+                    n is None or network.nodes.get(getattr(n, "name", None)) is not n
+                    for n in ends
+                )
+            ):
+                mixed = True
+                continue
+            seen.add(id(elem))
+            edges.append((elem, ends[0].name, ends[1].name))
+        if not edges:
+            return None
+        if mixed:
+            _warn_at_caller(_GRAPH_NOT_SOLVED.format(_GRAPH_MIXED))
+            return None
+        return edges
+
+    def _graph_topology(
+        self,
+        network: PipelineNetwork,
+        edges: List[Tuple[Any, str, str]],
+        q_in_m3s: float,
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+        """
+        The flow problem of a graph network: its inlet, the flow leaving each
+        node, and a spanning tree.
+
+        The inlet is the one node that no edge enters; the network flow given
+        to `fit()` enters there. An edge's direction is the direction of
+        positive flow; a flow against it comes out negative. The flow leaves
+        at the node demands (`Node.demand`) and at the outlets, the nodes that
+        no edge leaves. The outlets without a demand take what the demands
+        leave, at one common pressure: they are joined to a virtual node by
+        edges without loss, so their split is solved like any other loop.
+
+        Each edge outside the spanning tree closes one independent loop,
+        listed as (edge, +1 or -1) pairs, +1 where the loop runs along the
+        edge's direction.
+
+        Returns:
+            (graph, None), or (None, reason) when the topology does not define
+            the flows (no single inlet, no outlet, unconnected parts).
+
+        Raises:
+            ValueError: If the demands do not fit the inlet flow, or a node
+                with a demand has no edge.
+        """
+        used: List[str] = []
+        for _, start, end in edges:
+            for name in (start, end):
+                if name not in used:
+                    used.append(name)
+        for name, node in network.nodes.items():
+            if name not in used and getattr(node, "demand", None) is not None:
+                raise ValueError(f"Node '{name}' has a demand but no edge.")
+
+        entered = {end for _, _, end in edges}
+        left = {start for _, start, _ in edges}
+        inlets = [n for n in used if n not in entered]
+        if len(inlets) != 1:
+            return None, _GRAPH_NO_INLET
+        source = inlets[0]
+
+        demands: Dict[str, float] = {}
+        for name in used:
+            demand = getattr(network.nodes[name], "demand", None)
+            if demand is not None:
+                demands[name] = float(demand.to("m3/s").value)
+        free = [n for n in used if n not in left and n not in demands]
+        if not free and not demands:
+            return None, _GRAPH_NO_OUTLET
+
+        tol = max(float(self.data.get("tolerance_m3s", DEFAULT_FLOW_TOL)), 1e-9 * q_in_m3s)
+        q_free = q_in_m3s - sum(demands.values())
+        if q_free < -tol:
+            raise ValueError(
+                f"The node demands add up to {sum(demands.values()):.6g} m3/s, "
+                f"more than the inlet flow of {q_in_m3s:.6g} m3/s."
+            )
+        if not free and abs(q_free) > tol:
+            raise ValueError(
+                f"The node demands add up to {sum(demands.values()):.6g} m3/s and "
+                f"the inlet flow is {q_in_m3s:.6g} m3/s; with a demand on every "
+                "outlet the two must be equal."
+            )
+
+        # Flow leaving each node (the inlet's is negative: the flow enters).
+        outflow = {name: demands.get(name, 0.0) for name in used}
+        outflow[source] -= q_in_m3s
+        graph_edges = [
+            {"element": elem, "start": start, "end": end, "virtual": False}
+            for elem, start, end in edges
+        ]
+        nodes = list(used)
+        if len(free) == 1:
+            outflow[free[0]] += q_free
+        elif free:
+            common = "(outlets)"
+            while common in network.nodes:
+                common = f"({common})"
+            nodes.append(common)
+            outflow[common] = q_free
+            for name in free:
+                graph_edges.append(
+                    {"element": None, "start": name, "end": common, "virtual": True}
+                )
+
+        # Spanning tree, breadth first from the inlet.
+        incident: Dict[str, List[int]] = {name: [] for name in nodes}
+        for i, edge in enumerate(graph_edges):
+            incident[edge["start"]].append(i)
+            incident[edge["end"]].append(i)
+        parent: Dict[str, Optional[int]] = {source: None}
+        depth = {source: 0}
+        order = [source]
+        k = 0
+        while k < len(order):
+            name = order[k]
+            k += 1
+            for i in incident[name]:
+                edge = graph_edges[i]
+                other = edge["end"] if edge["start"] == name else edge["start"]
+                if other not in parent:
+                    parent[other] = i
+                    depth[other] = depth[name] + 1
+                    order.append(other)
+        if len(order) != len(nodes):
+            return None, _GRAPH_DISCONNECTED
+        tree = {i for i in parent.values() if i is not None}
+        chords = [i for i in range(len(graph_edges)) if i not in tree]
+
+        def up(name: str) -> Tuple[str, int, int]:
+            """Parent node, tree edge, and +1 if going up runs along the edge."""
+            i = parent[name]
+            edge = graph_edges[i]
+            if edge["end"] == name:
+                return edge["start"], i, -1
+            return edge["end"], i, 1
+
+        loops = []
+        for chord in chords:
+            # chord start -> chord end, then back along the tree to the start
+            a, b = graph_edges[chord]["end"], graph_edges[chord]["start"]
+            from_end, from_start = [], []
+            while depth[a] > depth[b]:
+                a, i, sign = up(a)
+                from_end.append((i, sign))
+            while depth[b] > depth[a]:
+                b, i, sign = up(b)
+                from_start.append((i, sign))
+            while a != b:
+                a, i, sign = up(a)
+                from_end.append((i, sign))
+                b, i, sign = up(b)
+                from_start.append((i, sign))
+            loops.append(
+                [(chord, 1)] + from_end + [(i, -sign) for i, sign in reversed(from_start)]
+            )
+
+        outlets = [n for n in used if n != source and (n in demands or n in free)]
+        return {
+            "edges": graph_edges,
+            "nodes": nodes,
+            "source": source,
+            "outlets": outlets,
+            "outflow": outflow,
+            "order": order,
+            "parent": parent,
+            "chords": chords,
+            "loops": loops,
+            "elevation": {name: _elevation_m(network.nodes[name]) for name in used},
+        }, None
+
+    @staticmethod
+    def _graph_tree_flows(graph: Dict[str, Any], chord_flows: Dict[int, float]) -> List[float]:
+        """
+        Edge flows (m3/s, positive along the edge) that meet the mass balance
+        at every node, for the given flows in the edges outside the spanning
+        tree. Each tree edge carries what the part of the tree beyond it
+        takes, leaves first.
+        """
+        edges = graph["edges"]
+        flows = [0.0] * len(edges)
+        balance = {name: 0.0 for name in graph["nodes"]}  # flow in - flow out
+        for i, q in chord_flows.items():
+            flows[i] = q
+            balance[edges[i]["end"]] += q
+            balance[edges[i]["start"]] -= q
+        for name in reversed(graph["order"][1:]):
+            i = graph["parent"][name]
+            edge = edges[i]
+            if edge["end"] == name:
+                q = graph["outflow"][name] - balance[name]
+            else:
+                q = balance[name] - graph["outflow"][name]
+            flows[i] = q
+            balance[edge["end"]] += q
+            balance[edge["start"]] -= q
+        return flows
+
+    def _graph_edge_drop(
+        self, graph: Dict[str, Any], edge: Dict[str, Any], q: float, rho: float, q_floor: float
+    ) -> Tuple[float, float, float]:
+        """
+        Pressure drop along an edge (start minus end, Pa) at the signed flow
+        `q` (m3/s), its slope d(drop)/dq used by the loop solver, and the
+        static part.
+
+        A pipe's friction and fitting losses are those of `_pipe_calculation`
+        at |q| (the same as a single-pipe run), with the sign of the flow. The
+        static head rho g (z_end - z_start) is signed on every edge, so a
+        downhill edge gains pressure; node pressures need it and it cancels
+        around a loop. A pump adds its fixed gain and equipment its fixed
+        drop, whatever the flow.
+        """
+        if edge["virtual"]:
+            return 0.0, 0.0, 0.0
+        elem = edge["element"]
+        elevation = graph["elevation"]
+        static = rho * G * (elevation[edge["end"]] - elevation[edge["start"]])
+        if isinstance(elem, Pipe):
+            q_eval = max(abs(q), q_floor)
+            calc = self._pipe_calculation(elem, VolumetricFlowRate(q_eval, "m3/s"))
+            friction = calc["major_dp_pa"] + calc["minor_dp_pa"]
+            # Turbulent drop goes as q^2: slope 2 dp / q.
+            slope = 2.0 * friction / q_eval
+            if abs(q) < q_floor:
+                friction *= abs(q) / q_floor
+            return math.copysign(friction, q) + static, slope, static
+        if isinstance(elem, Pump):
+            return -self._pump_gain_pa(elem).to("Pa").value + static, 0.0, static
+        if isinstance(elem, Equipment):
+            return self._equipment_dp_pa(elem).to("Pa").value + static, 0.0, static
+        return static, 0.0, static
+
+    def _size_graph_network(
+        self, network: PipelineNetwork, graph: Dict[str, Any], q_in: VolumetricFlowRate, **kwargs: Any
+    ) -> None:
+        """
+        Sizes the pipes of a graph network that have no diameter, each for
+        the flow in its own edge (`_solve_for_diameter_network`); pipes with a
+        diameter keep it.
+
+        A tree network's flows come from the mass balance alone, so one pass
+        does. In a looped one the split depends on the sizes: every pipe to
+        size is first sized for the network flow, then the flows are solved
+        and the pipes sized again for them, until no size changes (at most
+        `GRAPH_MAX_SIZING_PASSES` passes).
+        """
+        to_size = [p for p in network.get_all_pipes() if self._pipe_bore(p) is None]
+        if not to_size:
+            return
+        q_total = float(q_in.to("m3/s").value)
+        if graph["loops"]:
+            design = {id(p): q_total for p in to_size}
+        else:
+            tree = self._graph_tree_flows(graph, {})
+            design = {
+                id(e["element"]): abs(q) for e, q in zip(graph["edges"], tree) if not e["virtual"]
+            }
+            self._solve_for_diameter_network(
+                network, design_flows=design, pipes_to_size=to_size, **kwargs
+            )
+            return
+
+        sizes = None
+        for _ in range(GRAPH_MAX_SIZING_PASSES):
+            self._solve_for_diameter_network(
+                network, design_flows=design, pipes_to_size=to_size, verbose=False, **kwargs
+            )
+            new_sizes = [p.internal_diameter.to("m").value for p in to_size]
+            if new_sizes == sizes:
+                break
+            sizes = new_sizes
+            solved = self._solve_graph_network(network, graph, q_in)
+            design = {k: abs(q) for k, q in solved["edge_flows"].items()}
+        else:
+            _warn_at_caller(_GRAPH_SIZES_NOT_SETTLED)
+        # Once more, printing the sizing on the final flows.
+        self._solve_for_diameter_network(
+            network, design_flows=design, pipes_to_size=to_size, **kwargs
+        )
+
+    def _graph_balance_loops(
+        self, graph: Dict[str, Any], chord_flows: Dict[int, float], rho: float, q_floor: float
+    ) -> Tuple[bool, int]:
+        """
+        Newton iteration on the loop flows (see `_solve_graph_network`),
+        updating the flows of the loop-closing edges in `chord_flows` in place.
+
+        Returns:
+            (converged, iterations)
+
+        Raises:
+            ValueError: If a loop has no pipe, so its flow is not defined.
+        """
+        edges, loops, chords = graph["edges"], graph["loops"], graph["chords"]
+        for loop in loops:
+            if not any(isinstance(edges[i]["element"], Pipe) for i, _ in loop):
+                raise ValueError(_GRAPH_LOOP_WITHOUT_PIPE)
+        converged = False
+        iterations = 0
+        for iterations in range(1, GRAPH_MAX_ITER + 1):
+            flows = self._graph_tree_flows(graph, chord_flows)
+            evaluated = [
+                self._graph_edge_drop(graph, edge, q, rho, q_floor)
+                for edge, q in zip(edges, flows)
+            ]
+            residual = [sum(sign * evaluated[i][0] for i, sign in loop) for loop in loops]
+            # Static heads cancel around a loop; the losses set the scale.
+            scale = [
+                sum(abs(evaluated[i][0] - evaluated[i][2]) for i, _ in loop) for loop in loops
+            ]
+            if all(abs(r) <= GRAPH_LOOP_TOL * max(sc, 1e-9) for r, sc in zip(residual, scale)):
+                converged = True
+                break
+            sign_in = [dict(loop) for loop in loops]
+            jacobian = [
+                [
+                    sum(
+                        sign * sign_in[b][i] * evaluated[i][1]
+                        for i, sign in loops[a] if i in sign_in[b]
+                    )
+                    for b in range(len(loops))
+                ]
+                for a in range(len(loops))
+            ]
+            delta = _solve_linear(jacobian, [-r for r in residual])
+            if delta is None:
+                raise ValueError(_GRAPH_LOOP_WITHOUT_PIPE)
+            for chord, d in zip(chords, delta):
+                chord_flows[chord] += d
+        return converged, iterations
+
+    @staticmethod
+    def _graph_node_pressures(graph: Dict[str, Any], drops: List[float]) -> Dict[str, float]:
+        """Pressure at each node relative to the inlet (Pa), along the tree."""
+        edges = graph["edges"]
+        pressure = {graph["source"]: 0.0}
+        for name in graph["order"][1:]:
+            i = graph["parent"][name]
+            edge = edges[i]
+            if edge["end"] == name:
+                pressure[name] = pressure[edge["start"]] - drops[i]
+            else:
+                pressure[name] = pressure[edge["end"]] + drops[i]
+        return pressure
+
+    @staticmethod
+    def _graph_governing_path(graph: Dict[str, Any], flows: List[float], outlet: str) -> List[str]:
+        """
+        Nodes from the inlet to `outlet`, going upstream from the outlet along
+        the edge that brings it the most flow.
+        """
+        path = [outlet]
+        seen = {outlet}
+        name = outlet
+        while name != graph["source"]:
+            best = None
+            for i, edge in enumerate(graph["edges"]):
+                if edge["virtual"]:
+                    continue
+                if edge["end"] == name and flows[i] > 0:
+                    other, q = edge["start"], flows[i]
+                elif edge["start"] == name and flows[i] < 0:
+                    other, q = edge["end"], -flows[i]
+                else:
+                    continue
+                if other not in seen and (best is None or q > best[1]):
+                    best = (other, q)
+            if best is None:
+                break
+            name = best[0]
+            seen.add(name)
+            path.append(name)
+        return list(reversed(path))
+
+    def _solve_graph_network(
+        self, network: PipelineNetwork, graph: Dict[str, Any], q_in: VolumetricFlowRate
+    ) -> Dict[str, Any]:
+        """
+        Flow in every edge of a graph network from the mass balance at its
+        nodes, then the drop along each edge, the node pressures and the
+        governing drop: from the inlet to the outlet with the lowest
+        pressure.
+
+        A tree network's flows follow from the mass balance alone. In a
+        looped one the flow around each loop is found so that the pressure
+        drops around every loop add up to zero, by Newton's method on all
+        loops at once (Hardy Cross corrects one loop at a time with the same
+        terms): the correction dq solves J dq = -r, r the pressure imbalance
+        of each loop and J[a][b] the sum over the edges shared by loops a and
+        b of their slopes 2 dp/q, with the signs of the two loops. The drops
+        are those of `_pipe_calculation`, so the result matches single-pipe
+        runs. Converged when every loop's imbalance is below `GRAPH_LOOP_TOL`
+        of the sum of the losses around it.
+
+        Returns:
+            Dict with the element `reports` (in the order the elements were
+            added, each with its `start_node`, `end_node` and signed
+            `flow_m3s`), `total_dp_Pa` (the governing drop), `converged`,
+            `iterations` and the graph `summary` entries.
+        """
+        q_in_m3s = float(q_in.to("m3/s").value)
+        rho = self._get_density().to("kg/m3").value
+        q_floor = max(1e-9 * q_in_m3s, 1e-15)
+        edges = graph["edges"]
+
+        chord_flows = {i: 0.0 for i in graph["chords"]}
+        iterations, converged = 0, True
+        if graph["loops"]:
+            converged, iterations = self._graph_balance_loops(
+                graph, chord_flows, rho, q_floor
+            )
+            if not converged:
+                _warn_at_caller(_GRAPH_NOT_CONVERGED)
+        flows = self._graph_tree_flows(graph, chord_flows)
+
+        drops, statics = [], []
+        for edge, q in zip(edges, flows):
+            drop, _, static = self._graph_edge_drop(graph, edge, q, rho, q_floor)
+            drops.append(drop)
+            statics.append(static)
+        pressure = self._graph_node_pressures(graph, drops)
+
+        # Element reports, in the order the elements were added.
+        index = {id(e["element"]): i for i, e in enumerate(edges) if not e["virtual"]}
+        reports: List[Dict[str, Any]] = []
+        for elem in network.elements:
+            i = index.get(id(elem))
+            if i is None:
+                # A fitting at a node: reported as in block networks.
+                reports.extend(self._evaluate_block(elem, q_in)[1])
+                continue
+            edge, q = edges[i], flows[i]
+            _, element_reports, _ = self._evaluate_block(
+                elem, VolumetricFlowRate(max(abs(q), q_floor), "m3/s")
+            )
+            report = element_reports[0]
+            report.update({
+                "start_node": edge["start"],
+                "end_node": edge["end"],
+                "flow_m3s": q,
+                "pressure_drop_Pa": drops[i],
+                "elevation_dp_Pa": statics[i],
+            })
+            if "total_dp" in report:
+                report["total_dp"] = Pressure(max(drops[i], 0.0), "Pa")
+            if q < -q_floor and isinstance(elem, (Pump, Equipment)):
+                report.setdefault("warnings", []).append(_GRAPH_REVERSE_FLOW)
+                _warn_at_caller(_GRAPH_REVERSE_FLOW)
+            reports.append(report)
+
+        # Flow leaving the network at each outlet, from the edge flows.
+        outlet_flows = {}
+        for name in graph["outlets"]:
+            outlet_flows[name] = sum(
+                (q if e["end"] == name else -q)
+                for e, q in zip(edges, flows)
+                if not e["virtual"] and name in (e["start"], e["end"])
+            )
+        drop_from_inlet = {
+            name: 0.0 - pressure[name] for name in graph["order"] if name in graph["elevation"]
+        }
+        governing = (
+            max(graph["outlets"], key=lambda n: drop_from_inlet[n])
+            if graph["outlets"] else None
+        )
+        total_dp_pa = drop_from_inlet[governing] if governing is not None else 0.0
+
+        summary = {
+            "solver": "graph",
+            "inlet_node": graph["source"],
+            "number_of_loops": len(graph["chords"]),
+            "governing_outlet": governing,
+            "governing_path": (
+                self._graph_governing_path(graph, flows, governing) if governing else []
+            ),
+            "outlet_flows_m3s": outlet_flows,
+            "node_pressure_drop_Pa": drop_from_inlet,
+        }
+        p_in = self._as_pressure(self.data.get("inlet_pressure"))
+        if p_in is not None:
+            p_in_pa = p_in.to("Pa").value
+            summary["node_pressures_Pa"] = {
+                name: p_in_pa - dp for name, dp in drop_from_inlet.items()
+            }
+        return {
+            "reports": reports,
+            "edge_flows": {
+                id(e["element"]): q for e, q in zip(edges, flows) if not e["virtual"]
+            },
+            "total_dp_Pa": total_dp_pa,
+            "converged": converged,
+            "iterations": iterations,
+            "summary": summary,
+        }
+
+
     # ---------------------- Network Solvers ---------------------------------
 
 
@@ -1153,6 +1759,16 @@ class PipelineEngine:
         # NETWORK MODE
         # -----------------------
         if isinstance(net, PipelineNetwork):
+            # A network built with add_node / add_edge is solved as a graph:
+            # the flow in each edge from the mass balance at the nodes. It
+            # used to run as one series chain, every edge at the full flow.
+            graph = None
+            graph_edges = self._graph_edges(net)
+            if graph_edges is not None:
+                graph, reason = self._graph_topology(net, graph_edges, q_in.to("m3/s").value)
+                if graph is None:
+                    _warn_at_caller(_GRAPH_NOT_SOLVED.format(reason))
+
             # --------------------------------------------------
             # Step 1: Detect pipes missing diameter definitions
             # --------------------------------------------------
@@ -1171,7 +1787,11 @@ class PipelineEngine:
                 # The sizing sets the size of each pipe it sizes. The sizes
                 # were also copied again here by pipe name, which gave a pipe
                 # the user had sized the size of another pipe of the same name.
-                self._solve_for_diameter_network(net, **kwargs)
+                if graph is not None:
+                    # Each pipe for the flow of its own edge.
+                    self._size_graph_network(net, graph, q_in, **kwargs)
+                else:
+                    self._solve_for_diameter_network(net, **kwargs)
 
             # --------------------------------------------------
             # Step 3: Assign flowrate to pipes if missing
@@ -1187,7 +1807,19 @@ class PipelineEngine:
             # --------------------------------------------------
             # Step 4: Solve the (now ready) network
             # --------------------------------------------------
-            solved_dict, solver_meta = self._solve_network_dual(net, q_in, tol)
+            graph_summary: Dict[str, Any] = {}
+            if graph is not None:
+                solved = self._solve_graph_network(net, graph, q_in)
+                solved_dict = {
+                    "success": solved["converged"],
+                    "reports": solved["reports"],
+                    "total_dp_Pa": solved["total_dp_Pa"],
+                    "iterations": solved["iterations"],
+                }
+                solver_meta = None
+                graph_summary = solved["summary"]
+            else:
+                solved_dict, solver_meta = self._solve_network_dual(net, q_in, tol)
             reports = solved_dict.get("reports", []) or []
 
             # Convert reports to dictionaries
@@ -1230,6 +1862,7 @@ class PipelineEngine:
                     "pump_shaft_power_kW": shaft_power_kw,
                     "solver_converged": solved_dict.get("success", False),
                     "solver_iterations": solved_dict.get("iterations", getattr(solver_meta, "iterations", None)),
+                    **graph_summary,
                 },
                 "components": comp_list
             })
@@ -1734,7 +2367,9 @@ class PipelineEngine:
                 self._design_flows(branch, q_m3s * share / total, None, flows)
         return flows
 
-    def _solve_for_diameter_network(self, network, **kwargs):
+    def _solve_for_diameter_network(
+        self, network, design_flows=None, pipes_to_size=None, verbose=True, **kwargs
+    ):
         """
         Iteratively sizes each pipe in a network using the same standard diameter
         selection logic as `_solve_for_diameter`, ensuring consistency between
@@ -1744,6 +2379,13 @@ class PipelineEngine:
         internal diameter keeps it. Each pipe is sized for the flow it carries
         in the network (see `_design_flows`); every pipe used to be sized for
         the 0.001 m3/s placeholder `Pipe.flow_rate`, whatever the network flow.
+
+        Args:
+            design_flows: flow (m3/s) per id(pipe), in place of `_design_flows`
+                (a graph network passes its edge flows).
+            pipes_to_size: the pipes to size, in place of those without a
+                diameter (a graph network resizes the same pipes on each pass).
+            verbose: print the candidates and warnings.
         """
         import math
         from ..pipelines.standards import get_recommended_velocity, list_available_pipe_diameters
@@ -1762,10 +2404,14 @@ class PipelineEngine:
             [p for branch in self._normalize_branches(network) for p in branch if isinstance(p, Pipe)]
 
         q_total = float(self._infer_flowrate().to("m3/s").value)
-        design_flows = self._design_flows(network, q_total)
+        if design_flows is None:
+            design_flows = self._design_flows(network, q_total)
 
         for pipe in pipes:
-            if self._pipe_bore(pipe) is not None:
+            if pipes_to_size is not None:
+                if not any(pipe is p for p in pipes_to_size):
+                    continue
+            elif self._pipe_bore(pipe) is not None:
                 # A size the user gave is kept; it used to be replaced.
                 continue
             q_val = design_flows.get(id(pipe), q_total)
@@ -1845,9 +2491,10 @@ class PipelineEngine:
                 else:
                     _, range_note = self._velocity_range_index(velocities, idx, v_min, v_max)
             else:
-                print(f"🔍 Pipe {pipe.name}: No available DP provided. Showing candidates:")
-                for r in results_list:
-                    print(f"  {r['nominal_diameter'].to('in')} -> {r['velocity_m_s']:.2f} m/s, {r['pressure_drop_Pa']:.2f} Pa")
+                if verbose:
+                    print(f"🔍 Pipe {pipe.name}: No available DP provided. Showing candidates:")
+                    for r in results_list:
+                        print(f"  {r['nominal_diameter'].to('in')} -> {r['velocity_m_s']:.2f} m/s, {r['pressure_drop_Pa']:.2f} Pa")
                 # The size at the middle of the range, kept in the range (see
                 # `_velocity_range_index`). The middle entry of the list was
                 # used, which is the next larger size when the list starts at
@@ -1868,7 +2515,7 @@ class PipelineEngine:
     
             # Warning if velocity out of range
             v_final = best_result["velocity_m_s"]
-            if not (v_min <= v_final <= v_max):
+            if verbose and not (v_min <= v_final <= v_max):
                 print(f"⚠️ Warning: Pipe '{pipe.name}' velocity {v_final:.2f} m/s outside recommended range {v_min}-{v_max} m/s")
                 if range_note:
                     print(f"   {range_note}")

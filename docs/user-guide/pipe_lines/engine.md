@@ -69,9 +69,10 @@ Chooses between **Network Mode** or **Single Pipe Mode**.
 
 **Core Logic**
 - **Network Mode** (with `network` object):  
-  - Diameter Check → Auto-sizing if missing: only pipes without a diameter are sized, each for the flow it carries in the network (a parallel block's flow split by `flow_split` when given, evenly otherwise); a pipe with a nominal or internal diameter keeps it  
+  - Diameter Check → Auto-sizing if missing: only pipes without a diameter are sized, each for the flow it carries in the network (a parallel block's flow split by `flow_split` when given, evenly otherwise; in a graph network the flow of its own edge); a pipe with a nominal or internal diameter keeps it  
   - Flowrate Assignment → Distributes flow  
   - Network Solving → Pressure drop, head, pump power  
+  - A network built with `add_node` / `add_edge` is solved as a graph: the flow in each edge from the mass balance at the nodes (node demands, outlets), the loops balanced so that the drops around each loop add up to zero, and the network drop taken from the inlet to the outlet with the lowest pressure. See [Solving a graph network](network.md#solving-a-graph-network).  
 
 - **Single Pipe Mode** (without `network`):  
   - If no diameter (in `fit()` or on the `pipe`) → Solves for optimum diameter  
@@ -218,16 +219,13 @@ Orchestrates all primitives to perform full pipe analysis.
 
 ### **Network Solvers**
 
-**`_resolve_parallel_flows`**
-- **Purpose:** This is an iterative solver for parallel networks. It balances the flow rates between parallel branches until the pressure drop across all branches converges to a single value within a specified tolerance.  
-- **Logic:** It starts with an initial guess (usually an equal flow split), calculates the pressure drop for each branch, and then adjusts the flow rates to reduce the difference in pressure drops. This process repeats until a stable solution is found.  
+**`_balance_parallel_flows`** and **`_solve_network_dual`** (series/parallel block networks)
+- **Purpose:** Balance the flow between the branches of a parallel block until every branch has the same pressure drop (or apply `flow_split` when given), and add the drops of series elements.  
+- **Logic:** It starts with an equal split and updates each branch flow as q * sqrt(dp_mean / dp), rescaled to the total, until the spread of the branch drops is below 1e-4 of their mean.  
 
-**`_hardy_cross`**
-- **Purpose:** Implements the Hardy-Cross method, a classic iterative approach for solving flow and pressure problems in pipe networks, especially those with loops.  
-- **Logic:** It computes the flow corrections needed for each loop to satisfy the principle that the sum of head losses around any closed loop must be zero. This is a robust method for complex, interconnected systems.  
-
-**`_matrix_solver`** and **`_solve_network_dual`**
-- **Purpose:** These functions provide alternative, iterative methods for solving complex parallel networks. They use a similar principle to the Hardy-Cross method, iteratively adjusting branch flow rates to balance the pressure drops until the solution converges.  
+**`_solve_graph_network`** (networks built with `add_node` / `add_edge`)
+- **Purpose:** Finds the flow in every edge from the mass balance at the nodes, then the drop along each edge, the node pressures and the governing drop (inlet to the outlet with the lowest pressure).  
+- **Logic:** `_graph_topology` finds the inlet, the flow leaving each node (demands, outlets) and a spanning tree; each edge outside the tree closes one loop. The tree edges carry what the mass balance gives them. The loop flows are solved by Newton's method on all loops at once (`_graph_balance_loops`; Hardy Cross applies the same correction one loop at a time): r is the pressure imbalance of each loop, J sums the slopes 2 dp/q of the edges two loops share, and J dq = -r is solved by Gaussian elimination, until every loop's imbalance is below 1e-6 of the losses around it. `_size_graph_network` sizes the pipes without a diameter on their edge flows, solving again until the sizes settle in a looped network.  
 
 ---
 
@@ -251,9 +249,8 @@ Orchestrates all primitives to perform full pipe analysis.
 - Accounts for elevation, roughness, fittings, valves.
 
 **Network Analysis**
-- Branched/looped networks using:
-  - Hardy–Cross iteration  
-  - Direct matrix solver  
+- Series/parallel block networks (balanced parallel branches)  
+- Branched/looped networks built from nodes and edges, with node demands (Newton loop solver with the Hardy Cross terms)  
 - Supports plant utility networks, firewater loops, cooling systems.
 
 **Component Loss Modeling**
@@ -270,8 +267,7 @@ Orchestrates all primitives to perform full pipe analysis.
 |-------------------|--------------------------------|----------------------------------|
 | Darcy–Weisbach    | Precise engineering calcs       | Custom fluid properties supported |
 | Hazen–Williams    | Quick water line checks         | Assumes low viscosity             |
-| Hardy–Cross       | Small networks (≤10 pipes)      | Simple, easy debugging            |
-| Matrix Solver     | Moderate networks with loops    | Robust, faster                    |
+| Graph loop solver | `add_edge` networks with loops  | Newton on all loops at once       |
 
 **Typical Use Cases**
 - Utility water networks  

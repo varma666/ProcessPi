@@ -14,10 +14,16 @@ class Node:
     """
     Represents a connection point, junction, or endpoint in a pipeline network.
 
-    Nodes have a name for identification and an elevation for calculating
-    static head differences in the system.
+    Nodes have a name for identification, an elevation for calculating
+    static head differences in the system, and an optional demand: the flow
+    that leaves the network at the node.
     """
-    def __init__(self, name: str, elevation: float = 0.0):
+    def __init__(
+        self,
+        name: str,
+        elevation: float = 0.0,
+        demand: Optional[VolumetricFlowRate] = None,
+    ):
         """
         Initializes a Node instance.
 
@@ -25,14 +31,33 @@ class Node:
             name (str): A unique identifier for the node.
             elevation (float, optional): The elevation of the node in meters.
                                          Used in pressure calculations. Defaults to 0.0.
+            demand (Optional[VolumetricFlowRate], optional): The flow that
+                leaves the network at this node (an outlet or an offtake).
+                The engine splits the flow of a network built with `add_edge`
+                by mass balance at its nodes; an outlet without a demand
+                takes what the demands leave, at a pressure shared with the
+                other outlets without one. Defaults to None.
+
+        Raises:
+            TypeError: If `demand` is not a VolumetricFlowRate.
         """
+        if demand is not None and not isinstance(demand, VolumetricFlowRate):
+            raise TypeError(
+                f"Node demand must be a VolumetricFlowRate, got {demand!r}"
+            )
         self.name: str = name
         self.elevation: float = elevation
+        self.demand: Optional[VolumetricFlowRate] = demand
         self.pressure: Optional[Pressure] = None
         self.flow_rate: Optional[VolumetricFlowRate] = None
         self.connected_components: List[Any] = []
 
     def __repr__(self):
+        if self.demand is not None:
+            return (
+                f"Node(name='{self.name}', elevation={self.elevation} m, "
+                f"demand={self.demand})"
+            )
         return f"Node(name='{self.name}', elevation={self.elevation} m)"
 
 
@@ -169,13 +194,20 @@ class PipelineNetwork:
         return self
 
     # ---------------- Node & Edge Management (Graph-based construction) ------
-    def add_node(self, name: str, elevation: float = 0.0) -> Node:
+    def add_node(
+        self,
+        name: str,
+        elevation: float = 0.0,
+        demand: Optional[VolumetricFlowRate] = None,
+    ) -> Node:
         """
         Adds a new node (junction) to the network's internal node dictionary.
 
         Args:
             name (str): The unique name of the node.
             elevation (float, optional): The elevation in meters. Defaults to 0.0.
+            demand (Optional[VolumetricFlowRate], optional): The flow that
+                leaves the network at this node; see `Node`. Defaults to None.
 
         Returns:
             Node: The newly created Node object.
@@ -186,7 +218,7 @@ class PipelineNetwork:
         if name in self.nodes:
             raise ValueError(f"Node '{name}' already exists in the network.")
             
-        node = Node(name, elevation)
+        node = Node(name, elevation, demand)
         self.nodes[name] = node
         return node
 
@@ -215,6 +247,11 @@ class PipelineNetwork:
         This method strictly links components that have a defined inlet and outlet
         to the network's nodes. It also automatically adds the component to the
         network's `elements` list.
+
+        `PipelineEngine` solves a network built this way as a graph: the
+        direction start to end is the direction of positive flow, the flow
+        enters at the one node no edge enters, and leaves at node demands and
+        at the nodes no edge leaves.
 
         Args:
             component (Union[Pipe, Pump, Vessel, Equipment]): The component to connect.
