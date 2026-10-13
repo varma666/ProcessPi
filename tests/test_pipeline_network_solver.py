@@ -56,7 +56,7 @@ def test_single_pipe_total_does_not_double_count_minor_losses():
     """`pressure_drop` already holds major + minor + elevation."""
     engine = _engine(
         flowrate=VolumetricFlowRate(50, "m3/h"),
-        diameter=Diameter(102.3, "mm"),
+        internal_diameter=Diameter(102.3, "mm"),
         length=Length(100, "m"),
         fittings=[Fitting("standard_elbow_90_deg", quantity=4)],
     )

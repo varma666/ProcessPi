@@ -58,16 +58,16 @@ chiller = Equipment("Chiller", pressure_drop=0.2)
 
 # ---------------- Build Network ----------------
 # Tank → Pump
-net.add_edge(Pipe("TankPipe", length=5), "Tank", "Pump_In")
+net.add_edge(Pipe("TankPipe", length=Length(5, "m")), "Tank", "Pump_In")
 net.add_edge(pump, "Pump_In", "Pump_Out")
 
 # Pump → Main header
-net.add_edge(Pipe("MainPipe", length=15), "Pump_Out", "Main_In")
-net.add_edge(Pipe("MainPipe_Out", length=5), "Main_In", "Main_Out")
+net.add_edge(Pipe("MainPipe", length=Length(15, "m")), "Pump_Out", "Main_In")
+net.add_edge(Pipe("MainPipe_Out", length=Length(5, "m")), "Main_In", "Main_Out")
 
 # Branch inlets
 for b in range(1, 6):
-    net.add_edge(Pipe(f"MainToBranch_{b}", length=3), "Main_Out", f"Branch_{b}_In")
+    net.add_edge(Pipe(f"MainToBranch_{b}", length=Length(3, "m")), "Main_Out", f"Branch_{b}_In")
 
 # ---------------- AHU pipes (fixed diameters) ----------------
 ahu_diameters = [Diameter(3, "in"), Diameter(4, "in"), Diameter(4, "in"),
@@ -84,7 +84,7 @@ for b in range(1, 6):
         eq_out = f"AHU_{b}_{a}_EqOut"
 
         # Pipe
-        net.add_edge(Pipe(f"AHUPipe_{b}_{a}", nominal_diameter=dia, length=5), in_node, pipe_out)
+        net.add_edge(Pipe(f"AHUPipe_{b}_{a}", nominal_diameter=dia, length=Length(5, "m")), in_node, pipe_out)
 
         # AHU equipment
         pd = 0.05 + 0.01 * (ahu_flows[(a - 1) % len(ahu_flows)].to("m3/h").value / 10)
@@ -93,11 +93,11 @@ for b in range(1, 6):
 # Branch returns
 for b in range(1, 6):
     last_ahu_out = f"AHU_{b}_5_EqOut"
-    net.add_edge(Pipe(f"BranchReturnPipe_{b}", length=5), last_ahu_out, f"Return_{b}")
+    net.add_edge(Pipe(f"BranchReturnPipe_{b}", length=Length(5, "m")), last_ahu_out, f"Return_{b}")
 
 # Returns → Tank
 for b in range(1, 6):
-    net.add_edge(Pipe(f"ReturnPipe_{b}", length=10), f"Return_{b}", "Return_Tank")
+    net.add_edge(Pipe(f"ReturnPipe_{b}", length=Length(10, "m")), f"Return_{b}", "Return_Tank")
 
 # Expansion vessel & chiller
 net.add_edge(vessel, "Main_Out", "Return_Tank")

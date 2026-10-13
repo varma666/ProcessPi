@@ -402,8 +402,8 @@ for node_name in ["A", "B", "C", "D", "E", "F", "G", "H"]:
 
 # ---------------- Step 2: Create pipes, pumps, fittings, vessel, equipment ----------------
 # Series pipes
-pipe1 = Pipe(name="Pipe1", nominal_diameter=100, length=10)
-pipe2 = Pipe(name="Pipe2", nominal_diameter=150, length=15)
+pipe1 = Pipe(name="Pipe1", nominal_diameter=Diameter(100, "mm"), length=Length(10, "m"))
+pipe2 = Pipe(name="Pipe2", nominal_diameter=Diameter(150, "mm"), length=Length(15, "m"))
 pump1 = Pump(name="Pump1", pump_type="Centrifugal", head=20)
 
 # Fittings with K-factor
@@ -411,15 +411,15 @@ elbow1 = Fitting(fitting_type="Elbow", diameter=Diameter(100, "mm"))
 tee1 = Fitting(fitting_type="Tee", diameter=Diameter(150, "mm"))
 
 # Parallel branch components
-pipe_branch1 = Pipe(name="PipeBranch1", nominal_diameter=80, length=5)
+pipe_branch1 = Pipe(name="PipeBranch1", nominal_diameter=Diameter(80, "mm"), length=Length(5, "m"))
 vessel1 = Vessel(name="Separator1")
 
-pipe_branch2 = Pipe(name="PipeBranch2", nominal_diameter=120, length=8)
+pipe_branch2 = Pipe(name="PipeBranch2", nominal_diameter=Diameter(125, "mm"), length=Length(8, "m"))
 equipment1 = Equipment(name="HeatExchanger", pressure_drop=0.5)
 
 # Final pipes to outputs
-pipe_EG = Pipe(name="PipeEG", nominal_diameter=100, length=12)
-pipe_FH = Pipe(name="PipeFH", nominal_diameter=100, length=12)
+pipe_EG = Pipe(name="PipeEG", nominal_diameter=Diameter(100, "mm"), length=Length(12, "m"))
+pipe_FH = Pipe(name="PipeFH", nominal_diameter=Diameter(100, "mm"), length=Length(12, "m"))
 
 # ---------------- Step 3: Connect series pipes ----------------
 main_net.add_edge(pipe1, "A", "B")
@@ -569,16 +569,16 @@ chiller = Equipment("Chiller", pressure_drop=0.2)
 
 # ---------------- Build Network ----------------
 # Tank → Pump (auto diameter)
-net.add_edge(Pipe("TankPipe", length=5), "Tank", "Pump_In")
+net.add_edge(Pipe("TankPipe", length=Length(5, "m")), "Tank", "Pump_In")
 net.add_edge(pump, "Pump_In", "Pump_Out")
 
 # Pump → Main header (auto diameter)
-net.add_edge(Pipe("MainPipe", length=15), "Pump_Out", "Main_In")
-net.add_edge(Pipe("MainPipe_Out", length=5), "Main_In", "Main_Out")
+net.add_edge(Pipe("MainPipe", length=Length(15, "m")), "Pump_Out", "Main_In")
+net.add_edge(Pipe("MainPipe_Out", length=Length(5, "m")), "Main_In", "Main_Out")
 
 # Branch inlets (auto diameter)
 for b in range(1, 6):
-    net.add_edge(Pipe(f"MainToBranch_{b}", length=3), "Main_Out", f"Branch_{b}_In")
+    net.add_edge(Pipe(f"MainToBranch_{b}", length=Length(3, "m")), "Main_Out", f"Branch_{b}_In")
 
 # ---------------- AHU pipes (fixed diameters) ----------------
 # Assume varying sizes and flow rates for diversity
@@ -593,7 +593,7 @@ for b in range(1, 6):
         eq_out = f"AHU_{b}_{a}_EqOut"
 
         # Fixed AHU pipe diameter
-        net.add_edge(Pipe(f"AHUPipe_{b}_{a}", nominal_diameter=dia, length=5), in_node, pipe_out)
+        net.add_edge(Pipe(f"AHUPipe_{b}_{a}", nominal_diameter=dia, length=Length(5, "m")), in_node, pipe_out)
 
         # AHU equipment pressure drop (varied slightly with flow)
         pd = 0.05 + 0.01 * (ahu_flows[(a - 1) % len(ahu_flows)].to('m3/h').value / 10)
@@ -602,11 +602,11 @@ for b in range(1, 6):
 # Branch returns (auto diameter)
 for b in range(1, 6):
     last_ahu_out = f"AHU_{b}_5_EqOut"
-    net.add_edge(Pipe(f"BranchReturnPipe_{b}", length=5), last_ahu_out, f"Return_{b}")
+    net.add_edge(Pipe(f"BranchReturnPipe_{b}", length=Length(5, "m")), last_ahu_out, f"Return_{b}")
 
 # Returns → Tank (auto diameter)
 for b in range(1, 6):
-    net.add_edge(Pipe(f"ReturnPipe_{b}", length=10), f"Return_{b}", "Return_Tank")
+    net.add_edge(Pipe(f"ReturnPipe_{b}", length=Length(10, "m")), f"Return_{b}", "Return_Tank")
 
 # Optional expansion vessel and chiller (auto diameter)
 net.add_edge(vessel, "Main_Out", "Return_Tank")

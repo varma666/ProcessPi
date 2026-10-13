@@ -217,7 +217,7 @@ def test_sizing_and_run_agree_and_use_the_higher_loss():
     assert s["total_pressure_drop_Pa"] == pytest.approx(22992.2, rel=1e-4)
     assert [x["fitting_method"] for x in comp["fitting_losses"]] == ["K", "K"]
 
-    ran = _quiet(_engine(diameter=Diameter(s["calculated_diameter_m"], "m"),
+    ran = _quiet(_engine(internal_diameter=Diameter(s["calculated_diameter_m"], "m"),
                          fittings=_sizing_fittings()).run)
     r = ran.results
     assert r["summary"]["total_pressure_drop_Pa"] == pytest.approx(
@@ -246,7 +246,7 @@ def test_series_network_total_includes_the_higher_losses():
     assert res["summary"]["total_pressure_drop_Pa"] == pytest.approx(total, rel=1e-9)
 
     # Single-pipe run of P1 alone gives the same element drop.
-    single = _quiet(_engine(diameter=Diameter(D_4IN_STD, "m"),
+    single = _quiet(_engine(internal_diameter=Diameter(D_4IN_STD, "m"),
                             fittings=[Fitting("standard_elbow_90_deg", quantity=4)]).run)
     assert single.results["summary"]["total_pressure_drop_Pa"] == pytest.approx(
         comps["P1"]["total_dp"].to("Pa").value, rel=1e-6)

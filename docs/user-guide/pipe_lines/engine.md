@@ -11,7 +11,7 @@ It performs **component-wise and network-wide calculations**, including **pressu
 Configures the `PipelineEngine` instance by processing input parameters, converting units, normalizing keys, and setting default values.
 
 **Parameters**  
-- `**kwargs`: Keyword arguments representing pipeline properties (`flowrate`, `diameter`, `velocity`, `length`) and solver configuration (`method`, `solver`).
+- `**kwargs`: Keyword arguments representing pipeline properties (`flowrate`, `nominal_diameter`, `internal_diameter`, `schedule`, `velocity`, `length`) and solver configuration (`method`, `solver`).
 
 **Functionality**
 - **Data Initialization:** Stores inputs in `data` dictionary.  
@@ -22,20 +22,37 @@ Configures the `PipelineEngine` instance by processing input parameters, convert
 | `flowrate`       | `flow_rate`, `q`, `Q`, `flowrate`               |
 | `mass_flowrate`  | `mass_flow`, `m_dot`, `mdot`                    |
 | `velocity`       | `v`                                             |
-| `diameter`       | `dia`, `D`, `nominal_diameter`, `internal_diameter` |
+| `internal_diameter` | `diameter`, `dia`, `D` (deprecated, see below) |
 | `length`         | `len`, `L`                                      |
 | `inlet_pressure` | `in_pressure`, `pin`, `p_in`                    |
 | `outlet_pressure`| `out_pressure`, `pout`, `p_out`                 |
 
+- **Pipe size:** `nominal_diameter` and `internal_diameter` are separate inputs:
+  - `nominal_diameter` is the pipe size, an NPS (`Diameter(4, "in")`) or a DN in millimetres (`Diameter(100, "mm")`, which is NPS 4). The internal diameter is looked up for `schedule` (default `"STD"`) in the ASME B36.10M / B36.19M table: NPS 4 STD is 102.26 mm.
+  - `internal_diameter` is the bore, used as given.
+  - Given both, the internal diameter is used (a lined pipe, a wall the table does not list) and must be smaller than the nominal size's outside diameter, otherwise `ValueError`.
+  - A `nominal_diameter` that is not a standard size cannot be looked up; it is used as the internal diameter, with a `UserWarning`.
+  - `diameter` (and `dia`, `D`) is the internal diameter, as before, with a `DeprecationWarning`. Until this change `nominal_diameter` was an alias of it, so a nominal 4 in was used as a 101.6 mm bore.
+- **Bare numbers:** a diameter given as a plain number is read in millimetres (metres with `assume_mm_for_numbers=False`), a length in metres, as before, each with a `UserWarning` naming the unit. Pass `Diameter` and `Length` objects to avoid both.
 - **Default Values:** Applies defaults for `assume_mm_for_numbers`, `flow_split`, `tolerance_m3s`, `pump_efficiency`, `method`, `hw_coefficient`, and `solver`.  
 - **Network Validation:** Validates that `network` is a `PipelineNetwork` instance.  
-- **Attribute Binding:** Binds normalized parameters (`flowrate`, `mass_flowrate`, `velocity`, `diameter`) as instance attributes.
+- **Attribute Binding:** Binds normalized parameters (`flowrate`, `mass_flowrate`, `velocity`, `nominal_diameter`, `internal_diameter`, and `diameter`, the same bore) as instance attributes.
 
 **Returns**  
 - `PipelineEngine`: Configured instance for method chaining.
 
 **Raises**  
 - `TypeError`: If `network` is not a `PipelineNetwork`.
+- `ValueError`: If the diameter inputs contradict each other, or `schedule` is not tabulated for the nominal size.
+
+```python
+model.fit(fluid=Water(), flowrate=VolumetricFlowRate(50, "m3/h"), length=Length(100, "m"),
+          nominal_diameter=Diameter(4, "in"), schedule="40")   # bore 102.26 mm
+model.fit(fluid=Water(), flowrate=VolumetricFlowRate(50, "m3/h"), length=Length(100, "m"),
+          internal_diameter=Diameter(102.26, "mm"))             # the same bore, given directly
+```
+
+The results report both: `summary["nominal_diameter"]` and the component `nominal_diameter` (None when only a bore was given), `summary["calculated_diameter_m"]` and the component `diameter` (the bore used).
 
 ---
 
@@ -114,7 +131,7 @@ These private helper methods are used internally by the `PipelineEngine` class t
 **`_resolve_internal_diameter`**
 Determines the internal diameter of a pipe using a priority order:
 1. `pipe.internal_diameter` (explicitly defined)  
-2. `pipe.nominal_diameter` (nominal size)  
+2. `pipe.nominal_diameter`, looked up with `pipe.schedule` in the schedule table (a size that is not tabulated is used as the bore, with a `UserWarning`)  
 3. `engine.diameter` (default from `fit`)  
 4. **Fallback:** Calculates hydraulically optimum diameter  
 

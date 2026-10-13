@@ -375,9 +375,18 @@ class PipelineNetwork:
             
         for element in self.elements:
             if isinstance(element, Pipe):
+                # Nominal size and bore apart; this printed the nominal size
+                # followed by "mm" whatever its unit ("4 in mm").
+                nominal = getattr(element, "nominal_diameter", None)
+                bore = getattr(element, "internal_diameter", None)
+                size = []
+                if nominal is not None:
+                    size.append(f"nominal {nominal}")
+                if isinstance(bore, Diameter):
+                    size.append(f"ID {bore.to('mm'):.2f}")
                 desc += (
-                    f"{indent}    Pipe: {getattr(element, 'nominal_diameter', 'NA')} mm, "
-                    f"L={getattr(element, 'length', 'NA')} m, "
+                    f"{indent}    Pipe: {', '.join(size) or 'diameter to be sized'}, "
+                    f"L={getattr(element, 'length', 'NA')}, "
                     f"from {element.start_node.name} → {element.end_node.name}\n"
                 )
             elif isinstance(element, Pump):

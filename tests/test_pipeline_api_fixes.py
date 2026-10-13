@@ -28,7 +28,7 @@ Q = VolumetricFlowRate(50, "m3/h")
 
 def _summary(**specs):
     engine = PipelineEngine().fit(fluid=Water(), flowrate=Q, length=Length(100, "m"),
-                                  diameter=Diameter(0.10226, "m"), **specs)
+                                  internal_diameter=Diameter(0.10226, "m"), **specs)
     with contextlib.redirect_stdout(io.StringIO()):
         return engine.run().results["summary"]
 

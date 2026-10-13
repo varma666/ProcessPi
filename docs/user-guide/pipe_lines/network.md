@@ -90,6 +90,7 @@ MainNet [series]
 ```python
 from processpi.pipelines.network import PipelineNetwork, Node
 from processpi.pipelines.pipes import Pipe
+from processpi.units import Diameter, Length
 
 # Create nodes
 net = PipelineNetwork("MainNet")
@@ -97,7 +98,7 @@ net.add_node("A", elevation=0.0)
 net.add_node("B", elevation=5.0)
 
 # Add a pipe between nodes
-pipe = Pipe(diameter="100 mm", length=20)
+pipe = Pipe("P1", nominal_diameter=Diameter(4, "in"), length=Length(20, "m"))
 net.add_edge(pipe, "A", "B")
 
 # Validate
