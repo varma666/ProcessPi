@@ -156,7 +156,7 @@ Heat Exchanger Summary
 Type                  : condenser
 Type Selection        : explicit
 Method                : bell_delaware
-Heat Duty             : 0.000 kW
+Heat Duty             : 5012.192 kW
 Area                  : 111.784 m2
 U Calculated          : 737.638 W/m2K
 U Basis               : assumed
@@ -178,7 +178,7 @@ Shell ΔP Actual      : 40.319 kPa
 Engineering Feasibility
 ------------------------------
 Thermal Performance  : PASS
-Hydraulic Performance: PASS
+Hydraulic Performance: FAIL
 Pressure Drop        : FAIL
 
 Engineering Insights
@@ -195,6 +195,7 @@ Warnings
 • [GEOMETRY_WARNING] Bundle diameter uses Sinnott Table 12.4, which is for a pitch of 1.25 do; the pitch here is 1.417 do
 • [ASSUMPTION_WARNING] Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the shell side: no hot_wall_viscosity given
 • [ASSUMPTION_WARNING] Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the tube side: no cold_wall_viscosity given
+• Tube velocity high (2.27 m/s)
 ```
 
 ---
@@ -234,7 +235,7 @@ During the evaluation, ProcessPI calculates:
 | Service | Total Condenser |
 | Mode | Rating |
 | Method | Bell–Delaware |
-| Heat Duty | 0.000 kW (as printed; see the note below) |
+| Heat Duty | 5012.19 kW |
 | Heat Transfer Area | 111.78 m² |
 | Overall U (Calculated) | 737.64 W/m²·K |
 | Tube Count | 766 |
@@ -245,18 +246,18 @@ During the evaluation, ProcessPI calculates:
 | Shell Pressure Drop | 40.319 kPa |
 | Status | **PRESSURE_DROP_FAILURE** |
 
-Note: rating mode currently returns a heat duty of 0 kW for this case, because it rates the vapor as a sensible cooler with no temperature change instead of as a condensing stream. The cooling-water flow (107.0 kg/s) is calculated from the latent duty before rating, so it is right, but with a 0 kW duty the required area is 0 m², and the thermal check below is passed by default.
+The heat duty is the latent duty of the condensing vapor, m·λ = 7.560 kg/s × 663 kJ/kg = 5012.2 kW. The cooling-water flow (107.0 kg/s) is calculated from the same duty, so the water takes it from 29.4 to 40.6°C. At the assumed U of 568 W/m²·K and the condensing LMTD of 82.87 K, the duty needs 106.5 m² of the 111.8 m² installed.
 
 ---
 
 ## Engineering Assessment
 
-The thermal check passes (by default, see the note above), and the hydraulic evaluation shows that both pressure drops exceed their limits:
+The thermal check passes, with the 111.8 m² installed against the 106.5 m² the duty needs. The hydraulic evaluation shows that both pressure drops exceed their limits:
 
 - Tube side: 69.98 kPa against a 10 psi (68.95 kPa) limit
 - Shell side: 40.32 kPa against a 2 psi (13.79 kPa) limit
 
-The engine also flags the shell-side vapor velocity as high. Because of the pressure-drop limits, the exchanger status is reported as **PRESSURE_DROP_FAILURE**.
+The engine also flags both velocities: the shell-side vapor velocity as high, and the 2.27 m/s cooling-water velocity as above the 2.0 m/s the condenser service allows in the tubes, so the hydraulic check fails as well. The pressure-drop failure ranks first, and the exchanger status is reported as **PRESSURE_DROP_FAILURE**.
 
 This demonstrates one of the strengths of the ProcessPI HeatExchangerEngine—it evaluates **both thermal and hydraulic performance**, rather than relying solely on heat duty calculations.
 

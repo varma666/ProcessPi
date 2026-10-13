@@ -119,6 +119,11 @@ class ShellAndTubeHX(HeatExchanger):
     # scoring, or None to let the scoring (or force_hot_in_tubes /
     # force_cold_in_tubes) decide. The phase-change subclasses pin it.
     _FIXED_TUBE_SIDE: str | None = None
+    # The phase-change service the exchanger class itself stands for
+    # ("condenser", "evaporator", "reboiler"), or None. rate() reads it when
+    # no `service` spec is given; `service_type` cannot carry it, since design()
+    # and rate() overwrite that with the service of the run.
+    _PHASE_CHANGE_SERVICE: str | None = None
 
     def __init__(self, *args: Any, method: str = "kern", **kwargs: Any):
         self.method = method.lower()
@@ -3121,8 +3126,25 @@ class ShellAndTubeHX(HeatExchanger):
         if explicit:
             return explicit
 
-        # A vapor inlet does not by itself prove condensation/boiling. In
-        # rating mode, absent an explicit phase-change service, default to
+        # A condenser, evaporator or reboiler is rated as one. Rated as a
+        # sensible cooler, a condensing stream in and out at the same
+        # temperature gave a zero duty, a zero required area and a thermal PASS.
+        if self._PHASE_CHANGE_SERVICE is not None:
+            return self._PHASE_CHANGE_SERVICE
+
+        # A vapor inlet does not by itself prove condensation/boiling, but a
+        # vapor inlet with a liquid outlet does (and a liquid inlet with a
+        # vapor outlet on the cold side), as the engine reads the phases when
+        # it picks a condenser or a reboiler.
+        vapor_phases = {"vapor", "vapour", "gas", "steam"}
+        hot_out_phase = self._get_stream_outlet_phase("hot", hot["phase"])
+        cold_out_phase = self._get_stream_outlet_phase("cold", cold["phase"])
+        if hot["phase"] in vapor_phases and hot_out_phase == "liquid":
+            return "condenser"
+        if cold["phase"] == "liquid" and cold_out_phase in vapor_phases:
+            return "reboiler"
+
+        # Otherwise, absent an explicit phase-change service, default to
         # sensible heating/cooling and choose the U category from stream phase.
         hot_category = self._assumed_u_fluid_type("hot", hot)
         cold_category = self._assumed_u_fluid_type("cold", cold)
@@ -3195,8 +3217,15 @@ class ShellAndTubeHX(HeatExchanger):
 
         condenser_services = {"condenser", "total_condenser", "partial_condenser"}
         reboiler_services = {"reboiler", "kettle_reboiler", "thermosyphon_reboiler", "evaporator"}
+        phase_change = service in condenser_services or service in reboiler_services
 
-        if service in condenser_services:
+        if phase_change and self._PHASE_CHANGE_SERVICE is not None:
+            # The phase-change exchangers compute their latent duty in
+            # `_calculate_heat_duty`, the duty design() sizes on: the condensed
+            # fraction of a partial condenser, the boiling side of an evaporator
+            # and its heating-side capacity check. Rating uses the same duty.
+            q_actual, _, _ = self._calculate_heat_duty(hot, cold)
+        elif service in condenser_services:
             latent_heat = self.specs.get("latent_heat")
             if latent_heat is None:
                 raise ValueError("Condenser service requires latent_heat in specs (J/kg)")
@@ -3213,6 +3242,32 @@ class ShellAndTubeHX(HeatExchanger):
             q_cold = cold["m_dot"] * cold["cp"] * max(tc_out - cold["t_k"], 0.0)
             q_actual = min(max(q_hot, 0.0), max(q_cold, 0.0))
 
+        if not q_actual > 0.0:
+            # A zero duty needs a zero area, which every exchanger passes.
+            raise ValueError(
+                f"rate() found no heat duty ({q_actual:.6g} W) for {service} service: "
+                f"hot {hot['t_k']:.2f} K -> {th_out:.2f} K, cold {cold['t_k']:.2f} K -> "
+                f"{tc_out:.2f} K. A stream that condenses or boils at constant "
+                "temperature has no sensible duty; rate it as a condenser, reboiler "
+                "or evaporator (hx_type, or the service spec, with latent_heat)"
+            )
+
+        if phase_change:
+            # The latent duty is the rated duty and the other stream's specified
+            # outlet sets the LMTD; say when the two disagree.
+            sensible_side = "cold" if self._latent_side_for_energy_balance() == "hot" else "hot"
+            props, t_out = (cold, tc_out) if sensible_side == "cold" else (hot, th_out)
+            sign = 1.0 if sensible_side == "cold" else -1.0
+            t_balance = props["t_k"] + sign * q_actual / max(props["m_dot"] * props["cp"], 1e-12)
+            if abs(t_balance - t_out) > 0.5:
+                self._warn_with_category(
+                    "BALANCE_WARNING",
+                    f"The rated latent duty {q_actual / 1000.0:.3f} kW puts the "
+                    f"{sensible_side} outlet at {t_balance:.2f} K by the energy "
+                    f"balance; the specified {sensible_side} outlet "
+                    f"{t_out:.2f} K was used for the LMTD",
+                )
+
         lmtd = self._calculate_service_lmtd(service, hot, cold, th_out, tc_out)
 
         # The same LMTD correction design() applies. The LMTD above is the
@@ -3220,7 +3275,7 @@ class ShellAndTubeHX(HeatExchanger):
         # counter-current and needs F (Bowman, Mueller and Nagle 1940).
         tube_passes = int(self.specs.get("tube_passes", 2))
         shell_passes = int(self.specs.get("shell_passes", 1))
-        if service in condenser_services or service in reboiler_services:
+        if phase_change:
             # One stream at constant temperature: F = 1 for any pass arrangement.
             ft = 1.0
         elif shell_passes == 1 and tube_passes == 1:

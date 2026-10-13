@@ -30,6 +30,7 @@ class EvaporatorHX(ShellAndTubeHX):
     # Evaporator/reboiler configuration historically keeps the heating
     # stream in the tubes and the boiling stream on the shell.
     _FIXED_TUBE_SIDE = "hot"
+    _PHASE_CHANGE_SERVICE = "evaporator"
 
     def __init__(
         self,
