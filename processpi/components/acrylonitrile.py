@@ -49,4 +49,5 @@ class Acrylonitrile(Component):
     _viscosity_constants = [2.019, 239.7, -1.8975,0,0]
     _thermal_conductivity_constants = [0.28941, -0.00041691,0,0,0]
     _vapor_pressure_constants = [87.604,-6392.70,-10.101,1.09e-5,2]
-    _enthalpy_constants = [4.155, 0.2733,0,0,0]
+    # Perry's 8th ed., Table 2-150, p. 2-150 prints C1 x 1E-07 = 4.155 (J/kmol).
+    _enthalpy_constants = [4.155E7, 0.2733,0,0,0]

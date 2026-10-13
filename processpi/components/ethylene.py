@@ -1,7 +1,9 @@
+import warnings
+
 from .base import Component
 from processpi.units import *
-class Ethlylene(Component):
-    name = "Ethlylene"
+class Ethylene(Component):
+    name = "Ethylene"
     formula = "C2H4"
     molecular_weight = 28.053
     _critical_temperature = Temperature(282.34, "K")
@@ -15,3 +17,15 @@ class Ethlylene(Component):
     _thermal_conductivity_constants = [0.4194,-0.001591,0.000001306,0,0]
     _vapor_pressure_constants = [53.963,-2443,-5.5643,0.000019079,2] 
     _enthalpy_constants = [1.8844E-7,0.36485, 0,0, 0]  # Placeholder for enthalpy constants
+
+
+class Ethlylene(Ethylene):
+    """Misspelt old name of `Ethylene`, kept so existing code still runs."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "Ethlylene is deprecated; use Ethylene.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)

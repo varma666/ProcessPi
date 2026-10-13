@@ -12,6 +12,7 @@ from processpi.units import * # Import all unit classes
 # Import all calculation classes for the registry. This makes them available to the engine.
 from processpi.calculations.fluids.velocity import FluidVelocity
 from processpi.calculations.fluids.reynolds_number import ReynoldsNumber
+from processpi.calculations.fluids.flow_type import TypeOfFlow
 from processpi.calculations.fluids.friction_factor_colebrookwhite import ColebrookWhite
 from processpi.calculations.fluids.pressure_drop_darcy import PressureDropDarcy
 from processpi.calculations.fluids.pressure_drop_fanning import PressureDropFanning
@@ -60,6 +61,9 @@ class CalculationEngine:
             "reynolds_number": ReynoldsNumber,
             "re": ReynoldsNumber,
             "reynoldsnumber": ReynoldsNumber,
+            "type_of_flow": TypeOfFlow,
+            "flow_type": TypeOfFlow,
+            "flow_regime": TypeOfFlow,
             "colebrook_white": ColebrookWhite,
             "friction_factor_colebrookwhite": ColebrookWhite,
             "friction_factor": ColebrookWhite,

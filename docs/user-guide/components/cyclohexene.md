@@ -1,19 +1,19 @@
-# **Class: `Cyclohexane`**
+# **Class: `Cyclohexene`**
 
 ## **Description**
 
-The `Cyclohexane` class represents the properties and constants for Cyclohexane (C₆H₁₂).  
+The `Cyclohexene` class represents the properties and constants for Cyclohexene (C₆H₁₀).  
 It provides physical and thermodynamic properties required in process engineering simulations and calculations.
 
 ## **Properties**
 
-* **`name`** (string): Cyclohexane  
-* **`formula`** (string): C₆H₁₂  
-* **`molecular_weight`** (float): 84.16 g/mol  
+* **`name`** (string): Cyclohexene  
+* **`formula`** (string): C₆H₁₀  
+* **`molecular_weight`** (float): 82.14 g/mol  
 
 ## **Class Reference**
 
-**`class Cyclohexane()`**
+**`class Cyclohexene()`**
 
 **Parameters:**  
 * `temperature`: `Temperature`, default = `Temperature(25,"C")`  
@@ -27,7 +27,7 @@ It provides physical and thermodynamic properties required in process engineerin
 
 ## **Methods**
 
-The properties of the `Cyclohexane` class are calculated using the following methods, inherited from the base `Component` class.
+The properties of the `Cyclohexene` class are calculated using the following methods, inherited from the base `Component` class.
 
 * **`phase()`**: Detects the phase of the substance (`"liquid"` or `"gas"`) by comparing the system temperature and vapor pressure.  
 * **`density()`**:  
@@ -44,14 +44,14 @@ The properties of the `Cyclohexane` class are calculated using the following met
 ## **Examples**
 
 ```py
-from processpi.components import Cyclohexane
+from processpi.components import Cyclohexene
 from processpi.units import *
 
-c6h12 = Cyclohexane(temperature=Temperature(25, "C"))
-print(c6h12.density().to("kg/m3"))
-print(c6h12.viscosity().to("Pa·s"))
-print(c6h12.specific_heat().to("J/kgK"))
-print(c6h12.thermal_conductivity().to("W/mK"))
-print(c6h12.vapor_pressure().to("Pa"))
-print(c6h12.enthalpy().to("J/kg"))
+c6h10 = Cyclohexene(temperature=Temperature(25, "C"))
+print(c6h10.density().to("kg/m3"))
+print(c6h10.viscosity().to("Pa·s"))
+print(c6h10.specific_heat().to("J/kgK"))
+print(c6h10.thermal_conductivity().to("W/mK"))
+print(c6h10.vapor_pressure().to("Pa"))
+print(c6h10.enthalpy().to("J/kg"))
 ```

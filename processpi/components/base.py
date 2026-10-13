@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from math import exp, log
+from math import cosh, exp, log, sinh
 from processpi.units import (
     Temperature, Pressure, Density, SpecificHeat, Viscosity,
     ThermalConductivity, HeatOfVaporization
@@ -32,6 +32,9 @@ class Component(ABC):
     """
     Abstract base class for a chemical component with DIPPR-style property methods.
     """
+
+    # Phase reported when none is given, instead of the vapour-pressure test.
+    _default_phase = None
 
     def __init__(
         self,
@@ -100,6 +103,12 @@ class Component(ABC):
         forced = getattr(self, "_phase", None)
         if forced:
             return "gas" if str(forced).lower() in {"gas", "vapor", "vapour", "steam"} else "liquid"
+        # A placeholder that stands for a gas or a vapour (Gas, Vapor) is one
+        # unless a phase is given. Its vapour-pressure constants are not data
+        # for any substance (Vapor's give 0.05 Pa at 100 C), so the test below
+        # called it a liquid and took the liquid density correlation.
+        if self._default_phase:
+            return self._default_phase
         P = self.pressure.to("Pa").value
         Pvap = self.vapor_pressure().to("Pa").value
         return "gas" if P < Pvap else "liquid"
@@ -141,6 +150,11 @@ class Component(ABC):
     def specific_heat(self) -> SpecificHeat:
         if self._specific_heat is not None:
             return self._specific_heat
+
+        # Gas phase: ideal-gas Cp, when the component gives those constants.
+        cp_gas = self._ideal_gas_specific_heat()
+        if cp_gas is not None:
+            return cp_gas
     
         # ✅ Always use Kelvin
         T = self.temperature.to("K").value
@@ -158,6 +172,27 @@ class Component(ABC):
             raise ValueError(f"Unphysical Cp detected: {cp_kg} J/kgK")
     
         return SpecificHeat(cp_kg, "J/kgK")
+
+    def _ideal_gas_specific_heat(self):
+        """
+        Ideal-gas Cp from DIPPR Eq. 107 (Aly-Lee), used in the gas phase when
+        the component defines `_ideal_gas_heat_capacity_constants`:
+
+            Cp = C1 + C2*[(C3/T)/sinh(C3/T)]^2 + C4*[(C5/T)/cosh(C5/T)]^2
+
+        Cp in J/(kmol K), T in K. This is the form of Perry's Chemical
+        Engineers' Handbook, 8th ed., Table 2-156. `_specific_heat_constants`
+        hold the liquid polynomial (Table 2-153), which is only valid between
+        the liquid Tmin and Tmax. Returns None when the correlation does not
+        apply, so the caller falls back to the liquid polynomial.
+        """
+        constants = getattr(self, "_ideal_gas_heat_capacity_constants", None)
+        if not constants or self.phase.value != "gas":
+            return None
+        T = self.temperature.to("K").value
+        C1, C2, C3, C4, C5 = constants
+        cp_kmol = C1 + C2 * ((C3 / T) / sinh(C3 / T)) ** 2 + C4 * ((C5 / T) / cosh(C5 / T)) ** 2
+        return SpecificHeat(cp_kmol / self.molecular_weight, "J/kgK")
 
 
     # ----------------------------------------------------------------------
@@ -199,6 +234,19 @@ class Component(ABC):
     def thermal_conductivity(self) -> ThermalConductivity:
         if self._thermal_conductivity is not None:
             return self._thermal_conductivity
+
+        # Gas phase: DIPPR Eq. 102, when the component gives those constants
+        # (Perry's 8th ed., Table 2-314):
+        #     k = C1 * T^C2 / (1 + C3/T + C4/T^2), k in W/(m K), T in K.
+        # `_thermal_conductivity_constants` hold the liquid polynomial
+        # (Table 2-315), which is only valid between the liquid Tmin and Tmax.
+        constants = getattr(self, "_vapor_thermal_conductivity_constants", None)
+        if constants and self.phase.value == "gas":
+            T = self.temperature.to("K").value
+            C1, C2, C3, C4 = constants
+            k = C1 * T ** C2 / (1 + C3 / T + C4 / T ** 2)
+            return ThermalConductivity(k, "W/mK")
+
         T = self.temperature.value
         k = sum(c * (T ** i) for i, c in enumerate(self._thermal_conductivity_constants))
         return ThermalConductivity(k, "W/mK")

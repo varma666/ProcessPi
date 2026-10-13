@@ -111,6 +111,7 @@ print(velocity)
 |--------------|-------|
 | `fluid_velocity`, `velocity`, `v`, `volumetric_flow_rate` | `FluidVelocity` |
 | `nre`, `reynolds_number`, `re`, `reynoldsnumber` | `ReynoldsNumber` |
+| `type_of_flow`, `flow_type`, `flow_regime` | `TypeOfFlow` |
 | `colebrook_white`, `friction_factor_colebrookwhite`, `friction_factor`, `ff` | `ColebrookWhite` |
 | `pressure_drop_darcy`, `pd`, `pressure_drop` | `PressureDropDarcy` |
 | `pressure_drop_fanning` | `PressureDropFanning` |

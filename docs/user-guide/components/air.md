@@ -33,10 +33,14 @@ The properties of the `Air` class are calculated using the following methods, wh
 * **`density()`**:  
     * **Gas Phase**: Calculates density using the Ideal Gas Law  
     * **Liquid Phase**: Approximations possible under cryogenic conditions  
-* **`specific_heat()`**: Calculates specific heat capacity (Cp​) as a polynomial function of temperature  
+* **`specific_heat()`**:  
+    * **Gas Phase**: Ideal-gas heat capacity (Cp), DIPPR Eq. 107 with the constants of Perry's Chemical Engineers' Handbook, 8th ed., Table 2-156  
+    * **Liquid Phase**: Polynomial function of temperature (Perry's Table 2-153)  
 * **`viscosity()`**:  
     * **Gas Phase**: Calculates viscosity using Sutherland's Law  
-* **`thermal_conductivity()`**: Calculates thermal conductivity (k) as a polynomial function of temperature  
+* **`thermal_conductivity()`**:  
+    * **Gas Phase**: Vapor thermal conductivity (k), DIPPR Eq. 102 with the constants of Perry's 8th ed., Table 2-314  
+    * **Liquid Phase**: Polynomial function of temperature (Perry's Table 2-315)  
 * **`vapor_pressure()`**: Not typically applicable to air (mixture) but correlation can be used at cryogenic temperatures  
 * **`enthalpy()`**: Calculates enthalpy using correlations based on temperature and reference state  
 

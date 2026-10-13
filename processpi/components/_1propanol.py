@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Propanol(Component):
     """
-    Represents the properties and constants for 1Propanol(C3?H8?O).
+    Represents the properties and constants for 1Propanol(C3H8O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Propanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Propanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Propanol"
-    formula = "C3?H8?O"
+    formula = "C3H8O"
     molecular_weight = 60.095
 
     # Critical properties
@@ -45,8 +45,16 @@ class _1Propanol(Component):
     _critical_acentric_factor = 0.6209
 
     _density_constants = [1.2457, 0.27281, 536.8, 0.23994]
-    _specific_heat_constants = [0.0, -635.0, 1.969, 0.0, 0.0, 1.0797, 2.198]
+    # Liquid Cp, J/(kmol K), 146.95-400 K: Perry's Chemical Engineers'
+    # Handbook, 8th ed., Table 2-153, p. 2-169. C1 is 158,760; the thousands
+    # comma had turned it into 0.0, and the table's Cp at Tmin and Tmax
+    # (1.0797E5, 2.198E5) had been appended as two more constants.
+    _specific_heat_constants = [158760, -635.0, 1.969, 0.0, 0.0]
     _viscosity_constants = [23.467, 116.07, -5.3372, 2880000000.0, -4.0267]
     _thermal_conductivity_constants = [0.2203, -0.0002155]
-    _vapor_pressure_constants = [84.6642, 0.0, -8.5767, 7.51e-18, 6.0]
-    _enthalpy_constants = [6.8988, 0.6458, -0.5384, 0.3317]
+    # Vapour pressure, Pa: Perry's 8th ed., Table 2-8, p. 2-59. C2 is
+    # -8,307.2; the thousands comma had turned it into 0.0.
+    _vapor_pressure_constants = [84.6642, -8307.2, -8.5767, 7.51e-18, 6.0]
+    # Heat of vaporization, J/kmol, 146.95-536.8 K: Perry's 8th ed., Table
+    # 2-150, p. 2-154. The table prints C1 x 1E-07 = 6.8988; C5 is blank (0).
+    _enthalpy_constants = [6.8988E7, 0.6458, -0.5384, 0.3317, 0]

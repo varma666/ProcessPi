@@ -49,4 +49,5 @@ class AceticAnhydride(Component):
     _viscosity_constants = [-14.164, 1350.3, 0.4492,0,0]
     _thermal_conductivity_constants = [0.23638, -0.00024263,0,0,0]
     _vapor_pressure_constants = [100.95, -8873.20, -11.451, 6.13e-6,2]
-    _enthalpy_constants = [6.352, 0.3986,0,0,0]
+    # Perry's 8th ed., Table 2-150, p. 2-150 prints C1 x 1E-07 = 6.352 (J/kmol).
+    _enthalpy_constants = [6.352E7, 0.3986,0,0,0]

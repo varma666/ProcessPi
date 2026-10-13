@@ -1,4 +1,4 @@
-from .base import Component
+from .base import Component, PropertyMethod
 from processpi.units import *
 
 
@@ -47,21 +47,40 @@ class Ammonia(Component):
     
     # Constants for various property correlations
     _density_constants = [3.5383, 0.25443, 405.65, 0.2888]
+    # Liquid Cp, Perry's Chemical Engineers' Handbook, 8th ed., Table 2-153,
+    # p. 2-165, "use Eq. (2)", 203.15-401.15 K (see specific_heat below).
     _specific_heat_constants = [61.289,80925,799.4,-2651,0]
     _viscosity_constants = [-6.743,598.3,-0.7341,-3.69E-27, 10] 
     _thermal_conductivity_constants = [1.169, -0.002314, 0,0,0]
     _vapor_pressure_constants = [90.483, -4669.70, -11.607, 1.72E-02, 1] 
     _enthalpy_constants = [3.1523E-7, 0.3914, -0.2289,0.2309, 0]  # Placeholder for enthalpy constants
 
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K, used by the base
+    # class in the gas phase: Perry's 8th ed., Table 2-156, p. 2-176
+    # (C1 = 0.33427E5, C2 = 0.4898E5, C3 = 2.036E3, C4 = 0.2256E5, C5 = 882).
+    # 2090.7 J/kgK at 300 K.
+    _ideal_gas_heat_capacity_constants = [0.33427E5, 0.4898E5, 2.036E3, 0.2256E5, 882]
+    # `_thermal_conductivity_constants` above are the LIQUID ammonia
+    # correlation (Table 2-315). In the gas phase the base class uses this:
+    # vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 200-900 K: Perry's
+    # 8th ed., Table 2-314, p. 2-433 (C3, C4 blank). 0.0253 W/mK at 300 K.
+    _vapor_thermal_conductivity_constants = [9.6608E-06, 1.3799, 0, 0]
 
-    #@PropertyMethod
+
+    @PropertyMethod
     def specific_heat(self) -> SpecificHeat:
         if self._specific_heat is not None:
             return self._specific_heat
-        T = self.temperature.value
-        Tr = T / self._critical_temperature.value
-        t = 1 - Tr
-        cp = (self._specific_heat_constants[0] / t ) + (self._specific_heat_constants[1]) - ( 2 * self._specific_heat_constants[0] * self._specific_heat_constants[2] * t) - (self._specific_heat_constants[0] * self._specific_heat_constants[3] * (t**2)) - ((self._specific_heat_constants[2]**2)*(t**3)/3) - ((self._specific_heat_constants[2] * self._specific_heat_constants[3] * (t**4))/2) - ((self._specific_heat_constants[0]**2) * (t**5)/5) 
-        return SpecificHeat(cp, "J/kgK")
+        cp_gas = self._ideal_gas_specific_heat()
+        if cp_gas is not None:
+            return cp_gas
+        # Liquid: Perry's 8th ed., Table 2-153, Eq. (2), J/(kmol K):
+        # Cp = C1^2/t + C2 - 2*C1*C3*t - C1*C4*t^2 - C3^2*t^3/3 - C3*C4*t^4/2 - C4^2*t^5/5
+        # with t = 1 - T/Tc. Gives the table's 0.7575E5 at 203.15 K and 4.1847E5 at 401.15 K.
+        C1, C2, C3, C4 = self._specific_heat_constants[:4]
+        T = self.temperature.to("K").value
+        t = 1 - T / self._critical_temperature.to("K").value
+        cp = (C1 ** 2 / t) + C2 - (2 * C1 * C3 * t) - (C1 * C4 * t ** 2) - (C3 ** 2 * t ** 3 / 3) - (C3 * C4 * t ** 4 / 2) - (C4 ** 2 * t ** 5 / 5)
+        return SpecificHeat(cp / self.molecular_weight, "J/kgK")
 
         

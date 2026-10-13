@@ -1,8 +1,10 @@
+import warnings
+
 from .base import Component
 from processpi.units import *
-class EthlylAcetate(Component):
-    name = "Ethlyl Acetate"
-    formula = "C4​H8​O2​​"
+class EthylAcetate(Component):
+    name = "Ethyl Acetate"
+    formula = "C4H8O2"
     molecular_weight = 88.105
     _critical_temperature = Temperature(523.3, "K")
     _critical_pressure = Pressure(3.88, "MPa") 
@@ -15,3 +17,15 @@ class EthlylAcetate(Component):
     _thermal_conductivity_constants = [0.2501, -0.0003563,0,0,0]
     _vapor_pressure_constants = [66.824,-6227.60,-6.41,1.79E-17, 6] 
     _enthalpy_constants = [4.933E-7,0.3847, 0,0, 0]  # Placeholder for enthalpy constants
+
+
+class EthlylAcetate(EthylAcetate):
+    """Misspelt old name of `EthylAcetate`, kept so existing code still runs."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "EthlylAcetate is deprecated; use EthylAcetate.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)

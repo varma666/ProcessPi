@@ -6,6 +6,8 @@ class Vapor(Component):
     hx_type = "vapor"
     formula = "Gas"
     molecular_weight = 28.0
+    # Gas phase unless a phase is given: density from the ideal gas law.
+    _default_phase = "gas"
     _critical_temperature = Temperature(400, "K")
     _critical_pressure = Pressure(3.8, "MPa")
     _critical_volume = Volume(0.3, "m3")
