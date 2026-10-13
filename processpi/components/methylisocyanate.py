@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylIsocyanate(Component):
     """
-    Represents the properties and constants for Methyl Isocyanate(C2?H3?NO).
+    Represents the properties and constants for Methyl Isocyanate(C2H3NO).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyl Isocyanate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylIsocyanate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyl Isocyanate"
-    formula = "C2?H3?NO"
+    formula = "C2H3NO"
     molecular_weight = 57.051
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylIsocyanate(Component):
     _critical_acentric_factor = 0.3007
 
     _density_constants = [1.0228, 0.20692, 488.0, 0.28571]
-    _specific_heat_constants = [0.0, -529.82, 1.3499, 0.0, 0.0, 1.0263, 1.3668]
-    _viscosity_constants = []
-    _thermal_conductivity_constants = [0.2822, -0.00042037]
-    _vapor_pressure_constants = [57.612, 0.0, -5.1269, 2.17e-17, 6.0]
-    _enthalpy_constants = [4.2967, 0.37922]
+    _specific_heat_constants = [149770, -529.82, 1.3499, 0.0, 0.0]
+    _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2822, -0.00042037, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [57.612, -5197.90, -5.1269, 2.17e-17, 6.0]
+    _enthalpy_constants = [4.2967e-7, 0.37922, 0.0, 0.0, 0.0]

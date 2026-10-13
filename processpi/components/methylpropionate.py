@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylPropionate(Component):
     """
-    Represents the properties and constants for Methyl propionate(C4?H8?O2?).
+    Represents the properties and constants for Methyl propionate(C4H8O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyl propionate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylPropionate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyl propionate"
-    formula = "C4?H8?O2?"
+    formula = "C4H8O2"
     molecular_weight = 88.105
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylPropionate(Component):
     _critical_acentric_factor = 0.3466
 
     _density_constants = [0.9147, 0.2594, 530.6, 0.2774]
-    _specific_heat_constants = [0.0, 335.5, 0.0, 0.0, 0.0, 1.7179, 2.0198]
-    _viscosity_constants = [-4.841, 696.7, -0.9194]
-    _thermal_conductivity_constants = [0.22534, -0.0002683]
-    _vapor_pressure_constants = [70.717, 0.0, -6.9845, 2.01e-17, 6.0]
-    _enthalpy_constants = [5.008, 0.3959]
+    _specific_heat_constants = [71140, 335.5, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-4.841, 696.7, -0.9194, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.22534, -0.0002683, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [70.717, -4634.10, -6.9845, 2.01e-17, 6.0]
+    _enthalpy_constants = [5.008e-7, 0.3959, 0.0, 0.0, 0.0]

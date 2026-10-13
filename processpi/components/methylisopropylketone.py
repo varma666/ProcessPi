@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylisopropylKetone(Component):
     """
-    Represents the properties and constants for Methylisopropyl ketone(C5?H10?O).
+    Represents the properties and constants for Methylisopropyl ketone(C5H10O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methylisopropyl ketone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylisopropylKetone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylisopropyl ketone"
-    formula = "C5?H10?O"
+    formula = "C5H10O"
     molecular_weight = 86.132
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylisopropylKetone(Component):
     _critical_acentric_factor = 0.3208
 
     _density_constants = [0.86567, 0.26836, 553.4, 0.28364]
-    _specific_heat_constants = [0.0, -331.04, 0.98445, 0.0, 0.0, 1.6348, 2.361]
-    _viscosity_constants = [-11.272, 1048.9, 0.00030493]
-    _thermal_conductivity_constants = [0.2332, -0.0003044]
-    _vapor_pressure_constants = [45.242, 0.0, -3.2551, 3.04e-18, 6.0]
-    _enthalpy_constants = [4.7075, 0.33601]
+    _specific_heat_constants = [191170, -331.04, 0.98445, 0.0, 0.0]
+    _viscosity_constants = [-11.272, 1048.9, 0.00030493, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2332, -0.0003044, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [45.242, -5324.40, -3.2551, 3.04e-18, 6.0]
+    _enthalpy_constants = [4.7075e-7, 0.33601, 0.0, 0.0, 0.0]

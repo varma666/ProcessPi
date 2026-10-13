@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MalonicAcid(Component):
     """
-    Represents the properties and constants for Malonic acid(C3?H4?O4?).
+    Represents the properties and constants for Malonic acid(C3H4O4).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Malonic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MalonicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Malonic acid"
-    formula = "C3?H4?O4?"
+    formula = "C3H4O4"
     molecular_weight = 104.061
 
     # Critical properties
@@ -45,8 +45,8 @@ class MalonicAcid(Component):
     _critical_acentric_factor = 0.9418
 
     _density_constants = [0.84266, 0.217, 805.0, 0.28571]
-    _specific_heat_constants = [0.0, -41.619, 0.42817, 0.0, 0.0, 2.1213, 2.888]
-    _viscosity_constants = [-19.834, 2784.5, 1.1161]
-    _thermal_conductivity_constants = [0.28918, -0.0002614]
-    _vapor_pressure_constants = [122.92, 0.0, -13.113, 2.06e-18, 6.0]
-    _enthalpy_constants = [11.767, 0.37877]
+    _specific_heat_constants = [157850, -41.619, 0.42817, 0.0, 0.0]
+    _viscosity_constants = [-19.834, 2784.5, 1.1161, 0, 0]
+    _thermal_conductivity_constants = [0.28918, -0.0002614, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [122.92, -16258, -13.113, 2.06e-18, 6.0]
+    _enthalpy_constants = [11.767e-7, 0.37877, 0.0, 0.0, 0.0]

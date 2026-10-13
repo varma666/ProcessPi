@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylBenzoate(Component):
     """
-    Represents the properties and constants for Methyl benzoate(C8?H8?O2?).
+    Represents the properties and constants for Methyl benzoate(C8H8O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyl benzoate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylBenzoate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyl benzoate"
-    formula = "C8?H8?O2?"
+    formula = "C8H8O2"
     molecular_weight = 136.148
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylBenzoate(Component):
     _critical_acentric_factor = 0.4205
 
     _density_constants = [0.53382, 0.23274, 693.0, 0.28147]
-    _specific_heat_constants = [0.0, 279.75, 0.0, 0.0, 0.0, 1.9857, 2.5785]
-    _viscosity_constants = [-21.971, 2267.4, 1.4173]
-    _thermal_conductivity_constants = [0.22142, -0.00022759]
-    _vapor_pressure_constants = [84.828, 0.0, -8.7063, 6.17e-18, 6.0]
-    _enthalpy_constants = [6.8504, 0.38852]
+    _specific_heat_constants = [125630, 279.75, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-21.971, 2267.4, 1.4173, 0, 0]
+    _thermal_conductivity_constants = [0.22142, -0.00022759, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [84.828, -9334.70, -8.7063, 6.17e-18, 6.0]
+    _enthalpy_constants = [6.8504e-7, 0.38852, 0.0, 0.0, 0.0]

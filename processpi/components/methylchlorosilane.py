@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Methylchlorosilane(Component):
     """
-    Represents the properties and constants for Methylchlorosilane(CH5?ClSi).
+    Represents the properties and constants for Methylchlorosilane(CH5ClSi).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methylchlorosilane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Methylchlorosilane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylchlorosilane"
-    formula = "CH5?ClSi"
+    formula = "CH5ClSi"
     molecular_weight = 80.589
 
     # Critical properties
@@ -45,8 +45,8 @@ class Methylchlorosilane(Component):
     _critical_acentric_factor = 0.2252
 
     _density_constants = [1.0674, 0.26257, 442.0, 0.26569]
-    _specific_heat_constants = [0.0, 338.4, 0.0, 0.0, 0.0, 1.3233, 1.5771]
-    _viscosity_constants = [-12.002, 1009.7]
-    _thermal_conductivity_constants = [0.24683, -0.00038854]
-    _vapor_pressure_constants = [95.984, 0.0, -11.829, 1.81e-05, 2.0]
-    _enthalpy_constants = [3.2835, 0.33116]
+    _specific_heat_constants = [47726, 338.4, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-12.002, 1009.7, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.24683, -0.00038854, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [95.984, -5401.70, -11.829, 1.81e-05, 2.0]
+    _enthalpy_constants = [3.2835e-7, 0.33116, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylisopropylSulfide(Component):
     """
-    Represents the properties and constants for Methylisopropyl sulfide(C4?H10?S).
+    Represents the properties and constants for Methylisopropyl sulfide(C4H10S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methylisopropyl sulfide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylisopropylSulfide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylisopropyl sulfide"
-    formula = "C4?H10?S"
+    formula = "C4H10S"
     molecular_weight = 90.187
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylisopropylSulfide(Component):
     _critical_acentric_factor = 0.2461
 
     _density_constants = [0.78912, 0.25915, 553.1, 0.26512]
-    _specific_heat_constants = [0.0, -661.97, 2.4216, -0.0021383, 0.0, 1.5808, 1.8641]
-    _viscosity_constants = [-11.075, 990.72]
-    _thermal_conductivity_constants = [0.20978, -0.00026468]
-    _vapor_pressure_constants = [52.82, 0.0, -4.442, 9.51e-18, 6.0]
-    _enthalpy_constants = [4.5052, 0.36493]
+    _specific_heat_constants = [211170, -661.97, 2.4216, -0.0021383, 0.0]
+    _viscosity_constants = [-11.075, 990.72, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20978, -0.00026468, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [52.82, -5437.70, -4.442, 9.51e-18, 6.0]
+    _enthalpy_constants = [4.5052e-7, 0.36493, 0.0, 0.0, 0.0]

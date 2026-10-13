@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylAcetylene(Component):
     """
-    Represents the properties and constants for Methyl acetylene(C3?H4?).
+    Represents the properties and constants for Methyl acetylene(C3H4).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyl acetylene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylAcetylene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyl acetylene"
-    formula = "C3?H4?"
+    formula = "C3H4"
     molecular_weight = 40.064
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylAcetylene(Component):
     _critical_acentric_factor = 0.2115
 
     _density_constants = [1.6085, 0.26436, 402.4, 0.27987]
-    _specific_heat_constants = [0.0, 89.49, 0.0, 0.0, 0.0, 0.9769, 1.0216]
-    _viscosity_constants = [-2.8737, 301.35, -1.2271]
-    _thermal_conductivity_constants = [0.23648, -0.00041639]
-    _vapor_pressure_constants = [50.242, 0.0, -4.2526, 6.53e-17, 6.0]
-    _enthalpy_constants = [3.1889, 0.37881]
+    _specific_heat_constants = [79791, 89.49, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-2.8737, 301.35, -1.2271, 0, 0]
+    _thermal_conductivity_constants = [0.23648, -0.00041639, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [50.242, -3811.90, -4.2526, 6.53e-17, 6.0]
+    _enthalpy_constants = [3.1889e-7, 0.37881, 0.0, 0.0, 0.0]

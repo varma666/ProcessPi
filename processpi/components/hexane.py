@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Hexane(Component):
     """
-    Represents the properties and constants for Hexane(C6?H14?).
+    Represents the properties and constants for Hexane(C6H14).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Hexane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Hexane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Hexane"
-    formula = "C6?H14?"
+    formula = "C6H14"
     molecular_weight = 86.175
 
     # Critical properties
@@ -45,8 +45,8 @@ class Hexane(Component):
     _critical_acentric_factor = 0.3013
 
     _density_constants = [0.70824, 0.26411, 507.6, 0.27537]
-    _specific_heat_constants = [0.0, -183.78, 0.88734, 0.0, 0.0, 1.675, 2.7534]
+    _specific_heat_constants = [172120, -183.78, 0.88734, 0.0, 0.0]
     _viscosity_constants = [-6.3276, 640.0, -0.694, 5.69e+21, -10.0]
-    _thermal_conductivity_constants = [0.22492, -0.0003533]
-    _vapor_pressure_constants = [104.65, 0.0, -12.702, 1.24e-05, 2.0]
-    _enthalpy_constants = [4.4544, 0.39002]
+    _thermal_conductivity_constants = [0.22492, -0.0003533, 0, 0, 0]
+    _vapor_pressure_constants = [104.65, -6995.50, -12.702, 1.24e-05, 2.0]
+    _enthalpy_constants = [4.4544e-7, 0.39002, 0, 0, 0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylbutylSulfide(Component):
     """
-    Represents the properties and constants for Methylbutyl sulfide(C5?H12?S).
+    Represents the properties and constants for Methylbutyl sulfide(C5H12S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methylbutyl sulfide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylbutylSulfide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylbutyl sulfide"
-    formula = "C5?H12?S"
+    formula = "C5H12S"
     molecular_weight = 104.214
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylbutylSulfide(Component):
     _critical_acentric_factor = 0.3229
 
     _density_constants = [0.75509, 0.27183, 593.0, 0.29127]
-    _specific_heat_constants = [0.0, -220.35, 0.76096, 0.0, 0.0, 1.8315, 2.8394]
-    _viscosity_constants = [-10.97, 1067.3, -0.017484]
-    _thermal_conductivity_constants = [0.20698, -0.00024439]
-    _vapor_pressure_constants = [96.344, 0.0, -11.058, 7.31e-06, 2.0]
-    _enthalpy_constants = [5.3416, 0.3835]
+    _specific_heat_constants = [198390, -220.35, 0.76096, 0.0, 0.0]
+    _viscosity_constants = [-10.97, 1067.3, -0.017484, 0, 0]
+    _thermal_conductivity_constants = [0.20698, -0.00024439, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [96.344, -7856.30, -11.058, 7.31e-06, 2.0]
+    _enthalpy_constants = [5.3416e-7, 0.3835, 0.0, 0.0, 0.0]

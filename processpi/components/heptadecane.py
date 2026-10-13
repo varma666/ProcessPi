@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Heptadecane(Component):
     """
-    Represents the properties and constants for Heptadecane(C17?H36?).
+    Represents the properties and constants for Heptadecane(C17H36).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Heptadecane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Heptadecane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Heptadecane"
-    formula = "C17?H36?"
+    formula = "C17H36"
     molecular_weight = 240.468
 
     # Critical properties
@@ -45,8 +45,8 @@ class Heptadecane(Component):
     _critical_acentric_factor = 0.7697
 
     _density_constants = [0.21897, 0.23642, 736.0, 0.28571]
-    _specific_heat_constants = [0.0, 347.82, 0.57895, 0.0, 0.0, 5.3005, 7.6869]
-    _viscosity_constants = [-19.991, 2245.1, 1.1982]
-    _thermal_conductivity_constants = [0.20926, -0.0002215]
-    _vapor_pressure_constants = [156.95, 0.0, -18.966, 6.46e-06, 2.0]
-    _enthalpy_constants = [10.473, 0.4374]
+    _specific_heat_constants = [376970, 347.82, 0.57895, 0.0, 0.0]
+    _viscosity_constants = [-19.991, 2245.1, 1.1982,0,0]
+    _thermal_conductivity_constants = [0.20926, -0.0002215,0,0,0]
+    _vapor_pressure_constants = [156.95, -15557, -18.966, 6.46e-06, 2.0]
+    _enthalpy_constants = [10.473e-7, 0.4374,0,0,0]

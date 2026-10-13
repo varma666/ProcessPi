@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Methylsilane(Component):
     """
-    Represents the properties and constants for Methylsilane(CH6?Si).
+    Represents the properties and constants for Methylsilane(CH6Si).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methylsilane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Methylsilane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylsilane"
-    formula = "CH6?Si"
+    formula = "CH6Si"
     molecular_weight = 46.144
 
     # Critical properties
@@ -45,8 +45,8 @@ class Methylsilane(Component):
     _critical_acentric_factor = 0.1314
 
     _density_constants = [1.3052, 0.26757, 352.5, 0.28799]
-    _specific_heat_constants = [0.0, 0.0, 0.0, 0.0, 0.0, 1.1347, 1.1347]
-    _viscosity_constants = []
-    _thermal_conductivity_constants = [0.2774, -0.00054608]
-    _vapor_pressure_constants = [37.205, 0.0, -2.5993, 6.05e-06, 2.0]
-    _enthalpy_constants = [2.2656, 0.30269]
+    _specific_heat_constants = [113470, 0.0, 0.0, 0.0, 0.0]
+    _viscosity_constants = [0,0,0,0,0]
+    _thermal_conductivity_constants = [0.2774, -0.00054608, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [37.205, -2590.30, -2.5993, 6.05e-06, 2.0]
+    _enthalpy_constants = [2.2656e-7, 0.30269, 0.0, 0.0, 0.0]

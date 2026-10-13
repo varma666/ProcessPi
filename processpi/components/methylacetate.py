@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylAcetate(Component):
     """
-    Represents the properties and constants for Methyl acetate(C3?H6?O2?).
+    Represents the properties and constants for Methyl acetate(C3H6O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyl acetate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylAcetate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyl acetate"
-    formula = "C3?H6?O2?"
+    formula = "C3H6O2"
     molecular_weight = 74.079
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylAcetate(Component):
     _critical_acentric_factor = 0.3313
 
     _density_constants = [1.13, 0.2593, 506.55, 0.2764]
-    _specific_heat_constants = [0.0, 270.9, 0.0, 0.0, 0.0, 1.2991, 1.6241]
-    _viscosity_constants = [13.557, -187.3, -3.6592]
-    _thermal_conductivity_constants = [0.2777, -0.000417]
-    _vapor_pressure_constants = [61.267, 0.0, -5.6473, 2.11e-17, 6.0]
-    _enthalpy_constants = [4.492, 0.3685]
+    _specific_heat_constants = [61260, 270.9, 0.0, 0.0, 0.0]
+    _viscosity_constants = [13.557, -187.3, -3.6592, 0, 0]
+    _thermal_conductivity_constants = [0.2777, -0.000417, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [61.267, -5618.60, -5.6473, 2.11e-17, 6.0]
+    _enthalpy_constants = [4.492e-7, 0.3685, 0.0, 0.0, 0.0]

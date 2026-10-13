@@ -34,7 +34,7 @@ class MethylisobutylKetone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylisobutyl ketone"
-    formula = "C6?H12?O"
+    formula = "C6H12O"
     molecular_weight = 100.159
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylisobutylKetone(Component):
     _critical_acentric_factor = 0.3557
 
     _density_constants = [0.71687, 0.26453, 574.6, 0.28918]
-    _specific_heat_constants = [0.0, -79.862, 0.60769, 0.0, 0.0, 1.9029, 2.446]
-    _viscosity_constants = [-11.394, 1168.7, -0.007539]
-    _thermal_conductivity_constants = [0.2301, -0.00028899]
-    _vapor_pressure_constants = [80.503, 0.0, -8.379, 1.81e-17, 6.0]
-    _enthalpy_constants = [5.4687, 0.40583]
+    _specific_heat_constants = [183650, -79.862, 0.60769, 0.0, 0.0]
+    _viscosity_constants = [-11.394, 1168.7, -0.007539, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2301, -0.00028899, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [80.503, -7421.80, -8.379, 1.81e-17, 6.0]
+    _enthalpy_constants = [5.4687e-7, 0.40583, 0.0, 0.0, 0.0]

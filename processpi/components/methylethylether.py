@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylethylEther(Component):
     """
-    Represents the properties and constants for Methylethyl ether(C3?H8?O).
+    Represents the properties and constants for Methylethyl ether(C3H8O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methylethyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylethylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylethyl ether"
-    formula = "C3?H8?O"
+    formula = "C3H8O"
     molecular_weight = 60.095
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylethylEther(Component):
     _critical_acentric_factor = 0.2314
 
     _density_constants = [1.2635, 0.27878, 437.8, 0.2744]
-    _specific_heat_constants = [0.0, 199.08, -0.061547, 0.0, 0.0, 1.1566, 1.3638]
-    _viscosity_constants = [-11.104, 627.18, 0.036581]
-    _thermal_conductivity_constants = [0.27304, -0.0004518]
-    _vapor_pressure_constants = [78.586, 0.0, -8.7501, 9.17e-06, 2.0]
-    _enthalpy_constants = [3.53, 0.376]
+    _specific_heat_constants = [85383, 199.08, -0.061547, 0.0, 0.0]
+    _viscosity_constants = [-11.104, 627.18, 0.036581, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.27304, -0.0004518, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [78.586, -5176.30, -8.7501, 9.17e-06, 2.0]
+    _enthalpy_constants = [3.53e-7, 0.376, 0.0, 0.0, 0.0]

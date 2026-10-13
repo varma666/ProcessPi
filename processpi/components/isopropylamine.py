@@ -3,7 +3,7 @@ from processpi.units import *
 
 class IsopropylAmine(Component):
     """
-    Represents the properties and constants for Isopropyl amine(C3?H9?N).
+    Represents the properties and constants for Isopropyl amine(C3H9N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Isopropyl amine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class IsopropylAmine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Isopropyl amine"
-    formula = "C3?H9?N"
+    formula = "C3H9N"
     molecular_weight = 59.11
 
     # Critical properties
@@ -45,8 +45,8 @@ class IsopropylAmine(Component):
     _critical_acentric_factor = 0.2759
 
     _density_constants = [1.2801, 0.2828, 471.85, 0.2972]
-    _specific_heat_constants = [0.0, 0.0, -7.0145, 0.0086913, 0.0, 1.4621, 1.6671]
-    _viscosity_constants = [-31.157, 1926.0, 2.925]
-    _thermal_conductivity_constants = [0.237, -0.000332]
-    _vapor_pressure_constants = [136.66, 0.0, -18.934, 0.0223, 1.0]
-    _enthalpy_constants = [4.4041, 0.43325]
+    _specific_heat_constants = [-32469,1977.10, -7.0145, 0.0086913, 0.0]
+    _viscosity_constants = [-31.157, 1926.0, 2.925, 0, 0]
+    _thermal_conductivity_constants = [0.237, -0.000332, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [136.66, -7201.50, -18.934, 0.0223, 1.0]
+    _enthalpy_constants = [4.4041e-7, 0.43325, 0.0, 0.0, 0.0]

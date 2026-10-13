@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylethylKetone(Component):
     """
-    Represents the properties and constants for Methylethyl ketone(C4?H8?O).
+    Represents the properties and constants for Methylethyl ketone(C4H8O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methylethyl ketone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylethylKetone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylethyl ketone"
-    formula = "C4?H8?O"
+    formula = "C4H8O"
     molecular_weight = 72.106
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylethylKetone(Component):
     _critical_acentric_factor = 0.3234
 
     _density_constants = [0.93767, 0.25035, 535.5, 0.29964]
-    _specific_heat_constants = [0.0, 200.87, -0.9597, 0.0019533, 0.0, 1.4905, 1.7511]
-    _viscosity_constants = [-1.0598, 520.68, -1.4961]
-    _thermal_conductivity_constants = [0.2197, -0.0002505]
-    _vapor_pressure_constants = [72.698, 0.0, -7.5779, 5.65e-06, 2.0]
-    _enthalpy_constants = [4.622, 0.355]
+    _specific_heat_constants = [132300, 200.87, -0.9597, 0.0019533, 0.0]
+    _viscosity_constants = [-1.0598, 520.68, -1.4961, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2197, -0.0002505, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [72.698, -6143.60, -7.5779, 5.65e-06, 2.0]
+    _enthalpy_constants = [4.622e-7, 0.355, 0.0, 0.0, 0.0]

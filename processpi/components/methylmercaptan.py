@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylMercaptan(Component):
     """
-    Represents the properties and constants for Methyl mercaptan(CH4?S).
+    Represents the properties and constants for Methyl mercaptan(CH4S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyl mercaptan"
-    formula = "CH4?S"
+    formula = "CH4S"
     molecular_weight = 48.107
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylMercaptan(Component):
     _critical_acentric_factor = 0.1582
 
     _density_constants = [1.9323, 0.28018, 469.95, 0.28523]
-    _specific_heat_constants = [0.0, -263.23, 0.60412, 0.0, 0.0, 0.8939, 0.9052]
-    _viscosity_constants = [-10.628, 645.0, 0.025885]
-    _thermal_conductivity_constants = [0.26119, -0.00038345]
-    _vapor_pressure_constants = [54.15, 0.0, -4.8127, 4.5e-17, 6.0]
-    _enthalpy_constants = [3.4448, 0.37427]
+    _specific_heat_constants = [115300, -263.23, 0.60412, 0.0, 0.0]
+    _viscosity_constants = [-10.628, 645.0, 0.025885, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.26119, -0.00038345, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [54.15, -4337.70, -4.8127, 4.5e-17, 6.0]
+    _enthalpy_constants = [3.4448e-7, 0.37427, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylAmine(Component):
     """
-    Represents the properties and constants for Methyl amine(CH5?N).
+    Represents the properties and constants for Methyl amine(CH5N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyl amine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylAmine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyl amine"
-    formula = "CH5?N"
+    formula = "CH5N"
     molecular_weight = 31.057
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylAmine(Component):
     _critical_acentric_factor = 0.2814
 
     _density_constants = [1.39, 0.21405, 430.05, 0.2275]
-    _specific_heat_constants = [0.0, 37.45, 0.0, 0.0, 0.0, 0.9925, 1.0251]
-    _viscosity_constants = [-17.044, 1074.0, 0.84203]
+    _specific_heat_constants = [92520, 37.45, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-17.044, 1074.0, 0.84203,0,0]
     _thermal_conductivity_constants = [0.33446, -0.00067427, 8.03e-07]
-    _vapor_pressure_constants = [75.206, 0.0, -8.0919, 8.11e-06, 2.0]
-    _enthalpy_constants = [3.858, 0.404]
+    _vapor_pressure_constants = [75.206, -5082.80, -8.0919, 8.11e-06, 2.0]
+    _enthalpy_constants = [3.858e-7, 0.404, 0.0, 0.0, 0.0]

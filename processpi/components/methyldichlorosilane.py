@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Methyldichlorosilane(Component):
     """
-    Represents the properties and constants for Methyldichlorosilane(CH4?Cl2?Si).
+    Represents the properties and constants for Methyldichlorosilane(CH4Cl2Si).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyldichlorosilane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Methyldichlorosilane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyldichlorosilane"
-    formula = "CH4?Cl2?Si"
+    formula = "CH4Cl2Si"
     molecular_weight = 115.034
 
     # Critical properties
@@ -45,8 +45,8 @@ class Methyldichlorosilane(Component):
     _critical_acentric_factor = 0.2758
 
     _density_constants = [0.97608, 0.28209, 483.0, 0.22529]
-    _specific_heat_constants = [0.0, 413.0, 0.0, 0.0, 0.0, 1.3028, 1.7158]
-    _viscosity_constants = [-10.517, 745.32]
-    _thermal_conductivity_constants = [0.21956, -0.00032153]
-    _vapor_pressure_constants = [79.788, 0.0, -9.0702, 1.15e-05, 2.0]
-    _enthalpy_constants = [3.6756, 0.31266]
+    _specific_heat_constants = [27030, 413.0, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-10.517, 745.32, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21956, -0.00032153, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [79.788, -5420, -9.0702, 1.15e-05, 2.0]
+    _enthalpy_constants = [3.6756e-7, 0.31266, 0.0, 0.0, 0.0]

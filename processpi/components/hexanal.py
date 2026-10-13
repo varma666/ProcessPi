@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Hexanal(Component):
     """
-    Represents the properties and constants for Hexanal(C6?H12?O).
+    Represents the properties and constants for Hexanal(C6H12O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Hexanal, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Hexanal(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Hexanal"
-    formula = "C6?H12?O"
+    formula = "C6H12O"
     molecular_weight = 100.159
 
     # Critical properties
@@ -45,8 +45,8 @@ class Hexanal(Component):
     _critical_acentric_factor = 0.3872
 
     _density_constants = [0.71899, 0.26531, 591.0, 0.27628]
-    _specific_heat_constants = [0.0, 329.52, 0.0, 0.0, 0.0, 1.8926, 2.4999]
-    _viscosity_constants = [-10.745, 1021.4, -5.5427e-05]
-    _thermal_conductivity_constants = [0.22196, -0.00032053, 1.16e-07]
-    _vapor_pressure_constants = [81.507, 0.0, -8.4516, 1.51e-17, 6.0]
-    _enthalpy_constants = [5.6661, 0.38533]
+    _specific_heat_constants = [117700, 329.52, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-10.745, 1021.4, -5.5427e-05, 0, 0]
+    _thermal_conductivity_constants = [0.22196, -0.00032053, 1.16e-07, 0, 0]
+    _vapor_pressure_constants = [81.507, -7776.80, -8.4516, 1.51e-17, 6.0]
+    _enthalpy_constants = [5.6661e-7, 0.38533, 0, 0, 0]

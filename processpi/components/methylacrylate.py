@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylAcrylate(Component):
     """
-    Represents the properties and constants for Methyl acrylate(C4?H6?O2?).
+    Represents the properties and constants for Methyl acrylate(C4H6O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyl acrylate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylAcrylate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyl acrylate"
-    formula = "C4?H6?O2?"
+    formula = "C4H6O2"
     molecular_weight = 86.089
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylAcrylate(Component):
     _critical_acentric_factor = 0.3423
 
     _density_constants = [0.97286, 0.26267, 536.0, 0.2508]
-    _specific_heat_constants = [0.0, 0.0, 2.568, 0.0, 0.0, 1.493, 1.9084]
-    _viscosity_constants = [10.848, 75.0, -3.297]
-    _thermal_conductivity_constants = [0.26082, -0.0003506]
-    _vapor_pressure_constants = [107.69, 0.0, -13.916, 0.0152, 1.0]
-    _enthalpy_constants = [4.68, 0.349]
+    _specific_heat_constants = [275500, -1147, 2.568, 0.0, 0.0]
+    _viscosity_constants = [10.848, 75.0, -3.297, 0, 0]
+    _thermal_conductivity_constants = [0.26082, -0.0003506, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [107.69, -7027.20, -13.916, 0.0152, 1.0]
+    _enthalpy_constants = [4.68e-7, 0.349, 0.0, 0.0, 0.0]

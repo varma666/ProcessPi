@@ -3,7 +3,7 @@ from processpi.units import *
 
 class HexylMercaptan(Component):
     """
-    Represents the properties and constants for Hexyl mercaptan(C6?H14?S).
+    Represents the properties and constants for Hexyl mercaptan(C6H14S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Hexyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class HexylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Hexyl mercaptan"
-    formula = "C6?H14?S"
+    formula = "C6H14S"
     molecular_weight = 118.24
 
     # Critical properties
@@ -45,8 +45,8 @@ class HexylMercaptan(Component):
     _critical_acentric_factor = 0.3681
 
     _density_constants = [0.66372, 0.27345, 623.0, 0.29185]
-    _specific_heat_constants = [0.0, 0.0, 3.3885, -0.002762, 0.0, 2.1495, 2.7639]
-    _viscosity_constants = [-10.073, 1123.3, -0.16515]
-    _thermal_conductivity_constants = [0.2058, -0.0002324]
-    _vapor_pressure_constants = [68.467, 0.0, -6.5456, 7.76e-18, 6.0]
-    _enthalpy_constants = [5.8422, 0.38704]
+    _specific_heat_constants = [303320, 0.0, 3.3885, -0.002762, 0.0, 2.1495, 2.7639]
+    _viscosity_constants = [-10.073, 1123.3, -0.16515, 0, 0]
+    _thermal_conductivity_constants = [0.2058, -0.0002324, 0, 0, 0]
+    _vapor_pressure_constants = [68.467, -7390.50, -6.5456, 7.76e-18, 6.0]
+    _enthalpy_constants = [5.8422e-7, 0.38704, 0, 0, 0]

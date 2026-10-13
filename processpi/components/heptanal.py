@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Heptanal(Component):
     """
-    Represents the properties and constants for Heptanal(C7?H14?O).
+    Represents the properties and constants for Heptanal(C7H14O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Heptanal, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Heptanal(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Heptanal"
-    formula = "C7?H14?O"
+    formula = "C7H14O"
     molecular_weight = 114.185
 
     # Critical properties
@@ -45,8 +45,8 @@ class Heptanal(Component):
     _critical_acentric_factor = 0.4279
 
     _density_constants = [0.59006, 0.25609, 616.8, 0.28384]
-    _specific_heat_constants = [0.0, -105.17, 0.65074, 0.0, 0.0, 2.3256, 2.7685]
-    _viscosity_constants = [-10.443, 1063.2, -0.031488]
-    _thermal_conductivity_constants = [0.21816, -0.0003015, 1.03e-07]
-    _vapor_pressure_constants = [92.252, 0.0, -10.274, 5.93e-06, 2.0]
-    _enthalpy_constants = [5.956, 0.36474]
+    _specific_heat_constants = [222360, -105.17, 0.65074, 0.0, 0.0]
+    _viscosity_constants = [-10.443, 1063.2, -0.031488, 0, 0]
+    _thermal_conductivity_constants = [0.21816, -0.0003015, 1.03e-07, 0, 0]
+    _vapor_pressure_constants = [92.252, -8349, -10.274, 5.93e-06, 2.0]
+    _enthalpy_constants = [5.956e-7, 0.36474, 0, 0, 0]

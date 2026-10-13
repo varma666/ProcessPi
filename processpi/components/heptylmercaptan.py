@@ -3,7 +3,7 @@ from processpi.units import *
 
 class HeptylMercaptan(Component):
     """
-    Represents the properties and constants for Heptyl mercaptan(C7?H16?S).
+    Represents the properties and constants for Heptyl mercaptan(C7H16S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Heptyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class HeptylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Heptyl mercaptan"
-    formula = "C7?H16?S"
+    formula = "C7H16S"
     molecular_weight = 132.267
 
     # Critical properties
@@ -45,8 +45,8 @@ class HeptylMercaptan(Component):
     _critical_acentric_factor = 0.4226
 
     _density_constants = [0.58622, 0.2726, 645.0, 0.29644]
-    _specific_heat_constants = [0.0, -158.01, 0.78982, 0.0, 0.0, 2.4229, 3.3131]
-    _viscosity_constants = [-11.812, 1291.9, 0.076469]
-    _thermal_conductivity_constants = [0.2037, -0.0002252]
-    _vapor_pressure_constants = [79.858, 0.0, -8.1043, 8.15e-18, 6.0]
-    _enthalpy_constants = [6.5473, 0.40968]
+    _specific_heat_constants = [236870, -158.01, 0.78982, 0.0, 0.0]
+    _viscosity_constants = [-11.812, 1291.9, 0.076469, 0, 0]
+    _thermal_conductivity_constants = [0.2037, -0.0002252, 0, 0, 0]
+    _vapor_pressure_constants = [79.858, -8501.80, -8.1043, 8.15e-18, 6.0]
+    _enthalpy_constants = [6.5473e-7, 0.40968, 0, 0, 0]

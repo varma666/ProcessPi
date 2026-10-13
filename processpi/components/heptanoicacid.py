@@ -3,7 +3,7 @@ from processpi.units import *
 
 class HeptanoicAcid(Component):
     """
-    Represents the properties and constants for Heptanoic acid(C7?H14?O2?).
+    Represents the properties and constants for Heptanoic acid(C7H14O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Heptanoic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class HeptanoicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Heptanoic acid"
-    formula = "C7?H14?O2?"
+    formula = "C7H14O2"
     molecular_weight = 130.185
 
     # Critical properties
@@ -45,8 +45,8 @@ class HeptanoicAcid(Component):
     _critical_acentric_factor = 0.7564
 
     _density_constants = [0.53066, 0.24729, 677.3, 0.28289]
-    _specific_heat_constants = [0.0, -23.206, 0.88395, 0.0, 0.0, 2.5087, 4.0065]
-    _viscosity_constants = [-40.543, 3328.3, 4.1804]
-    _thermal_conductivity_constants = [0.202, -0.0002]
-    _vapor_pressure_constants = [120.47, 0.0, -13.31, 5.84e-18, 6.0]
-    _enthalpy_constants = [11.274, 0.86047, -0.40661, -0.012644]
+    _specific_heat_constants = [194570, -23.206, 0.88395, 0.0, 0.0]
+    _viscosity_constants = [-40.543, 3328.3, 4.1804,0,0]
+    _thermal_conductivity_constants = [0.202, -0.0002, 0, 0, 0]
+    _vapor_pressure_constants = [120.47, -13106, -13.31, 5.84e-18, 6.0]
+    _enthalpy_constants = [11.274e-7, 0.86047, -0.40661, -0.012644, 0]

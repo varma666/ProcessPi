@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylisopropylEther(Component):
     """
-    Represents the properties and constants for Methylisopropyl ether(C4?H10?O).
+    Represents the properties and constants for Methylisopropyl ether(C4H10O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methylisopropyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylisopropylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylisopropyl ether"
-    formula = "C4?H10?O"
+    formula = "C4H10O"
     molecular_weight = 74.122
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylisopropylEther(Component):
     _critical_acentric_factor = 0.2656
 
     _density_constants = [0.97887, 0.27017, 464.48, 0.28998]
-    _specific_heat_constants = [0.0, -154.07, 0.7255, 0.0, 0.0, 1.356, 1.654]
-    _viscosity_constants = [-11.216, 737.75, 0.019308]
-    _thermal_conductivity_constants = [0.24154, -0.0003774]
-    _vapor_pressure_constants = [53.867, 0.0, -4.7052, 2.88e-17, 6.0]
-    _enthalpy_constants = [3.8501, 0.36453]
+    _specific_heat_constants = [143440, -154.07, 0.7255, 0.0, 0.0]
+    _viscosity_constants = [-11.216, 737.75, 0.019308, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.24154, -0.0003774, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [53.867, -4701, -4.7052, 2.88e-17, 6.0]
+    _enthalpy_constants = [3.8501e-7, 0.36453, 0.0, 0.0, 0.0]

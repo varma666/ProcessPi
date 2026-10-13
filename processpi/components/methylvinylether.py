@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylVinylEther(Component):
     """
-    Represents the properties and constants for Methyl vinyl ether(C3?H6?O).
+    Represents the properties and constants for Methyl vinyl ether(C3H6O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyl vinyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylVinylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyl vinyl ether"
-    formula = "C3?H6?O"
+    formula = "C3H6O"
     molecular_weight = 58.079
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylVinylEther(Component):
     _critical_acentric_factor = 0.2416
 
     _density_constants = [1.2587, 0.26433, 437.0, 0.25819]
-    _specific_heat_constants = [0.0, 184.7, 0.0, 0.0, 0.0, 1.0152, 1.2507]
-    _viscosity_constants = [-10.34, 519.61, -0.013899]
-    _thermal_conductivity_constants = [0.28035, -0.0004646]
-    _vapor_pressure_constants = [51.085, 0.0, -4.307, 3.05e-17, 6.0]
-    _enthalpy_constants = [3.587, 0.3769]
+    _specific_heat_constants = [73600, 184.7, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-10.34, 519.61, -0.013899, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.28035, -0.0004646, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [51.085, -4271, -4.307, 3.05e-17, 6.0]
+    _enthalpy_constants = [3.587e-7, 0.3769, 0.0, 0.0, 0.0]

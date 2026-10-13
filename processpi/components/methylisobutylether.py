@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylisobutylEther(Component):
     """
-    Represents the properties and constants for Methylisobutyl ether(C5?H12?O).
+    Represents the properties and constants for Methylisobutyl ether(C5H12O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methylisobutyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylisobutylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylisobutyl ether"
-    formula = "C5?H12?O"
+    formula = "C5H12O"
     molecular_weight = 88.148
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylisobutylEther(Component):
     _critical_acentric_factor = 0.3078
 
     _density_constants = [0.84005, 0.27638, 497.0, 0.27645]
-    _specific_heat_constants = [0.0, 324.43, 0.0, 0.0, 0.0, 1.8965, 2.0647]
-    _viscosity_constants = [-11.27, 888.42, 0.024736]
-    _thermal_conductivity_constants = [0.222, -0.00032217]
-    _vapor_pressure_constants = [57.984, 0.0, -5.2362, 2.08e-17, 6.0]
-    _enthalpy_constants = [4.2678, 0.37995]
+    _specific_heat_constants = [92919, 324.43, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-11.27, 888.42, 0.024736, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.222, -0.00032217, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [57.984, -5339.60, -5.2362, 2.08e-17, 6.0]
+    _enthalpy_constants = [4.2678e-7, 0.37995, 0.0, 0.0, 0.0]

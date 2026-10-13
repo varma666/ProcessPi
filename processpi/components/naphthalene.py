@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Naphthalene(Component):
     """
-    Represents the properties and constants for Naphthalene(C10?H8?).
+    Represents the properties and constants for Naphthalene(C10H8).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Naphthalene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Naphthalene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Naphthalene"
-    formula = "C10?H8?"
+    formula = "C10H8"
     molecular_weight = 128.171
 
     # Critical properties
@@ -45,8 +45,8 @@ class Naphthalene(Component):
     _critical_acentric_factor = 0.302
 
     _density_constants = [0.6348, 0.25838, 748.4, 0.27727]
-    _specific_heat_constants = [0.0, 527.5, 0.0, 0.0, 0.0, 2.1623, 2.8888]
-    _viscosity_constants = [-19.308, 1822.5, 1.218]
-    _thermal_conductivity_constants = [0.17096, -0.00010059]
-    _vapor_pressure_constants = [62.964, 0.0, -5.6317, 2.27e-18, 6.0]
-    _enthalpy_constants = [7.0911, 0.46468]
+    _specific_heat_constants = [29800, 527.5, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-19.308, 1822.5, 1.218, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.17096, -0.00010059, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [62.964, -8137.50, -5.6317, 2.27e-18, 6.0]
+    _enthalpy_constants = [7.0911e-7, 0.46468, 0.0, 0.0, 0.0]

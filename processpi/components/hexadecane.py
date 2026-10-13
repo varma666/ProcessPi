@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Hexadecane(Component):
     """
-    Represents the properties and constants for Hexadecane(C16?H34?).
+    Represents the properties and constants for Hexadecane(C16H34).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Hexadecane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Hexadecane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Hexadecane"
-    formula = "C16?H34?"
+    formula = "C16H34"
     molecular_weight = 226.441
 
     # Critical properties
@@ -45,8 +45,8 @@ class Hexadecane(Component):
     _critical_acentric_factor = 0.7174
 
     _density_constants = [0.23289, 0.23659, 723.0, 0.28571]
-    _specific_heat_constants = [0.0, 231.47, 0.68632, 0.0, 0.0, 4.9602, 7.1521]
-    _viscosity_constants = [-20.182, 2203.5, 1.2289]
-    _thermal_conductivity_constants = [0.20749, -0.00021917]
-    _vapor_pressure_constants = [156.06, 0.0, -18.941, 6.82e-06, 2.0]
-    _enthalpy_constants = [10.156, 0.45726]
+    _specific_heat_constants = [370350, 231.47, 0.68632, 0.0, 0.0]
+    _viscosity_constants = [-20.182, 2203.5, 1.2289, 0, 0]
+    _thermal_conductivity_constants = [0.20749, -0.00021917, 0, 0, 0]
+    _vapor_pressure_constants = [156.06, -15015, -18.941, 6.82e-06, 2.0]
+    _enthalpy_constants = [10.156e-7, 0.45726, 0, 0, 0]

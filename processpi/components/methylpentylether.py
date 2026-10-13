@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylPentylEther(Component):
     """
-    Represents the properties and constants for Methyl pentyl ether(C6?H14?O).
+    Represents the properties and constants for Methyl pentyl ether(C6H14O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyl pentyl ether, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylPentylEther(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyl pentyl ether"
-    formula = "C6?H14?O"
+    formula = "C6H14O"
     molecular_weight = 102.175
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylPentylEther(Component):
     _critical_acentric_factor = 0.3442
 
     _density_constants = [0.71004, 0.26981, 546.49, 0.29974]
-    _specific_heat_constants = [0.0, -468.32, 1.2209, 0.0, 0.0, 2.0728, 2.4663]
-    _viscosity_constants = [-11.391, 1090.8, 1.08e-07]
-    _thermal_conductivity_constants = [0.21698, -0.00028998]
-    _vapor_pressure_constants = [61.907, 0.0, -5.706, 1.18e-17, 6.0]
-    _enthalpy_constants = [5.0002, 0.3781]
+    _specific_heat_constants = [251890, -468.32, 1.2209, 0.0, 0.0]
+    _viscosity_constants = [-11.391, 1090.8, 1.08e-07, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21698, -0.00028998, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [61.907, -6188.90, -5.706, 1.18e-17, 6.0]
+    _enthalpy_constants = [5.0002e-7, 0.3781, 0.0, 0.0, 0.0]

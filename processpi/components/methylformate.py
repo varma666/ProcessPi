@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylFormate(Component):
     """
-    Represents the properties and constants for Methyl formate(C2?H4?O2?).
+    Represents the properties and constants for Methyl formate(C2H4O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methyl formate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylFormate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methyl formate"
-    formula = "C2?H4?O2?"
+    formula = "C2H4O2"
     molecular_weight = 60.052
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylFormate(Component):
     _critical_acentric_factor = 0.2556
 
     _density_constants = [1.525, 0.2634, 487.2, 0.2806]
-    _specific_heat_constants = [0.0, -396.0, 1.21, 0.0, 0.0, 0.9793, 1.2195]
-    _viscosity_constants = [-39.641, 2113.3, 4.308]
-    _thermal_conductivity_constants = [0.3246, -0.000468]
-    _vapor_pressure_constants = [77.184, 0.0, -8.392, 7.85e-06, 2.0]
-    _enthalpy_constants = [4.103, 0.3825]
+    _specific_heat_constants = [130200, -396.0, 1.21, 0.0, 0.0]
+    _viscosity_constants = [-39.641, 2113.3, 4.308, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.3246, -0.000468, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [77.184, -5606.10, -8.392, 7.85e-06, 2.0]
+    _enthalpy_constants = [4.103e-7, 0.3825, 0.0, 0.0, 0.0]

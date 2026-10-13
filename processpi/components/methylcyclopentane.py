@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Methylcyclopentane(Component):
     """
-    Represents the properties and constants for Methylcyclopentane(C6?H12?).
+    Represents the properties and constants for Methylcyclopentane(C6H12).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methylcyclopentane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Methylcyclopentane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylcyclopentane"
-    formula = "C6?H12?"
+    formula = "C6H12"
     molecular_weight = 84.159
 
     # Critical properties
@@ -45,8 +45,8 @@ class Methylcyclopentane(Component):
     _critical_acentric_factor = 0.2288
 
     _density_constants = [0.84758, 0.27037, 532.7, 0.28258]
-    _specific_heat_constants = [0.0, -490.0, 2.1383, -0.0015585, 0.0, 1.2492, 1.8682]
-    _viscosity_constants = [-1.8553, 612.62, -1.3774]
-    _thermal_conductivity_constants = [0.1929, -0.0002492]
-    _vapor_pressure_constants = [55.368, 0.0, -5.0136, 3.22e-06, 2.0]
-    _enthalpy_constants = [4.3595, 0.38507]
+    _specific_heat_constants = [155920, -490.0, 2.1383, -0.0015585, 0.0]
+    _viscosity_constants = [-1.8553, 612.62, -1.3774, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.1929, -0.0002492, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [55.368, -5149.80, -5.0136, 3.22e-06, 2.0]
+    _enthalpy_constants = [4.3595e-7, 0.38507, 0.0, 0.0, 0.0]

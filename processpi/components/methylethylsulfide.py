@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethylethylSulfide(Component):
     """
-    Represents the properties and constants for Methylethyl sulfide(C3?H8?S).
+    Represents the properties and constants for Methylethyl sulfide(C3H8S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methylethyl sulfide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethylethylSulfide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methylethyl sulfide"
-    formula = "C3?H8?S"
+    formula = "C3H8S"
     molecular_weight = 76.161
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethylethylSulfide(Component):
     _critical_acentric_factor = 0.2091
 
     _density_constants = [1.067, 0.27102, 533.0, 0.29364]
-    _specific_heat_constants = [0.0, -288.61, 0.78179, 0.0, 0.0, 1.3484, 1.5344]
-    _viscosity_constants = [-10.842, 863.65, -0.00074603]
-    _thermal_conductivity_constants = [0.22136, -0.00028938]
-    _vapor_pressure_constants = [79.07, 0.0, -8.631, 6.53e-06, 2.0]
-    _enthalpy_constants = [4.4842, 0.41151]
+    _specific_heat_constants = [161240, -288.61, 0.78179, 0.0, 0.0]
+    _viscosity_constants = [-10.842, 863.65, -0.00074603, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.22136, -0.00028938, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [79.07, -6114.10, -8.631, 6.53e-06, 2.0]
+    _enthalpy_constants = [4.4842e-7, 0.41151, 0.0, 0.0, 0.0]

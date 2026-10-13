@@ -3,7 +3,7 @@ from processpi.units import *
 
 class MethacrylicAcid(Component):
     """
-    Represents the properties and constants for Methacrylic acid(C4?H6?O2?).
+    Represents the properties and constants for Methacrylic acid(C4H6O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Methacrylic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class MethacrylicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Methacrylic acid"
-    formula = "C4?H6?O2?"
+    formula = "C4H6O2"
     molecular_weight = 86.089
 
     # Critical properties
@@ -45,8 +45,8 @@ class MethacrylicAcid(Component):
     _critical_acentric_factor = 0.3318
 
     _density_constants = [0.87025, 0.24383, 662.0, 0.28571]
-    _specific_heat_constants = [0.0, -58.59, 0.3582, 0.0, 0.0, 1.5915, 1.8837]
-    _viscosity_constants = [-14.527, 1497.7, 0.51747]
-    _thermal_conductivity_constants = [0.2306, -0.00025201]
-    _vapor_pressure_constants = [109.53, 0.0, -12.289, 3.2e-06, 2.0]
-    _enthalpy_constants = [4.6095, 0.23331]
+    _specific_heat_constants = [146290, -58.59, 0.3582, 0.0, 0.0]
+    _viscosity_constants = [-14.527, 1497.7, 0.51747, 0, 0]
+    _thermal_conductivity_constants = [0.2306, -0.00025201, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [109.53, -10410, -12.289, 3.2e-06, 2.0]
+    _enthalpy_constants = [4.6095e-7, 0.23331, 0.0, 0.0, 0.0]

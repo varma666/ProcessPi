@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Hydrazine(Component):
     """
-    Represents the properties and constants for Hydrazine(H4?N2?).
+    Represents the properties and constants for Hydrazine(H4N2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Hydrazine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Hydrazine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Hydrazine"
-    formula = "H4?N2?"
+    formula = "H4N2"
     molecular_weight = 32.045
 
     # Critical properties
@@ -45,8 +45,8 @@ class Hydrazine(Component):
     _critical_acentric_factor = 0.3143
 
     _density_constants = [1.0516, 0.16613, 653.15, 0.1898]
-    _specific_heat_constants = [0.0, 50.929, 0.043379, 0.0, 0.0, 0.9708, 1.3158]
+    _specific_heat_constants = [79815, 50.929, 0.043379, 0.0, 0.0]
     _viscosity_constants = [-75.781, 4175.4, 9.6508, -7.27e-09, 3.0]
-    _thermal_conductivity_constants = [1.3675, -0.0015895]
-    _vapor_pressure_constants = [76.858, 0.0, -8.22, 0.00616, 1.0]
-    _enthalpy_constants = [5.9794, 0.9424, -1.398, 0.8862]
+    _thermal_conductivity_constants = [1.3675, -0.0015895, 0, 0, 0]
+    _vapor_pressure_constants = [76.858, -7245.20, -8.22, 0.00616, 1.0]
+    _enthalpy_constants = [5.9794e-7, 0.9424, -1.398, 0.8862]

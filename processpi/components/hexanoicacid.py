@@ -3,7 +3,7 @@ from processpi.units import *
 
 class HexanoicAcid(Component):
     """
-    Represents the properties and constants for Hexanoic acid(C6?H12?O2?).
+    Represents the properties and constants for Hexanoic acid(C6H12O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Hexanoic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class HexanoicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Hexanoic acid"
-    formula = "C6?H12?O2?"
+    formula = "C6H12O2"
     molecular_weight = 116.158
 
     # Critical properties
@@ -45,8 +45,8 @@ class HexanoicAcid(Component):
     _critical_acentric_factor = 0.7299
 
     _density_constants = [0.62833, 0.25598, 660.2, 0.25304]
-    _specific_heat_constants = [0.0, 44.116, 0.709, 0.0, 0.0, 2.2526, 3.4568]
-    _viscosity_constants = [-46.402, 3448.6, 5.0849]
-    _thermal_conductivity_constants = [0.1855, -0.000146]
-    _vapor_pressure_constants = [114.05, 0.0, -12.45, 5.63e-18, 6.0]
-    _enthalpy_constants = [9.0746, 0.8926, -0.75172, 0.34378]
+    _specific_heat_constants = [161980, 44.116, 0.709, 0.0, 0.0]
+    _viscosity_constants = [-46.402, 3448.6, 5.0849, 0, 0]
+    _thermal_conductivity_constants = [0.1855, -0.000146, 0, 0, 0]
+    _vapor_pressure_constants = [114.05, -12332, -12.45, 5.63e-18, 6.0]
+    _enthalpy_constants = [9.0746e-7, 0.8926, -0.75172, 0.34378]
