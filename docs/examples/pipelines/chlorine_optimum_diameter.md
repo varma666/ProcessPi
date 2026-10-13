@@ -33,29 +33,28 @@ results.detailed_summary()
 # Summary
 Density: 17.685884 kg/m3
 ✅ Found optimal diameter based on recommended velocity.
-   Selected Diameter: 8.0 in 
-   Calculated Pressure Drop: 15.41 Pa
-⚠️ Warning: Final velocity 4.87 m/s outside recommended range (5.00-10.00 m/s) for Chlorine.
+   Selected Diameter: 6.0 in 
+   Calculated Pressure Drop: 62.85 Pa
 
 === Pipeline Result 1 (Main Pipe) ===
 Mode: Single_pipe
-Nominal Pipe Size: 8 in
-Internal Diameter: 202.74 mm
+Nominal Pipe Size: 6 in
+Internal Diameter: 154.08 mm
 Inlet Flow: 0.157 m3/s 
 Outlet Flow: 0.157 m3/s 
-Total Pressure Drop: 0.02 kPa
-Total Head Loss: 0.09 m
-Total Power Required: 0.00 kW
-Velocity: 4.865 m/s
-Reynolds Number: 986964 (dimensionless)
-Friction Factor: 0.0149 (dimensionless)
+Total Pressure Drop: 0.06 kPa
+Total Head Loss: 0.36 m
+Total Power Required: 0.01 kW
+Velocity: 8.423 m/s
+Reynolds Number: 1298657 (dimensionless)
+Friction Factor: 0.0154 (dimensionless)
 
 # Detailed Summary
 === Detailed Components for Result 1 (Main Pipe) ===
-+-----------+--------+-----------------+------------+------------+-------------------+----------------+---------------------+
-| Name      | Type   |   Pressure Drop |   Velocity |   Reynolds |   Friction Factor | Nominal Size   | Internal Diameter   |
-+===========+========+=================+============+============+===================+================+=====================+
-| Main Pipe | pipe   |           15.41 |       4.87 |     986964 |            0.0149 | 8 in           | 202.74 mm           |
-+-----------+--------+-----------------+------------+------------+-------------------+----------------+---------------------+
++-----------+--------+-----------------+------------+-------------+-------------------+----------------+---------------------+
+| Name      | Type   |   Pressure Drop |   Velocity |    Reynolds |   Friction Factor | Nominal Size   | Internal Diameter   |
++===========+========+=================+============+=============+===================+================+=====================+
+| Main Pipe | pipe   |           62.85 |       8.42 | 1.29866e+06 |            0.0154 | 6 in           | 154.08 mm           |
++-----------+--------+-----------------+------------+-------------+-------------------+----------------+---------------------+
 
 ```

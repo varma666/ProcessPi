@@ -166,6 +166,10 @@ class PipelineEngine:
           DeprecationWarning; it used to take `nominal_diameter` and
           `internal_diameter` as aliases, so a nominal 4 in was used as a
           101.6 mm bore instead of 102.26 mm.
+        - None of these, with a `pipe` that has a nominal or internal diameter:
+          that pipe's size is used. It used to be ignored and the pipe sized.
+          A fit() diameter is used over the pipe's, as before, with a
+          UserWarning when the two differ.
 
         A bare number for a diameter is read in millimetres
         (`assume_mm_for_numbers=False`: metres), a bare length in metres, as
@@ -268,10 +272,37 @@ class PipelineEngine:
 
         schedule = normalize_schedule(self.data.get("schedule") or "STD")
         nominal, internal = resolve_diameters(nominal, internal, schedule, "PipelineEngine")
+
+        # A `pipe` that has its own size is calculated on it; only fit()
+        # diameters used to be read, so such a pipe was sized all over again.
+        pipe = self.data.get("pipe")
+        pipe_bore = self._pipe_bore(pipe) if isinstance(pipe, Pipe) else None
+        if pipe_bore is not None:
+            if internal is None:
+                nominal, internal = pipe.nominal_diameter, pipe_bore
+                schedule = pipe.schedule
+            elif abs(internal.to_base() - pipe_bore.to_base()) > 1e-12:
+                # fit() diameters have always been the ones used (and written
+                # to the pipe by run()), so a Pipe reused with several fit()
+                # diameters keeps working.
+                _warn_at_caller(
+                    "The diameter given to fit() differs from the diameter of "
+                    "the `pipe` given to fit(); the fit() diameter is used and "
+                    "written to the pipe. Give the diameter in one place."
+                )
+
         self.data["schedule"] = schedule
         self.data["nominal_diameter"] = nominal
         self.data["internal_diameter"] = internal
         self.data["diameter"] = internal
+
+    def _pipe_bore(self, pipe: Pipe) -> Optional[Diameter]:
+        """The bore of a pipe that has a size (nominal or internal), else None."""
+        if getattr(pipe, "internal_diameter", None) is not None:
+            return pipe.internal_diameter
+        if getattr(pipe, "nominal_diameter", None) is not None:
+            return self._resolve_internal_diameter(pipe)
+        return None
 
 
     # ---------------------- Fluid properties --------------------------------
@@ -1137,16 +1168,10 @@ class PipelineEngine:
                 print("🔄 Auto-sizing network pipe diameters...")
                 kwargs = self.data.copy()
                 kwargs.pop("network", None)
-                sizing_results = self._solve_for_diameter_network(net, **kwargs)
-
-                # Access results directly
-                sizing_data = sizing_results.results
-
-                # Apply calculated diameters to network pipes
-                for comp in sizing_data.get("all_simulation_results", []):
-                    for pipe in net.get_all_pipes():
-                        if pipe.name == comp.get("network_name"):
-                            pipe.internal_diameter = comp["components"][0]["diameter"]
+                # The sizing sets the size of each pipe it sizes. The sizes
+                # were also copied again here by pipe name, which gave a pipe
+                # the user had sized the size of another pipe of the same name.
+                self._solve_for_diameter_network(net, **kwargs)
 
             # --------------------------------------------------
             # Step 3: Assign flowrate to pipes if missing
@@ -1390,6 +1415,46 @@ class PipelineEngine:
     
 
 
+    @staticmethod
+    def _velocity_range_index(
+        velocities: List[float], start: int, v_min: float, v_max: float
+    ) -> Tuple[int, Optional[str]]:
+        """
+        The standard size for velocity-based sizing.
+
+        `velocities` are those of the standard sizes in ascending order of bore,
+        and `start` is the size the sizing aims at: the smallest bore at or
+        above the one for the middle of the recommended range. That size is
+        kept when its velocity is in the range. Rounding the bore up can take
+        the velocity below the range (chlorine at 10 000 kg/h: 8 in at 4.87 m/s
+        for 5 to 10 m/s); the next smaller size is then used when it is within
+        the maximum (6 in at 8.4 m/s), and the start size otherwise.
+
+        Returns:
+            (index, note): note is None when the velocity is in the range, and
+            otherwise says why no standard size puts it there.
+        """
+        v = velocities[start]
+        if v < v_min and start > 0 and velocities[start - 1] <= v_max:
+            return start - 1, None
+        if v < v_min:
+            if start == 0:
+                return start, (
+                    "No standard size is in the range: the flow is too small "
+                    "for the smallest size."
+                )
+            return start, (
+                f"No standard size is in the range: the next smaller size would "
+                f"exceed the maximum ({velocities[start - 1]:.2f} m/s), so the "
+                f"maximum governs."
+            )
+        if v > v_max:
+            return start, (
+                "No standard size is in the range: even the largest size exceeds "
+                "the maximum."
+            )
+        return start, None
+
     def _solve_for_diameter(self, **kwargs):
         """
         Sizing a single pipeline to meet either a target velocity or an available pressure drop.
@@ -1457,6 +1522,7 @@ class PipelineEngine:
         available_dp_pa = _pressure_to_Pa(available_dp)
         
         available_dp_met = None
+        range_note = None
         if available_dp_pa is not None:
             all_standard_diameters = list_available_pipe_diameters()
             if not all_standard_diameters:
@@ -1468,7 +1534,11 @@ class PipelineEngine:
             # test the pipe friction alone and then add the fittings without
             # checking again, so the size it called optimal could exceed the
             # available drop.
+            # It must also keep the velocity at or below the recommended
+            # maximum: a generous available drop used to give the smallest pipe
+            # that met it, at any velocity.
             D_final = None
+            available_dp_met = False
             for D_test in all_standard_diameters:
                 trial_pipe = Pipe(
                     name=pipe.name,
@@ -1481,10 +1551,14 @@ class PipelineEngine:
                 trial_pipe.fittings = fittings
                 trial_calc = self._pipe_calculation(trial_pipe, flow_rate)
                 trial_dp_pa = _pressure_to_Pa(trial_calc.get("pressure_drop"))
-                if trial_dp_pa is not None and trial_dp_pa <= available_dp_pa:
-                    D_final, final_pipe_object, final_calc = D_test, trial_pipe, trial_calc
-                    break
-            available_dp_met = D_final is not None
+                if trial_dp_pa is None or trial_dp_pa > available_dp_pa:
+                    continue
+                available_dp_met = True
+                trial_v = _to_value(trial_calc.get("velocity"))
+                if trial_v is not None and trial_v > v_max:
+                    continue
+                D_final, final_pipe_object, final_calc = D_test, trial_pipe, trial_calc
+                break
 
             if D_final is None:
                 # Nothing fits: the largest size, reported as not meeting the drop.
@@ -1507,35 +1581,51 @@ class PipelineEngine:
             print(f"   Selected Diameter: {D_final.to('in')} ({final_pipe_object.internal_diameter.to('m').value:.4f} m internal)")
             print(f"   Calculated Pressure Drop: {total_dp_pa:.2f} Pa (allowed: {available_dp_pa:.2f} Pa)")
 
+            # Why the velocity may still be outside the recommended range.
+            bores_m = [
+                (get_internal_diameter(d) or d).to("m").value for d in all_standard_diameters
+            ]
+            velocities = [q_val / (math.pi * b * b / 4.0) for b in bores_m]
+            idx = all_standard_diameters.index(D_final)
+            if v_final is not None and v_final < v_min and (
+                not available_dp_met or (idx > 0 and velocities[idx - 1] <= v_max)
+            ):
+                range_note = (
+                    "The available pressure drop governs: a smaller size, in the "
+                    "velocity range, exceeds it."
+                )
+            else:
+                _, range_note = self._velocity_range_index(velocities, idx, v_min, v_max)
+
         else:
-            # Velocity-based sizing (no change from previous correct version)
+            # Velocity-based sizing: aim at the middle of the recommended range,
+            # round the bore up to a standard size, and keep the velocity in
+            # the range (see `_velocity_range_index`).
             v_start = 0.5 * (v_min + v_max)
             D_initial = math.sqrt(max(1e-20, 4.0 * q_val / (math.pi * v_start)))
-            selected_diameter_obj = None
             all_standard_diameters = list_available_pipe_diameters()
-            #all_standard_internal_diameters = 
-            for d in all_standard_diameters:
-                d = get_internal_diameter(nominal_diameter = d)
-                d_m = _to_value(d)
-                if d_m is not None and d_m >= D_initial:
-                    selected_diameter_obj = d
-                    break
-            if selected_diameter_obj is None and all_standard_diameters:
-                selected_diameter_obj = all_standard_diameters[-1]
-            
+            bores_m = [
+                (get_internal_diameter(d) or d).to("m").value for d in all_standard_diameters
+            ]
+            velocities = [q_val / (math.pi * b * b / 4.0) for b in bores_m]
+            start = next(
+                (i for i, b in enumerate(bores_m) if b >= D_initial), len(bores_m) - 1
+            )
+            idx, range_note = self._velocity_range_index(velocities, start, v_min, v_max)
+            D_final = all_standard_diameters[idx]
+
             final_pipe_object = Pipe(
                 name=pipe.name,
                 length=pipe.length,
                 material=pipe.material,
-                nominal_diameter=get_nominal_dia_from_internal_dia(selected_diameter_obj),
+                nominal_diameter=D_final,
                 fittings=self.data.get("fittings", []) or []
             )
             final_calc = self._pipe_calculation(final_pipe_object, flow_rate)
-            
-            D_final = get_nominal_dia_from_internal_dia(selected_diameter_obj)
+
             total_dp_pa = _pressure_to_Pa(final_calc.get("pressure_drop"))
             v_final = _to_value(final_calc.get("velocity"))
-            
+
             print(f"✅ Found optimal diameter based on recommended velocity.")
             print(f"   Selected Diameter: {D_final.to('in')} ")
             print(f"   Calculated Pressure Drop: {total_dp_pa:.2f} Pa")
@@ -1555,6 +1645,8 @@ class PipelineEngine:
                 f"⚠️ Warning: Final velocity {v_final:.2f} m/s outside recommended "
                 f"range ({v_min:.2f}-{v_max:.2f} m/s) for {getattr(fluid, 'name', 'fluid')}."
             )
+            if range_note:
+                print(f"   {range_note}")
         self.selected_diameter = D_final
         # The calculation used the internal diameter of the selected size; the
         # nominal size was reported in its place.
@@ -1595,11 +1687,63 @@ class PipelineEngine:
         return PipelineResults(results_out)
 
     
+    def _design_flows(
+        self,
+        block: Any,
+        q_m3s: float,
+        net_name: Optional[str] = None,
+        flows: Optional[Dict[int, float]] = None,
+    ) -> Dict[int, float]:
+        """
+        The flow (m3/s) each pipe of a network carries, keyed by id(pipe), for
+        sizing pipes that have no diameter yet.
+
+        Series elements carry the flow that enters them. A parallel block
+        splits its flow by `flow_split` when one is given for it, as
+        `_balance_parallel_flows` does, and evenly otherwise: the balanced
+        split needs the diameters being sized. The solver balances the split
+        on the sized pipes afterwards.
+        """
+        if flows is None:
+            flows = {}
+        if isinstance(block, Pipe):
+            flows[id(block)] = q_m3s
+        elif isinstance(block, PipelineNetwork):
+            if block.connection_type == "parallel":
+                self._design_flows(block.elements, q_m3s, block.name, flows)
+            else:
+                for element in block.elements:
+                    self._design_flows(element, q_m3s, None, flows)
+        elif isinstance(block, list):
+            parallel = (net_name is not None) or (
+                bool(block) and all(isinstance(b, list) for b in block)
+            )
+            if not parallel:
+                for element in block:
+                    self._design_flows(element, q_m3s, None, flows)
+                return flows
+            n = len(block)
+            if n == 0:
+                return flows
+            shares = [1.0] * n
+            split_cfg = (self.data.get("flow_split") or {}).get(net_name) if net_name else None
+            if split_cfg and len(split_cfg) == n:
+                shares = [float(x) for x in split_cfg]
+            total = sum(shares) or 1.0
+            for branch, share in zip(block, shares):
+                self._design_flows(branch, q_m3s * share / total, None, flows)
+        return flows
+
     def _solve_for_diameter_network(self, network, **kwargs):
         """
         Iteratively sizes each pipe in a network using the same standard diameter
         selection logic as `_solve_for_diameter`, ensuring consistency between
         single-pipe and network sizing.
+
+        Only pipes without a diameter are sized; a pipe with a nominal or
+        internal diameter keeps it. Each pipe is sized for the flow it carries
+        in the network (see `_design_flows`); every pipe used to be sized for
+        the 0.001 m3/s placeholder `Pipe.flow_rate`, whatever the network flow.
         """
         import math
         from ..pipelines.standards import get_recommended_velocity, list_available_pipe_diameters
@@ -1617,12 +1761,17 @@ class PipelineEngine:
         pipes = network.get_all_pipes() if hasattr(network, "get_all_pipes") else \
             [p for branch in self._normalize_branches(network) for p in branch if isinstance(p, Pipe)]
 
-        for pipe in pipes:
-            flow_rate = getattr(pipe, "flow_rate", None) or self._infer_flowrate()
-            if flow_rate is None or float(getattr(flow_rate, "value", flow_rate)) <= 0:
-                continue
+        q_total = float(self._infer_flowrate().to("m3/s").value)
+        design_flows = self._design_flows(network, q_total)
 
-            q_val = float(flow_rate.value)
+        for pipe in pipes:
+            if self._pipe_bore(pipe) is not None:
+                # A size the user gave is kept; it used to be replaced.
+                continue
+            q_val = design_flows.get(id(pipe), q_total)
+            if q_val <= 0:
+                continue
+            flow_rate = VolumetricFlowRate(q_val, "m3/s")
     
             # Recommended velocity range
             vel_range = get_recommended_velocity(getattr(fluid, "name", "").strip().lower().replace(" ", "_"))
@@ -1645,26 +1794,25 @@ class PipelineEngine:
                 return get_internal_diameter(nominal, schedule) or nominal
 
             std_diams = list_available_pipe_diameters()
-            D_candidates = []
-            for idx, d in enumerate(std_diams):
-                if _internal(d).to("m").value >= D_initial:
-                    D_candidates = [
-                        std_diams[idx - 1] if idx > 0 else None,
-                        d,
-                        std_diams[idx + 1] if idx < len(std_diams) - 1 else None
-                    ]
-                    break
-            D_candidates = [d for d in D_candidates if d is not None]
-    
-            if not D_candidates:
-                D_candidates = [std_diams[-1]]
-    
+            bores_m = [_internal(d).to("m").value for d in std_diams]
+            velocities = [q_val / (math.pi * b * b / 4.0) for b in bores_m]
+            # The smallest bore at or above the one for the middle of the range,
+            # with the sizes either side of it.
+            start = next(
+                (i for i, b in enumerate(bores_m) if b >= D_initial), len(std_diams) - 1
+            )
+            D_indices = [i for i in (start - 1, start, start + 1) if 0 <= i < len(std_diams)]
+            if bores_m[start] < D_initial:
+                D_indices = [start]
+
             results_list = []
-            for D_test in D_candidates:
+            for idx in D_indices:
+                D_test = std_diams[idx]
                 id_test = _internal(D_test)
                 pipe.internal_diameter = id_test
                 calc = self._pipe_calculation(pipe, flow_rate)
                 results_list.append({
+                    "index": idx,
                     "nominal_diameter": D_test,
                     "diameter": id_test,
                     "diameter_m": id_test.to("m").value,
@@ -1674,18 +1822,38 @@ class PipelineEngine:
                 })
     
             # Selection logic
+            range_note = None
             if available_dp:
                 available_dp_pa = available_dp.to("Pa").value if hasattr(available_dp, "to") else float(available_dp)
-                feasible = [r for r in results_list if r["pressure_drop_Pa"] <= available_dp_pa]
+                # Within the drop and at or below the maximum velocity.
+                feasible = [
+                    r for r in results_list
+                    if r["pressure_drop_Pa"] <= available_dp_pa and r["velocity_m_s"] <= v_max
+                ]
                 if feasible:
                     best_result = min(feasible, key=lambda r: r["diameter_m"])
                 else:
                     best_result = min(results_list, key=lambda r: (abs(r["pressure_drop_Pa"] - available_dp_pa), -r["diameter_m"]))
+                idx = best_result["index"]
+                if best_result["velocity_m_s"] < v_min and (
+                    not feasible or (idx > 0 and velocities[idx - 1] <= v_max)
+                ):
+                    range_note = (
+                        "The available pressure drop governs: a smaller size, in "
+                        "the velocity range, exceeds it."
+                    )
+                else:
+                    _, range_note = self._velocity_range_index(velocities, idx, v_min, v_max)
             else:
                 print(f"🔍 Pipe {pipe.name}: No available DP provided. Showing candidates:")
                 for r in results_list:
                     print(f"  {r['nominal_diameter'].to('in')} -> {r['velocity_m_s']:.2f} m/s, {r['pressure_drop_Pa']:.2f} Pa")
-                best_result = results_list[len(results_list)//2]
+                # The size at the middle of the range, kept in the range (see
+                # `_velocity_range_index`). The middle entry of the list was
+                # used, which is the next larger size when the list starts at
+                # the smallest size.
+                idx, range_note = self._velocity_range_index(velocities, start, v_min, v_max)
+                best_result = next(r for r in results_list if r["index"] == idx)
     
             pipe.nominal_diameter = best_result["nominal_diameter"]
             pipe.internal_diameter = best_result["diameter"]
@@ -1702,6 +1870,8 @@ class PipelineEngine:
             v_final = best_result["velocity_m_s"]
             if not (v_min <= v_final <= v_max):
                 print(f"⚠️ Warning: Pipe '{pipe.name}' velocity {v_final:.2f} m/s outside recommended range {v_min}-{v_max} m/s")
+                if range_note:
+                    print(f"   {range_note}")
     
             all_results.append({
                 "network_name": pipe.name,

@@ -54,10 +54,12 @@ results_concrete.detailed_summary()
    Selected Diameter: 10.0 in (0.2545 m internal)
    Calculated Pressure Drop: 31993.15 Pa (allowed: 58768.50 Pa)
 ⚠️ Warning: Final velocity 0.55 m/s outside recommended range (1.00-2.50 m/s) for Water.
+   The available pressure drop governs: a smaller size, in the velocity range, exceeds it.
 ✅ Found optimal diameter for available pressure drop.
    Selected Diameter: 10.0 in (0.2545 m internal)
    Calculated Pressure Drop: 41106.19 Pa (allowed: 58768.50 Pa)
 ⚠️ Warning: Final velocity 0.55 m/s outside recommended range (1.00-2.50 m/s) for Water.
+   The available pressure drop governs: a smaller size, in the velocity range, exceeds it.
 
 # Summary
 === Pipeline Result 1 (Steel Pipe) ===

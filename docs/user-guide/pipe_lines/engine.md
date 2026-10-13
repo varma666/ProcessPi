@@ -33,6 +33,7 @@ Configures the `PipelineEngine` instance by processing input parameters, convert
   - Given both, the internal diameter is used (a lined pipe, a wall the table does not list) and must be smaller than the nominal size's outside diameter, otherwise `ValueError`.
   - A `nominal_diameter` that is not a standard size cannot be looked up; it is used as the internal diameter, with a `UserWarning`.
   - `diameter` (and `dia`, `D`) is the internal diameter, as before, with a `DeprecationWarning`. Until this change `nominal_diameter` was an alias of it, so a nominal 4 in was used as a 101.6 mm bore.
+  - With none of these, a `pipe` passed to `fit()` that has a nominal or internal diameter is calculated on its own size. It used to be ignored and the pipe sized. A diameter given to `fit()` is used over the pipe's, as before, with a `UserWarning` when the two differ.
 - **Bare numbers:** a diameter given as a plain number is read in millimetres (metres with `assume_mm_for_numbers=False`), a length in metres, as before, each with a `UserWarning` naming the unit. Pass `Diameter` and `Length` objects to avoid both.
 - **Default Values:** Applies defaults for `assume_mm_for_numbers`, `flow_split`, `tolerance_m3s`, `pump_efficiency`, `method`, `hw_coefficient`, and `solver`.  
 - **Network Validation:** Validates that `network` is a `PipelineNetwork` instance.  
@@ -68,13 +69,15 @@ Chooses between **Network Mode** or **Single Pipe Mode**.
 
 **Core Logic**
 - **Network Mode** (with `network` object):  
-  - Diameter Check → Auto-sizing if missing  
+  - Diameter Check → Auto-sizing if missing: only pipes without a diameter are sized, each for the flow it carries in the network (a parallel block's flow split by `flow_split` when given, evenly otherwise); a pipe with a nominal or internal diameter keeps it  
   - Flowrate Assignment → Distributes flow  
   - Network Solving → Pressure drop, head, pump power  
 
 - **Single Pipe Mode** (without `network`):  
-  - If no diameter → Solves for optimum diameter  
+  - If no diameter (in `fit()` or on the `pipe`) → Solves for optimum diameter  
   - If diameter present → Standard hydraulic calculation  
+
+- **Sizing:** without `available_dp`, the size is the standard bore at or above the one for the middle of the fluid's recommended velocity range; when that size is below the range and the next smaller size is within the maximum, the smaller size is used. With `available_dp`, it is the smallest size whose drop fits in it and whose velocity is at or below the maximum. When the velocity is still outside the range, the warning says which limit governs.
 
 **Results Output**  
 - Consolidates into `results_out` → returned as `PipelineResults`.
