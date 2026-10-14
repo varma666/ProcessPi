@@ -3,7 +3,7 @@ from processpi.units import *
 
 class PropylMercaptan(Component):
     """
-    Represents the properties and constants for Propyl mercaptan(C3?H8?S).
+    Represents the properties and constants for Propyl mercaptan(C3H8S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Propyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class PropylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Propyl mercaptan"
-    formula = "C3?H8?S"
+    formula = "C3H8S"
     molecular_weight = 76.161
 
     # Critical properties
@@ -45,8 +45,8 @@ class PropylMercaptan(Component):
     _critical_acentric_factor = 0.2318
 
     _density_constants = [1.0714, 0.27214, 536.6, 0.29481]
-    _specific_heat_constants = [0.0, -319.1, 0.8127, 0.0, 0.0, 1.3708, 1.5299]
-    _viscosity_constants = [-10.153, 840.71, -0.093763]
-    _thermal_conductivity_constants = [0.2202, -0.00028535]
-    _vapor_pressure_constants = [62.165, 0.0, -5.8595, 2.06e-17, 6.0]
-    _enthalpy_constants = [4.4782, 0.41073]
+    _specific_heat_constants = [167300, -319.1, 0.8127, 0.0, 0.0]
+    _viscosity_constants = [-10.153, 840.71, -0.093763, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2202, -0.00028535, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [62.165, -5624, -5.8595, 2.06e-17, 6.0]
+    _enthalpy_constants = [4.4782e-7, 0.41073, 0.0, 0.0, 0.0]

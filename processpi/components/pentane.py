@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Pentane(Component):
     """
-    Represents the properties and constants for Pentane(C5?H12?).
+    Represents the properties and constants for Pentane(C5H12).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Pentane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Pentane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Pentane"
-    formula = "C5?H12?"
+    formula = "C5H12"
     molecular_weight = 72.149
 
     # Critical properties
@@ -45,8 +45,8 @@ class Pentane(Component):
     _critical_acentric_factor = 0.2515
 
     _density_constants = [0.84947, 0.26726, 469.7, 0.27789]
-    _specific_heat_constants = [0.0, -270.5, 0.99537, 0.0, 0.0, 1.4076, 2.0498]
+    _specific_heat_constants = [159080, -270.5, 0.99537, 0.0, 0.0]
     _viscosity_constants = [-53.509, 1836.6, 7.1409, -1.9627e-05, 2.0]
     _thermal_conductivity_constants = [0.2537, -0.000576, 3.44e-07]
-    _vapor_pressure_constants = [78.741, 0.0, -8.8253, 9.62e-06, 2.0]
-    _enthalpy_constants = [3.9109, 0.38681]
+    _vapor_pressure_constants = [78.741, -5420.30, -8.8253, 9.62e-06, 2.0]
+    _enthalpy_constants = [3.9109e-7, 0.38681, 0.0, 0.0, 0.0]

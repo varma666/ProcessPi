@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Tridecane(Component):
     """
-    Represents the properties and constants for Tridecane(C13?H28?).
+    Represents the properties and constants for Tridecane(C13H28).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Tridecane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Tridecane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Tridecane"
-    formula = "C13?H28?"
+    formula = "C13H28"
     molecular_weight = 184.361
 
     # Critical properties
@@ -45,8 +45,8 @@ class Tridecane(Component):
     _critical_acentric_factor = 0.6174
 
     _density_constants = [0.29934, 0.2433, 675.0, 0.28571]
-    _specific_heat_constants = [0.0, -104.7, 1.0022, 0.0, 0.0, 3.94, 5.5619]
+    _specific_heat_constants = [350180, -104.7, 1.0022, 0.0, 0.0]
     _viscosity_constants = [-4.1103, 1005.3, -1.0188, 1e+19, -8.0]
-    _thermal_conductivity_constants = [0.20447, -0.00022612]
-    _vapor_pressure_constants = [137.45, 0.0, -16.543, 7.13e-06, 2.0]
-    _enthalpy_constants = [8.4339, 0.4257]
+    _thermal_conductivity_constants = [0.20447, -0.00022612, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [137.45, -12549, -16.543, 7.13e-06, 2.0]
+    _enthalpy_constants = [8.4339e-7, 0.4257, 0.0, 0.0, 0.0]

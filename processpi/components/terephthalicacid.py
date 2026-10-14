@@ -3,7 +3,7 @@ from processpi.units import *
 
 class TerephthalicAcid(Component):
     """
-    Represents the properties and constants for Terephthalic acid(C8?H6?O4?).
+    Represents the properties and constants for Terephthalic acid(C8H6O4).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Terephthalic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class TerephthalicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Terephthalic acid"
-    formula = "C8?H6?O4?"
+    formula = "C8H6O4"
     molecular_weight = 166.131
 
     # Critical properties
@@ -45,8 +45,8 @@ class TerephthalicAcid(Component):
     _critical_acentric_factor = 1.0591
 
     _density_constants = [0.42685, 0.181, 1113.0, 0.28571]
-    _specific_heat_constants = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    _viscosity_constants = []
-    _thermal_conductivity_constants = []
-    _vapor_pressure_constants = [248.72, 0.0, -30.009, 4.8e-06, 2.0]
-    _enthalpy_constants = [8.824, 298.15, 8.824]
+    _specific_heat_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
+    _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [248.72, -32283, -30.009, 4.8e-06, 2.0]
+    _enthalpy_constants = [8.824e-7, 298.15, 8.824e-7, 0.0, 0.0]

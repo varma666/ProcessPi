@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Propylene(Component):
     """
-    Represents the properties and constants for Propylene(C3?H6?).
+    Represents the properties and constants for Propylene(C3H6).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Propylene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Propylene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Propylene"
-    formula = "C3?H6?"
+    formula = "C3H6"
     molecular_weight = 42.08
 
     # Critical properties
@@ -45,8 +45,8 @@ class Propylene(Component):
     _critical_acentric_factor = 0.1376
 
     _density_constants = [1.4403, 0.26852, 364.85, 0.28775]
-    _specific_heat_constants = [0.0, -343.72, 1.0905, 0.0, 0.0, 0.9235, 0.9208]
+    _specific_heat_constants = [114140, -343.72, 1.0905, 0.0, 0.0]
     _viscosity_constants = [-92.082, 1907.3, 15.639, -0.043098, 1.0]
-    _thermal_conductivity_constants = [0.24719, -0.00048824]
-    _vapor_pressure_constants = [43.905, 0.0, -3.4425, 1e-16, 6.0]
-    _enthalpy_constants = [2.5216, 0.33721, -0.18399, 0.22377]
+    _thermal_conductivity_constants = [0.24719, -0.00048824, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [43.905, -3097.80, -3.4425, 1e-16, 6.0]
+    _enthalpy_constants = [2.5216e-7, 0.33721, -0.18399, 0.22377]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class SuccinicAcid(Component):
     """
-    Represents the properties and constants for Succinic acid(C4?H6?O4?).
+    Represents the properties and constants for Succinic acid(C4H6O4).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Succinic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class SuccinicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Succinic acid"
-    formula = "C4?H6?O4?"
+    formula = "C4H6O4"
     molecular_weight = 118.088
 
     # Critical properties
@@ -45,8 +45,8 @@ class SuccinicAcid(Component):
     _critical_acentric_factor = 0.9922
 
     _density_constants = [0.70284, 0.22268, 806.0, 0.28571]
-    _specific_heat_constants = [0.0, -236.96, 0.63148, 0.0, 0.0, 2.6961, 3.3228]
-    _viscosity_constants = [-13.422, 3431.8]
-    _thermal_conductivity_constants = [0.28215, -0.0002585]
-    _vapor_pressure_constants = [128.65, 0.0, -13.872, 2.16e-18, 6.0]
-    _enthalpy_constants = [12.018, 0.37149]
+    _specific_heat_constants = [244770, -236.96, 0.63148, 0.0, 0.0]
+    _viscosity_constants = [-13.422, 3431.8, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.28215, -0.0002585, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [128.65, -16958, -13.872, 2.16e-18, 6.0]
+    _enthalpy_constants = [12.018e-7, 0.37149, 0.0, 0.0, 0.0]

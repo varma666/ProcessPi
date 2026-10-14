@@ -3,7 +3,7 @@ from processpi.units import *
 
 class OctylMercaptan(Component):
     """
-    Represents the properties and constants for Octyl mercaptan(C8?H18?S).
+    Represents the properties and constants for Octyl mercaptan(C8H18S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Octyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class OctylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Octyl mercaptan"
-    formula = "C8?H18?S"
+    formula = "C8H18S"
     molecular_weight = 146.294
 
     # Critical properties
@@ -45,8 +45,8 @@ class OctylMercaptan(Component):
     _critical_acentric_factor = 0.4497
 
     _density_constants = [0.52577, 0.27234, 667.3, 0.30063]
-    _specific_heat_constants = [0.0, -33.198, 0.67889, 0.0, 0.0, 2.7118, 3.7573]
-    _viscosity_constants = [-11.498, 1362.1, 0.015575]
-    _thermal_conductivity_constants = [0.2012, -0.0002142]
-    _vapor_pressure_constants = [78.368, 0.0, -7.8202, 5.66e-18, 6.0]
-    _enthalpy_constants = [6.8907, 0.40017]
+    _specific_heat_constants = [240040, -33.198, 0.67889, 0.0, 0.0]
+    _viscosity_constants = [-11.498, 1362.1, 0.015575, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2012, -0.0002142, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [78.368, -8855.40, -7.8202, 5.66e-18, 6.0]
+    _enthalpy_constants = [6.8907e-7, 0.40017, 0.0, 0.0, 0.0]

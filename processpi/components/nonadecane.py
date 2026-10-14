@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Nonadecane(Component):
     """
-    Represents the properties and constants for Nonadecane(C19?H40?).
+    Represents the properties and constants for Nonadecane(C19H40).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Nonadecane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Nonadecane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Nonadecane"
-    formula = "C19?H40?"
+    formula = "C19H40"
     molecular_weight = 268.521
 
     # Critical properties
@@ -45,8 +45,8 @@ class Nonadecane(Component):
     _critical_acentric_factor = 0.8522
 
     _density_constants = [0.19199, 0.23337, 758.0, 0.28571]
-    _specific_heat_constants = [0.0, 762.08, 0.20481, 0.0, 0.0, 5.9409, 8.7663]
-    _viscosity_constants = [-16.403, 2119.5, 0.6881]
-    _thermal_conductivity_constants = [0.21229, -0.00022]
-    _vapor_pressure_constants = [182.54, 0.0, -22.498, 7.4e-06, 2.0]
-    _enthalpy_constants = [11.674, 0.45865]
+    _specific_heat_constants = [342570, 762.08, 0.20481, 0.0, 0.0]
+    _viscosity_constants = [-16.403, 2119.5, 0.6881, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21229, -0.00022, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [182.54, -17897, -22.498, 7.4e-06, 2.0]
+    _enthalpy_constants = [11.674e-7, 0.45865, 0.0, 0.0, 0.0]

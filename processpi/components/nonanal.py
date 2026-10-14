@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Nonanal(Component):
     """
-    Represents the properties and constants for Nonanal(C9?H18?O).
+    Represents the properties and constants for Nonanal(C9H18O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Nonanal, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Nonanal(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Nonanal"
-    formula = "C9?H18?O"
+    formula = "C9H18O"
     molecular_weight = 142.239
 
     # Critical properties
@@ -45,8 +45,8 @@ class Nonanal(Component):
     _critical_acentric_factor = 0.5117
 
     _density_constants = [0.49587, 0.26135, 658.0, 0.30736]
-    _specific_heat_constants = [0.0, 531.29, 0.0, 0.0, 0.0, 2.7238, 3.8554]
-    _viscosity_constants = [-12.94, 1257.6, 0.37191]
-    _thermal_conductivity_constants = [0.21523, -0.0002799, 9.57e-08]
-    _vapor_pressure_constants = [337.71, 0.0, -50.224, 0.0473, 1.0]
-    _enthalpy_constants = [7.3363, 0.41735]
+    _specific_heat_constants = [136820, 531.29, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-12.94, 1257.6, 0.37191, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21523, -0.0002799, 9.57e-08, 0.0, 0.0]
+    _vapor_pressure_constants = [337.71, -18506, -50.224, 0.0473, 1.0]
+    _enthalpy_constants = [7.3363e-7, 0.41735, 0.0, 0.0, 0.0]

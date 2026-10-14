@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Nonane(Component):
     """
-    Represents the properties and constants for Nonane(C9?H20?).
+    Represents the properties and constants for Nonane(C9H20).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Nonane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Nonane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Nonane"
-    formula = "C9?H20?"
+    formula = "C9H20"
     molecular_weight = 128.255
 
     # Critical properties
@@ -45,8 +45,8 @@ class Nonane(Component):
     _critical_acentric_factor = 0.4435
 
     _density_constants = [0.46321, 0.25444, 594.6, 0.28571]
-    _specific_heat_constants = [0.0, 0.0, 2.7101, 0.0, 0.0, 2.6348, 2.989]
+    _specific_heat_constants = [383080, -1139.80, 2.7101, 0.0, 0.0]
     _viscosity_constants = [-68.54, 3165.3, 9.0919, -1.3519e-05, 2.0]
-    _thermal_conductivity_constants = [0.209, -0.000264]
-    _vapor_pressure_constants = [109.35, 0.0, -12.882, 7.85e-06, 2.0]
-    _enthalpy_constants = [6.037, 0.38522]
+    _thermal_conductivity_constants = [0.209, -0.000264, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [109.35, -9030.40, -12.882, 7.85e-06, 2.0]
+    _enthalpy_constants = [6.037e-7, 0.38522, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class VinylTrichlorosilane(Component):
     """
-    Represents the properties and constants for Vinyl trichlorosilane(C2?H3?Cl3?Si).
+    Represents the properties and constants for Vinyl trichlorosilane(C2H3Cl3Si).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Vinyl trichlorosilane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class VinylTrichlorosilane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Vinyl trichlorosilane"
-    formula = "C2?H3?Cl3?Si"
+    formula = "C2H3Cl3Si"
     molecular_weight = 161.49
 
     # Critical properties
@@ -45,8 +45,8 @@ class VinylTrichlorosilane(Component):
     _critical_acentric_factor = 0.2815
 
     _density_constants = [0.59595, 0.24314, 543.15, 0.24856]
-    _specific_heat_constants = [0.0, 420.35, 0.0, 0.0, 0.0, 1.2449, 2.0246]
-    _viscosity_constants = [-10.37, 823.31]
-    _thermal_conductivity_constants = [0.21831, -0.00029122]
-    _vapor_pressure_constants = [54.571, 0.0, -4.712, 1.07e-17, 6.0]
-    _enthalpy_constants = [4.5659, 0.36278]
+    _specific_heat_constants = [49516, 420.35, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-10.37, 823.31, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21831, -0.00029122, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [54.571, -5561.50, -4.712, 1.07e-17, 6.0]
+    _enthalpy_constants = [4.5659e-7, 0.36278, 0.0, 0.0, 0.0]

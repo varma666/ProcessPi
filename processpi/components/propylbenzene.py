@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Propylbenzene(Component):
     """
-    Represents the properties and constants for Propylbenzene(C9?H12?).
+    Represents the properties and constants for Propylbenzene(C9H12).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Propylbenzene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Propylbenzene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Propylbenzene"
-    formula = "C9?H12?"
+    formula = "C9H12"
     molecular_weight = 120.192
 
     # Critical properties
@@ -45,8 +45,8 @@ class Propylbenzene(Component):
     _critical_acentric_factor = 0.3444
 
     _density_constants = [0.57233, 0.25171, 638.35, 0.29616]
-    _specific_heat_constants = [0.0, -101.8, 0.79, 0.0, 0.0, 1.8051, 2.7806]
-    _viscosity_constants = [-18.282, 1549.7, 1.0454]
-    _thermal_conductivity_constants = [0.18707, -0.00019846]
-    _vapor_pressure_constants = [91.379, 0.0, -10.176, 5.62e-06, 2.0]
-    _enthalpy_constants = [5.8887, 0.38534]
+    _specific_heat_constants = [174380, -101.8, 0.79, 0.0, 0.0]
+    _viscosity_constants = [-18.282, 1549.7, 1.0454, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.18707, -0.00019846, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [91.379, -8276.80, -10.176, 5.62e-06, 2.0]
+    _enthalpy_constants = [5.8887e-7, 0.38534, 0.0, 0.0, 0.0]

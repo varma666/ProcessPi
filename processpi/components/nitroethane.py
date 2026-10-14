@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Nitroethane(Component):
     """
-    Represents the properties and constants for Nitroethane(C2?H5?NO2?).
+    Represents the properties and constants for Nitroethane(C2H5NO2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Nitroethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Nitroethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Nitroethane"
-    formula = "C2?H5?NO2?"
+    formula = "C2H5NO2"
     molecular_weight = 75.067
 
     # Critical properties
@@ -45,8 +45,8 @@ class Nitroethane(Component):
     _critical_acentric_factor = 0.3803
 
     _density_constants = [1.0024, 0.23655, 593.0, 0.278]
-    _specific_heat_constants = [0.0, -497.6, 1.0691, 0.0, 0.0, 1.3242, 1.5536]
-    _viscosity_constants = [-4.438, 746.5, -0.9385]
-    _thermal_conductivity_constants = [0.247, -0.0002814]
-    _vapor_pressure_constants = [75.632, 0.0, -7.6464, 1.83e-17, 6.0]
-    _enthalpy_constants = [5.1459, 0.33017]
+    _specific_heat_constants = [187740, -497.6, 1.0691, 0.0, 0.0]
+    _viscosity_constants = [-4.438, 746.5, -0.9385, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.247, -0.0002814, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [75.632, -7202.30, -7.6464, 1.83e-17, 6.0]
+    _enthalpy_constants = [5.1459e-7, 0.33017, 0.0, 0.0, 0.0]

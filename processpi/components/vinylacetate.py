@@ -3,7 +3,7 @@ from processpi.units import *
 
 class VinylAcetate(Component):
     """
-    Represents the properties and constants for Vinyl acetate(C4?H6?O2?).
+    Represents the properties and constants for Vinyl acetate(C4H6O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Vinyl acetate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class VinylAcetate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Vinyl acetate"
-    formula = "C4?H6?O2?"
+    formula = "C4H6O2"
     molecular_weight = 86.089
 
     # Critical properties
@@ -45,8 +45,8 @@ class VinylAcetate(Component):
     _critical_acentric_factor = 0.3513
 
     _density_constants = [0.9591, 0.2593, 519.13, 0.27448]
-    _specific_heat_constants = [0.0, -106.17, 0.75175, 0.0, 0.0, 1.5939, 2.0892]
-    _viscosity_constants = [-22.407, 1462.8, 1.7006]
-    _thermal_conductivity_constants = [0.256, -0.0003542]
-    _vapor_pressure_constants = [57.406, 0.0, -5.0307, 1.1e-17, 6.0]
-    _enthalpy_constants = [4.77, 0.3765]
+    _specific_heat_constants = [136300, -106.17, 0.75175, 0.0, 0.0]
+    _viscosity_constants = [-22.407, 1462.8, 1.7006, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.256, -0.0003542, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [57.406, -5702.80, -5.0307, 1.1e-17, 6.0]
+    _enthalpy_constants = [4.77e-7, 0.3765, 0.0, 0.0, 0.0]

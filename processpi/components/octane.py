@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Octane(Component):
     """
-    Represents the properties and constants for Octane(C8?H18?).
+    Represents the properties and constants for Octane(C8H18).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Octane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Octane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Octane"
-    formula = "C8?H18?"
+    formula = "C8H18"
     molecular_weight = 114.229
 
     # Critical properties
@@ -45,8 +45,8 @@ class Octane(Component):
     _critical_acentric_factor = 0.3996
 
     _density_constants = [0.5266, 0.25693, 568.7, 0.28571]
-    _specific_heat_constants = [0.0, -186.63, 0.95891, 0.0, 0.0, 2.2934, 3.4189]
+    _specific_heat_constants = [224830, -186.63, 0.95891, 0.0, 0.0]
     _viscosity_constants = [-7.556, 881.09, -0.52502, 4.63e+22, -10.0]
-    _thermal_conductivity_constants = [0.2156, -0.00029483]
-    _vapor_pressure_constants = [96.084, 0.0, -11.003, 7.18e-06, 2.0]
-    _enthalpy_constants = [5.518, 0.38467]
+    _thermal_conductivity_constants = [0.2156, -0.00029483, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [96.084, -7900.20, -11.003, 7.18e-06, 2.0]
+    _enthalpy_constants = [5.518e-7, 0.38467, 0.0, 0.0, 0.0]

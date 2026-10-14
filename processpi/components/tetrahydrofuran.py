@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Tetrahydrofuran(Component):
     """
-    Represents the properties and constants for Tetrahydrofuran(C4?H8?O).
+    Represents the properties and constants for Tetrahydrofuran(C4H8O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Tetrahydrofuran, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Tetrahydrofuran(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Tetrahydrofuran"
-    formula = "C4?H8?O"
+    formula = "C4H8O"
     molecular_weight = 72.106
 
     # Critical properties
@@ -45,8 +45,8 @@ class Tetrahydrofuran(Component):
     _critical_acentric_factor = 0.2254
 
     _density_constants = [1.2543, 0.28084, 540.15, 0.2912]
-    _specific_heat_constants = [0.0, -800.47, 2.8934, -0.0025015, 0.0, 1.0721, 1.3546]
-    _viscosity_constants = [-10.321, 900.92, -0.069128]
-    _thermal_conductivity_constants = [0.19428, -0.000249]
-    _vapor_pressure_constants = [54.898, 0.0, -4.7627, 1.43e-17, 6.0]
-    _enthalpy_constants = [4.3021, 0.36972]
+    _specific_heat_constants = [171730, -800.47, 2.8934, -0.0025015, 0.0]
+    _viscosity_constants = [-10.321, 900.92, -0.069128, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.19428, -0.000249, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [54.898, -4762.7, -4.7627, 1.43e-17, 6.0]
+    _enthalpy_constants = [4.3021e-7, 0.36972, 0.0, 0.0, 0.0]

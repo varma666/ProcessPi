@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Quinone(Component):
     """
-    Represents the properties and constants for Quinone(C6?H4?O2?).
+    Represents the properties and constants for Quinone(C6H4O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Quinone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Quinone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Quinone"
-    formula = "C6?H4?O2?"
+    formula = "C6H4O2"
     molecular_weight = 108.095
 
     # Critical properties
@@ -45,8 +45,8 @@ class Quinone(Component):
     _critical_acentric_factor = 0.4945
 
     _density_constants = [0.83228, 0.25385, 683.0, 0.23658]
-    _specific_heat_constants = [0.0, 368.33, 0.0, 0.0, 0.0, 1.8904, 2.9738]
-    _viscosity_constants = [-14.846, 1829.4, 0.3729]
-    _thermal_conductivity_constants = [0.26524, -0.00028676]
-    _vapor_pressure_constants = [48.651, 0.0, -3.4453, 1.01e-18, 6.0]
-    _enthalpy_constants = [6.49, 0.3112]
+    _specific_heat_constants = [45810, 368.33, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-14.846, 1829.4, 0.3729, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.26524, -0.00028676, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [48.651, -7289.50, -3.4453, 1.01e-18, 6.0]
+    _enthalpy_constants = [6.49e-7, 0.3112, 0.0, 0.0, 0.0]

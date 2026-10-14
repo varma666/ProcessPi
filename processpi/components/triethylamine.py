@@ -3,7 +3,7 @@ from processpi.units import *
 
 class TriethylAmine(Component):
     """
-    Represents the properties and constants for Triethyl amine(C6?H15?N).
+    Represents the properties and constants for Triethyl amine(C6H15N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Triethyl amine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class TriethylAmine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Triethyl amine"
-    formula = "C6?H15?N"
+    formula = "C6H15N"
     molecular_weight = 101.19
 
     # Critical properties
@@ -45,8 +45,8 @@ class TriethylAmine(Component):
     _critical_acentric_factor = 0.3162
 
     _density_constants = [0.7035, 0.27386, 535.15, 0.2872]
-    _specific_heat_constants = [0.0, 368.13, 0.0, 0.0, 0.0, 1.8511, 2.4471]
-    _viscosity_constants = [-3.7067, 585.78, -1.0926]
-    _thermal_conductivity_constants = [0.1918, -0.0002453]
-    _vapor_pressure_constants = [56.55, 0.0, -4.9815, 1.24e-17, 6.0]
-    _enthalpy_constants = [4.664, 0.3663]
+    _specific_heat_constants = [111480, 368.13, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-3.7067, 585.78, -1.0926, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.1918, -0.0002453, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [56.55, -5681.90, -4.9815, 1.24e-17, 6.0]
+    _enthalpy_constants = [4.664e-7, 0.3663, 0.0, 0.0, 0.0]

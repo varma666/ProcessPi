@@ -3,7 +3,7 @@ from processpi.units import *
 
 class TrimethylAmine(Component):
     """
-    Represents the properties and constants for Trimethyl amine(C3?H9?N).
+    Represents the properties and constants for Trimethyl amine(C3H9N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Trimethyl amine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class TrimethylAmine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Trimethyl amine"
-    formula = "C3?H9?N"
+    formula = "C3H9N"
     molecular_weight = 59.11
 
     # Critical properties
@@ -45,8 +45,8 @@ class TrimethylAmine(Component):
     _critical_acentric_factor = 0.2062
 
     _density_constants = [1.0116, 0.25683, 433.25, 0.2696]
-    _specific_heat_constants = [0.0, -288.0, 0.9913, 0.0, 0.0, 1.1525, 1.3208]
-    _viscosity_constants = [10.142, -130.41, -3.2199]
-    _thermal_conductivity_constants = [0.23813, -0.00038397]
-    _vapor_pressure_constants = [134.68, 0.0, -19.415, 0.0286, 1.0]
-    _enthalpy_constants = [3.305, 0.354]
+    _specific_heat_constants = [136050, -288.0, 0.9913, 0.0, 0.0]
+    _viscosity_constants = [10.142, -130.41, -3.2199, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.23813, -0.00038397, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [134.68, -6055.80, -19.415, 0.0286, 1.0]
+    _enthalpy_constants = [3.305e-7, 0.354, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Pentanal(Component):
     """
-    Represents the properties and constants for Pentanal(C5?H10?O).
+    Represents the properties and constants for Pentanal(C5H10O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Pentanal, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Pentanal(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Pentanal"
-    formula = "C5?H10?O"
+    formula = "C5H10O"
     molecular_weight = 86.132
 
     # Critical properties
@@ -45,8 +45,8 @@ class Pentanal(Component):
     _critical_acentric_factor = 0.3472
 
     _density_constants = [0.83871, 0.26252, 566.1, 0.29444]
-    _specific_heat_constants = [0.0, 257.78, 0.0, 0.0, 0.0, 1.6361, 2.0901]
-    _viscosity_constants = [-10.846, 980.01, -0.0054565]
-    _thermal_conductivity_constants = [0.22697, -0.00033227, 1.18e-07]
-    _vapor_pressure_constants = [149.58, 0.0, -20.697, 0.0221, 1.0]
-    _enthalpy_constants = [5.1478, 0.37541]
+    _specific_heat_constants = [112050, 257.78, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-10.846, 980.01, -0.0054565, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.22697, -0.00033227, 1.18e-07, 0.0, 0.0]
+    _vapor_pressure_constants = [149.58, -8890, -20.697, 0.0221, 1.0]
+    _enthalpy_constants = [5.1478e-7, 0.37541, 0.0, 0.0, 0.0]

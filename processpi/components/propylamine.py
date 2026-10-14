@@ -3,7 +3,7 @@ from processpi.units import *
 
 class PropylAmine(Component):
     """
-    Represents the properties and constants for Propyl amine(C3?H9?N).
+    Represents the properties and constants for Propyl amine(C3H9N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Propyl amine, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class PropylAmine(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Propyl amine"
-    formula = "C3?H9?N"
+    formula = "C3H9N"
     molecular_weight = 59.11
 
     # Critical properties
@@ -45,8 +45,8 @@ class PropylAmine(Component):
     _critical_acentric_factor = 0.2798
 
     _density_constants = [0.9195, 0.23878, 496.95, 0.2461]
-    _specific_heat_constants = [0.0, 78.0, 0.0, 0.0, 0.0, 1.5422, 1.6605]
-    _viscosity_constants = [-9.8074, 1010.4, -0.25697]
-    _thermal_conductivity_constants = [0.2632, -0.0004278, 4.12e-07]
-    _vapor_pressure_constants = [58.398, 0.0, -5.2876, 1.99e-06, 2.0]
-    _enthalpy_constants = [4.4488, 0.39494]
+    _specific_heat_constants = [139530, 78.0, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-9.8074, 1010.4, -0.25697, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2632, -0.0004278, 4.12e-07, 0.0, 0.0]
+    _vapor_pressure_constants = [58.398, -5312.70, -5.2876, 1.99e-06, 2.0]
+    _enthalpy_constants = [4.4488e-7, 0.39494, 0.0, 0.0, 0.0]

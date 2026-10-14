@@ -3,7 +3,7 @@ from processpi.units import *
 
 class PhthalicAnhydride(Component):
     """
-    Represents the properties and constants for Phthalic anhydride(C8?H4?O3?).
+    Represents the properties and constants for Phthalic anhydride(C8H4O3).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Phthalic anhydride, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class PhthalicAnhydride(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Phthalic anhydride"
-    formula = "C8?H4?O3?"
+    formula = "C8H4O3"
     molecular_weight = 148.116
 
     # Critical properties
@@ -45,8 +45,8 @@ class PhthalicAnhydride(Component):
     _critical_acentric_factor = 0.7025
 
     _density_constants = [0.5393, 0.22704, 791.0, 0.248]
-    _specific_heat_constants = [0.0, 252.4, 0.0, 0.0, 0.0, 2.4741, 2.8615]
-    _viscosity_constants = [195.25, -11072.0, -29.084]
-    _thermal_conductivity_constants = [0.22946, -0.00021345]
-    _vapor_pressure_constants = [126.5, 0.0, -15.002, 7.75e-06, 2.0]
-    _enthalpy_constants = [6.916, 0.1755]
+    _specific_heat_constants = [145400, 252.4, 0.0, 0.0, 0.0]
+    _viscosity_constants = [195.25, -11072.0, -29.084, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.22946, -0.00021345, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [126.5, -12551, -15.002, 7.75e-06, 2.0]
+    _enthalpy_constants = [6.916e-7, 0.1755, 0.0, 0.0, 0.0]

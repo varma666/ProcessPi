@@ -3,7 +3,7 @@ from processpi.units import *
 
 class SulfurTrioxide(Component):
     """
-    Represents the properties and constants for Sulfur trioxide(O3?S).
+    Represents the properties and constants for Sulfur trioxide(O3S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Sulfur trioxide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class SulfurTrioxide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Sulfur trioxide"
-    formula = "O3?S"
+    formula = "O3S"
     molecular_weight = 80.063
 
     # Critical properties
@@ -45,8 +45,8 @@ class SulfurTrioxide(Component):
     _critical_acentric_factor = 0.424
 
     _density_constants = [1.4969, 0.19013, 490.85, 0.4359]
-    _specific_heat_constants = [0.0, 0.0, 0.0, 0.0, 0.0, 2.5809, 2.5809]
-    _viscosity_constants = [-88.793, 6400.7, 10.709]
-    _thermal_conductivity_constants = [0.92882, -0.0030803, 2.66e-06]
-    _vapor_pressure_constants = [180.99, 0.0, -22.839, 7.24e-17, 6.0]
-    _enthalpy_constants = [7.337, 0.5647]
+    _specific_heat_constants = [258090, 0.0, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-88.793, 6400.7, 10.709, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.92882, -0.0030803, 2.66e-06, 0.0, 0.0]
+    _vapor_pressure_constants = [180.99, -12060, -22.839, 7.24e-17, 6.0]
+    _enthalpy_constants = [7.337e-7, 0.5647, 0.0, 0.0, 0.0]

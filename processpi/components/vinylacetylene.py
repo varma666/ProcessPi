@@ -3,7 +3,7 @@ from processpi.units import *
 
 class VinylAcetylene(Component):
     """
-    Represents the properties and constants for Vinyl acetylene(C4?H4?).
+    Represents the properties and constants for Vinyl acetylene(C4H4).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Vinyl acetylene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class VinylAcetylene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Vinyl acetylene"
-    formula = "C4?H4?"
+    formula = "C4H4"
     molecular_weight = 52.075
 
     # Critical properties
@@ -45,8 +45,8 @@ class VinylAcetylene(Component):
     _critical_acentric_factor = 0.1069
 
     _density_constants = [1.2703, 0.26041, 454.0, 0.297]
-    _specific_heat_constants = [0.0, 135.0, 0.0, 0.0, 0.0, 0.9572, 1.0628]
-    _viscosity_constants = [-2.2333, 320.37, -1.2915]
-    _thermal_conductivity_constants = [0.22838, -0.00035173]
-    _vapor_pressure_constants = [55.682, 0.0, -5.0136, 1.97e-17, 6.0]
-    _enthalpy_constants = [3.649, 0.4, 0.043]
+    _specific_heat_constants = [68720, 135.0, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-2.2333, 320.37, -1.2915, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.22838, -0.00035173, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [55.682, -4439.30, -5.0136, 1.97e-17, 6.0]
+    _enthalpy_constants = [3.649e-7, 0.4, 0.043, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class PentylMercaptan(Component):
     """
-    Represents the properties and constants for Pentyl mercaptan(C5?H12?S).
+    Represents the properties and constants for Pentyl mercaptan(C5H12S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Pentyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class PentylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Pentyl mercaptan"
-    formula = "C5?H12?S"
+    formula = "C5H12S"
     molecular_weight = 104.214
 
     # Critical properties
@@ -45,8 +45,8 @@ class PentylMercaptan(Component):
     _critical_acentric_factor = 0.3207
 
     _density_constants = [0.75345, 0.27047, 598.0, 0.30583]
-    _specific_heat_constants = [0.0, -324.4, 0.9472, 0.0, 0.0, 1.8664, 2.3546]
-    _viscosity_constants = [-11.677, 1091.2, 0.10658]
-    _thermal_conductivity_constants = [0.2086, -0.00024536]
-    _vapor_pressure_constants = [67.309, 0.0, -6.4449, 1.01e-17, 6.0]
-    _enthalpy_constants = [5.4315, 0.3972]
+    _specific_heat_constants = [213760, -324.4, 0.9472, 0.0, 0.0]
+    _viscosity_constants = [-11.677, 1091.2, 0.10658, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2086, -0.00024536, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [67.309, -6880.80, -6.4449, 1.01e-17, 6.0]
+    _enthalpy_constants = [5.4315e-7, 0.3972, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class PentanoicAcid(Component):
     """
-    Represents the properties and constants for Pentanoic acid(C5?H10?O2?).
+    Represents the properties and constants for Pentanoic acid(C5H10O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Pentanoic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class PentanoicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Pentanoic acid"
-    formula = "C5?H10?O2?"
+    formula = "C5H10O2"
     molecular_weight = 102.132
 
     # Critical properties
@@ -45,8 +45,8 @@ class PentanoicAcid(Component):
     _critical_acentric_factor = 0.7052
 
     _density_constants = [0.73455, 0.25636, 639.16, 0.25522]
-    _specific_heat_constants = [0.0, 28.344, 0.6372, 0.0, 0.0, 1.8827, 2.9228]
-    _viscosity_constants = [-37.067, 2856.7, 3.7344]
-    _thermal_conductivity_constants = [0.1848, -0.0001434]
-    _vapor_pressure_constants = [101.7, 0.0, -10.829, 7.19e-18, 6.0]
-    _enthalpy_constants = [7.3197, 1.2093, -1.9114, 1.1591]
+    _specific_heat_constants = [145080, 28.344, 0.6372, 0.0, 0.0]
+    _viscosity_constants = [-37.067, 2856.7, 3.7344, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.1848, -0.0001434, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [101.7, -10955, -10.829, 7.19e-18, 6.0]
+    _enthalpy_constants = [7.3197e-7, 1.2093, -1.9114, 1.1591, 0.0]

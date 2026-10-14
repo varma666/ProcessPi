@@ -3,7 +3,7 @@ from processpi.units import *
 
 class PhenylIsocyanate(Component):
     """
-    Represents the properties and constants for Phenyl isocyanate(C7?H5?NO).
+    Represents the properties and constants for Phenyl isocyanate(C7H5NO).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Phenyl isocyanate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class PhenylIsocyanate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Phenyl isocyanate"
-    formula = "C7?H5?NO"
+    formula = "C7H5NO"
     molecular_weight = 119.121
 
     # Critical properties
@@ -45,8 +45,8 @@ class PhenylIsocyanate(Component):
     _critical_acentric_factor = 0.4123
 
     _density_constants = [0.63163, 0.23373, 653.0, 0.28571]
-    _specific_heat_constants = [0.0, 215.89, 0.29552, 0.0, 0.0, 1.308, 2.3745]
-    _viscosity_constants = [-11.31, 1280.0]
-    _thermal_conductivity_constants = [0.16326, -0.00017777]
-    _vapor_pressure_constants = [86.779, 0.0, -9.5303, 6.14e-06, 2.0]
-    _enthalpy_constants = [5.5769, 0.30346]
+    _specific_heat_constants = [60834, 215.89, 0.29552, 0.0, 0.0]
+    _viscosity_constants = [-11.31, 1280.0, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.16326, -0.00017777, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [86.779, -8101.80, -9.5303, 6.14e-06, 2.0]
+    _enthalpy_constants = [5.5769e-7, 0.30346, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class PropylFormate(Component):
     """
-    Represents the properties and constants for Propyl formate(C4?H8?O2?).
+    Represents the properties and constants for Propyl formate(C4H8O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Propyl formate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class PropylFormate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Propyl formate"
-    formula = "C4?H8?O2?"
+    formula = "C4H8O2"
     molecular_weight = 88.105
 
     # Critical properties
@@ -45,8 +45,8 @@ class PropylFormate(Component):
     _critical_acentric_factor = 0.3088
 
     _density_constants = [0.915, 0.26134, 538.0, 0.28]
-    _specific_heat_constants = [0.0, 326.1, 0.0, 0.0, 0.0, 1.7293, 2.0554]
+    _specific_heat_constants = [75700, 326.1, 0.0, 0.0, 0.0]
     _viscosity_constants = [-73.735, 2668.2, 10.993, -0.018364, 1.0]
-    _thermal_conductivity_constants = [0.2247, -0.000264]
-    _vapor_pressure_constants = [104.08, 0.0, -12.348, 9.6e-06, 2.0]
-    _enthalpy_constants = [4.9687, 0.4025]
+    _thermal_conductivity_constants = [0.2247, -0.000264, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [104.08, -7535.90, -12.348, 9.6e-06, 2.0]
+    _enthalpy_constants = [4.9687e-7, 0.4025, 0.0, 0.0, 0.0]

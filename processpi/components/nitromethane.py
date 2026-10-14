@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Nitromethane(Component):
     """
-    Represents the properties and constants for Nitromethane(CH3?NO2?).
+    Represents the properties and constants for Nitromethane(CH3NO2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Nitromethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Nitromethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Nitromethane"
-    formula = "CH3?NO2?"
+    formula = "CH3NO2"
     molecular_weight = 61.04
 
     # Critical properties
@@ -45,8 +45,8 @@ class Nitromethane(Component):
     _critical_acentric_factor = 0.348
 
     _density_constants = [1.3728, 0.23793, 588.15, 0.29601]
-    _specific_heat_constants = [0.0, -135.3, 0.345, 0.0, 0.0, 1.0382, 1.2949]
-    _viscosity_constants = [-9.5556, 981.64, -0.19453]
-    _thermal_conductivity_constants = [0.3276, -0.000405]
-    _vapor_pressure_constants = [57.278, 0.0, -4.9821, 1.22e-17, 6.0]
-    _enthalpy_constants = [4.7417, 0.3062]
+    _specific_heat_constants = [116270, -135.3, 0.345, 0.0, 0.0]
+    _viscosity_constants = [-9.5556, 981.64, -0.19453, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.3276, -0.000405, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [57.278, -6089, -4.9821, 1.22e-17, 6.0]
+    _enthalpy_constants = [4.7417e-7, 0.3062, 0.0, 0.0, 0.0]

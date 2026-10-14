@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Undecane(Component):
     """
-    Represents the properties and constants for Undecane(C11?H24?).
+    Represents the properties and constants for Undecane(C11H24).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Undecane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Undecane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Undecane"
-    formula = "C11?H24?"
+    formula = "C11H24"
     molecular_weight = 156.308
 
     # Critical properties
@@ -45,8 +45,8 @@ class Undecane(Component):
     _critical_acentric_factor = 0.5303
 
     _density_constants = [0.36703, 0.24876, 639.0, 0.28571]
-    _specific_heat_constants = [0.0, -114.98, 0.96936, 0.0, 0.0, 3.2493, 4.2624]
+    _specific_heat_constants = [293980, -114.98, 0.96936, 0.0, 0.0]
     _viscosity_constants = [52.176, -4951.9, -8.5676, 0.0, -2.0]
-    _thermal_conductivity_constants = [0.20515, -0.00023933]
-    _vapor_pressure_constants = [131.0, 0.0, -15.855, 8.19e-06, 2.0]
-    _enthalpy_constants = [7.2284, 0.40607]
+    _thermal_conductivity_constants = [0.20515, -0.00023933, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [131.0, -11143, -15.855, 8.19e-06, 2.0]
+    _enthalpy_constants = [7.2284e-7, 0.40607, 0.0, 0.0, 0.0]

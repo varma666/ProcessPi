@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Tetradecane(Component):
     """
-    Represents the properties and constants for Tetradecane(C14?H30?).
+    Represents the properties and constants for Tetradecane(C14H30).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Tetradecane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Tetradecane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Tetradecane"
-    formula = "C14?H30?"
+    formula = "C14H30"
     molecular_weight = 198.388
 
     # Critical properties
@@ -45,8 +45,8 @@ class Tetradecane(Component):
     _critical_acentric_factor = 0.643
 
     _density_constants = [0.27248, 0.24007, 693.0, 0.28571]
-    _specific_heat_constants = [0.0, 29.13, 0.86116, 0.0, 0.0, 4.2831, 6.0741]
+    _specific_heat_constants = [353140, 29.13, 0.86116, 0.0, 0.0]
     _viscosity_constants = [-14.493, 1710.8, 0.4417, 3.09e+28, -12.0]
-    _thermal_conductivity_constants = [0.20293, -0.00021798]
-    _vapor_pressure_constants = [140.47, 0.0, -16.859, 6.59e-06, 2.0]
-    _enthalpy_constants = [9.0539, 0.44467]
+    _thermal_conductivity_constants = [0.20293, -0.00021798, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [140.47, -13231, -16.859, 6.59e-06, 2.0]
+    _enthalpy_constants = [9.0539e-7, 0.44467, 0.0, 0.0, 0.0]

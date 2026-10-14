@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Propenylcyclohexene(Component):
     """
-    Represents the properties and constants for Propenylcyclohexene(C3?H14?).
+    Represents the properties and constants for Propenylcyclohexene(C3H14).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Propenylcyclohexene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Propenylcyclohexene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Propenylcyclohexene"
-    formula = "C3?H14?"
+    formula = "C3H14"
     molecular_weight = 122.207
 
     # Critical properties
@@ -45,8 +45,8 @@ class Propenylcyclohexene(Component):
     _critical_acentric_factor = 0.342
 
     _density_constants = [0.61255, 0.26769, 636.0, 0.28571]
-    _specific_heat_constants = [0.0, -450.6, 1.7053, 0.0, 0.0, 1.7926, 3.2463]
-    _viscosity_constants = [-11.208, 1079.8]
-    _thermal_conductivity_constants = [0.1831, -0.00020275]
-    _vapor_pressure_constants = [64.268, 0.0, -5.9109, 4.85e-18, 6.0]
-    _enthalpy_constants = [5.8866, 0.38533]
+    _specific_heat_constants = [201400, -450.6, 1.7053, 0.0, 0.0]
+    _viscosity_constants = [-11.208, 1079.8, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.1831, -0.00020275, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [64.268, -7298.90, -5.9109, 4.85e-18, 6.0]
+    _enthalpy_constants = [5.8866e-7, 0.38533, 0.0, 0.0, 0.0]

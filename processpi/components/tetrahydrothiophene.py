@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Tetrahydrothiophene(Component):
     """
-    Represents the properties and constants for Tetrahydrothiophene(C4?H8?S).
+    Represents the properties and constants for Tetrahydrothiophene(C4H8S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Tetrahydrothiophene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Tetrahydrothiophene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Tetrahydrothiophene"
-    formula = "C4?H8?S"
+    formula = "C4H8S"
     molecular_weight = 88.171
 
     # Critical properties
@@ -45,8 +45,8 @@ class Tetrahydrothiophene(Component):
     _critical_acentric_factor = 0.1996
 
     _density_constants = [1.1628, 0.28954, 631.95, 0.28674]
-    _specific_heat_constants = [0.0, -130.1, 0.6229, 0.0, 0.0, 1.1979, 1.6883]
-    _viscosity_constants = [-10.843, 1165.2]
-    _thermal_conductivity_constants = [0.20414, -0.00021217]
-    _vapor_pressure_constants = [75.881, 0.0, -7.9499, 4.43e-06, 2.0]
-    _enthalpy_constants = [5.0642, 0.38904]
+    _specific_heat_constants = [123300, -130.1, 0.6229, 0.0, 0.0]
+    _viscosity_constants = [-10.843, 1165.2, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20414, -0.00021217, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [75.881, -6910.60, -7.9499, 4.43e-06, 2.0]
+    _enthalpy_constants = [5.0642e-7, 0.38904, 0.0, 0.0, 0.0]

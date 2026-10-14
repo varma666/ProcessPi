@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Thiophene(Component):
     """
-    Represents the properties and constants for Thiophene(C4?H4?S).
+    Represents the properties and constants for Thiophene(C4H4S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Thiophene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Thiophene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Thiophene"
-    formula = "C4?H4?S"
+    formula = "C4H4S"
     molecular_weight = 84.14
 
     # Critical properties
@@ -45,8 +45,8 @@ class Thiophene(Component):
     _critical_acentric_factor = 0.197
 
     _density_constants = [1.2874, 0.28194, 579.35, 0.30781]
-    _specific_heat_constants = [0.0, 91.725, 0.13243, 0.0, 0.0, 1.1372, 1.3455]
-    _viscosity_constants = [-16.671, 1342.5, 0.8388]
-    _thermal_conductivity_constants = [0.20571, -0.00020028]
-    _vapor_pressure_constants = [93.193, 0.0, -10.738, 8.23e-06, 2.0]
-    _enthalpy_constants = [4.5854, 0.38756]
+    _specific_heat_constants = [84864, 91.725, 0.13243, 0.0, 0.0]
+    _viscosity_constants = [-16.671, 1342.5, 0.8388, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20571, -0.00020028, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [93.193, -7001.50, -10.738, 8.23e-06, 2.0]
+    _enthalpy_constants = [4.5854e-7, 0.38756, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class NonanoicAcid(Component):
     """
-    Represents the properties and constants for Nonanoic acid(C9?H18?O2?).
+    Represents the properties and constants for Nonanoic acid(C9H18O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Nonanoic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class NonanoicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Nonanoic acid"
-    formula = "C9?H18?O2?"
+    formula = "C9H18O2"
     molecular_weight = 158.238
 
     # Critical properties
@@ -45,8 +45,8 @@ class NonanoicAcid(Component):
     _critical_acentric_factor = 0.7724
 
     _density_constants = [0.41582, 0.24284, 710.7, 0.30036]
-    _specific_heat_constants = [0.0, 49.726, 0.9813, 0.0, 0.0, 3.1855, 5.2498]
-    _viscosity_constants = [-48.851, 4095.0, 5.294]
-    _thermal_conductivity_constants = [0.204, -0.0002]
-    _vapor_pressure_constants = [137.6, 0.0, -15.618, 5.57e-18, 6.0]
-    _enthalpy_constants = [12.38, 0.69869, 0.097854, -0.35082]
+    _specific_heat_constants = [224336, 49.726, 0.9813, 0.0, 0.0]
+    _viscosity_constants = [-48.851, 4095.0, 5.294, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.204, -0.0002, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [137.6, -14948, -15.618, 5.57e-18, 6.0]
+    _enthalpy_constants = [12.38e-7, 0.69869, 0.097854, -0.35082, 0.0]

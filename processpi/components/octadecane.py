@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Octadecane(Component):
     """
-    Represents the properties and constants for Octadecane(C18?H38?).
+    Represents the properties and constants for Octadecane(C18H38).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Octadecane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Octadecane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Octadecane"
-    formula = "C18?H38?"
+    formula = "C18H38"
     molecular_weight = 254.494
 
     # Critical properties
@@ -45,8 +45,8 @@ class Octadecane(Component):
     _critical_acentric_factor = 0.8114
 
     _density_constants = [0.20448, 0.23474, 747.0, 0.28571]
-    _specific_heat_constants = [0.0, 374.64, 0.58156, 0.0, 0.0, 5.6511, 8.2276]
-    _viscosity_constants = [-22.688, 2466.0, 1.5703]
-    _thermal_conductivity_constants = [0.2137, -0.0002252]
-    _vapor_pressure_constants = [157.68, 0.0, -18.954, 5.93e-06, 2.0]
-    _enthalpy_constants = [10.969, 0.44327]
+    _specific_heat_constants = [399430, 374.64, 0.58156, 0.0, 0.0]
+    _viscosity_constants = [-22.688, 2466.0, 1.5703, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2137, -0.0002252, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [157.68, -16093, -18.954, 5.93e-06, 2.0]
+    _enthalpy_constants = [10.969e-7, 0.44327, 0.0, 0.0, 0.0]

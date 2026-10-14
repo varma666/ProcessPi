@@ -3,7 +3,7 @@ from processpi.units import *
 
 class NitrogenTrifluoride(Component):
     """
-    Represents the properties and constants for Nitrogen trifluoride(F3?N).
+    Represents the properties and constants for Nitrogen trifluoride(F3N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Nitrogen trifluoride, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class NitrogenTrifluoride(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Nitrogen trifluoride"
-    formula = "F3?N"
+    formula = "F3N"
     molecular_weight = 71.002
 
     # Critical properties
@@ -45,8 +45,8 @@ class NitrogenTrifluoride(Component):
     _critical_acentric_factor = 0.12
 
     _density_constants = [2.3736, 0.2817, 234.0, 0.29529]
-    _specific_heat_constants = [0.0, -682.11, 3.8912, 0.0, 0.0, 0.7486, 1.0154]
-    _viscosity_constants = []
-    _thermal_conductivity_constants = []
-    _vapor_pressure_constants = [68.149, 0.0, -8.9118, 0.0232, 1.0]
-    _enthalpy_constants = [1.6402, 0.36494]
+    _specific_heat_constants = [101400, -682.11, 3.8912, 0.0, 0.0]
+    _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [68.149, -2257.90, -8.9118, 0.0232, 1.0]
+    _enthalpy_constants = [1.6402e-7, 0.36494, 0.0, 0.0, 0.0]

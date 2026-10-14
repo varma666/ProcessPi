@@ -3,7 +3,7 @@ from processpi.units import *
 
 class SiliconTetrafluoride(Component):
     """
-    Represents the properties and constants for Silicon tetrafluoride(F4?Si).
+    Represents the properties and constants for Silicon tetrafluoride(F4Si).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Silicon tetrafluoride, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class SiliconTetrafluoride(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Silicon tetrafluoride"
-    formula = "F4?Si"
+    formula = "F4Si"
     molecular_weight = 104.079
 
     # Critical properties
@@ -45,8 +45,8 @@ class SiliconTetrafluoride(Component):
     _critical_acentric_factor = 0.3858
 
     _density_constants = [1.1945, 0.24128, 259.0, 0.16693]
-    _specific_heat_constants = [0.0, 0.0, 19.203, 0.0, 0.0, 1.3, 2.0403]
-    _viscosity_constants = []
-    _thermal_conductivity_constants = []
-    _vapor_pressure_constants = [272.85, 0.0, -40.089, 6.37e-15, 6.0]
-    _enthalpy_constants = [2.4105, 0.37988]
+    _specific_heat_constants = [829380, -7311.50, 19.203, 0.0, 0.0]
+    _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [272.85, -9548.90, -40.089, 6.37e-15, 6.0]
+    _enthalpy_constants = [2.4105e-7, 0.37988, 0.0, 0.0, 0.0]

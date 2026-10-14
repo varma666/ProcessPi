@@ -3,7 +3,7 @@ from processpi.units import *
 
 class OctanoicAcid(Component):
     """
-    Represents the properties and constants for Octanoic acid(C8?H16?O2?).
+    Represents the properties and constants for Octanoic acid(C8H16O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Octanoic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class OctanoicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Octanoic acid"
-    formula = "C8?H16?O2?"
+    formula = "C8H16O2"
     molecular_weight = 144.211
 
     # Critical properties
@@ -45,8 +45,8 @@ class OctanoicAcid(Component):
     _critical_acentric_factor = 0.7706
 
     _density_constants = [0.48251, 0.25196, 694.26, 0.26842]
-    _specific_heat_constants = [0.0, 44.392, 0.8956, 0.0, 0.0, 2.9326, 4.6358]
-    _viscosity_constants = [-60.795, 4617.8, 7.028]
-    _thermal_conductivity_constants = [0.203, -0.0002]
-    _vapor_pressure_constants = [140.16, 0.0, -16.004, 6.42e-18, 6.0]
-    _enthalpy_constants = [12.23, 0.69294, 0.12287, -0.36132]
+    _specific_heat_constants = [205260, 44.392, 0.8956, 0.0, 0.0]
+    _viscosity_constants = [-60.795, 4617.8, 7.028, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.203, -0.0002, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [140.16, -14813, -16.004, 6.42e-18, 6.0]
+    _enthalpy_constants = [12.23e-7, 0.69294, 0.12287, -0.36132]

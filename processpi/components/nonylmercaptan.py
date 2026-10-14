@@ -3,7 +3,7 @@ from processpi.units import *
 
 class NonylMercaptan(Component):
     """
-    Represents the properties and constants for Nonyl mercaptan(C9?H20?S).
+    Represents the properties and constants for Nonyl mercaptan(C9H20S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Nonyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class NonylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Nonyl mercaptan"
-    formula = "C9?H20?S"
+    formula = "C9H20S"
     molecular_weight = 160.32
 
     # Critical properties
@@ -45,8 +45,8 @@ class NonylMercaptan(Component):
     _critical_acentric_factor = 0.526
 
     _density_constants = [0.47377, 0.27052, 681.0, 0.30284]
-    _specific_heat_constants = [0.0, -46.22, 0.79154, 0.0, 0.0, 3.0434, 4.3491]
-    _viscosity_constants = [-11.319, 1428.0, -0.022545]
-    _thermal_conductivity_constants = [0.20244, -0.00021343]
-    _vapor_pressure_constants = [106.2, 0.0, -11.696, 8.9e-18, 6.0]
-    _enthalpy_constants = [7.5239, 0.3991]
+    _specific_heat_constants = [265350, -46.22, 0.79154, 0.0, 0.0]
+    _viscosity_constants = [-11.319, 1428.0, -0.022545, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20244, -0.00021343, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [106.2, -10982, -11.696, 8.9e-18, 6.0]
+    _enthalpy_constants = [7.5239e-7, 0.3991, 0.0, 0.0, 0.0]

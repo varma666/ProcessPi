@@ -3,7 +3,7 @@ from processpi.units import *
 
 class SulfurHexafluoride(Component):
     """
-    Represents the properties and constants for Sulfur hexafluoride(F6?S).
+    Represents the properties and constants for Sulfur hexafluoride(F6S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Sulfur hexafluoride, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class SulfurHexafluoride(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Sulfur hexafluoride"
-    formula = "F6?S"
+    formula = "F6S"
     molecular_weight = 146.055
 
     # Critical properties
@@ -45,8 +45,8 @@ class SulfurHexafluoride(Component):
     _critical_acentric_factor = 0.2151
 
     _density_constants = [1.3587, 0.2701, 318.69, 0.2921]
-    _specific_heat_constants = [0.0, 0.0, 0.0, 0.0, 0.0, 1.195, 1.195]
-    _viscosity_constants = [3.8305, 41.21, -2.1342]
-    _thermal_conductivity_constants = [0.2544, -0.0006595]
-    _vapor_pressure_constants = [29.16, 0.0, -1.1342, 0.0, 0.0]
-    _enthalpy_constants = [2.571, 0.383]
+    _specific_heat_constants = [119500, 0.0, 0.0, 0.0, 0.0]
+    _viscosity_constants = [3.8305, 41.21, -2.1342, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2544, -0.0006595, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [29.16, -2383.60, -1.1342, 0.0, 0.0]
+    _enthalpy_constants = [2.571e-7, 0.383, 0.0, 0.0, 0.0]

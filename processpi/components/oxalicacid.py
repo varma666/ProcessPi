@@ -3,7 +3,7 @@ from processpi.units import *
 
 class OxalicAcid(Component):
     """
-    Represents the properties and constants for Oxalic acid(C2?H2?O4?).
+    Represents the properties and constants for Oxalic acid(C2H2O4).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Oxalic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class OxalicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Oxalic acid"
-    formula = "C2?H2?O4?"
+    formula = "C2H2O4"
     molecular_weight = 90.035
 
     # Critical properties
@@ -45,8 +45,8 @@ class OxalicAcid(Component):
     _critical_acentric_factor = 0.9176
 
     _density_constants = [1.0501, 0.215, 804.0, 0.28571]
-    _specific_heat_constants = [0.0, -381.36, 0.64623, 0.0, 0.0, 1.374, 1.8052]
-    _viscosity_constants = []
-    _thermal_conductivity_constants = [0.3074, -0.00028101]
-    _vapor_pressure_constants = [122.04, 0.0, -12.986, 2.09e-18, 6.0]
-    _enthalpy_constants = [11.473, 0.37238]
+    _specific_heat_constants = [175510, -381.36, 0.64623, 0.0, 0.0]
+    _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.3074, -0.00028101, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [122.04, -16050, -12.986, 2.09e-18, 6.0]
+    _enthalpy_constants = [11.473e-7, 0.37238, 0.0, 0.0, 0.0]

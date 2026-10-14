@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Pentadecane(Component):
     """
-    Represents the properties and constants for Pentadecane(C15?H32?).
+    Represents the properties and constants for Pentadecane(C15H32).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Pentadecane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Pentadecane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Pentadecane"
-    formula = "C15?H32?"
+    formula = "C15H32"
     molecular_weight = 212.415
 
     # Critical properties
@@ -45,8 +45,8 @@ class Pentadecane(Component):
     _critical_acentric_factor = 0.6863
 
     _density_constants = [0.25142, 0.23837, 708.0, 0.28571]
-    _specific_heat_constants = [0.0, 219.54, 0.65632, 0.0, 0.0, 4.6165, 6.6042]
-    _viscosity_constants = [-19.299, 2088.6, 1.1091]
-    _thermal_conductivity_constants = [0.20649, -0.00021911]
-    _vapor_pressure_constants = [135.57, 0.0, -16.022, 5.61e-06, 2.0]
-    _enthalpy_constants = [9.6741, 0.45399]
+    _specific_heat_constants = [346910, 219.54, 0.65632, 0.0, 0.0]
+    _viscosity_constants = [-19.299, 2088.6, 1.1091, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20649, -0.00021911, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [135.57, -13478, -16.022, 5.61e-06, 2.0]
+    _enthalpy_constants = [9.6741e-7, 0.45399, 0.0, 0.0, 0.0]

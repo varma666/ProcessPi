@@ -3,7 +3,7 @@ from processpi.units import *
 
 class PropylAcetate(Component):
     """
-    Represents the properties and constants for Propyl acetate(C5?H10?O2?).
+    Represents the properties and constants for Propyl acetate(C5H10O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Propyl acetate, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class PropylAcetate(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Propyl acetate"
-    formula = "C5?H10?O2?"
+    formula = "C5H10O2"
     molecular_weight = 102.132
 
     # Critical properties
@@ -45,8 +45,8 @@ class PropylAcetate(Component):
     _critical_acentric_factor = 0.3889
 
     _density_constants = [0.73041, 0.25456, 549.73, 0.27666]
-    _specific_heat_constants = [0.0, 384.1, 0.0, 0.0, 0.0, 1.8891, 2.3885]
-    _viscosity_constants = [17.797, -252.43, -4.291]
-    _thermal_conductivity_constants = [0.2332, -0.0003096]
-    _vapor_pressure_constants = [115.16, 0.0, -13.934, 1.03e-05, 2.0]
-    _enthalpy_constants = [5.4327, 0.407]
+    _specific_heat_constants = [83400, 384.1, 0.0, 0.0, 0.0]
+    _viscosity_constants = [17.797, -252.43, -4.291, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2332, -0.0003096, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [115.16, -8433.90, -13.934, 1.03e-05, 2.0]
+    _enthalpy_constants = [5.4327e-7, 0.407, 0.0, 0.0, 0.0]

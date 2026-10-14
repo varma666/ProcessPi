@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Propionitrile(Component):
     """
-    Represents the properties and constants for Propionitrile(C3?H5?N).
+    Represents the properties and constants for Propionitrile(C3H5N).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Propionitrile, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Propionitrile(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Propionitrile"
-    formula = "C3?H5?N"
+    formula = "C3H5N"
     molecular_weight = 55.079
 
     # Critical properties
@@ -45,8 +45,8 @@ class Propionitrile(Component):
     _critical_acentric_factor = 0.3243
 
     _density_constants = [1.0224, 0.23452, 564.4, 0.2804]
-    _specific_heat_constants = [0.0, -120.98, 0.42075, 0.0, 0.0, 1.1005, 1.3112]
-    _viscosity_constants = [-5.7136, 703.62, -0.78123]
-    _thermal_conductivity_constants = [0.26626, -0.0003307]
-    _vapor_pressure_constants = [82.699, 0.0, -9.1506, 7.54e-06, 2.0]
-    _enthalpy_constants = [4.9348, 0.41873]
+    _specific_heat_constants = [181190, -120.98, 0.42075, 0.0, 0.0]
+    _viscosity_constants = [-5.7136, 703.62, -0.78123, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.26626, -0.0003307, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [82.699, -6703.50, -9.1506, 7.54e-06, 2.0]
+    _enthalpy_constants = [4.9348e-7, 0.41873, 0.0, 0.0, 0.0]

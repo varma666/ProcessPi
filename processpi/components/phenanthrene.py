@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Phenanthrene(Component):
     """
-    Represents the properties and constants for Phenanthrene(C14?H10?).
+    Represents the properties and constants for Phenanthrene(C14H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Phenanthrene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Phenanthrene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Phenanthrene"
-    formula = "C14?H10?"
+    formula = "C14H10"
     molecular_weight = 178.229
 
     # Critical properties
@@ -45,8 +45,8 @@ class Phenanthrene(Component):
     _critical_acentric_factor = 0.4707
 
     _density_constants = [0.45554, 0.2523, 869.0, 0.24841]
-    _specific_heat_constants = [0.0, 527.03, 0.0, 0.0, 0.0, 2.9963, 3.6688]
-    _viscosity_constants = [-22.472, 2566.9, 1.5749]
-    _thermal_conductivity_constants = [0.13753, -2.5247e-05]
-    _vapor_pressure_constants = [72.958, 0.0, -6.7902, 1.09e-18, 6.0]
-    _enthalpy_constants = [8.3482, 0.33172]
+    _specific_heat_constants = [103370, 527.03, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-22.472, 2566.9, 1.5749, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.13753, -2.5247e-05, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [72.958, -10943, -6.7902, 1.09e-18, 6.0]
+    _enthalpy_constants = [8.3482e-7, 0.33172, 0.0, 0.0, 0.0]

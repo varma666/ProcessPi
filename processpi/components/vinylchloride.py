@@ -3,7 +3,7 @@ from processpi.units import *
 
 class VinylChloride(Component):
     """
-    Represents the properties and constants for Vinyl chloride(C2?H3?Cl).
+    Represents the properties and constants for Vinyl chloride(C2H3Cl).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for Vinyl chloride, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class VinylChloride(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Vinyl chloride"
-    formula = "C2?H3?Cl"
+    formula = "C2H3Cl"
     molecular_weight = 62.498
 
     # Critical properties
@@ -45,8 +45,8 @@ class VinylChloride(Component):
     _critical_acentric_factor = 0.1001
 
     _density_constants = [1.5115, 0.2707, 432.0, 0.2716]
-    _specific_heat_constants = [0.0, 322.8, 0.0, 0.0, 0.0, 0.5424, 1.188]
-    _viscosity_constants = [0.26297, 276.55, -1.7282]
-    _thermal_conductivity_constants = [0.2333, -0.00039223]
-    _vapor_pressure_constants = [91.432, 0.0, -10.981, 1.43e-05, 2.0]
-    _enthalpy_constants = [3.4125, 0.4513]
+    _specific_heat_constants = [-10320, 322.8, 0.0, 0.0, 0.0]
+    _viscosity_constants = [0.26297, 276.55, -1.7282, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2333, -0.00039223, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [91.432, -5141.70, -10.981, 1.43e-05, 2.0]
+    _enthalpy_constants = [3.4125e-7, 0.4513, 0.0, 0.0, 0.0]
