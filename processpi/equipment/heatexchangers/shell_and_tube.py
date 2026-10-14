@@ -147,6 +147,8 @@ class ShellAndTubeHX(HeatExchanger):
         self._tube_side = "hot"
         fixed_keys = ["tube_length", "tube_od", "tube_id", "tube_pitch", "tube_passes", "shell_passes", "shell_diameter", "tube_count", "tube_layout", "baffle_spacing"]
         self.fixed_geometry = {k: (self.specs.get(k) is not None) for k in fixed_keys}
+        print(f"self.fixed_geometry: {self.fixed_geometry}")
+        
         self._load_standard_tables()
 
     def _assumed_u_fluid_type(self, side: str, props: Dict[str, float]) -> str:
@@ -787,16 +789,19 @@ class ShellAndTubeHX(HeatExchanger):
 
     def _select_tube_geometry(self, area_required: float, tube: Dict[str, float], shell: Dict[str, float],
                               tube_passes: int) -> Dict[str, float]:
+        
         tube_od = self._to_float(self.specs.get("tube_od"), "m") if self.specs.get("tube_od") is not None else None
         tube_id = self._to_float(self.specs.get("tube_id"), "m") if self.specs.get("tube_id") is not None else None
         tube_length = self._to_float(self.specs.get("tube_length"), "m") if self.specs.get("tube_length") is not None else None
-
+        print(f"Tube OD: {tube_od}, Tube ID: {tube_id}, Tube Length: {tube_length}")
         if tube_od is None or tube_id is None or tube_length is None:
             tube_stream, shell_stream = self._side_streams()
             tube_config = select_tube_configuration(
                 area_required,
                 {"m_dot": tube["m_dot"], "density": tube["density"], "component": tube_stream.component},
                 {"m_dot": shell["m_dot"], "density": shell["density"], "component": shell_stream.component},
+                tube_length=tube_length if tube_length is not None else None,
+                tube_od=tube_od if tube_od is not None else None,
             )
             if tube_config:
                 tube_od = tube_config["tube_od"]

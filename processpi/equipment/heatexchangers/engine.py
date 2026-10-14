@@ -445,9 +445,9 @@ class HeatExchangerEngine:
         # ======================================================
         # UPDATE METHOD IF PROVIDED
         # ======================================================
-    
+        #print(f"kwargs: {kwargs}")
         method = kwargs.get("method")
-    
+        #print(f"method: {method}")
         if method is not None:
     
             self.method = method.lower()
@@ -480,9 +480,9 @@ class HeatExchangerEngine:
             "hx_type": hx_type,
             "specs": kwargs,
         }
-    
+        #print(f"self.data: {self.data}")
         return self
-
+    
     @classmethod
     def _check_hx_type(cls, hx_type: str) -> str:
         key = str(hx_type).lower()
