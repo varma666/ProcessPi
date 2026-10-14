@@ -14,7 +14,7 @@ logging.basicConfig(
 # ============================================================
 
 from processpi.units import *
-from processpi.components import *
+from processpi.components import Water,OrganicLiquid
 from processpi.streams import MaterialStream
 from processpi.equipment.heatexchangers import HeatExchangerEngine
 
