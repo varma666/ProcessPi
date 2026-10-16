@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from typing import Any, Dict, List, Tuple
+import copy
 
 from processpi.calculations.heat_transfer import LMTD
 from processpi.units.area import Area
@@ -147,7 +148,6 @@ class ShellAndTubeHX(HeatExchanger):
         self._tube_side = "hot"
         fixed_keys = ["tube_length", "tube_od", "tube_id", "tube_pitch", "tube_passes", "shell_passes", "shell_diameter", "tube_count", "tube_layout", "baffle_spacing"]
         self.fixed_geometry = {k: (self.specs.get(k) is not None) for k in fixed_keys}
-        print(f"self.fixed_geometry: {self.fixed_geometry}")
         
         self._load_standard_tables()
 
@@ -773,8 +773,33 @@ class ShellAndTubeHX(HeatExchanger):
             "assignment_reason": reason,
         }
 
+    def _component_viscosity_at_temperature(self, component, stream, temperature_k: float) -> float | None:
+        """Evaluate ProcessPI's component viscosity model without mutating shared streams."""
+        if component is None or not callable(getattr(component, "viscosity", None)):
+            return None
+        try:
+            trial = copy.copy(component)
+            current_temperature = getattr(trial, "temperature", None)
+            if current_temperature is None:
+                return None
+            trial.temperature = type(current_temperature)(float(temperature_k), "K")
+            stream_pressure = getattr(stream, "pressure", None)
+            if stream_pressure is not None:
+                trial.pressure = stream_pressure
+            value = trial.viscosity()
+            mu = float(value.to("Pa·s").value if hasattr(value, "to") else value)
+            return mu if math.isfinite(mu) and mu > 0.0 else None
+        except (AttributeError, TypeError, ValueError, ArithmeticError):
+            return None
+
     def _side_props(self, hot: Dict[str, float], cold: Dict[str, float]) -> Tuple[Dict[str, float], Dict[str, float]]:
-        """Return the (tube, shell) stream properties for the resolved assignment."""
+        """Return stream properties with viscosity evaluated at each inlet temperature."""
+        for props, stream in ((hot, self.hot_in), (cold, self.cold_in)):
+            mu = self._component_viscosity_at_temperature(
+                getattr(stream, "component", None), stream, props.get("t_k", 298.15)
+            )
+            if mu is not None:
+                props["viscosity"] = mu
         return (hot, cold) if self._tube_side == "hot" else (cold, hot)
 
     def _hot_cold_props(self, tube: Dict[str, float], shell: Dict[str, float]) -> Tuple[Dict[str, float], Dict[str, float]]:
@@ -793,7 +818,6 @@ class ShellAndTubeHX(HeatExchanger):
         tube_od = self._to_float(self.specs.get("tube_od"), "m") if self.specs.get("tube_od") is not None else None
         tube_id = self._to_float(self.specs.get("tube_id"), "m") if self.specs.get("tube_id") is not None else None
         tube_length = self._to_float(self.specs.get("tube_length"), "m") if self.specs.get("tube_length") is not None else None
-        print(f"Tube OD: {tube_od}, Tube ID: {tube_id}, Tube Length: {tube_length}")
         if tube_od is None or tube_id is None or tube_length is None:
             tube_stream, shell_stream = self._side_streams()
             tube_config = select_tube_configuration(
@@ -1037,31 +1061,68 @@ class ShellAndTubeHX(HeatExchanger):
         min_shell_diameter = self._calculate_shell_diameter(bundle_diameter)
         shell_diameter = max(shell_diameter, min_shell_diameter)
 
-        v_shell = _shell_velocity(shell_diameter)
-        settled = False
-    
-        for _ in range(10):
-    
-            if shell_v_min <= v_shell <= shell_v_max:
-                settled = True
-                break
-    
-            if v_shell < shell_v_min:
-                if shell_diameter <= min_shell_diameter:
+        # The crossflow velocity decreases monotonically as shell diameter
+        # increases for the current baffle-spacing rule. Solve the diameter
+        # directly instead of making a fixed number of 10% adjustments.
+        v_at_min_diameter = _shell_velocity(min_shell_diameter)
+        if v_at_min_diameter < shell_v_min:
+            # Even the smallest shell that can contain this bundle cannot
+            # achieve the minimum velocity. Preserve physical geometry and
+            # report the real constraint violation; do not invent a smaller shell.
+            shell_diameter = min_shell_diameter
+            v_shell = v_at_min_diameter
+        elif v_at_min_diameter <= shell_v_max:
+            shell_diameter = min_shell_diameter
+            v_shell = v_at_min_diameter
+        else:
+            # Find the diameter at which velocity reaches the upper limit,
+            # then choose within the permitted velocity interval if possible.
+            lo = min_shell_diameter
+            hi = max(shell_diameter, lo * 1.25, lo + 0.01)
+            for _ in range(80):
+                if _shell_velocity(hi) <= shell_v_max:
                     break
-                shell_diameter = max(shell_diameter * 0.90, min_shell_diameter)
+                hi *= 1.5
             else:
-                shell_diameter *= 1.10
-    
-            # The returned velocity must belong to the returned shell diameter.
+                hi = max(hi, lo * 100.0)
+
+            # First find the largest diameter that still meets v_shell >= v_min.
+            # This is the low-velocity boundary (smallest allowed velocity).
+            left, right = lo, hi
+            for _ in range(80):
+                mid = 0.5 * (left + right)
+                if _shell_velocity(mid) > shell_v_max:
+                    left = mid
+                else:
+                    right = mid
+            d_for_vmax = 0.5 * (left + right)
+
+            # Find diameter where velocity reaches v_min; if reachable before
+            # the upper bracket, that endpoint defines the feasible interval.
+            left, right = d_for_vmax, hi
+            if _shell_velocity(right) > shell_v_min:
+                shell_diameter = right
+            else:
+                for _ in range(80):
+                    mid = 0.5 * (left + right)
+                    if _shell_velocity(mid) > shell_v_min:
+                        left = mid
+                    else:
+                        right = mid
+                # Choose the diameter at the minimum-velocity boundary. This
+                # maximizes shell diameter while still meeting the exact band.
+                shell_diameter = 0.5 * (left + right)
             v_shell = _shell_velocity(shell_diameter)
-    
-        if not settled:
+
+        # Floating-point root tolerances must not turn an exact boundary into
+        # a pass: final feasibility is evaluated independently with the same
+        # strict configured limits.
+        if not (shell_v_min <= v_shell <= shell_v_max):
             self._warn_with_category(
                 "HYDRAULIC_WARNING",
                 f"Shell velocity {v_shell:.3f} m/s is outside the "
-                f"{shell_v_min}-{shell_v_max} m/s target after 10 shell diameter "
-                f"adjustments; using shell diameter {shell_diameter:.4f} m",
+                f"{shell_v_min}-{shell_v_max} m/s target; minimum feasible "
+                f"shell diameter is {min_shell_diameter:.4f} m",
             )
     
         return (
@@ -1570,6 +1631,12 @@ class ShellAndTubeHX(HeatExchanger):
             # PRESSURE DROP
             # ======================================================
     
+            tube_stream, shell_stream = self._side_streams()
+            t_tube_k = self._safe_float(tube_stream.temperature.to("K"), "tube_stream.temperature")
+            t_shell_k = self._safe_float(shell_stream.temperature.to("K"), "shell_stream.temperature")
+            h_sum = max(h_t + h_s, 1e-12)
+            self._estimated_wall_temperature_k = (h_t * t_tube_k + h_s * t_shell_k) / h_sum
+
             tube_dp, shell_dp = (
                 self._calculate_pressure_drop(
                     tube=tube,
@@ -1585,6 +1652,44 @@ class ShellAndTubeHX(HeatExchanger):
                 )
             )
     
+            # ======================================================
+            # PRESSURE-DROP FEEDBACK (AUTO DESIGN ONLY)
+            # ======================================================
+            # If tube-side pressure drop exceeds the user's/default design limit,
+            # try the next lower standard tube-pass count before settling on a
+            # pressure-drop failure. Fewer passes reduce tube velocity and the
+            # velocity-head/friction contributions. Never override an explicitly
+            # specified tube_passes value. The next iteration rebuilds and
+            # re-rates the geometry, so thermal area, velocity and pressure drop
+            # are recalculated consistently.
+            tube_limit, _shell_limit = self._design_dp_limits(tube, shell)
+            if tube_dp > tube_limit and self.specs.get("tube_passes") is None:
+                supported_passes = (1, 2, 4, 6, 8)
+                lower_passes = [p for p in supported_passes if p < tube_passes]
+                if lower_passes:
+                    candidate_passes = max(lower_passes)
+                    vmin, _vmax = self._get_velocity_limits(
+                        "tube", self._side_streams()[0].component
+                    )
+                    estimated_velocity = v_tube * candidate_passes / max(tube_passes, 1)
+                    if estimated_velocity >= vmin:
+                        self._warn_with_category(
+                            "HYDRAULIC_WARNING",
+                            f"Tube-side pressure drop {tube_dp:.1f} Pa exceeds "
+                            f"the {tube_limit:.1f} Pa limit; retrying automatic "
+                            f"design with {candidate_passes} tube pass(es) "
+                            f"instead of {tube_passes}",
+                        )
+                        self._trace_step(
+                            "OPTIMIZATION", "Tube passes reduced for pressure drop",
+                            f"{tube_passes} -> {candidate_passes}",
+                        )
+                        state["optimization_actions"].append(
+                            f"tube_passes_for_dp:{tube_passes}->{candidate_passes}"
+                        )
+                        tube_passes = candidate_passes
+                        continue
+
             # ======================================================
             # SAVE DP TO STATE
             # ======================================================
@@ -1722,12 +1827,38 @@ class ShellAndTubeHX(HeatExchanger):
             earlier = [j for j, key in enumerate(state["geometry_history"][:-2]) if key == geometry_key]
             if earlier:
                 cycle = passes[earlier[-1]:]
-                adequate = [p for p in cycle if p["geometry"]["area"] >= p["area_required"]]
-                chosen = (
-                    min(adequate, key=lambda p: p["geometry"]["area"])
-                    if adequate
-                    else max(cycle, key=lambda p: p["geometry"]["area"])
-                )
+                bands = self._velocity_bands()
+                tube_vmin, tube_vmax = bands["tube"]
+                shell_vmin, shell_vmax = bands["shell"]
+                tube_dp_limit = self._pressure_limit_pa("tube_dp", 70000.0)
+                shell_dp_limit = self._pressure_limit_pa("shell_dp", 14000.0)
+
+                # A cycle candidate is acceptable only if its own area covers its
+                # own recalculated requirement and its own hydraulic checks pass.
+                # Prefer the lowest tube count among fully feasible candidates.
+                adequate = [
+                    p for p in cycle
+                    if p["geometry"]["area"] >= p["area_required"]
+                ]
+                feasible = [
+                    p for p in adequate
+                    if tube_vmin <= p["v_tube"] <= tube_vmax
+                    and shell_vmin <= p["v_shell"] <= shell_vmax
+                    and p["tube_dp"] <= tube_dp_limit
+                    and p["shell_dp"] <= shell_dp_limit
+                ]
+                if feasible:
+                    chosen = min(feasible, key=lambda p: (p["geometry"]["tube_count"], p["geometry"]["area"]))
+                    selection_reason = "smallest tube count satisfying thermal and hydraulic constraints"
+                elif adequate:
+                    # Keep thermal adequacy, but do not claim the cycle candidate
+                    # is hydraulically feasible; the final assessment will report it.
+                    chosen = min(adequate, key=lambda p: (p["geometry"]["tube_count"], p["geometry"]["area"]))
+                    selection_reason = "smallest thermally adequate candidate; no cycle candidate met all hydraulic limits"
+                else:
+                    chosen = max(cycle, key=lambda p: p["geometry"]["area"])
+                    selection_reason = "largest-area candidate because no cycle candidate covered its required area"
+
                 state.update({k: v for k, v in chosen.items() if k != "pass_warnings"})
                 self._warnings = list(chosen["pass_warnings"])
                 state["converged"] = True
@@ -1735,11 +1866,7 @@ class ShellAndTubeHX(HeatExchanger):
                 self._warn_with_category(
                     "CONVERGENCE_WARNING",
                     f"U cycles between tube counts {counts}; settled on "
-                    f"{chosen['geometry']['tube_count']} tubes, the smallest whose "
-                    f"area covers its own U" if adequate else
-                    f"U cycles between tube counts {counts} and none has the area "
-                    f"its own U requires; settled on the largest, "
-                    f"{chosen['geometry']['tube_count']} tubes",
+                    f"{chosen['geometry']['tube_count']} tubes ({selection_reason})",
                 )
                 self._trace_step("THERMAL", "U cycle settled", chosen["geometry"]["tube_count"])
                 break
@@ -1846,37 +1973,19 @@ class ShellAndTubeHX(HeatExchanger):
         return tube_dp, shell_dp
 
     def _sieder_tate_phi(self, side: str, props: Dict[str, float]) -> float:
-        """
-        Sieder-Tate viscosity correction phi = (mu / mu_w)^0.14 for one side.
-
-        mu_w is the viscosity of that side's fluid at the wall temperature. It
-        is not estimated here: the component property model evaluates a
-        property at the component's own temperature (25 C unless the component
-        was built with another), not at a temperature the caller passes, and it
-        switches phase on vapour pressure (benzene at 90 C and 1 atm comes back
-        as a gas, 2.1e-5 Pa.s), so a wall viscosity taken from it would be made
-        up. It is read instead from the `hot_wall_viscosity` /
-        `cold_wall_viscosity` spec of the stream on that side (a Viscosity, or
-        a number in Pa.s). Without one, phi = 1 is assumed and an
-        ASSUMPTION_WARNING says so.
-
-        Args:
-            side (str): "tube" or "shell".
-            props (Dict[str, float]): That side's stream properties.
-
-        Returns:
-            float: phi.
-        """
+        """Sieder-Tate factor using ProcessPI component viscosity at estimated wall temperature."""
         mu_wall = self._wall_viscosity(side)
-        if mu_wall is None:
-            stream = self._side_stream_name(side)
+        
+        mu_bulk = float(props.get("viscosity", 0.0))
+        if mu_wall is None or mu_bulk <= 0.0:
+            stream_name = self._side_stream_name(side)
             self._warn_with_category(
                 "ASSUMPTION_WARNING",
                 f"Sieder-Tate (mu/mu_w)^0.14 taken as 1 on the {side} side: "
-                f"no {stream}_wall_viscosity given",
+                f"component wall-temperature viscosity unavailable for {stream_name} stream",
             )
             return 1.0
-        return (props["viscosity"] / mu_wall) ** _SIEDER_TATE_EXPONENT
+        return (mu_bulk / mu_wall) ** _SIEDER_TATE_EXPONENT
 
     def _side_stream_name(self, side: str) -> str:
         """"hot" or "cold": the stream the assignment put on `side`."""
@@ -1885,15 +1994,23 @@ class ShellAndTubeHX(HeatExchanger):
         return "cold" if self._tube_side == "hot" else "hot"
 
     def _wall_viscosity(self, side: str) -> float | None:
-        """The wall viscosity spec of the stream on `side` [Pa.s], or None."""
-        stream = self._side_stream_name(side)
-        spec = self.specs.get(f"{stream}_wall_viscosity")
-        if spec is None:
-            return None
-        mu_wall = self._to_float(spec, "Pa·s")
-        if mu_wall <= 0.0:
-            raise ValueError(f"{stream}_wall_viscosity must be positive, got {mu_wall} Pa.s")
-        return mu_wall
+        """Explicit wall viscosity wins; otherwise evaluate the component at estimated wall T."""
+        stream_name = self._side_stream_name(side)
+        spec = self.specs.get(f"{stream_name}_wall_viscosity")
+        if spec is not None:
+            mu_wall = self._to_float(spec, "Pa·s")
+            if mu_wall <= 0.0:
+                raise ValueError(f"{stream_name}_wall_viscosity must be positive, got {mu_wall} Pa.s")
+            return mu_wall
+
+        tube_stream, shell_stream = self._side_streams()
+        stream = tube_stream if side == "tube" else shell_stream
+        component = getattr(stream, "component", None)
+        wall_temperature_k = getattr(
+            self, "_estimated_wall_temperature_k",
+            self._safe_float(stream.temperature.to("K"), f"{stream_name}_temperature"),
+        )
+        return self._component_viscosity_at_temperature(component, stream, wall_temperature_k)
 
     def _viscosity_correction_report(self, tube: Dict[str, float], shell: Dict[str, float]) -> Dict[str, Any]:
         """phi and its basis on each side, for the result."""
@@ -2915,8 +3032,19 @@ class ShellAndTubeHX(HeatExchanger):
         area_required = state["area_required"]
         thermal_feasible = area_designed >= area_required
         pressure_drop_feasible = tube_dp <= tube_limit and shell_dp <= shell_limit
-        hydraulic_feasible = not self._velocity_warnings(
-            state["v_tube"], state["v_shell"], tube, shell
+        # Hydraulic feasibility uses the exact configured velocity bands, not
+        # the warning text or the wider hard-failure tolerance used by geometry
+        # validation. Pressure-drop feasibility remains a separate flag.
+        tube_stream, shell_stream = self._side_streams()
+        tube_vmin, tube_vmax = self._get_velocity_limits(
+            side="tube", component=tube_stream.component
+        )
+        shell_vmin, shell_vmax = self._get_velocity_limits(
+            side="shell", component=shell_stream.component
+        )
+        hydraulic_feasible = (
+            tube_vmin <= state["v_tube"] <= tube_vmax
+            and shell_vmin <= state["v_shell"] <= shell_vmax
         )
         velocity_bands = self._velocity_bands()
 
