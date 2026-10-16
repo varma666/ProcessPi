@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Pdichlorobenzene(Component):
     """
-    Represents the properties and constants for pDichlorobenzene(C6?H4?Cl2?).
+    Represents the properties and constants for pDichlorobenzene(C6H4Cl2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for pDichlorobenzene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Pdichlorobenzene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "pDichlorobenzene"
-    formula = "C6?H4?Cl2?"
+    formula = "C6H4Cl2"
     molecular_weight = 147.002
 
     # Critical properties
@@ -45,8 +45,8 @@ class Pdichlorobenzene(Component):
     _critical_acentric_factor = 0.2846
 
     _density_constants = [0.74858, 0.26276, 684.75, 0.30788]
-    _specific_heat_constants = [0.0, -24.84, 0.48191, 0.0, 0.0, 1.7711, 2.4829]
-    _viscosity_constants = [31.63, -1080.0, -6.114]
-    _thermal_conductivity_constants = [0.16977, -0.0001799]
-    _vapor_pressure_constants = [88.31, 0.0, -9.6308, 4.58e-06, 2.0]
-    _enthalpy_constants = [5.9765, 0.38559]
+    _specific_heat_constants = [133950, -24.84, 0.48191, 0.0, 0.0]
+    _viscosity_constants = [31.63, -1080.0, -6.114, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.16977, -0.0001799, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [88.31, -8463.50, -9.6308, 4.58e-06, 2.0]
+    _enthalpy_constants = [5.9765e-7, 0.38559, 0.0, 0.0, 0.0]

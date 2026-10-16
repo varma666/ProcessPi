@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Methylbutane(Component):
     """
-    Represents the properties and constants for 2Methylbutane(C5?H12?).
+    Represents the properties and constants for 2Methylbutane(C5H12).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Methylbutane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Methylbutane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Methylbutane"
-    formula = "C5?H12?"
+    formula = "C5H12"
     molecular_weight = 72.149
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Methylbutane(Component):
     _critical_acentric_factor = 0.2279
 
     _density_constants = [0.91991, 0.27815, 460.4, 0.28667]
-    _specific_heat_constants = [0.0, 146.0, -0.292, 0.00151, 0.0, 1.2328, 1.7048]
-    _viscosity_constants = [-12.596, 889.11, 0.20469]
-    _thermal_conductivity_constants = [0.21246, -0.00033581]
-    _vapor_pressure_constants = [71.308, 0.0, -7.7169, 8.73e-06, 2.0]
-    _enthalpy_constants = [3.7593, 0.39173]
+    _specific_heat_constants = [108300, 146.0, -0.292, 0.00151, 0.0]
+    _viscosity_constants = [-12.596, 889.11, 0.20469, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21246, -0.00033581, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [71.308, -4976, -7.7169, 8.73e-06, 2.0]
+    _enthalpy_constants = [3.7593e-7, 0.39173, 0.0, 0.0, 0.0]

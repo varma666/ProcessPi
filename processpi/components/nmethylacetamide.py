@@ -3,7 +3,7 @@ from processpi.units import *
 
 class NmethylAcetamide(Component):
     """
-    Represents the properties and constants for NMethyl acetamide(C3?H7?NO).
+    Represents the properties and constants for NMethyl acetamide(C3H7NO).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for NMethyl acetamide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class NmethylAcetamide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "NMethyl acetamide"
-    formula = "C3?H7?NO"
+    formula = "C3H7NO"
     molecular_weight = 73.094
 
     # Critical properties
@@ -45,8 +45,8 @@ class NmethylAcetamide(Component):
     _critical_acentric_factor = 0.4351
 
     _density_constants = [0.88268, 0.23568, 718.0, 0.27379]
-    _specific_heat_constants = [0.0, 243.4, 0.0, 0.0, 0.0, 1.4998, 1.9367]
-    _viscosity_constants = [-4.648, 1832.0, -1.2191]
-    _thermal_conductivity_constants = [0.23743, -0.0002362]
-    _vapor_pressure_constants = [79.128, 0.0, -7.7355, 3.16e-18, 6.0]
-    _enthalpy_constants = [7.3402, 0.38974]
+    _specific_heat_constants = [62600, 243.4, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-4.648, 1832.0, -1.2191, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.23743, -0.0002362, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [79.128, -9523.90, -7.7355, 3.16e-18, 6.0]
+    _enthalpy_constants = [7.3402e-7, 0.38974, 0.0, 0.0, 0.0]

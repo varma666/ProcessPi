@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2EthylHexanoicAcid(Component):
     """
-    Represents the properties and constants for 2Ethyl hexanoic acid(C8?H16?O2?).
+    Represents the properties and constants for 2Ethyl hexanoic acid(C8H16O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Ethyl hexanoic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2EthylHexanoicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Ethyl hexanoic acid"
-    formula = "C8?H16?O2?"
+    formula = "C8H16O2"
     molecular_weight = 144.211
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2EthylHexanoicAcid(Component):
     _critical_acentric_factor = 0.8067
 
     _density_constants = [0.47428, 0.25028, 674.6, 0.25442]
-    _specific_heat_constants = [0.0, -17.907, 1.0493, 0.0, 0.0, 2.6141, 4.7157]
-    _viscosity_constants = [-13.037, 2346.0]
-    _thermal_conductivity_constants = [0.20954, -0.00022251]
-    _vapor_pressure_constants = [117.52, 0.0, -12.895, 6.13e-18, 6.0]
-    _enthalpy_constants = [11.184, 0.86189, -0.47845, 0.048646]
+    _specific_heat_constants = [207670, -17.907, 1.0493, 0.0, 0.0]
+    _viscosity_constants = [-13.037, 2346.0, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20954, -0.00022251, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [117.52, -12991, -12.895, 6.13e-18, 6.0]
+    _enthalpy_constants = [11.184e-7, 0.86189, -0.47845, 0.048646]

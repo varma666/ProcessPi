@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Decanol(Component):
     """
-    Represents the properties and constants for 1Decanol(C10?H22?O).
+    Represents the properties and constants for 1Decanol(C10H22O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Decanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Decanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Decanol"
-    formula = "C10?H22?O"
+    formula = "C10H22O"
     molecular_weight = 158.281
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Decanol(Component):
     _critical_acentric_factor = 0.607
 
     _density_constants = [0.38208, 0.24645, 688.0, 0.26125]
-    _specific_heat_constants = [0.0, 0.0, 216.35, -0.37538, 0.00023674, 3.5373, 5.0169]
-    _viscosity_constants = [-69.985, 5818.8, 8.0715]
-    _thermal_conductivity_constants = [0.228, -0.000223]
-    _vapor_pressure_constants = [156.239, 0.0, -18.424, 8.5e-18, 6.0]
-    _enthalpy_constants = [7.9041, -1.36, 4.0854, -2.3871]
+    _specific_heat_constants = [4988500, -52898, 216.35, -0.37538, 0.00023674]
+    _viscosity_constants = [-69.985, 5818.8, 8.0715,0,0]
+    _thermal_conductivity_constants = [0.228, -0.000223, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [156.239, -15212, -18.424, 8.5e-18, 6.0]
+    _enthalpy_constants = [7.9041e-7, -1.36, 4.0854, -2.3871,0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class NndimethylFormamide(Component):
     """
-    Represents the properties and constants for NNDimethyl formamide(C3?H7?NO).
+    Represents the properties and constants for NNDimethyl formamide(C3H7NO).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for NNDimethyl formamide, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class NndimethylFormamide(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "NNDimethyl formamide"
-    formula = "C3?H7?NO"
+    formula = "C3H7NO"
     molecular_weight = 73.094
 
     # Critical properties
@@ -45,8 +45,8 @@ class NndimethylFormamide(Component):
     _critical_acentric_factor = 0.3177
 
     _density_constants = [0.89615, 0.23478, 649.6, 0.28091]
-    _specific_heat_constants = [0.0, -106.0, 0.384, 0.0, 0.0, 1.4767, 1.82]
-    _viscosity_constants = [-20.425, 1515.5, 1.4444]
-    _thermal_conductivity_constants = [0.26, -0.000255]
-    _vapor_pressure_constants = [82.762, 0.0, -8.8038, 4.24e-06, 2.0]
-    _enthalpy_constants = [5.9217, 0.37996]
+    _specific_heat_constants = [147900, -106.0, 0.384, 0.0, 0.0]
+    _viscosity_constants = [-20.425, 1515.5, 1.4444, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.26, -0.000255, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [82.762, -7955.50, -8.8038, 4.24e-06, 2.0]
+    _enthalpy_constants = [5.9217e-7, 0.37996, 0.0, 0.0, 0.0]

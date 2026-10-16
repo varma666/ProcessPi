@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _3Hexyne(Component):
     """
-    Represents the properties and constants for 3Hexyne(C6?H10?).
+    Represents the properties and constants for 3Hexyne(C6H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 3Hexyne, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _3Hexyne(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "3Hexyne"
-    formula = "C6?H10?"
+    formula = "C6H10"
     molecular_weight = 82.144
 
     # Critical properties
@@ -45,8 +45,8 @@ class _3Hexyne(Component):
     _critical_acentric_factor = 0.2183
 
     _density_constants = [0.78045, 0.26065, 544.0, 0.28571]
-    _specific_heat_constants = [0.0, 283.4, 0.0, 0.0, 0.0, 1.6781, 1.8322]
-    _viscosity_constants = [-4.2684, 647.6, -1.0087]
-    _thermal_conductivity_constants = [0.20996, -0.0002692]
-    _vapor_pressure_constants = [47.091, 0.0, -3.6371, 0.000516, 1.0]
-    _enthalpy_constants = [4.808, 0.436]
+    _specific_heat_constants = [82795, 283.4, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-4.2684, 647.6, -1.0087, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20996, -0.0002692, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [47.091, -5104, -3.6371, 0.000516, 1.0]
+    _enthalpy_constants = [4.808e-7, 0.436, 0.0, 0.0, 0.0]

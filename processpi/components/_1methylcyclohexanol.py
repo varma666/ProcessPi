@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Methylcyclohexanol(Component):
     """
-    Represents the properties and constants for 1Methylcyclohexanol(C7?H14?O).
+    Represents the properties and constants for 1Methylcyclohexanol(C7H14O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Methylcyclohexanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Methylcyclohexanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Methylcyclohexanol"
-    formula = "C7?H14?O"
+    formula = "C7H14O"
     molecular_weight = 114.185
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Methylcyclohexanol(Component):
     _critical_acentric_factor = 0.2213
 
     _density_constants = [0.7013, 0.266, 686.0, 0.28571]
-    _specific_heat_constants = [0.0, 508.59, 0.0, 0.0, 0.0, 2.0315, 2.7494]
-    _viscosity_constants = [-6.1534, 3219.0, -1.4494]
-    _thermal_conductivity_constants = [0.21558, -0.00022728]
-    _vapor_pressure_constants = [134.63, 0.0, -16.511, 8.44e-06, 2.0]
-    _enthalpy_constants = [6.477, 0.4853]
+    _specific_heat_constants = [50578, 508.59, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-6.1534, 3219.0, -1.4494, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21558, -0.00022728, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [134.63, -10682, -16.511, 8.44e-06, 2.0]
+    _enthalpy_constants = [6.477e-7, 0.4853, 0.0, 0.0, 0.0]

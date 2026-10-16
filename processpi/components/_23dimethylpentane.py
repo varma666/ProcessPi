@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _23Dimethylpentane(Component):
     """
-    Represents the properties and constants for 23Dimethylpentane(C7?H16?).
+    Represents the properties and constants for 23Dimethylpentane(C7H16).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 23Dimethylpentane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _23Dimethylpentane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "23Dimethylpentane"
-    formula = "C7?H16?"
+    formula = "C7H16"
     molecular_weight = 100.202
 
     # Critical properties
@@ -45,8 +45,8 @@ class _23Dimethylpentane(Component):
     _critical_acentric_factor = 0.2964
 
     _density_constants = [0.72352, 0.28629, 537.3, 0.27121]
-    _specific_heat_constants = [0.0, 59.2, 0.604, 0.0, 0.0, 1.5664, 2.5613]
-    _viscosity_constants = [-12.08, 1112.2, 0.09654]
-    _thermal_conductivity_constants = [0.17964, -0.000246]
-    _vapor_pressure_constants = [78.335, 0.0, -8.5105, 6.43e-06, 2.0]
-    _enthalpy_constants = [4.6533, 0.37577]
+    _specific_heat_constants = [146420, 59.2, 0.604, 0.0, 0.0]
+    _viscosity_constants = [-12.08, 1112.2, 0.09654, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.17964, -0.000246, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [78.335, -6348.70, -8.5105, 6.43e-06, 2.0]
+    _enthalpy_constants = [4.6533e-7, 0.37577, 0.0, 0.0, 0.0]

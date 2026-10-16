@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Methyl2Butene(Component):
     """
-    Represents the properties and constants for 2Methyl2butene(C5?H10?).
+    Represents the properties and constants for 2Methyl2butene(C5H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Methyl2butene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Methyl2Butene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Methyl2butene"
-    formula = "C5?H10?"
+    formula = "C5H10"
     molecular_weight = 70.133
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Methyl2Butene(Component):
     _critical_acentric_factor = 0.287
 
     _density_constants = [0.93391, 0.27275, 470.0, 0.2578]
-    _specific_heat_constants = [0.0, -266.72, 0.90847, 0.0, 0.0, 1.3207, 1.5673]
-    _viscosity_constants = [-8.4453, 639.21, -0.38409]
-    _thermal_conductivity_constants = [0.19636, -0.000291]
-    _vapor_pressure_constants = [83.927, 0.0, -9.6453, 1.11e-05, 2.0]
-    _enthalpy_constants = [3.9248, 0.36173]
+    _specific_heat_constants = [151600, -266.72, 0.90847, 0.0, 0.0]
+    _viscosity_constants = [-8.4453, 639.21, -0.38409, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.19636, -0.000291, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [83.927, -5640.50, -9.6453, 1.11e-05, 2.0]
+    _enthalpy_constants = [3.9248e-7, 0.36173, 0.0, 0.0, 0.0]

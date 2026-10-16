@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _23Dimethylbutane(Component):
     """
-    Represents the properties and constants for 23Dimethylbutane(C6?H14?).
+    Represents the properties and constants for 23Dimethylbutane(C6H14).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 23Dimethylbutane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _23Dimethylbutane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "23Dimethylbutane"
-    formula = "C6?H14?"
+    formula = "C6H14"
     molecular_weight = 86.175
 
     # Critical properties
@@ -45,8 +45,8 @@ class _23Dimethylbutane(Component):
     _critical_acentric_factor = 0.2493
 
     _density_constants = [0.7565, 0.27305, 500.0, 0.27408]
-    _specific_heat_constants = [0.0, 18.5, 0.608, 0.0, 0.0, 1.4495, 2.0224]
-    _viscosity_constants = [7.2565, 221.4, -2.7946]
-    _thermal_conductivity_constants = [0.1774, -0.0002436]
-    _vapor_pressure_constants = [77.161, 0.0, -8.501, 8.03e-06, 2.0]
-    _enthalpy_constants = [4.1509, 0.38383]
+    _specific_heat_constants = [129450, 18.5, 0.608, 0.0, 0.0]
+    _viscosity_constants = [7.2565, 221.4, -2.7946, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.1774, -0.0002436, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [77.161, -5691.10, -8.501, 8.03e-06, 2.0]
+    _enthalpy_constants = [4.1509e-7, 0.38383, 0.0, 0.0, 0.0]

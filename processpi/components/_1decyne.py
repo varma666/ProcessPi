@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Decyne(Component):
     """
-    Represents the properties and constants for 1Decyne(C10?H18?).
+    Represents the properties and constants for 1Decyne(C10H18).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Decyne, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Decyne(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Decyne"
-    formula = "C10?H18?"
+    formula = "C10H18"
     molecular_weight = 138.25
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Decyne(Component):
     _critical_acentric_factor = 0.5178
 
     _density_constants = [0.46877, 0.25875, 619.85, 0.29479]
-    _specific_heat_constants = [0.0, -371.23, 1.5774, 0.0, 0.0, 2.7466, 4.2629]
-    _viscosity_constants = [-2.3633, 791.93, -1.2272]
-    _thermal_conductivity_constants = [0.20839, -0.00023622]
-    _vapor_pressure_constants = [142.94, 0.0, -17.818, 1.1e-05, 2.0]
-    _enthalpy_constants = [6.9461, 0.42109]
+    _specific_heat_constants = [276900, -371.23, 1.5774, 0.0, 0.0]
+    _viscosity_constants = [-2.3633, 791.93, -1.2272, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20839, -0.00023622, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [142.94, -11119, -17.818, 1.1e-05, 2.0]
+    _enthalpy_constants = [6.9461e-7, 0.42109, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Heptanone(Component):
     """
-    Represents the properties and constants for 2Heptanone(C7?H14?O).
+    Represents the properties and constants for 2Heptanone(C7H14O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Heptanone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Heptanone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Heptanone"
-    formula = "C7?H14?O"
+    formula = "C7H14O"
     molecular_weight = 114.185
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Heptanone(Component):
     _critical_acentric_factor = 0.419
 
     _density_constants = [0.58247, 0.25279, 611.4, 0.29818]
-    _specific_heat_constants = [0.0, -375.68, 1.0024, 0.0, 0.0, 2.3242, 3.2163]
-    _viscosity_constants = [-13.929, 1321.9, 0.40382]
-    _thermal_conductivity_constants = [0.2108, -0.000246]
-    _vapor_pressure_constants = [75.494, 0.0, -7.5047, 8.91e-18, 6.0]
-    _enthalpy_constants = [6.1425, 0.39802]
+    _specific_heat_constants = [265040, -375.68, 1.0024, 0.0, 0.0]
+    _viscosity_constants = [-13.929, 1321.9, 0.40382, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2108, -0.000246, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [75.494, -7896.50, -7.5047, 8.91e-18, 6.0]
+    _enthalpy_constants = [6.1425e-7, 0.39802, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Methyl1Butene3Yne(Component):
     """
-    Represents the properties and constants for 2Methyl1butene3yne(C5?H6?).
+    Represents the properties and constants for 2Methyl1butene3yne(C5H6).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Methyl1butene3yne, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Methyl1Butene3Yne(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Methyl1butene3yne"
-    formula = "C5?H6?"
+    formula = "C5H6"
     molecular_weight = 66.101
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Methyl1Butene3Yne(Component):
     _critical_acentric_factor = 0.137
 
     _density_constants = [1.1157, 0.27671, 492.0, 0.30821]
-    _specific_heat_constants = [0.0, 181.01, 0.0, 0.0, 0.0, 1.3589, 1.372]
-    _viscosity_constants = [-3.6585, 441.1, -1.0547]
-    _thermal_conductivity_constants = [0.20385, -0.0002874]
-    _vapor_pressure_constants = [95.453, 0.0, -12.384, 0.0156, 1.0]
-    _enthalpy_constants = [3.648, 0.3863]
+    _specific_heat_constants = [81919, 181.01, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-3.6585, 441.1, -1.0547, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20385, -0.0002874, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [95.453, -5448.80, -12.384, 0.0156, 1.0]
+    _enthalpy_constants = [3.648e-7, 0.3863, 0.0, 0.0, 0.0]

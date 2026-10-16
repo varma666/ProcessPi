@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Heptanol(Component):
     """
-    Represents the properties and constants for 2Heptanol(C7?H16?O).
+    Represents the properties and constants for 2Heptanol(C7H16O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Heptanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Heptanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Heptanol"
-    formula = "C7?H16?O"
+    formula = "C7H16O"
     molecular_weight = 116.201
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Heptanol(Component):
     _critical_acentric_factor = 0.5628
 
     _density_constants = [0.57114, 0.25534, 608.3, 0.26487]
-    _specific_heat_constants = [0.0, 0.0, 3.44064, 0.0, 0.0, 2.2649, 4.7873]
+    _specific_heat_constants = [283127, -1037.63, 3.44064, 0.0, 0.0]
     _viscosity_constants = [11.225, 25.319, -3.2694, 101000000000.0, -4.3444]
-    _thermal_conductivity_constants = [0.21134, -0.00024776]
-    _vapor_pressure_constants = [124.23, 0.0, -14.148, 6.95e-17, 5.7]
-    _enthalpy_constants = [9.6433, 0.783, -0.27273, 0.038495]
+    _thermal_conductivity_constants = [0.21134, -0.00024776, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [124.23, -11637, -14.148, 6.95e-17, 5.7]
+    _enthalpy_constants = [9.6433e-7, 0.783, -0.27273, 0.038495, 0.0]

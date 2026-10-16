@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Odichlorobenzene(Component):
     """
-    Represents the properties and constants for oDichlorobenzene(C6?H4?Cl2?).
+    Represents the properties and constants for oDichlorobenzene(C6H4Cl2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for oDichlorobenzene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Odichlorobenzene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "oDichlorobenzene"
-    formula = "C6?H4?Cl2?"
+    formula = "C6H4Cl2"
     molecular_weight = 147.002
 
     # Critical properties
@@ -45,8 +45,8 @@ class Odichlorobenzene(Component):
     _critical_acentric_factor = 0.2192
 
     _density_constants = [0.74404, 0.26112, 705.0, 0.30815]
-    _specific_heat_constants = [0.0, 183.97, 0.2314, 0.0, 0.0, 1.6061, 2.5506]
-    _viscosity_constants = [-30.6, 2153.4, 2.9371]
-    _thermal_conductivity_constants = [0.16994, -0.0001637]
-    _vapor_pressure_constants = [77.105, 0.0, -7.8886, 2.73e-06, 2.0]
-    _enthalpy_constants = [6.2117, 0.42845]
+    _specific_heat_constants = [93093, 183.97, 0.2314, 0.0, 0.0]
+    _viscosity_constants = [-30.6, 2153.4, 2.9371, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.16994, -0.0001637, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [77.105, -8111.10, -7.8886, 2.73e-06, 2.0]
+    _enthalpy_constants = [6.2117e-7, 0.42845, 0.0, 0.0, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Heptyne(Component):
     """
-    Represents the properties and constants for 1Heptyne(C7?H12?).
+    Represents the properties and constants for 1Heptyne(C7H12).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Heptyne, which are essential for various process engineering calculations.
@@ -45,8 +45,8 @@ class _1Heptyne(Component):
     _critical_acentric_factor = 0.3778
 
     _density_constants = [0.67304, 0.26045, 547.0, 0.28388]
-    _specific_heat_constants = [0.0, 761.13, -0.62882, 0.0, 0.0, 1.7387, 2.4319]
-    _viscosity_constants = [-2.7947, 563.86, -1.1636]
-    _thermal_conductivity_constants = [0.21098, -0.00026652]
-    _vapor_pressure_constants = [59.083, 0.0, -5.3072, 1.44e-17, 6.0]
-    _enthalpy_constants = [4.8222, 0.33858]
+    _specific_heat_constants = [46798, 761.13, -0.62882, 0.0, 0.0]
+    _viscosity_constants = [-2.7947, 563.86, -1.1636, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21098, -0.00026652, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [59.083, -6031.80, -5.3072, 1.44e-17, 6.0]
+    _enthalpy_constants = [4.8222e-7, 0.33858, 0.0, 0.0, 0.0]

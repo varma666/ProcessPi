@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2MethylbutanoicAcid(Component):
     """
-    Represents the properties and constants for 2Methylbutanoic acid(C5?H10?O2?).
+    Represents the properties and constants for 2Methylbutanoic acid(C5H10O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Methylbutanoic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2MethylbutanoicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Methylbutanoic acid"
-    formula = "C5?H10?O2?"
+    formula = "C5H10O2"
     molecular_weight = 102.132
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2MethylbutanoicAcid(Component):
     _critical_acentric_factor = 0.5894
 
     _density_constants = [0.72762, 0.25244, 643.0, 0.28571]
-    _specific_heat_constants = [0.0, 417.4, 0.0, 0.0, 0.0, 2.0839, 2.7518]
-    _viscosity_constants = [-1.035, 1048.5, -1.5474]
-    _thermal_conductivity_constants = [0.22284, -0.0002516]
-    _vapor_pressure_constants = [85.383, 0.0, -8.6164, 5.61e-18, 6.0]
-    _enthalpy_constants = [7.48, 0.3933]
+    _specific_heat_constants = [74200, 417.4, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-1.035, 1048.5, -1.5474, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.22284, -0.0002516, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [85.383, -9575.40, -8.6164, 5.61e-18, 6.0]
+    _enthalpy_constants = [7.48e-7, 0.3933, 0.0, 0.0, 0.0]

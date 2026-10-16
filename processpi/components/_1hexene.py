@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Hexene(Component):
     """
-    Represents the properties and constants for 1Hexene(C6?H12?).
+    Represents the properties and constants for 1Hexene(C6H12).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Hexene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Hexene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Hexene"
-    formula = "C6?H12?"
+    formula = "C6H12"
     molecular_weight = 84.159
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Hexene(Component):
     _critical_acentric_factor = 0.2888
 
     _density_constants = [0.76925, 0.26809, 504.0, 0.28571]
-    _specific_heat_constants = [0.0, -200.37, 0.8784, 0.0, 0.0, 1.5354, 1.9673]
-    _viscosity_constants = [-10.36, 775.85, -0.082348]
-    _thermal_conductivity_constants = [0.19112, -8.3519e-05, -5.14e-07]
-    _vapor_pressure_constants = [51.024, 0.0, -4.2463, 1.68e-17, 6.0]
-    _enthalpy_constants = [4.1429, 0.49118, -0.44821, 0.32105]
+    _specific_heat_constants = [164640, -200.37, 0.8784, 0.0, 0.0]
+    _viscosity_constants = [-10.36, 775.85, -0.082348, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.19112, -8.3519e-05, -5.14e-07, 0.0, 0.0]
+    _vapor_pressure_constants = [51.024, -4986.40, -4.2463, 1.68e-17, 6.0]
+    _enthalpy_constants = [4.1429e-7, 0.49118, -0.44821, 0.32105, 0.0]

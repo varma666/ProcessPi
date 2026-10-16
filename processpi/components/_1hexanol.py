@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Hexanol(Component):
     """
-    Represents the properties and constants for 1Hexanol(C6?H14?O).
+    Represents the properties and constants for 1Hexanol(C6H14O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Hexanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Hexanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Hexanol"
-    formula = "C6?H14?O"
+    formula = "C6H14O"
     molecular_weight = 102.175
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Hexanol(Component):
     _critical_acentric_factor = 0.5586
 
     _density_constants = [0.70093, 0.26776, 611.3, 0.24919]
-    _specific_heat_constants = [0.0, 0.0, 71.721, -0.12026, 7.1087e-05, 1.9821, 3.5197]
+    _specific_heat_constants = [1638600, -17261, 71.721, -0.12026, 7.1087e-05]
     _viscosity_constants = [-39.324, 3841.0, 3.6933, -2.12e-30, 10.485]
-    _thermal_conductivity_constants = [0.2193, -0.00022]
-    _vapor_pressure_constants = [135.421, 0.0, -15.732, 1.27e-17, 6.0]
-    _enthalpy_constants = [7.035, -0.9575, 3.1431, -1.8066]
+    _thermal_conductivity_constants = [0.2193, -0.00022, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [135.421, -12288, -15.732, 1.27e-17, 6.0]
+    _enthalpy_constants = [7.035e-7, -0.9575, 3.1431, -1.8066, 0.0]

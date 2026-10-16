@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Heptene(Component):
     """
-    Represents the properties and constants for 1Heptene(C7?H14?).
+    Represents the properties and constants for 1Heptene(C7H14?).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Heptene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Heptene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Heptene"
-    formula = "C7?H14?"
+    formula = "C7H14"
     molecular_weight = 98.186
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Heptene(Component):
     _critical_acentric_factor = 0.3432
 
     _density_constants = [0.66016, 0.26657, 537.4, 0.28571]
-    _specific_heat_constants = [0.0, 0.0, 6.5242, -0.011994, 9.38e-06, 1.815, 2.4096]
-    _viscosity_constants = [-10.819, 841.33]
-    _thermal_conductivity_constants = [0.19664, -0.00016623, -2.52e-07]
-    _vapor_pressure_constants = [65.922, 0.0, -6.3629, 2.01e-17, 6.0]
-    _enthalpy_constants = [4.9437, 0.35428, 0.22149, -0.2353]
+    _specific_heat_constants = [267950, -1315.90, 6.5242, -0.011994, 9.38e-06]
+    _viscosity_constants = [-10.819, 841.33, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.19664, -0.00016623, -2.52e-07, 0.0, 0.0]
+    _vapor_pressure_constants = [65.922, -6189, -6.3629, 2.01e-17, 6.0]
+    _enthalpy_constants = [4.9437e-7, 0.35428, 0.22149, -0.2353, 0.0]

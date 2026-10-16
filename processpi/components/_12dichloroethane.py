@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _12Dichloroethane(Component):
     """
-    Represents the properties and constants for 12Dichloroethane(C2?H4?Cl2?).
+    Represents the properties and constants for 12Dichloroethane(C2H4Cl2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 12Dichloroethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _12Dichloroethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "12Dichloroethane"
-    formula = "C2?H4?Cl2?"
+    formula = "C2H4Cl2"
     molecular_weight = 98.959
 
     # Critical properties
@@ -45,8 +45,8 @@ class _12Dichloroethane(Component):
     _critical_acentric_factor = 0.2866
 
     _density_constants = [1.2591, 0.27698, 561.6, 0.30492]
-    _specific_heat_constants = [0.0, -444.74, 0.93009, 0.0, 0.0, 1.2601, 1.3885]
-    _viscosity_constants = [15.312, -41.12, -3.919]
-    _thermal_conductivity_constants = [0.214, -0.000266]
-    _vapor_pressure_constants = [92.355, 0.0, -10.651, 9.14e-06, 2.0]
-    _enthalpy_constants = [4.5507, 0.34444]
+    _specific_heat_constants = [179170, -444.74, 0.93009, 0.0, 0.0]
+    _viscosity_constants = [15.312, -41.12, -3.919, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.214, -0.000266, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [92.355, -6920.40, -10.651, 9.14e-06, 2.0]
+    _enthalpy_constants = [4.5507e-7, 0.34444, 0.0, 0.0, 0.0]

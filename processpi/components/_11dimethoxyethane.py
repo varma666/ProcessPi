@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _11Dimethoxyethane(Component):
     """
-    Represents the properties and constants for 11Dimethoxyethane(C4?H10?O2?).
+    Represents the properties and constants for 11Dimethoxyethane(C4H10O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 11Dimethoxyethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _11Dimethoxyethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "11Dimethoxyethane"
-    formula = "C4?H10?O2?"
+    formula = "C4H10O2"
     molecular_weight = 90.121
 
     # Critical properties
@@ -45,8 +45,8 @@ class _11Dimethoxyethane(Component):
     _critical_acentric_factor = 0.3277
 
     _density_constants = [0.89368, 0.26599, 507.8, 0.28571]
-    _specific_heat_constants = [0.0, -313.41, 1.1023, 0.0, 0.0, 1.6586, 2.0755]
-    _viscosity_constants = [-10.968, 885.49]
-    _thermal_conductivity_constants = [0.22078, -0.00031271]
-    _vapor_pressure_constants = [53.637, 0.0, -4.5649, 1.68e-17, 6.0]
-    _enthalpy_constants = [4.3872, 0.56226, -0.60662, 0.4202]
+    _specific_heat_constants = [187790, -313.41, 1.1023, 0.0, 0.0]
+    _viscosity_constants = [-10.968, 885.49, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.22078, -0.00031271, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [53.637,-5251.20, -4.5649, 1.68e-17, 6.0]
+    _enthalpy_constants = [4.3872e-7, 0.56226, -0.60662, 0.4202, 0.0]

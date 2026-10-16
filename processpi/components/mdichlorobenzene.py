@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Mdichlorobenzene(Component):
     """
-    Represents the properties and constants for mDichlorobenzene(C6?H4?Cl2?).
+    Represents the properties and constants for mDichlorobenzene(C6H4Cl2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for mDichlorobenzene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Mdichlorobenzene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "mDichlorobenzene"
-    formula = "C6?H4?Cl2?"
+    formula = "C6H4Cl2"
     molecular_weight = 147.002
 
     # Critical properties
@@ -45,8 +45,8 @@ class Mdichlorobenzene(Component):
     _critical_acentric_factor = 0.279
 
     _density_constants = [0.74495, 0.26147, 683.95, 0.31526]
-    _specific_heat_constants = [0.0, 187.25, 0.0, 0.0, 0.0, 1.6139, 1.8978]
+    _specific_heat_constants = [114880, 187.25, 0.0, 0.0, 0.0]
     _viscosity_constants = [-1.9265, 387.67, -1.1335, 150000000000000.0, -6.0]
-    _thermal_conductivity_constants = [0.16694, -0.0001667]
-    _vapor_pressure_constants = [53.187, 0.0, -4.3233, 2.31e-18, 6.0]
-    _enthalpy_constants = [5.6899, 0.35765]
+    _thermal_conductivity_constants = [0.16694, -0.0001667, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [53.187, -6827.50, -4.3233, 2.31e-18, 6.0]
+    _enthalpy_constants = [5.6899e-7, 0.35765, 0.0, 0.0, 0.0]

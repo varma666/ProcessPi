@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _11Dibromoethane(Component):
     """
-    Represents the properties and constants for 11Dibromoethane(C2?H4?Br2?).
+    Represents the properties and constants for 11Dibromoethane(C2H4Br2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 11Dibromoethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _11Dibromoethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "11Dibromoethane"
-    formula = "C2?H4?Br2?"
+    formula = "C2H4Br2"
     molecular_weight = 187.861
 
     # Critical properties
@@ -45,8 +45,8 @@ class _11Dibromoethane(Component):
     _critical_acentric_factor = 0.125
 
     _density_constants = [0.95523, 0.26364, 628.0, 0.29825]
-    _specific_heat_constants = [0.0, -231.8, 0.5946, 0.0, 0.0, 1.2695, 1.4743]
-    _viscosity_constants = [-10.457, 1101.1, -0.0031354]
-    _thermal_conductivity_constants = [0.1426, -0.00016402]
-    _vapor_pressure_constants = [62.711, 0.0, -5.7669, 1.04e-06, 2.0]
-    _enthalpy_constants = [5.712, 0.5255]
+    _specific_heat_constants = [149400, -231.8, 0.5946, 0.0, 0.0]
+    _viscosity_constants = [-10.457, 1101.1, -0.0031354, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.1426, -0.00016402, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [62.711, -6503.50, -5.7669, 1.04e-06, 2.0]
+    _enthalpy_constants = [5.712e-7, 0.5255, 0.0, 0.0, 0.0]

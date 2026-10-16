@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Decene(Component):
     """
-    Represents the properties and constants for 1Decene(C10?H20?).
+    Represents the properties and constants for 1Decene(C10H20).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Decene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Decene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Decene"
-    formula = "C10?H20?"
+    formula = "C10H20"
     molecular_weight = 140.266
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Decene(Component):
     _critical_acentric_factor = 0.4805
 
     _density_constants = [0.43981, 0.25661, 616.6, 0.29148]
-    _specific_heat_constants = [0.0, 0.0, 5.3948, -0.004348, 0.0, 2.7541, 3.825]
-    _viscosity_constants = [-15.868, 1434.8, 0.68071]
-    _thermal_conductivity_constants = [0.20237, -0.00024187]
-    _vapor_pressure_constants = [68.401, 0.0, -6.4637, 6.38e-18, 6.0]
-    _enthalpy_constants = [6.6985, 0.76944, -0.79975, 0.42379]
+    _specific_heat_constants = [417440, -1616.50, 5.3948, -0.004348, 0.0]
+    _viscosity_constants = [-15.868, 1434.8, 0.68071, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20237, -0.00024187, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [68.401, -7776.90, -6.4637, 6.38e-18, 6.0]
+    _enthalpy_constants = [6.6985e-7, 0.76944, -0.79975, 0.42379, 0.0]

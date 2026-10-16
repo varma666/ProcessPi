@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _3Methyl12Butadiene(Component):
     """
-    Represents the properties and constants for 3Methyl12butadiene(C5?H8?).
+    Represents the properties and constants for 3Methyl12butadiene(C5H8).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 3Methyl12butadiene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _3Methyl12Butadiene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "3Methyl12butadiene"
-    formula = "C5?H8?"
+    formula = "C5H8"
     molecular_weight = 68.117
 
     # Critical properties
@@ -45,8 +45,8 @@ class _3Methyl12Butadiene(Component):
     _critical_acentric_factor = 0.1874
 
     _density_constants = [0.84623, 0.24625, 490.0, 0.29041]
-    _specific_heat_constants = [0.0, -133.34, 0.63868, 0.0, 0.0, 1.3035, 1.5662]
-    _viscosity_constants = [-10.481, 648.37, -0.041947]
-    _thermal_conductivity_constants = [0.1983, -0.0002822]
-    _vapor_pressure_constants = [66.575, 0.0, -6.7693, 4.81e-06, 2.0]
-    _enthalpy_constants = [4.1233, 0.426]
+    _specific_heat_constants = [135370, -133.34, 0.63868, 0.0, 0.0]
+    _viscosity_constants = [-10.481, 648.37, -0.041947, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.1983, -0.0002822, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [66.575, -5213.40, -6.7693, 4.81e-06, 2.0]
+    _enthalpy_constants = [4.1233e-7, 0.426, 0.0, 0.0, 0.0]

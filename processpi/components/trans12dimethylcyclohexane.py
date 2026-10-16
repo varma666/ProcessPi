@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Trans12Dimethylcyclohexane(Component):
     """
-    Represents the properties and constants for trans12Dimethylcyclohexane(C8?H16?).
+    Represents the properties and constants for trans12Dimethylcyclohexane(C8H16).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for trans12Dimethylcyclohexane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Trans12Dimethylcyclohexane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "trans12Dimethylcyclohexane"
-    formula = "C8?H16?"
+    formula = "C8H16"
     molecular_weight = 112.213
 
     # Critical properties
@@ -45,8 +45,8 @@ class Trans12Dimethylcyclohexane(Component):
     _critical_acentric_factor = 0.2379
 
     _density_constants = [0.54405, 0.25026, 596.15, 0.2658]
-    _specific_heat_constants = [0.0, -145.26, 1.0932, 0.0, 0.0, 1.661, 2.6989]
-    _viscosity_constants = [-11.344, 1168.9, 0.04513]
-    _thermal_conductivity_constants = [0.17675, -0.0002077]
-    _vapor_pressure_constants = [78.429, 0.0, -8.4129, 4.98e-06, 2.0]
-    _enthalpy_constants = [5.1194, 0.405]
+    _specific_heat_constants = [155560, -145.26, 1.0932, 0.0, 0.0]
+    _viscosity_constants = [-11.344, 1168.9, 0.04513, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.17675, -0.0002077, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [78.429, -6882.10, -8.4129, 4.98e-06, 2.0]
+    _enthalpy_constants = [5.1194e-7, 0.405, 0.0, 0.0, 0.0]

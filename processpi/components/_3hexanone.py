@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _3Hexanone(Component):
     """
-    Represents the properties and constants for 3Hexanone(C6?H12?O).
+    Represents the properties and constants for 3Hexanone(C6H12O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 3Hexanone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _3Hexanone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "3Hexanone"
-    formula = "C6?H12?O"
+    formula = "C6H12O"
     molecular_weight = 100.159
 
     # Critical properties
@@ -45,8 +45,8 @@ class _3Hexanone(Component):
     _critical_acentric_factor = 0.3801
 
     _density_constants = [0.67666, 0.25578, 582.82, 0.27746]
-    _specific_heat_constants = [0.0, -345.94, 0.94278, 0.0, 0.0, 2.0532, 2.7632]
-    _viscosity_constants = [-13.684, 1283.4, 0.33755]
-    _thermal_conductivity_constants = [0.23493, -0.0002912]
-    _vapor_pressure_constants = [73.155, 0.0, -7.2569, 1.27e-17, 6.0]
-    _enthalpy_constants = [5.6232, 0.39972]
+    _specific_heat_constants = [235960, -345.94, 0.94278, 0.0, 0.0]
+    _viscosity_constants = [-13.684, 1283.4, 0.33755, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.23493, -0.0002912, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [73.155, -7242.90, -7.2569, 1.27e-17, 6.0]
+    _enthalpy_constants = [5.6232e-7, 0.39972, 0.0, 0.0, 0.0]
