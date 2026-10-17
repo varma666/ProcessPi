@@ -87,11 +87,27 @@ nav:
           - Ethanol: user-guide/components/ethanol.md
           - Ethylacetate: user-guide/components/ethylacetate.md
           - Gas: user-guide/components/gas.md
+          - Helium: user-guide/components/helium.md
+          - Hydrogen Chloride: user-guide/components/hydrogen_chloride.md
+          - Hydrogen Cyanide: user-guide/components/hydrogen_cyanide.md
+          - Hydrogen Sulfide: user-guide/components/hydrogen_sulfide.md
           - Inorganic Liquids: user-guide/components/inorganic_liquids.md
+          - Methane: user-guide/components/methane.md
           - Methanol: user-guide/components/methanol.md
+          - Neon: user-guide/components/neon.md
+          - Nitric Oxide: user-guide/components/nitric_oxide.md
+          - Nitrogen: user-guide/components/nitrogen.md
+          - Nitrous Oxide: user-guide/components/nitrous_oxide.md
           - Oil: user-guide/components/oil.md
           - Organic Liquids: user-guide/components/organic_liquids.md
+          - Oxygen: user-guide/components/oxygen.md
+          - Ozone: user-guide/components/ozone.md
+          - Phenol: user-guide/components/phenol.md
+          - Propane: user-guide/components/propane.md
+          - Propionic Acid: user-guide/components/propionic_acid.md
           - Steam: user-guide/components/steam.md
+          - Styrene: user-guide/components/styrene.md
+          - Sulfur Dioxide: user-guide/components/sulfur_dioxide.md
           - Toluene: user-guide/components/toluene.md
           - Vapor: user-guide/components/vapor.md
           - Water: user-guide/components/water.md
