@@ -39,7 +39,7 @@ class CarbonTetrafluoride(Component):
     # Heat exchanger data, read by Component.hx_data() and httype()
     _hx_family = "organic"
     _hx_liquid_type = "organic"
-    _hx_fouling_key = "hydrocarbons"
+    _hx_fouling_key = "vapor"
     _hx_corrosion_key = "inert_gas"
 
     # Critical properties
