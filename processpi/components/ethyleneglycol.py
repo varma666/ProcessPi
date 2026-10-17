@@ -53,5 +53,5 @@ class EthyleneGlycol(Component):
     _specific_heat_constants = [35540, 436.78, -0.18486, 0.0, 0.0]
     _viscosity_constants = [-20.515, 2468.5, 1.2435, 2500000000000.0, -5.0]
     _thermal_conductivity_constants = [0.088067, 0.00094712, -1.31e-06, 0.0, 0.0]
-    _vapor_pressure_constants = [84.09, -104111, -8.1976, 1.65e-18, 6.0]
+    _vapor_pressure_constants = [84.09, -10411, -8.1976, 1.6536E-18, 6]
     _enthalpy_constants = [8.3518e-7, 0.42625, 0.0, 0.0, 0.0]

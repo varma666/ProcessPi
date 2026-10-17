@@ -34,7 +34,7 @@ class Propenylcyclohexene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Propenylcyclohexene"
-    formula = "C3H14"
+    formula = "C9H14"
     molecular_weight = 122.207
     # Heat exchanger data, read by Component.hx_data() and httype()
     _hx_family = "organic"

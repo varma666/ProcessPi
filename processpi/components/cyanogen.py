@@ -2,7 +2,7 @@ from .base import Component
 from processpi.units import *
 class Cyanogen(Component):
     name = "Cyanogen"
-    formula = "C2N2​"
+    formula = "C2N2"
     molecular_weight = 52.035
     # Heat exchanger data, read by Component.hx_data() and httype()
     _hx_family = "inorganic"

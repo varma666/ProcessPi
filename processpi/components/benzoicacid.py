@@ -4,7 +4,7 @@ from processpi.units import *
 
 class BenzoicAcid(Component):
     name = "Benzoic Acid"
-    formula = "C7H6O"
+    formula = "C7H6O2"
     molecular_weight = 122.121
     # Heat exchanger data, read by Component.hx_data() and httype()
     _hx_family = "organic"

@@ -2,7 +2,7 @@ from .base import Component
 from processpi.units import *
 class Chloroform(Component):
     name = "Chloroform"
-    formula = "CHCl3​"
+    formula = "CHCl3"
     molecular_weight = 119.378
     # Heat exchanger data, read by Component.hx_data() and httype()
     _hx_family = "organic"

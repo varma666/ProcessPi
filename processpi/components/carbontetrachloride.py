@@ -2,7 +2,7 @@ from .base import Component
 from processpi.units import *
 class CarbonTetrachloride(Component):
     name = "Carbon Tetrachloride"
-    formula = "CO"
+    formula = "CCl4"
     molecular_weight = 153.823
     # Heat exchanger data, read by Component.hx_data() and httype()
     _hx_family = "organic"

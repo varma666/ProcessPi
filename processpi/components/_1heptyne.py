@@ -34,7 +34,7 @@ class _1Heptyne(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Heptyne"
-    formula = "C7?H12?"
+    formula = "C7H12"
     molecular_weight = 96.17
     # Heat exchanger data, read by Component.hx_data() and httype()
     _hx_family = "organic"

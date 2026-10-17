@@ -2,7 +2,7 @@ from .base import Component
 from processpi.units import *
 class ChloroMethane(Component):
     name = "Chloro Methane"
-    formula = "CH3Cl​"
+    formula = "CH3Cl"
     molecular_weight = 50.488
     # Heat exchanger data, read by Component.hx_data() and httype()
     _hx_family = "organic"
