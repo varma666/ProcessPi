@@ -256,6 +256,144 @@ import math
 
 logger = logging.getLogger("processpi.hx.standards")
 
+# Starting tube size when the user fixes neither OD nor length.
+PREFERRED_TUBE_OD = 0.019      # 19 mm (3/4 in)
+PREFERRED_TUBE_LENGTH = 3.0    # m
+
+
+
+def _select_preferred_tube_configuration(area_required, hot, cold):
+    """Tube count and passes for the preferred 19 mm x 3 m tube.
+
+    The selection used when the user fixes no geometry: only the tube count
+    and passes vary, so the design loop sees the same tube size on every U
+    iteration and converges.
+    """
+    best = None
+    best_score = float("inf")
+
+    hot_v_min, hot_v_max = get_velocity_range(hot["component"])
+    target_velocity = 0.5 * (hot_v_min + hot_v_max)
+    shell_v_min, shell_v_max = 0.3, 1.0
+
+    # ---- FIXED INITIAL SELECTION ----
+    preferred_od = PREFERRED_TUBE_OD
+    preferred_length = PREFERRED_TUBE_LENGTH
+
+    for tube in TUBE_DIAMETER_STANDARD:
+        tube_od = tube["od"]
+
+        # prioritize 19 mm but still allow fallback
+        if abs(tube_od - preferred_od) > 1e-6:
+            continue
+
+        tube_id = tube_od - 2 * tube["thickness"]
+
+        for length_data in TUBE_LENGTH_STANDARD:
+            tube_length = length_data["length"]
+
+            # prioritize 3 m but still allow fallback
+            if abs(tube_length - preferred_length) > 1e-6:
+                continue
+
+            area_per_tube = math.pi * tube_od * tube_length
+
+            # ---- BINARY SEARCH ON TUBE COUNT ----
+            Nt_min = max(1, int(area_required / area_per_tube * 0.5))
+            Nt_max = int(area_required / area_per_tube * 2) + 10
+
+            while Nt_min <= Nt_max:
+                tube_count = (Nt_min + Nt_max) // 2
+
+                total_area = tube_count * area_per_tube
+
+                # ---- ESTIMATE SHELL DIAMETER (pitch-based bundle relation) ----
+                pitch = 1.25 * tube_od
+                bundle_dia = pitch * math.sqrt(max(tube_count, 1))
+                shell_dia = bundle_dia + 0.05  # clearance ~50 mm
+
+                L_D_ratio = tube_length / max(shell_dia, 1e-6)
+
+                # ---- L/D CONSTRAINT ----
+                if L_D_ratio < 5:
+                    Nt_max = tube_count - 1
+                    continue
+                elif L_D_ratio > 10:
+                    Nt_min = tube_count + 1
+                    continue
+
+                # ---- SHELL-SIDE VELOCITY CONSTRAINT ----
+                shell_flow_area = (math.pi / 4) * max(shell_dia**2 - bundle_dia**2, 1e-12)
+                shell_velocity = (cold["m_dot"] / max(cold["density"], 1e-12)) / max(shell_flow_area, 1e-12)
+
+                if shell_velocity < shell_v_min:
+                    Nt_max = tube_count - 1
+                    continue
+                elif shell_velocity > shell_v_max:
+                    Nt_min = tube_count + 1
+                    continue
+
+                # ---- VELOCITY CALCULATION ----
+                flow_per_density = (hot["m_dot"] / max(hot["density"], 1e-12))
+                base_tube_area = math.pi * tube_id**2 / 4
+                min_passes, max_passes = 1, 8
+                passes = 2  # initial assumption
+                velocity = None
+
+                while True:
+                    flow_area = (tube_count / max(passes, 1)) * base_tube_area
+                    trial_velocity = flow_per_density / max(flow_area, 1e-12)
+
+                    if hot_v_min <= trial_velocity <= hot_v_max:
+                        velocity = trial_velocity
+                        break
+
+                    if trial_velocity < hot_v_min:
+                        if passes < max_passes:
+                            passes += 1
+                            continue
+                        Nt_max = tube_count - 1
+                        break
+
+                    if trial_velocity > hot_v_max:
+                        if passes > min_passes:
+                            passes -= 1
+                            continue
+                        Nt_min = tube_count + 1
+                        break
+
+                if velocity is None:
+                    continue
+
+                # ---- SCORING ----
+                area_penalty = abs((total_area - area_required) / max(area_required, 1e-12))
+                velocity_penalty = abs(velocity - target_velocity)
+
+                score = area_penalty * 2 + velocity_penalty
+
+                if score < best_score:
+                    best_score = score
+                    best = {
+                        "tube_od": tube_od,
+                        "tube_id": tube_id,
+                        "tube_length": tube_length,
+                        "tube_count": tube_count,
+                        "passes": passes,
+                        "velocity": velocity,
+                        "area": total_area,
+                        "shell_diameter": shell_dia,
+                        "L/D": L_D_ratio,
+                        "shell_velocity": shell_velocity,
+                        "velocity_range": (hot_v_min, hot_v_max),
+                        "score": score,
+                    }
+
+                if total_area < area_required:
+                    Nt_min = tube_count + 1
+                else:
+                    Nt_max = tube_count - 1
+
+    return best
 
 
 def select_tube_configuration(
@@ -273,6 +411,7 @@ def select_tube_configuration(
     shell_passes=None,
     baffle_spacing=None,
     max_tube_count=10000,
+    search_standard_sizes=False,
 ):
     """
     Select a feasible preliminary shell-and-tube configuration.
@@ -285,7 +424,10 @@ def select_tube_configuration(
         returned velocities: m/s
 
     Any supplied geometry value is treated as fixed. Missing values may be
-    selected/estimated. This is a preliminary screening model, not a
+    selected/estimated. With no geometry fixed, the preferred 19 mm x 3 m
+    tube is used and only the tube count and passes vary. Otherwise a free
+    OD is 19 mm and a free length 3 m, unless search_standard_sizes=True,
+    which tries every standard OD and length. This is a preliminary screening model, not a
     TEMA-rated bundle geometry or a substitute for detailed thermal/hydraulic
     and mechanical design.
     """
@@ -351,25 +493,41 @@ def select_tube_configuration(
     if max_tube_count < 1:
         raise ValueError("max_tube_count must be at least 1.")
 
+    fixed = (tube_od, tube_id, tube_length, tube_pitch, tube_layout, tube_count,
+             tube_passes, shell_diameter, shell_passes, baffle_spacing)
+    if not search_standard_sizes and all(value is None for value in fixed):
+        return _select_preferred_tube_configuration(area_required, hot, cold)
+
     hot_v_min, hot_v_max = get_velocity_range(hot["component"])
     hot_v_min, hot_v_max = float(hot_v_min), float(hot_v_max)
     if not (0 < hot_v_min <= hot_v_max):
         raise ValueError("get_velocity_range returned an invalid velocity range.")
     target_velocity = 0.5 * (hot_v_min + hot_v_max)
 
-    # If OD is not fixed, try standard ODs. If ID is fixed, do not pair it
-    # with an OD smaller than the specified ID.
-    od_candidates = [tube_od] if tube_od is not None else [
-        float(item["od"]) for item in TUBE_DIAMETER_STANDARD
-    ]
+    # If OD is not fixed, use the preferred 19 mm tube, or every standard OD
+    # with search_standard_sizes. The design loop calls this on every U
+    # iteration, so a free OD that changes between calls stops U converging.
+    # If ID is fixed, do not pair it with an OD smaller than the specified ID.
+    all_ods = [float(item["od"]) for item in TUBE_DIAMETER_STANDARD]
+    if tube_od is not None:
+        od_candidates = [tube_od]
+    elif search_standard_sizes:
+        od_candidates = all_ods
+    else:
+        od_candidates = [PREFERRED_TUBE_OD]
     if tube_id is not None:
         od_candidates = [od for od in od_candidates if od > tube_id]
+        if not od_candidates and tube_od is None:
+            od_candidates = [od for od in all_ods if od > tube_id]
 
-    # Arbitrary lengths are supported when supplied. Standard lengths are
-    # only used when the user leaves tube_length unspecified.
-    length_candidates = [tube_length] if tube_length is not None else [
-        float(item["length"]) for item in TUBE_LENGTH_STANDARD
-    ]
+    # Arbitrary lengths are supported when supplied. Otherwise the preferred
+    # 3 m length, or every standard length with search_standard_sizes.
+    if tube_length is not None:
+        length_candidates = [tube_length]
+    elif search_standard_sizes:
+        length_candidates = [float(item["length"]) for item in TUBE_LENGTH_STANDARD]
+    else:
+        length_candidates = [PREFERRED_TUBE_LENGTH]
 
     layout_candidates = [tube_layout] if tube_layout is not None else [
         "triangular", "square"

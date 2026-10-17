@@ -55,11 +55,23 @@ def test_ideal_vle_bubble_and_dew_points_are_consistent():
     assert 0.0 < vle.flash_vapor_fraction(x, 0.5 * (t_bub + t_dew), 101325.0) < 1.0
 
 
+class _BrokenHexane(Hexane):
+    """Hexane with its DIPPR-101 B coefficient lost as 0.0, the row it had
+    before c675f19, which puts Psat out by orders of magnitude."""
+    name = "BrokenHexane"
+    _vapor_pressure_constants = [104.65, 0.0, -12.702, 1.24e-05, 2.0]
+
+
 def test_ideal_vle_rejects_broken_vapour_pressure_constants():
-    # Hexane's DIPPR-101 B coefficient is stored as 0.0, which puts Psat out
-    # by orders of magnitude; refuse it instead of returning nonsense.
-    with pytest.raises(ValueError, match="Hexane"):
-        IdealVLE([Hexane, Toluene])
+    # Refuse constants like these instead of returning nonsense.
+    with pytest.raises(ValueError, match="BrokenHexane"):
+        IdealVLE([_BrokenHexane, Toluene])
+
+
+def test_ideal_vle_accepts_hexane_with_its_perry_constants():
+    # Perry 8th Table 2-8: B = -6995.5. n-Hexane boils at 341.9 K at 1 atm.
+    vle = IdealVLE([Hexane, Toluene])
+    assert vle.saturation_temperature("Hexane", 101325.0) == pytest.approx(341.9, abs=0.5)
 
 
 # ----------------------------------------------------------------------
