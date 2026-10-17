@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Pxylene(Component):
     """
-    Represents the properties and constants for pXylene(C8?H10?).
+    Represents the properties and constants for pXylene(C8H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for pXylene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Pxylene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "pXylene"
-    formula = "C8?H10?"
+    formula = "C8H10"
     molecular_weight = 106.165
 
     # Critical properties
@@ -45,8 +45,8 @@ class Pxylene(Component):
     _critical_acentric_factor = 0.3218
 
     _density_constants = [0.67752, 0.25887, 616.2, 0.27596]
-    _specific_heat_constants = [0.0, 0.0, -2.599, 0.002426, 0.0, 1.7697, 3.252]
-    _viscosity_constants = [-7.381, 911.7, -0.54152]
-    _thermal_conductivity_constants = [0.20003, -0.00023573]
-    _vapor_pressure_constants = [88.72, 0.0, -9.8693, 6.08e-06, 2.0]
-    _enthalpy_constants = [5.3819, 0.36695]
+    _specific_heat_constants = [-35500, 1287.20, -2.599, 0.002426, 0.0]
+    _viscosity_constants = [-7.381, 911.7, -0.54152,0,0]
+    _thermal_conductivity_constants = [0.20003, -0.00023573,0,0,0]
+    _vapor_pressure_constants = [88.72, -7741.20, -9.8693, 6.08e-06, 2.0]
+    _enthalpy_constants = [5.3819e-7, 0.36695,0,0,0]

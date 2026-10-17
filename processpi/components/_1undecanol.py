@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Undecanol(Component):
     """
-    Represents the properties and constants for 1Undecanol(C11?H24?O).
+    Represents the properties and constants for 1Undecanol(C11H24O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Undecanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Undecanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Undecanol"
-    formula = "C11?H24?O"
+    formula = "C11H24O"
     molecular_weight = 172.308
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Undecanol(Component):
     _critical_acentric_factor = 0.6236
 
     _density_constants = [0.33113, 0.23676, 703.9, 0.2762]
-    _specific_heat_constants = [0.0, 0.0, 27.927, -0.061847, 4.3e-05, 3.9103, 5.5127]
-    _viscosity_constants = [-69.778, 5905.2, 8.0214]
-    _thermal_conductivity_constants = [0.21211, -0.00021815]
-    _vapor_pressure_constants = [182.571, 0.0, -22.125, 1.13e-17, 6.0]
-    _enthalpy_constants = [8.7274, -1.5834, 5.0913, -3.2171]
+    _specific_heat_constants = [129450, -3039.50, 27.927, -0.061847, 4.3e-05]
+    _viscosity_constants = [-69.778, 5905.2, 8.0214,0,0]
+    _thermal_conductivity_constants = [0.21211, -0.00021815,0,0,0]
+    _vapor_pressure_constants = [182.571, -17112, -22.125, 1.13e-17, 6.0]
+    _enthalpy_constants = [8.7274e-7, -1.5834, 5.0913, -3.2171,0]

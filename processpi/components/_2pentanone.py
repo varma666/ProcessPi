@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Pentanone(Component):
     """
-    Represents the properties and constants for 2Pentanone(C5?H10?O).
+    Represents the properties and constants for 2Pentanone(C5H10O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Pentanone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Pentanone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Pentanone"
-    formula = "C5?H10?O"
+    formula = "C5H10O"
     molecular_weight = 86.132
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Pentanone(Component):
     _critical_acentric_factor = 0.3433
 
     _density_constants = [0.90411, 0.27207, 561.08, 0.30669]
-    _specific_heat_constants = [0.0, -263.86, 0.76808, 0.0, 0.0, 1.7239, 2.038]
-    _viscosity_constants = [-11.055, 1005.3, 0.0039301]
-    _thermal_conductivity_constants = [0.2161, -0.00024866]
-    _vapor_pressure_constants = [84.635, 0.0, -9.3, 6.27e-06, 2.0]
-    _enthalpy_constants = [5.174, 0.39422]
+    _specific_heat_constants = [194590, -263.86, 0.76808, 0.0, 0.0]
+    _viscosity_constants = [-11.055, 1005.3, 0.0039301,0,0]
+    _thermal_conductivity_constants = [0.2161, -0.00024866,0,0,0]
+    _vapor_pressure_constants = [84.635, -7078.40, -9.3, 6.27e-06, 2.0]
+    _enthalpy_constants = [5.174e-7, 0.39422,0,0,0]

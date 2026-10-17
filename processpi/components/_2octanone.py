@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Octanone(Component):
     """
-    Represents the properties and constants for 2Octanone(C8?H16?O).
+    Represents the properties and constants for 2Octanone(C8H16O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Octanone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Octanone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Octanone"
-    formula = "C8?H16?O"
+    formula = "C8H16O"
     molecular_weight = 128.212
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Octanone(Component):
     _critical_acentric_factor = 0.4549
 
     _density_constants = [0.50006, 0.24851, 632.7, 0.29942]
-    _specific_heat_constants = [0.0, -426.2, 1.1172, 0.0, 0.0, 2.6406, 3.666]
-    _viscosity_constants = [-11.736, 1415.2, 0.0003618]
-    _thermal_conductivity_constants = [0.2132, -0.0002494]
-    _vapor_pressure_constants = [63.775, 0.0, -5.7359, 3.09e-18, 6.0]
-    _enthalpy_constants = [6.5363, 0.38718]
+    _specific_heat_constants = [300400, -426.2, 1.1172, 0.0, 0.0]
+    _viscosity_constants = [-11.736, 1415.2, 0.0003618, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2132, -0.0002494, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [63.775, -7711.30, -5.7359, 3.09e-18, 6.0]
+    _enthalpy_constants = [6.5363e-7, 0.38718, 0.0, 0.0, 0.0]

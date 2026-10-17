@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Nonyne(Component):
     """
-    Represents the properties and constants for 1Nonyne(C9?H16?).
+    Represents the properties and constants for 1Nonyne(C9H16).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Nonyne, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Nonyne(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Nonyne"
-    formula = "C9?H16?"
+    formula = "C9H16"
     molecular_weight = 124.223
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Nonyne(Component):
     _critical_acentric_factor = 0.471
 
     _density_constants = [0.52152, 0.25918, 598.05, 0.29177]
-    _specific_heat_constants = [0.0, -366.3, 1.4881, 0.0, 0.0, 2.4594, 3.6566]
-    _viscosity_constants = [-2.3409, 715.52, -1.222]
-    _thermal_conductivity_constants = [0.20954, -0.00024588]
-    _vapor_pressure_constants = [114.77, 0.0, -13.631, 8.19e-06, 2.0]
-    _enthalpy_constants = [6.3337, 0.3975]
+    _specific_heat_constants = [253580, -366.3, 1.4881, 0.0, 0.0]
+    _viscosity_constants = [-2.3409, 715.52, -1.222, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20954, -0.00024588, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [114.77, -9430.80, -13.631, 8.19e-06, 2.0]
+    _enthalpy_constants = [6.3337e-7, 0.3975,0.0, 0.0, 0.0]

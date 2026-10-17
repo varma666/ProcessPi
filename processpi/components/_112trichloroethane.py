@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _112Trichloroethane(Component):
     """
-    Represents the properties and constants for 112Trichloroethane(C2?H3?Cl3?).
+    Represents the properties and constants for 112Trichloroethane(C2H3Cl3).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 112Trichloroethane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _112Trichloroethane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "112Trichloroethane"
-    formula = "C2?H3?Cl3?"
+    formula = "C2H3Cl3"
     molecular_weight = 133.404
 
     # Critical properties
@@ -45,8 +45,8 @@ class _112Trichloroethane(Component):
     _critical_acentric_factor = 0.2591
 
     _density_constants = [0.9062, 0.25475, 602.0, 0.31]
-    _specific_heat_constants = [0.0, 159.3, 0.0, 0.0, 0.0, 1.4102, 1.5114]
-    _viscosity_constants = [0.388, 736.5, -1.7063]
-    _thermal_conductivity_constants = [0.20731, -0.00024997]
-    _vapor_pressure_constants = [54.153, 0.0, -4.5383, 4.98e-18, 6.0]
-    _enthalpy_constants = [5.0929, 0.38013]
+    _specific_heat_constants = [103350, 159.3, 0.0, 0.0, 0.0]
+    _viscosity_constants = [0.388, 736.5, -1.7063,0,0]
+    _thermal_conductivity_constants = [0.20731, -0.00024997,0,0,0]
+    _vapor_pressure_constants = [54.153,-6041.80, -4.5383, 4.98e-18, 6.0]
+    _enthalpy_constants = [5.0929e-7, 0.38013,0,0,0]

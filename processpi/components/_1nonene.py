@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Nonene(Component):
     """
-    Represents the properties and constants for 1Nonene(C9?H18?).
+    Represents the properties and constants for 1Nonene(C9H18).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Nonene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Nonene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Nonene"
-    formula = "C9?H18?"
+    formula = "C9H18"
     molecular_weight = 126.239
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Nonene(Component):
     _critical_acentric_factor = 0.4367
 
     _density_constants = [0.48661, 0.25722, 593.1, 0.28571]
-    _specific_heat_constants = [0.0, -298.06, 1.1707, 0.0, 0.0, 2.4041, 3.3583]
-    _viscosity_constants = [-21.921, 1603.9, 1.5971]
-    _thermal_conductivity_constants = [0.20468, -0.00025738]
-    _vapor_pressure_constants = [63.313, 0.0, -5.8055, 7.58e-18, 6.0]
-    _enthalpy_constants = [5.9054, 0.61039, -0.54533, 0.30683]
+    _specific_heat_constants = [254490, -298.06, 1.1707, 0.0, 0.0]
+    _viscosity_constants = [-21.921, 1603.9, 1.5971, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20468, -0.00025738, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [63.313, -7040.40, -5.8055, 7.58e-18, 6.0]
+    _enthalpy_constants = [5.9054e-7, 0.61039, -0.54533, 0.30683]

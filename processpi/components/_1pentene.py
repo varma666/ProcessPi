@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Pentene(Component):
     """
-    Represents the properties and constants for 1Pentene(C5?H10?).
+    Represents the properties and constants for 1Pentene(C5H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Pentene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Pentene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Pentene"
-    formula = "C5?H10?"
+    formula = "C5H10"
     molecular_weight = 70.133
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Pentene(Component):
     _critical_acentric_factor = 0.2372
 
     _density_constants = [0.89816, 0.26608, 464.8, 0.28571]
-    _specific_heat_constants = [0.0, -456.94, 2.255, -0.003163, 2.38e-06, 1.2939, 1.7251]
-    _viscosity_constants = [-10.667, 659.56]
-    _thermal_conductivity_constants = [0.21361, -0.00030777]
-    _vapor_pressure_constants = [46.994, 0.0, -3.7345, 2.54e-17, 6.0]
-    _enthalpy_constants = [3.5027, 0.3481, -0.19672, 0.22394]
+    _specific_heat_constants = [156100, -456.94, 2.255, -0.003163, 2.38e-06]
+    _viscosity_constants = [-10.667, 659.56,0,0,0]
+    _thermal_conductivity_constants = [0.21361, -0.00030777,0,0,0]
+    _vapor_pressure_constants = [46.994, -4289.50, -3.7345, 2.54e-17, 6.0]
+    _enthalpy_constants = [3.5027e-7, 0.3481, -0.19672, 0.22394,0]

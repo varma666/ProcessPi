@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Pentanol(Component):
     """
-    Represents the properties and constants for 2Pentanol(C5?H12?O).
+    Represents the properties and constants for 2Pentanol(C5H12O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Pentanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Pentanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Pentanol"
-    formula = "C5?H12?O"
+    formula = "C5H12O"
     molecular_weight = 88.148
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Pentanol(Component):
     _critical_acentric_factor = 0.5549
 
     _density_constants = [0.79324, 0.25806, 561.0, 0.28571]
-    _specific_heat_constants = [0.0, 0.0, 3.26306, 0.0, 0.0, 1.7642, 7.0158]
+    _specific_heat_constants = [251596, -1028.49, 3.26306, 0.0, 0.0]
     _viscosity_constants = [-410.49, 18371.0, 61.985, -0.0095612, 1.2201]
-    _thermal_conductivity_constants = [0.21875, -0.00027849]
-    _vapor_pressure_constants = [122.26, 0.0, -13.943, 1.07e-42, 15.0]
-    _enthalpy_constants = [11.111, 1.8011, -2.1801, 1.0641]
+    _thermal_conductivity_constants = [0.21875, -0.00027849,0,0,0]
+    _vapor_pressure_constants = [122.26, -10774, -13.943, 1.07e-42, 15.0]
+    _enthalpy_constants = [11.111e-7, 1.8011, -2.1801, 1.0641,0]

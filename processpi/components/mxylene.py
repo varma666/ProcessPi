@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Mxylene(Component):
     """
-    Represents the properties and constants for mXylene(C8?H10?).
+    Represents the properties and constants for mXylene(C8H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for mXylene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Mxylene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "mXylene"
-    formula = "C8?H10?"
+    formula = "C8H10"
     molecular_weight = 106.165
 
     # Critical properties
@@ -45,8 +45,8 @@ class Mxylene(Component):
     _critical_acentric_factor = 0.3265
 
     _density_constants = [0.68902, 0.26086, 617.0, 0.27479]
-    _specific_heat_constants = [0.0, 7.8754, 0.52265, 0.0, 0.0, 1.6018, 2.906]
-    _viscosity_constants = [-11.91, 1094.9, 0.13825]
-    _thermal_conductivity_constants = [0.20044, -0.00023544]
-    _vapor_pressure_constants = [85.099, 0.0, -9.3072, 5.56e-06, 2.0]
-    _enthalpy_constants = [5.4626, 0.37289]
+    _specific_heat_constants = [133860, 7.8754, 0.52265, 0.0, 0.0]
+    _viscosity_constants = [-11.91, 1094.9, 0.13825,0,0,0]
+    _thermal_conductivity_constants = [0.20044, -0.00023544,0,0,0]
+    _vapor_pressure_constants = [85.099, -7615.90, -9.3072, 5.56e-06, 2.0]
+    _enthalpy_constants = [5.4626e-7, 0.37289,0,0,0]

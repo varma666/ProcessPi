@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _3Methylcyclopentene(Component):
     """
-    Represents the properties and constants for 3Methylcyclopentene(C6?H10?).
+    Represents the properties and constants for 3Methylcyclopentene(C6H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 3Methylcyclopentene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _3Methylcyclopentene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "3Methylcyclopentene"
-    formula = "C6?H10?"
+    formula = "C6H10"
     molecular_weight = 82.144
 
     # Critical properties
@@ -45,8 +45,8 @@ class _3Methylcyclopentene(Component):
     _critical_acentric_factor = 0.2296
 
     _density_constants = [0.9109, 0.276, 526.0, 0.26756]
-    _specific_heat_constants = [0.0, 346.93, 0.0, 0.0, 0.0, 1.1584, 1.6374]
-    _viscosity_constants = [-6.7424, 788.86, -0.69862]
-    _thermal_conductivity_constants = [0.1994, -0.00026149]
-    _vapor_pressure_constants = [52.601, 0.0, -4.4554, 1.33e-17, 6.0]
-    _enthalpy_constants = [4.209, 0.36779]
+    _specific_heat_constants = [46457, 346.93, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-6.7424, 788.86, -0.69862, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.1994, -0.00026149, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [52.601, -5120.30, -4.4554, 1.33e-17, 6.0]
+    _enthalpy_constants = [4.209e-7, 0.36779, 0.0, 0.0, 0.0]

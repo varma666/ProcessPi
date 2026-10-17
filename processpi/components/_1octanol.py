@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Octanol(Component):
     """
-    Represents the properties and constants for 1Octanol(C8?H18?O).
+    Represents the properties and constants for 1Octanol(C8H18O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Octanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Octanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Octanol"
-    formula = "C8?H18?O"
+    formula = "C8H18O"
     molecular_weight = 130.228
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Octanol(Component):
     _critical_acentric_factor = 0.5697
 
     _density_constants = [0.48979, 0.24931, 652.3, 0.27824]
-    _specific_heat_constants = [0.0, 0.0, 19.725, -0.021532, 0.0, 2.555, 4.1566]
+    _specific_heat_constants = [571370, -4849, 19.725, -0.021532, 0.0]
     _viscosity_constants = [-19.907, 2791.7, 0.94296, 2.3e+24, -10.09]
-    _thermal_conductivity_constants = [0.2316, -0.0002407]
-    _vapor_pressure_constants = [144.111, 0.0, -16.826, 9.37e-18, 6.0]
-    _enthalpy_constants = [7.2468, -1.2464, 3.6797, -2.0665]
+    _thermal_conductivity_constants = [0.2316, -0.0002407, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [144.111, -13667, -16.826, 9.37e-18, 6.0]
+    _enthalpy_constants = [7.2468e-7, -1.2464, 3.6797, -2.0665,0]

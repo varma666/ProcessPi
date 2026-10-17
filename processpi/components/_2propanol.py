@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Propanol(Component):
     """
-    Represents the properties and constants for 2Propanol(C3?H8?O).
+    Represents the properties and constants for 2Propanol(C3H8O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Propanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Propanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Propanol"
-    formula = "C3?H8?O"
+    formula = "C3H8O"
     molecular_weight = 60.095
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Propanol(Component):
     _critical_acentric_factor = 0.6544
 
     _density_constants = [1.1799, 0.2644, 508.3, 0.24653]
-    _specific_heat_constants = [0.0, 0.0, 14.745, -0.0144, 0.0, 1.1329, 2.0487]
-    _viscosity_constants = [-8.8918, 2357.6, -0.91376]
-    _thermal_conductivity_constants = [0.20161, -0.00021529]
-    _vapor_pressure_constants = [96.094, 0.0, -10.292, 1.67e-17, 6.0]
-    _enthalpy_constants = [7.2542, 0.79137, -0.66092, 0.34223]
+    _specific_heat_constants = [471710, -4172.10, 14.745, -0.0144, 0.0]
+    _viscosity_constants = [-8.8918, 2357.6, -0.91376,0,0]
+    _thermal_conductivity_constants = [0.20161, -0.00021529,0,0,0]
+    _vapor_pressure_constants = [96.094, -8575.40, -10.292, 1.67e-17, 6.0]
+    _enthalpy_constants = [7.2542e-7, 0.79137, -0.66092, 0.34223,0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Nonanol(Component):
     """
-    Represents the properties and constants for 1Nonanol(C9?H20?O).
+    Represents the properties and constants for 1Nonanol(C9H20O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Nonanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Nonanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Nonanol"
-    formula = "C9?H20?O"
+    formula = "C9H20O"
     molecular_weight = 144.255
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Nonanol(Component):
     _critical_acentric_factor = 0.5841
 
     _density_constants = [0.43682, 0.25161, 670.9, 0.2498]
-    _specific_heat_constants = [0.0, 0.0, 476.87, -0.85381, 0.00056246, 3.5059, 4.6494]
-    _viscosity_constants = [-39.863, 4089.0, 3.7631]
-    _thermal_conductivity_constants = [0.2292, -0.00023]
-    _vapor_pressure_constants = [162.854, 0.0, -19.424, 1.07e-17, 6.0]
-    _enthalpy_constants = [7.5429, -1.5966, 4.6489, -2.7229]
+    _specific_heat_constants = [10483000, -115220, 476.87, -0.85381, 0.00056246]
+    _viscosity_constants = [-39.863, 4089.0, 3.7631, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.2292, -0.00023, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [162.854, -15205, -19.424, 1.07e-17, 6.0]
+    _enthalpy_constants = [7.5429e-7, -1.5966, 4.6489, -2.7229]

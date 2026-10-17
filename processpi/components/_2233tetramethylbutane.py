@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2233Tetramethylbutane(Component):
     """
-    Represents the properties and constants for 2233Tetramethylbutane(C8?H18?).
+    Represents the properties and constants for 2233Tetramethylbutane(C8H18).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2233Tetramethylbutane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2233Tetramethylbutane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2233Tetramethylbutane"
-    formula = "C8?H18?"
+    formula = "C8H18"
     molecular_weight = 114.229
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2233Tetramethylbutane(Component):
     _critical_acentric_factor = 0.245
 
     _density_constants = [0.58988, 0.27201, 568.0, 0.27341]
-    _specific_heat_constants = [0.0, 630.73, 0.0, 0.0, 0.0, 2.8011, 3.1202]
-    _viscosity_constants = [5.5351, 632.38, -2.6576]
-    _thermal_conductivity_constants = [0.17835, -0.00023704]
-    _vapor_pressure_constants = [57.963, 0.0, -5.2048, 9.13e-18, 6.0]
-    _enthalpy_constants = [4.9055, 0.40678]
+    _specific_heat_constants = [43326, 630.73, 0.0, 0.0, 0.0]
+    _viscosity_constants = [5.5351, 632.38, -2.6576,0,0]
+    _thermal_conductivity_constants = [0.17835, -0.00023704,0,0,0]
+    _vapor_pressure_constants = [57.963, -5901.50, -5.2048, 9.13e-18, 6.0]
+    _enthalpy_constants = [4.9055e-7, 0.40678,0,0,0]

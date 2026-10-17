@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2PropylMercaptan(Component):
     """
-    Represents the properties and constants for 2Propyl mercaptan(C3?H8?S).
+    Represents the properties and constants for 2Propyl mercaptan(C3H8S).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Propyl mercaptan, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2PropylMercaptan(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Propyl mercaptan"
-    formula = "C3?H8?S"
+    formula = "C3H8S"
     molecular_weight = 76.161
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2PropylMercaptan(Component):
     _critical_acentric_factor = 0.2138
 
     _density_constants = [1.093, 0.27762, 517.0, 0.29781]
-    _specific_heat_constants = [0.0, -117.11, 0.47059, 0.0, 0.0, 1.3126, 1.5505]
-    _viscosity_constants = [-5.7244, 638.2, -0.76415]
-    _thermal_conductivity_constants = [0.21706, -0.00028952]
-    _vapor_pressure_constants = [60.43, 0.0, -5.6572, 2.6e-17, 6.0]
-    _enthalpy_constants = [4.2191, 0.41161]
+    _specific_heat_constants = [138390, -117.11, 0.47059, 0.0, 0.0]
+    _viscosity_constants = [-5.7244, 638.2, -0.76415,0,0]
+    _thermal_conductivity_constants = [0.21706, -0.00028952,0,0,0]
+    _vapor_pressure_constants = [60.43, -5276.90, -5.6572, 2.6e-17, 6.0]
+    _enthalpy_constants = [4.2191e-7, 0.41161,0,0,0]

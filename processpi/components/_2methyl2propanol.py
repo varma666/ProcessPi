@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Methyl2Propanol(Component):
     """
-    Represents the properties and constants for 2Methyl2propanol(C4?H10?O).
+    Represents the properties and constants for 2Methyl2propanol(C4H10O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Methyl2propanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Methyl2Propanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Methyl2propanol"
-    formula = "C4?H10?O"
+    formula = "C4H10O"
     molecular_weight = 74.122
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Methyl2Propanol(Component):
     _critical_acentric_factor = 0.6152
 
     _density_constants = [0.92128, 0.25442, 506.2, 0.27586]
-    _specific_heat_constants = [0.0, 0.0, -17.661, 0.013617, 0.0, 2.2016, 2.9455]
+    _specific_heat_constants = [-925460, 7894.90, -17.661, 0.013617, 0.0]
     _viscosity_constants = [51.356, -1249.5, -9.4593, 3.69e+24, -9.8759]
-    _thermal_conductivity_constants = [0.21258, -0.00029864]
-    _vapor_pressure_constants = [172.27, 0.0, -22.113, 1.37e-05, 2.0]
-    _enthalpy_constants = [7.7646, 0.56757]
+    _thermal_conductivity_constants = [0.21258, -0.00029864, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [172.27, -11589, -22.113, 1.37e-05, 2.0]
+    _enthalpy_constants = [7.7646e-7, 0.56757, 0.0, 0.0, 0.0]

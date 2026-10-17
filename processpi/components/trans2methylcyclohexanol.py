@@ -3,7 +3,7 @@ from processpi.units import *
 
 class Trans2Methylcyclohexanol(Component):
     """
-    Represents the properties and constants for trans2Methylcyclohexanol(C7?H14?O).
+    Represents the properties and constants for trans2Methylcyclohexanol(C7H14O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for trans2Methylcyclohexanol, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class Trans2Methylcyclohexanol(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "trans2Methylcyclohexanol"
-    formula = "C7?H14?O"
+    formula = "C7H14O"
     molecular_weight = 114.185
 
     # Critical properties
@@ -45,8 +45,8 @@ class Trans2Methylcyclohexanol(Component):
     _critical_acentric_factor = 0.679
 
     _density_constants = [0.72836, 0.27241, 617.0, 0.2478]
-    _specific_heat_constants = [0.0, 447.99, 0.0, 0.0, 0.0, 2.5257, 3.1535]
-    _viscosity_constants = [-6.6915, 3173.2, -1.3046]
-    _thermal_conductivity_constants = [0.21828, -0.0002557]
-    _vapor_pressure_constants = [54.179, 0.0, -4.22, 3.52e-18, 6.0]
-    _enthalpy_constants = [7.8995, 0.42479]
+    _specific_heat_constants = [118170, 447.99, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-6.6915, 3173.2, -1.3046, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21828, -0.0002557, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [54.179, -7477.20, -4.22, 3.52e-18, 6.0]
+    _enthalpy_constants = [7.8995e-7, 0.42479, 0.0, 0.0, 0.0]

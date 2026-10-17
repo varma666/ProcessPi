@@ -3,7 +3,7 @@ from processpi.units import *
 
 class AlphaMethylStyrene(Component):
     """
-    Represents the properties and constants for alpha-Methyl styrene(C9?H10?).
+    Represents the properties and constants for alpha-Methyl styrene(C9H10).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for alpha-Methyl styrene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class AlphaMethylStyrene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "alpha-Methyl styrene"
-    formula = "C9?H10?"
+    formula = "C9H10"
     molecular_weight = 118.176
 
     # Critical properties
@@ -45,8 +45,8 @@ class AlphaMethylStyrene(Component):
     _critical_acentric_factor = 0.323
 
     _density_constants = [0.64856, 0.25877, 654.0, 0.31444]
-    _specific_heat_constants = [0.0, 421.6, 0.0, 0.0, 0.0, 1.822, 2.6176]
-    _viscosity_constants = [-11.632, 1251.6, 0.071692]
-    _thermal_conductivity_constants = [0.19657, -0.0002118]
-    _vapor_pressure_constants = [56.485, 0.0, -4.7889, 2.78e-18, 6.0]
-    _enthalpy_constants = [5.8071, 0.37009]
+    _specific_heat_constants = [76822, 421.6, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-11.632, 1251.6, 0.071692, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.19657, -0.0002118, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [56.485, -6954.20, -4.7889, 2.78e-18, 6.0]
+    _enthalpy_constants = [5.8071e-7, 0.37009, 0.0, 0.0, 0.0]

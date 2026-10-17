@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2Methylpentane(Component):
     """
-    Represents the properties and constants for 2Methylpentane(C6?H14?).
+    Represents the properties and constants for 2Methylpentane(C6H14).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Methylpentane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2Methylpentane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Methylpentane"
-    formula = "C6?H14?"
+    formula = "C6H14"
     molecular_weight = 86.175
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2Methylpentane(Component):
     _critical_acentric_factor = 0.2791
 
     _density_constants = [0.72701, 0.26754, 497.7, 0.28268]
-    _specific_heat_constants = [0.0, -47.83, 0.739, 0.0, 0.0, 1.4706, 2.0842]
-    _viscosity_constants = [-12.86, 946.91, 0.26191]
-    _thermal_conductivity_constants = [0.19334, -0.00028038]
-    _vapor_pressure_constants = [53.579, 0.0, -4.6404, 1.94e-17, 6.0]
-    _enthalpy_constants = [4.2522, 0.3807]
+    _specific_heat_constants = [142220, -47.83, 0.739, 0.0, 0.0]
+    _viscosity_constants = [-12.86, 946.91, 0.26191, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.19334, -0.00028038, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [53.579, -5041.20, -4.6404, 1.94e-17, 6.0]
+    _enthalpy_constants = [4.2522e-7, 0.3807, 0.0, 0.0, 0.0]

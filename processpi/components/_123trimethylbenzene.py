@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _123Trimethylbenzene(Component):
     """
-    Represents the properties and constants for 123Trimethylbenzene(C9?H12?).
+    Represents the properties and constants for 123Trimethylbenzene(C9H12).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 123Trimethylbenzene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _123Trimethylbenzene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "123Trimethylbenzene"
-    formula = "C9?H12?"
+    formula = "C9H12"
     molecular_weight = 120.192
 
     # Critical properties
@@ -45,8 +45,8 @@ class _123Trimethylbenzene(Component):
     _critical_acentric_factor = 0.3666
 
     _density_constants = [0.6531, 0.27002, 664.5, 0.26268]
-    _specific_heat_constants = [0.0, 324.54, 0.0, 0.0, 0.0, 1.9987, 2.6526]
-    _viscosity_constants = [-11.756, 1483.1, -0.040387]
-    _thermal_conductivity_constants = [0.18854, -0.0001963]
-    _vapor_pressure_constants = [78.341, 0.0, -8.1458, 3.9e-06, 2.0]
-    _enthalpy_constants = [5.9996, 0.35578]
+    _specific_heat_constants = [119450, 324.54, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-11.756, 1483.1, -0.040387,0,0]
+    _thermal_conductivity_constants = [0.18854, -0.0001963,0,0,0]
+    _vapor_pressure_constants = [78.341, -8019.80, -8.1458, 3.9e-06, 2.0]
+    _enthalpy_constants = [5.9996e-7, 0.35578,0,0,0]

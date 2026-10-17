@@ -1,9 +1,9 @@
 from .base import Component
 from processpi.units import *
 
-class _124Tetrahydronaphthalene(Component):
+class _1234Tetrahydronaphthalene(Component):
     """
-    Represents the properties and constants for 12,4Tetrahydronaphthalene(C10?H12?).
+    Represents the properties and constants for 1234Tetrahydronaphthalene(C10H12).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 12,4Tetrahydronaphthalene, which are essential for various process engineering calculations.
@@ -33,8 +33,8 @@ class _124Tetrahydronaphthalene(Component):
       function of temperature using the Antoine equation or similar models.
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
-    name = "12,4Tetrahydronaphthalene"
-    formula = "C10?H12?"
+    name = "1234Tetrahydronaphthalene"
+    formula = "C10H12"
     molecular_weight = 132.202
 
     # Critical properties
@@ -45,8 +45,8 @@ class _124Tetrahydronaphthalene(Component):
     _critical_acentric_factor = 0.3353
 
     _density_constants = [0.67717, 0.27772, 720.0, 0.2878]
-    _specific_heat_constants = [0.0, 455.38, 0.0, 0.0, 0.0, 1.8986, 3.0069]
+    _specific_heat_constants = [81760, 455.38, 0.0, 0.0, 0.0]
     _viscosity_constants = [-11.167, 1193.2, 0.096226, 960000000000.0, -5.0]
-    _thermal_conductivity_constants = [0.14563, -5.36e-05]
-    _vapor_pressure_constants = [137.23, 0.0, -17.908, 0.0145, 1.0]
-    _enthalpy_constants = [6.8086, 0.43054]
+    _thermal_conductivity_constants = [0.14563, -5.36e-05,0,0,0]
+    _vapor_pressure_constants = [137.23, -10620, -17.908, 0.0145, 1.0]
+    _enthalpy_constants = [6.8086e-7, 0.43054,0,0,0]

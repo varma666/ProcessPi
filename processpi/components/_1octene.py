@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Octene(Component):
     """
-    Represents the properties and constants for 1Octene(C8?H16?).
+    Represents the properties and constants for 1Octene(C8H16).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Octene, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Octene(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Octene"
-    formula = "C8?H16?"
+    formula = "C8H16"
     molecular_weight = 112.213
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Octene(Component):
     _critical_acentric_factor = 0.3921
 
     _density_constants = [0.55449, 0.25952, 566.9, 0.28571]
-    _specific_heat_constants = [0.0, 0.0, 21.477, -0.044462, 3.5e-05, 2.1327, 2.8235]
-    _viscosity_constants = [-11.19, 1057.4]
-    _thermal_conductivity_constants = [0.20467, -0.0002675]
-    _vapor_pressure_constants = [74.936, 0.0, -7.5843, 1.71e-17, 6.0]
-    _enthalpy_constants = [5.4859, 0.26207, 0.50642, -0.43873]
+    _specific_heat_constants = [509420, -4279.10, 21.477, -0.044462, 3.5e-05]
+    _viscosity_constants = [-11.19, 1057.4, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20467, -0.0002675, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [74.936, -7155.90, -7.5843, 1.71e-17, 6.0]
+    _enthalpy_constants = [5.4859e-7, 0.26207, 0.50642, -0.43873, 0.0]

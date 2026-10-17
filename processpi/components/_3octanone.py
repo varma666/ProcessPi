@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _3Octanone(Component):
     """
-    Represents the properties and constants for 3Octanone(C8?H16?O).
+    Represents the properties and constants for 3Octanone(C8H16O).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 3Octanone, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _3Octanone(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "3Octanone"
-    formula = "C8?H16?O"
+    formula = "C8H16O"
     molecular_weight = 128.212
 
     # Critical properties
@@ -45,8 +45,8 @@ class _3Octanone(Component):
     _critical_acentric_factor = 0.4406
 
     _density_constants = [0.5108, 0.25386, 627.7, 0.26735]
-    _specific_heat_constants = [0.0, -417.27, 1.2218, 0.0, 0.0, 2.6314, 3.4335]
-    _viscosity_constants = [-20.804, 1834.6, 1.3403]
-    _thermal_conductivity_constants = [0.21732, -0.00024969]
-    _vapor_pressure_constants = [72.382, 0.0, -7.0002, 5.83e-18, 6.0]
-    _enthalpy_constants = [6.6142, 0.58562, -0.40512, 0.22144]
+    _specific_heat_constants = [289980, -417.27, 1.2218, 0.0, 0.0]
+    _viscosity_constants = [-20.804, 1834.6, 1.3403, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.21732, -0.00024969, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [72.382, -8054.80, -7.0002, 5.83e-18, 6.0]
+    _enthalpy_constants = [6.6142e-7, 0.58562, -0.40512, 0.22144, 0.0]

@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _233Trimethylpentane(Component):
     """
-    Represents the properties and constants for 233Trimethylpentane(C8?H18?).
+    Represents the properties and constants for 233Trimethylpentane(C8H18).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 233Trimethylpentane, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _233Trimethylpentane(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "233Trimethylpentane"
-    formula = "C8?H18?"
+    formula = "C8H18"
     molecular_weight = 114.229
 
     # Critical properties
@@ -45,8 +45,8 @@ class _233Trimethylpentane(Component):
     _critical_acentric_factor = 0.2903
 
     _density_constants = [0.6028, 0.27446, 573.5, 0.2741]
-    _specific_heat_constants = [0.0, 0.0, 3.2187, 0.0, 0.0, 2.3791, 2.5757]
-    _viscosity_constants = [-4.0309, 990.76, -1.1771]
-    _thermal_conductivity_constants = [0.16815, -0.00020535]
-    _vapor_pressure_constants = [83.105, 0.0, -9.1858, 6.47e-06, 2.0]
-    _enthalpy_constants = [4.991, 0.383]
+    _specific_heat_constants = [388620, -1439.50, 3.2187, 0.0, 0.0]
+    _viscosity_constants = [-4.0309, 990.76, -1.1771,0,0]
+    _thermal_conductivity_constants = [0.16815, -0.00020535,0,0,0]
+    _vapor_pressure_constants = [83.105, -6903.70, -9.1858, 6.47e-06, 2.0]
+    _enthalpy_constants = [4.991e-7, 0.383,0,0,0]

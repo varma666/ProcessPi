@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _2MethyloctanoicAcid(Component):
     """
-    Represents the properties and constants for 2Methyloctanoic acid(C9?H18?O2?).
+    Represents the properties and constants for 2Methyloctanoic acid(C9H18O2).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 2Methyloctanoic acid, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _2MethyloctanoicAcid(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "2Methyloctanoic acid"
-    formula = "C9?H18?O2?"
+    formula = "C9H18O2"
     molecular_weight = 158.238
 
     # Critical properties
@@ -45,8 +45,8 @@ class _2MethyloctanoicAcid(Component):
     _critical_acentric_factor = 0.7913
 
     _density_constants = [0.4416, 0.2521, 694.0, 0.28532]
-    _specific_heat_constants = [0.0, 15.421, 1.0578, 0.0, 0.0, 2.9128, 5.1864]
-    _viscosity_constants = [-12.579, 2224.2]
-    _thermal_conductivity_constants = [0.20911, -0.00021852]
-    _vapor_pressure_constants = [105.7, 0.0, -11.234, 4.46e-18, 6.0]
-    _enthalpy_constants = [10.53, 0.7454, -0.39297, 0.047214]
+    _specific_heat_constants = [226650, 15.421, 1.0578, 0.0, 0.0]
+    _viscosity_constants = [-12.579, 2224.2, 0.0, 0.0, 0.0]
+    _thermal_conductivity_constants = [0.20911, -0.00021852, 0.0, 0.0, 0.0]
+    _vapor_pressure_constants = [105.7, -12458, -11.234, 4.46e-18, 6.0]
+    _enthalpy_constants = [10.53e-7, 0.7454, -0.39297, 0.047214]

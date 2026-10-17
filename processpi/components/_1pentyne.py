@@ -3,7 +3,7 @@ from processpi.units import *
 
 class _1Pentyne(Component):
     """
-    Represents the properties and constants for 1Pentyne(C5?H8?).
+    Represents the properties and constants for 1Pentyne(C5H8).
 
     This class provides a comprehensive set of physical and thermodynamic properties
     for 1Pentyne, which are essential for various process engineering calculations.
@@ -34,7 +34,7 @@ class _1Pentyne(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "1Pentyne"
-    formula = "C5?H8?"
+    formula = "C5H8"
     molecular_weight = 68.117
 
     # Critical properties
@@ -45,8 +45,8 @@ class _1Pentyne(Component):
     _critical_acentric_factor = 0.2899
 
     _density_constants = [0.8491, 0.2352, 481.2, 0.353]
-    _specific_heat_constants = [0.0, 256.6, 0.0, 0.0, 0.0, 1.3752, 1.666]
-    _viscosity_constants = [-1.7273, 424.34, -1.342]
-    _thermal_conductivity_constants = [0.22102, -0.000322]
-    _vapor_pressure_constants = [82.805, 0.0, -9.4301, 1.08e-05, 2.0]
-    _enthalpy_constants = [3.954, 0.3512]
+    _specific_heat_constants = [86200, 256.6, 0.0, 0.0, 0.0]
+    _viscosity_constants = [-1.7273, 424.34, -1.342,0,0]
+    _thermal_conductivity_constants = [0.22102, -0.000322,0,0,0]
+    _vapor_pressure_constants = [82.805, -5683.80, -9.4301, 1.08e-05, 2.0]
+    _enthalpy_constants = [3.954e-7, 0.3512,0,0,0]
