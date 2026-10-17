@@ -2,12 +2,13 @@
 ProcessPI Components Module
 ===========================
 
-Automatically discovers all chemical component classes in this package
+Imports every chemical component class in this package
 and exposes them for direct import.
 
 Example:
     from processpi.components import Water, Ethanol, Acetone
 """
+from .base import Component
 from ._12butadiene import _12Butadiene
 from ._12butanediol import _12Butanediol
 from ._12dibromoethane import _12Dibromoethane
@@ -19,7 +20,7 @@ from ._12propyleneglycol import _12PropyleneGlycol
 from ._135trinitrobenzene import _135Trinitrobenzene
 from ._13butadiene import _13Butadiene
 from ._13butanediol import _13Butanediol
-from ._14dioxane import _14Dioxanefrom 
+from ._14dioxane import _14Dioxane
 from ._112trichloroethane import _112Trichloroethane
 from ._11dibromoethane import _11Dibromoethane
 from ._11dichloroethane import _11Dichloroethane
@@ -65,8 +66,8 @@ from ._23dimethylpentane import _23Dimethylpentane
 from ._246trinitrotoluene import _246Trinitrotoluene
 from ._2butanol import _2Butanol
 from ._2chloropropane import _2Chloropropane
-from ._2ethylbutanoicacid import _2EthylbutanoicAcid
-from ._2ethylhexanoicacid import _2EthylhexanoicAcid
+from ._2ethylbutanoicacid import _2EthylButanoicAcid
+from ._2ethylhexanoicacid import _2EthylHexanoicAcid
 from ._2heptanol import _2Heptanol
 from ._2heptanone import _2Heptanone
 from ._2hexanol import _2Hexanol
@@ -77,8 +78,8 @@ from ._2methyl1butene3yne import _2Methyl1Butene3Yne
 from ._2methyl2butene import _2Methyl2Butene
 from ._2methyl2propanol import _2Methyl2Propanol
 from ._2methylbutane import _2Methylbutane
-from ._2methylbutanoicacid import _2MethylButanoicacid
-from ._2methyloctanoicacid import _2MethylOctanoicacid
+from ._2methylbutanoicacid import _2MethylbutanoicAcid
+from ._2methyloctanoicacid import _2MethyloctanoicAcid
 from ._2methylpentane import _2Methylpentane
 from ._2methylpropane import _2Methylpropane
 from ._2methylpropene import _2MethylPropene
@@ -111,7 +112,7 @@ from .acrolein import Acrolein
 from .acrylicacid import AcrylicAcid
 from .acrylonitrile import Acrylonitrile
 from .air import Air
-from .alphamethylstyrene import AlphamethylStyrene
+from .alphamethylstyrene import AlphaMethylStyrene
 from .ammonia import Ammonia
 from .anisole import Anisole
 from .argon import Argon
@@ -122,7 +123,7 @@ from .benzoicacid import BenzoicAcid
 from .benzonitrile import Benzonitrile
 from .benzophenone import Benzophenone
 from .benzylalcohol import BenzylAlcohol
-from .benzylethylether import BenzylEthylether
+from .benzylethylether import BenzylEthylEther
 from .benzylmercaptan import BenzylMercaptan
 from .biphenyl import Biphenyl
 from .bromine import Bromine
@@ -137,7 +138,7 @@ from .butyraldehyde import Butyraldehyde
 from .butyricacid import ButyricAcid
 from .butyronitrile import Butyronitrile
 from .carbondioxide import Carbondioxide
-from .carbondisulfide import CarbondiSulfide
+from .carbondisulfide import CarbonDisulfide
 from .carbonmonoxide import CarbonMonoxide
 from .carbontetrachloride import CarbonTetrachloride
 from .carbontetrafluoride import CarbonTetrafluoride
@@ -181,35 +182,35 @@ from .dimethylamine import DimethylAmine
 from .dimethyldisulfide import DimethylDisulfide
 from .dimethylether import DimethylEther
 from .dimethylphthalate import DimethylPhthalate
-from .dimethylsilane import DimethylSilane
+from .dimethylsilane import Dimethylsilane
 from .dimethylsulfide import DimethylSulfide
 from .dimethylsulfoxide import DimethylSulfoxide
-from .dimethylterephthalate import DimethylSerephthalate
+from .dimethylterephthalate import DimethylTerephthalate
 from .diphenylether import DiphenylEther
 from .dipropylamine import DipropylAmine
 from .dodecane import Dodecane
 from .eicosane import Eicosane
 from .ethane import Ethane
 from .ethanol import Ethanol
-from .ethylacetate import EthylAcetate
+from .ethylacetate import EthlylAcetate, EthylAcetate
 from .ethylamine import EthylAmine
 from .ethylbenzene import Ethylbenzene
 from .ethylbenzoate import EthylBenzoate
 from .ethylbutyrate import EthylButyrate
 from .ethylcyclohexane import Ethylcyclohexane
 from .ethylcyclopentane import Ethylcyclopentane
-from .ethylene import Ethylene
+from .ethylene import Ethlylene, Ethylene
 from .ethylenediamine import Ethylenediamine
 from .ethyleneglycol import EthyleneGlycol
 from .ethyleneimine import Ethyleneimine
-from .ethyleneoxide import Ethylenoexide
+from .ethyleneoxide import EthyleneOxide
 from .ethylformate import EthylFormate
 from .ethylhexylether import EthylhexylEther
 from .ethylisopropylether import EthylisopropylEther
-from .ethylisopropylketone import EthylisopropylEetone
-from .ethylmercaptan import EthylEercaptan
+from .ethylisopropylketone import EthylisopropylKetone
+from .ethylmercaptan import EthylMercaptan
 from .ethylpropionate import EthylPropionate
-from .ethylpropylether import EthylPropylether
+from .ethylpropylether import EthylpropylEther
 from .ethyltrichlorosilane import Ethyltrichlorosilane
 from .fluorine import Fluorine
 from .fluorobenzene import FluoroBenzene
@@ -219,7 +220,6 @@ from .formaldehyde import Formaldehyde
 from .formamide import Formamide
 from .formicacid import FormicAcid
 from .furan import Furan
-from .helium import Helium
 from .heptadecane import Heptadecane
 from .heptanal import Heptanal
 from .heptane import Heptane
@@ -233,95 +233,82 @@ from .hexylmercaptan import HexylMercaptan
 from .hydrazine import Hydrazine
 from .hydrogen import Hydrogen
 from .hydrogenbromide import HydrogenBromide
-from .hydrogenchloride import HydrogenChloride
-from .hydrogencyanide import HydrogenCyanide
 from .hydrogenfluoride import HydrogenFluoride
-from .hydrogensulfide import HydrogenSulfide
 from .isobutyricacid import IsobutyricAcid
 from .isopropylamine import IsopropylAmine
 from .malonicacid import MalonicAcid
 from .mcresol import Mcresol
 from .mdichlorobenzene import Mdichlorobenzene
 from .methacrylicacid import MethacrylicAcid
-from .methane import Methane
 from .methanol import Methanol
 from .methylacetate import MethylAcetate
 from .methylacetylene import MethylAcetylene
 from .methylacrylate import MethylAcrylate
 from .methylamine import MethylAmine
 from .methylbenzoate import MethylBenzoate
-from .methylbutylether import MethylButylEther
+from .methylbutylether import MethylbutylEther
 from .methylbutylsulfide import MethylbutylSulfide
 from .methylbutyrate import MethylButyrate
 from .methylchlorosilane import Methylchlorosilane
 from .methylcyclohexane import Methylcyclohexane
 from .methylcyclopentane import Methylcyclopentane
 from .methyldichlorosilane import Methyldichlorosilane
-from .methylethylether import Methylethylether
-from .methylethylketone import Methylethylketone
-from .methylethylsulfide import Methylethylsulfide
-from .methylformate import Methylformate
-from .methylisobutylether import Methylisobutylether
-from .methylisobutylketone import Methylisobutylketone
-from .methylisocyanate import Methylisocyanate
-from .methylisopropylether import Methylisopropylether
-from .methylisopropylketone import Methylisopropylketone
-from .methylisopropylsulfide import Methylisopropylsulfide
-from .methylmercaptan import Methylmercaptan
-from .methylmethacrylate import Methylmethacrylate
-from .methylpentylether import Methylpentylether
-from .methylpropionate import Methylpropionate
-from .methylpropylether import Methylpropylether
-from .methylpropylsulfide import Methylpropylsulfide
+from .methylethylether import MethylethylEther
+from .methylethylketone import MethylethylKetone
+from .methylethylsulfide import MethylethylSulfide
+from .methylformate import MethylFormate
+from .methylisobutylether import MethylisobutylEther
+from .methylisobutylketone import MethylisobutylKetone
+from .methylisocyanate import MethylIsocyanate
+from .methylisopropylether import MethylisopropylEther
+from .methylisopropylketone import MethylisopropylKetone
+from .methylisopropylsulfide import MethylisopropylSulfide
+from .methylmercaptan import MethylMercaptan
+from .methylmethacrylate import MethylMethacrylate
+from .methylpentylether import MethylPentylEther
+from .methylpropionate import MethylPropionate
+from .methylpropylether import MethylpropylEther
+from .methylpropylsulfide import MethylpropylSulfide
 from .methylsilane import Methylsilane
-from .methyltertbutylether import Methyltertbutylether
-from .methylvinylether import Methylvinylether
+from .methyltertbutylether import MethylTertButylEther
+from .methylvinylether import MethylVinylEther
 from .mxylene import Mxylene
 from .naphthalene import Naphthalene
-from .neon import Neon
-from .nitricoxide import Nitricoxide
 from .nitroethane import Nitroethane
-from .nitrogen import Nitrogen
-from .nitrogentrifluoride import Nitrogentrifluoride
+from .nitrogentrifluoride import NitrogenTrifluoride
 from .nitromethane import Nitromethane
-from .nitrousoxide import Nitrousoxide
-from .nmethylacetamide import Nmethylacetamide
-from .nndimethylformamide import Nndimethylformamide
+from .nmethylacetamide import NmethylAcetamide
+from .nndimethylformamide import NndimethylFormamide
 from .nonadecane import Nonadecane
 from .nonanal import Nonanal
 from .nonane import Nonane
-from .nonanoicacid import Nonanoicacid
-from .nonylmercaptan import Nonylmercaptan
+from .nonanoicacid import NonanoicAcid
+from .nonylmercaptan import NonylMercaptan
 from .ocresol import Ocresol
 from .octadecane import Octadecane
 from .octanal import Octanal
 from .octane import Octane
-from .octanoicacid import Octanoicacid
-from .octylmercaptan import Octylmercaptan
+from .octanoicacid import OctanoicAcid
+from .octylmercaptan import OctylMercaptan
 from .odichlorobenzene import Odichlorobenzene
 from .oterphenyl import Oterphenyl
-from .oxalicacid import Oxalicacid
-from .oxygen import Oxygen
+from .oxalicacid import OxalicAcid
 from .oxylene import Oxylene
-from .ozone import Ozone
 from .pcresol import Pcresol
 from .pdichlorobenzene import Pdichlorobenzene
 from .pentadecane import Pentadecane
 from .pentanal import Pentanal
 from .pentane import Pentane
-from .pentanoicacid import Pentanoicacid
-from .pentylmercaptan import Pentylmercaptan
+from .pentanoicacid import PentanoicAcid
+from .pentylmercaptan import PentylMercaptan
 from .phenanthrene import Phenanthrene
-from .phenol import Phenol
-from .phenylisocyanate import Phenylisocyanate
-from .phthalicanhydride import Phthalicanhydride
+from .phenylisocyanate import PhenylIsocyanate
+from .phthalicanhydride import PhthalicAnhydride
 from .propadiene import Propadiene
-from .propane import Propane
 from .propenylcyclohexene import Propenylcyclohexene
 from .propionaldehyde import Propionaldehyde
-from .propionicacid import Propionicacid
 from .propionitrile import Propionitrile
-from .propylacetate import Propylacetate
+from .propylacetate import PropylAcetate
 from .propylamine import PropylAmine
 from .propylbenzene import Propylbenzene
 from .propylene import Propylene
@@ -329,14 +316,12 @@ from .propylformate import PropylFormate
 from .propylmercaptan import PropylMercaptan
 from .pxylene import Pxylene
 from .quinone import Quinone
-from .sebutylmercaptan import SebutylMercaptan
-from .silicontetrafluoride import Silicontetrafluoride
-from .styrene import Styrene
-from .succinicacid import Succinicacid
-from .sulfurdioxide import Sulfurdioxide
-from .sulfurhexafluoride import Sulfurhexafluoride
-from .sulfurtrioxide import Sulfurtrioxide
-from .terephthalicacid import Terephthalicacid
+from .sebutylmercaptan import SeButylmercaptan
+from .silicontetrafluoride import SiliconTetrafluoride
+from .succinicacid import SuccinicAcid
+from .sulfurhexafluoride import SulfurHexafluoride
+from .sulfurtrioxide import SulfurTrioxide
+from .terephthalicacid import TerephthalicAcid
 from .tetradecane import Tetradecane
 from .tetrahydrofuran import Tetrahydrofuran
 from .tetrahydrothiophene import Tetrahydrothiophene
@@ -346,15 +331,22 @@ from .trans12dimethylcyclohexane import Trans12Dimethylcyclohexane
 from .trans2butene import Trans2Butene
 from .trans2methylcyclohexanol import Trans2Methylcyclohexanol
 from .tridecane import Tridecane
-from .triethylamine import Triethylamine
-from .trimethylamine import Trimethylamine
+from .triethylamine import TriethylAmine
+from .trimethylamine import TrimethylAmine
 from .undecane import Undecane
-from .vinylacetate import Vinylacetate
-from .vinylacetylene import Vinylacetylene
-from .vinylchloride import Vinylchloride
-from .vinyltrichlorosilane import Vinyltrichlorosilane
+from .vinylacetate import VinylAcetate
+from .vinylacetylene import VinylAcetylene
+from .vinylchloride import VinylChloride
+from .vinyltrichlorosilane import VinylTrichlorosilane
 from .water import Water
+from .gas import Gas
+from .inorganic_liquid import InorganicLiquid
+from .oil import Oil
+from .organic_liquid import OrganicLiquid
+from .steam import Steam
+from .vapor import Vapor
 __all__ = [
+    "Component",
     "_112Trichloroethane",
     "_11Dibromoethane",
     "_11Dichloroethane",
@@ -372,7 +364,7 @@ __all__ = [
     "_12Dichloropropane",
     "_12Difluoroethane",
     "_12Dimethoxypropane",
-    "_12Propyleneglycol",
+    "_12PropyleneGlycol",
     "_135Trinitrobenzene",
     "_13Butadiene",
     "_13Butanediol",
@@ -411,8 +403,8 @@ __all__ = [
     "_246Trinitrotoluene",
     "_2Butanol",
     "_2Chloropropane",
-    "_2Ethylbutanoicacid",
-    "_2Ethylhexanoicacid",
+    "_2EthylButanoicAcid",
+    "_2EthylHexanoicAcid",
     "_2Heptanol",
     "_2Heptanone",
     "_2Hexanol",
@@ -423,20 +415,20 @@ __all__ = [
     "_2Methyl2Butene",
     "_2Methyl2Propanol",
     "_2Methylbutane",
-    "_2Methylbutanoicacid",
-    "_2Methyloctanoicacid",
+    "_2MethylbutanoicAcid",
+    "_2MethyloctanoicAcid",
     "_2Methylpentane",
     "_2Methylpropane",
-    "_2Methylpropene",
+    "_2MethylPropene",
     "_2Nonanol",
     "_2Octanol",
     "_2Octanone",
     "_2Pentanol",
     "_2Pentanone",
-    "_2Pentylmercaptan",
+    "_2PentylMercaptan",
     "_2Pentyne",
     "_2Propanol",
-    "_2Propylmercaptan",
+    "_2PropylMercaptan",
     "_3Heptanone",
     "_3Hexanone",
     "_3Hexyne",
@@ -448,50 +440,50 @@ __all__ = [
     "_3Pentanone",
     "Acetaldehyde",
     "Acetamide",
-    "Aceticacid",
-    "Aceticanhydride",
+    "AceticAcid",
+    "AceticAnhydride",
     "Acetone",
     "Acetonitrile",
     "Acetylene",
     "Acrolein",
-    "Acrylicacid",
+    "AcrylicAcid",
     "Acrylonitrile",
     "Air",
-    "Alphamethylstyrene",
+    "AlphaMethylStyrene",
     "Ammonia",
     "Anisole",
     "Argon",
     "Benzamide",
     "Benzene",
     "Benzenethiol",
-    "Benzoicacid",
+    "BenzoicAcid",
     "Benzonitrile",
     "Benzophenone",
-    "Benzylalcohol",
-    "Benzylethylether",
-    "Benzylmercaptan",
+    "BenzylAlcohol",
+    "BenzylEthylEther",
+    "BenzylMercaptan",
     "Biphenyl",
     "Bromine",
     "Bromobenzene",
     "Bromoethane",
     "Bromomethane",
     "Butane",
-    "Butylacetate",
+    "ButylAcetate",
     "Butylbenzene",
-    "Butylmercaptan",
+    "ButylMercaptan",
     "Butyraldehyde",
-    "Butyricacid",
+    "ButyricAcid",
     "Butyronitrile",
     "Carbondioxide",
-    "Carbondisulfide",
-    "Carbonmonoxide",
-    "Carbontetrachloride",
-    "Carbontetrafluoride",
+    "CarbonDisulfide",
+    "CarbonMonoxide",
+    "CarbonTetrachloride",
+    "CarbonTetrafluoride",
     "Chlorine",
-    "Chlorobenzene",
+    "ChloroBenzene",
     "Chloroethane",
     "Chloroform",
-    "Chloromethane",
+    "ChloroMethane",
     "Cis12Dimethylcyclohexane",
     "Cis2Butene",
     "Cis2Methylcyclohexanol",
@@ -502,187 +494,171 @@ __all__ = [
     "Cyclohexanol",
     "Cyclohexanone",
     "Cyclohexene",
-    "Cyclohexylmercaptan",
+    "CyclohexylMercaptan",
     "Cyclopentane",
     "Cyclopentene",
     "Cyclopropane",
     "Decanal",
     "Decane",
-    "Decanoicacid",
-    "Decylmercaptan",
+    "DecanoicAcid",
+    "DecylMercaptan",
     "Deuterium",
     "Dibromomethane",
-    "Dibutylether",
+    "DibutylEther",
     "Dichloromethane",
-    "Diethanolamine",
-    "Diethylamine",
-    "Diethylether",
-    "Diethylsulfide",
+    "DiethanolAmine",
+    "DiethylAmine",
+    "DiethylEther",
+    "DiethylSulfide",
     "Difluoromethane",
-    "Diisopropylamine",
-    "Diisopropylether",
-    "Diisopropylketone",
-    "Dimethylacetylene",
-    "Dimethylamine",
-    "Dimethyldisulfide",
-    "Dimethylether",
-    "Dimethylphthalate",
+    "DiisopropylAmine",
+    "DiisopropylEther",
+    "DiisopropylKetone",
+    "DimethylAcetylene",
+    "DimethylAmine",
+    "DimethylDisulfide",
+    "DimethylEther",
+    "DimethylPhthalate",
     "Dimethylsilane",
-    "Dimethylsulfide",
-    "Dimethylsulfoxide",
-    "Dimethylterephthalate",
-    "Diphenylether",
-    "Dipropylamine",
+    "DimethylSulfide",
+    "DimethylSulfoxide",
+    "DimethylTerephthalate",
+    "DiphenylEther",
+    "DipropylAmine",
     "Dodecane",
     "Eicosane",
     "Ethane",
     "Ethanol",
-    "Ethylacetate",
-    "Ethylamine",
+    "EthylAcetate",
+    "EthylAmine",
     "Ethylbenzene",
-    "Ethylbenzoate",
-    "Ethylbutyrate",
+    "EthylBenzoate",
+    "EthylButyrate",
     "Ethylcyclohexane",
     "Ethylcyclopentane",
     "Ethylene",
     "Ethylenediamine",
-    "Ethyleneglycol",
+    "EthyleneGlycol",
     "Ethyleneimine",
-    "Ethyleneoxide",
-    "Ethylformate",
-    "Ethylhexylether",
-    "Ethylisopropylether",
-    "Ethylisopropylketone",
-    "Ethylmercaptan",
-    "Ethylpropionate",
-    "Ethylpropylether",
+    "EthyleneOxide",
+    "EthylFormate",
+    "EthylhexylEther",
+    "EthylisopropylEther",
+    "EthylisopropylKetone",
+    "EthylMercaptan",
+    "EthylPropionate",
+    "EthylpropylEther",
     "Ethyltrichlorosilane",
     "Fluorine",
-    "Fluorobenzene",
+    "FluoroBenzene",
     "Fluoroethane",
     "Fluoromethane",
     "Formaldehyde",
     "Formamide",
-    "Formicacid",
+    "FormicAcid",
     "Furan",
-    "Helium",
     "Heptadecane",
     "Heptanal",
     "Heptane",
-    "Heptanoicacid",
-    "Heptylmercaptan",
+    "HeptanoicAcid",
+    "HeptylMercaptan",
     "Hexadecane",
     "Hexanal",
     "Hexane",
-    "Hexanoicacid",
-    "Hexylmercaptan",
+    "HexanoicAcid",
+    "HexylMercaptan",
     "Hydrazine",
     "Hydrogen",
-    "Hydrogenbromide",
-    "Hydrogenchloride",
-    "Hydrogencyanide",
-    "Hydrogenfluoride",
-    "Hydrogensulfide",
-    "Isobutyricacid",
-    "Isopropylamine",
-    "Malonicacid",
+    "HydrogenBromide",
+    "HydrogenFluoride",
+    "IsobutyricAcid",
+    "IsopropylAmine",
+    "MalonicAcid",
     "Mcresol",
     "Mdichlorobenzene",
-    "Methacrylicacid",
-    "Methane",
+    "MethacrylicAcid",
     "Methanol",
-    "Methylacetate",
-    "Methylacetylene",
-    "Methylacrylate",
-    "Methylamine",
-    "Methylbenzoate",
-    "Methylbutylether",
-    "Methylbutylsulfide",
-    "Methylbutyrate",
+    "MethylAcetate",
+    "MethylAcetylene",
+    "MethylAcrylate",
+    "MethylAmine",
+    "MethylBenzoate",
+    "MethylbutylEther",
+    "MethylbutylSulfide",
+    "MethylButyrate",
     "Methylchlorosilane",
     "Methylcyclohexane",
     "Methylcyclopentane",
     "Methyldichlorosilane",
-    "Methylethylether",
-    "Methylethylketone",
-    "Methylethylsulfide",
-    "Methylformate",
-    "Methylisobutylether",
-    "Methylisobutylketone",
-    "Methylisocyanate",
-    "Methylisopropylether",
-    "Methylisopropylketone",
-    "Methylisopropylsulfide",
-    "Methylmercaptan",
-    "Methylmethacrylate",
-    "Methylpentylether",
-    "Methylpropionate",
-    "Methylpropylether",
-    "Methylpropylsulfide",
+    "MethylethylEther",
+    "MethylethylKetone",
+    "MethylethylSulfide",
+    "MethylFormate",
+    "MethylisobutylEther",
+    "MethylisobutylKetone",
+    "MethylIsocyanate",
+    "MethylisopropylEther",
+    "MethylisopropylKetone",
+    "MethylisopropylSulfide",
+    "MethylMercaptan",
+    "MethylMethacrylate",
+    "MethylPentylEther",
+    "MethylPropionate",
+    "MethylpropylEther",
+    "MethylpropylSulfide",
     "Methylsilane",
-    "Methyltertbutylether",
-    "Methylvinylether",
+    "MethylTertButylEther",
+    "MethylVinylEther",
     "Mxylene",
     "Naphthalene",
-    "Neon",
-    "Nitricoxide",
     "Nitroethane",
-    "Nitrogen",
-    "Nitrogentrifluoride",
+    "NitrogenTrifluoride",
     "Nitromethane",
-    "Nitrousoxide",
-    "Nmethylacetamide",
-    "Nndimethylformamide",
+    "NmethylAcetamide",
+    "NndimethylFormamide",
     "Nonadecane",
     "Nonanal",
     "Nonane",
-    "Nonanoicacid",
-    "Nonylmercaptan",
+    "NonanoicAcid",
+    "NonylMercaptan",
     "Ocresol",
     "Octadecane",
     "Octanal",
     "Octane",
-    "Octanoicacid",
-    "Octylmercaptan",
+    "OctanoicAcid",
+    "OctylMercaptan",
     "Odichlorobenzene",
     "Oterphenyl",
-    "Oxalicacid",
-    "Oxygen",
+    "OxalicAcid",
     "Oxylene",
-    "Ozone",
     "Pcresol",
     "Pdichlorobenzene",
     "Pentadecane",
     "Pentanal",
     "Pentane",
-    "Pentanoicacid",
-    "Pentylmercaptan",
+    "PentanoicAcid",
+    "PentylMercaptan",
     "Phenanthrene",
-    "Phenol",
-    "Phenylisocyanate",
-    "Phthalicanhydride",
+    "PhenylIsocyanate",
+    "PhthalicAnhydride",
     "Propadiene",
-    "Propane",
     "Propenylcyclohexene",
     "Propionaldehyde",
-    "Propionicacid",
     "Propionitrile",
-    "Propylacetate",
-    "Propylamine",
+    "PropylAcetate",
+    "PropylAmine",
     "Propylbenzene",
     "Propylene",
-    "Propylformate",
-    "Propylmercaptan",
+    "PropylFormate",
+    "PropylMercaptan",
     "Pxylene",
     "Quinone",
-    "Sebutylmercaptan",
-    "Silicontetrafluoride",
-    "Styrene",
-    "Succinicacid",
-    "Sulfurdioxide",
-    "Sulfurhexafluoride",
-    "Sulfurtrioxide",
-    "Terephthalicacid",
+    "SeButylmercaptan",
+    "SiliconTetrafluoride",
+    "SuccinicAcid",
+    "SulfurHexafluoride",
+    "SulfurTrioxide",
+    "TerephthalicAcid",
     "Tetradecane",
     "Tetrahydrofuran",
     "Tetrahydrothiophene",
@@ -692,13 +668,20 @@ __all__ = [
     "Trans2Butene",
     "Trans2Methylcyclohexanol",
     "Tridecane",
-    "Triethylamine",
-    "Trimethylamine",
+    "TriethylAmine",
+    "TrimethylAmine",
     "Undecane",
-    "Vinylacetate",
-    "Vinylacetylene",
-    "Vinylchloride",
-    "Vinyltrichlorosilane",
+    "VinylAcetate",
+    "VinylAcetylene",
+    "VinylChloride",
+    "VinylTrichlorosilane",
     "Water",
+    "EthlylAcetate",
+    "Ethlylene",
+    "Gas",
+    "InorganicLiquid",
+    "Oil",
+    "OrganicLiquid",
+    "Steam",
+    "Vapor",
 ]
-
