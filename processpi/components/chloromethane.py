@@ -2,7 +2,7 @@ from .base import Component
 from processpi.units import *
 class ChloroMethane(Component):
     name = "Chloro Methane"
-    formula = "CH3Cl​"
+    formula = "CH3Cl"
     molecular_weight = 50.488
     _critical_temperature = Temperature(416.25, "K")
     _critical_pressure = Pressure(6.68, "MPa") 

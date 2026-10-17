@@ -4,7 +4,7 @@ from processpi.units import *
 
 class BenzoicAcid(Component):
     name = "Benzoic Acid"
-    formula = "C7H6O"
+    formula = "C7H6O2"
     molecular_weight = 122.121
     _critical_temperature = Temperature(751, "K")
     _critical_pressure = Pressure(4.47, "MPa") 

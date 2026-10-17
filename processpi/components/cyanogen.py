@@ -2,7 +2,7 @@ from .base import Component
 from processpi.units import *
 class Cyanogen(Component):
     name = "Cyanogen"
-    formula = "C2N2​"
+    formula = "C2N2"
     molecular_weight = 52.035
     _critical_temperature = Temperature(400.15, "K")
     _critical_pressure = Pressure(5.98, "MPa") 

@@ -48,5 +48,5 @@ class Tetrahydrofuran(Component):
     _specific_heat_constants = [171730, -800.47, 2.8934, -0.0025015, 0.0]
     _viscosity_constants = [-10.321, 900.92, -0.069128, 0.0, 0.0]
     _thermal_conductivity_constants = [0.19428, -0.000249, 0.0, 0.0, 0.0]
-    _vapor_pressure_constants = [54.898, -4762.7, -4.7627, 1.43e-17, 6.0]
+    _vapor_pressure_constants = [54.898, -5305.4, -4.7627, 1.4291E-17, 6]
     _enthalpy_constants = [4.3021e-7, 0.36972, 0.0, 0.0, 0.0]

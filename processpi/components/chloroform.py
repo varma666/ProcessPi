@@ -2,7 +2,7 @@ from .base import Component
 from processpi.units import *
 class Chloroform(Component):
     name = "Chloroform"
-    formula = "CHCl3​"
+    formula = "CHCl3"
     molecular_weight = 119.378
     _critical_temperature = Temperature(536.4, "K")
     _critical_pressure = Pressure(5.472, "MPa") 

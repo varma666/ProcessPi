@@ -34,7 +34,7 @@ class Acetonitrile(Component):
     - `_enthalpy_constants`: Constants for calculating enthalpy as a function of temperature.
     """
     name = "Acetonitrile"
-    formula = "C2?H3?N"
+    formula = "C2H3N"
     molecular_weight = 41.052
 
     # Critical properties
@@ -48,5 +48,5 @@ class Acetonitrile(Component):
     _specific_heat_constants = [0.0, -122.2, 0.34085, 0.0, 0.0, 0.8748, 0.9713]
     _viscosity_constants = [-10.906, 872.02]
     _thermal_conductivity_constants = [0.33192, -0.00043243]
-    _vapor_pressure_constants = [58.302, 0.0, -5.4954, 5.36e-06, 2.0]
+    _vapor_pressure_constants = [58.302, -5385.6, -5.4954, 5.3634E-06, 2]
     _enthalpy_constants = [4.3511, 0.34765]

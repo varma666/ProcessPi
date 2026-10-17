@@ -2,7 +2,7 @@ from .base import Component
 from processpi.units import *
 class ChloroBenzene(Component):
     name = "Chloro Benzene"
-    formula = "C6​H5​Cl"
+    formula = "C6H5Cl"
     molecular_weight = 112.557
     _critical_temperature = Temperature(632.35, "K")
     _critical_pressure = Pressure(4.519, "MPa") 

@@ -2,7 +2,7 @@ from .base import Component
 from processpi.units import *
 class CarbonTetrachloride(Component):
     name = "Carbon Tetrachloride"
-    formula = "CO"
+    formula = "CCl4"
     molecular_weight = 153.823
     _critical_temperature = Temperature(556.35, "K")
     _critical_pressure = Pressure(4.56, "MPa") 

@@ -48,5 +48,5 @@ class Benzamide(Component):
     _specific_heat_constants = [161440,260.66,0,0,0]
     _viscosity_constants = [-12.632, 2668.2,0,0,0]
     _thermal_conductivity_constants = [0.28485, -0.00025225,0,0,0]
-    _vapor_pressure_constants = [85.474, -11.932, -8.3348, 1.29e-18, 6.0]
+    _vapor_pressure_constants = [85.474, -11932, -8.3348, 1.2850E-18, 6]
     _enthalpy_constants = [8.7809e-7, 0.1933, 0.30877, -0.14162,0]
