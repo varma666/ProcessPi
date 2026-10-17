@@ -109,6 +109,12 @@ class Component(ABC):
         # called it a liquid and took the liquid density correlation.
         if self._default_phase:
             return self._default_phase
+        # Above the critical temperature there is no liquid. The vapour
+        # pressure correlation is not valid there either, and its C4*T^C5
+        # term overflowed (OverflowError for 2-pentanol at 1000 K).
+        tc = getattr(self, "_critical_temperature", None)
+        if tc is not None and self.temperature.to("K").value >= tc.to("K").value:
+            return "gas"
         P = self.pressure.to("Pa").value
         Pvap = self.vapor_pressure().to("Pa").value
         return "gas" if P < Pvap else "liquid"
