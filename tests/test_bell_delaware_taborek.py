@@ -130,7 +130,14 @@ def test_rating_shell_coefficient_by_hand():
     pr = shell["cp_J_kgK"] * shell["viscosity_Pa_s"] / shell["k_W_mK"]
     a = 1.450 / (1 + 0.14 * re ** 0.519)
     j = 0.321 * (1.33 / 1.25) ** a * re ** -0.388                    # Re > 1000
-    h_ideal = j * shell["cp_J_kgK"] * m / sm * pr ** (-2 / 3)         # Perry 11-21, phi = 1
+    # Sieder-Tate phi = (mu / mu_w)^0.14: rate() takes the wall midway between
+    # the two sides' mean temperatures, and mu_w is benzene's there.
+    t_wall = 0.5 * (shell["temperature_K"] + data["property_basis"]["cold"]["temperature_K"])
+    mu_wall = Benzene(temperature=Temperature(t_wall, "K"), phase="liquid").viscosity().to("Pa·s").value
+    phi = (shell["viscosity_Pa_s"] / mu_wall) ** 0.14
+    assert data["viscosity_correction"]["shell"]["phi"] == pytest.approx(phi, rel=1e-9)
+    assert phi < 1.0                                                  # cooled liquid
+    h_ideal = j * shell["cp_J_kgK"] * m / sm * pr ** (-2 / 3) * phi   # Perry 11-21
 
     jc = 0.55 + 0.72 * fc
     rs, rlm = ssb / (ssb + stb), (ssb + stb) / sm

@@ -793,14 +793,30 @@ class ShellAndTubeHX(HeatExchanger):
             return None
 
     def _side_props(self, hot: Dict[str, float], cold: Dict[str, float]) -> Tuple[Dict[str, float], Dict[str, float]]:
-        """Return stream properties with viscosity evaluated at each inlet temperature."""
+        """Return stream properties with viscosity evaluated at the property temperature.
+
+        The bulk viscosity belongs at the temperature the other properties were
+        evaluated at, ``t_props_k`` (the mean temperature, set by
+        ``_evaluate_props_at_mean_temperature``); ``t_k`` stays the inlet
+        temperature. Perry 8th ed., p. 5-9: the properties are evaluated at the
+        bulk mean temperature, except mu_s, which is at the wall temperature.
+        """
         for props, stream in ((hot, self.hot_in), (cold, self.cold_in)):
             mu = self._component_viscosity_at_temperature(
-                getattr(stream, "component", None), stream, props.get("t_k", 298.15)
+                getattr(stream, "component", None), stream,
+                props.get("t_props_k", props.get("t_k", 298.15)),
             )
             if mu is not None:
                 props["viscosity"] = mu
-        return (hot, cold) if self._tube_side == "hot" else (cold, hot)
+        tube, shell = (hot, cold) if self._tube_side == "hot" else (cold, hot)
+        # First estimate of the wall temperature for the Sieder-Tate mu_w:
+        # midway between the two bulk temperatures. design() refines it with
+        # the film coefficients each pass; rate() keeps it. Without it, mu_w
+        # fell back to the stream's inlet temperature.
+        self._estimated_wall_temperature_k = 0.5 * (
+            tube.get("t_props_k", tube["t_k"]) + shell.get("t_props_k", shell["t_k"])
+        )
+        return tube, shell
 
     def _hot_cold_props(self, tube: Dict[str, float], shell: Dict[str, float]) -> Tuple[Dict[str, float], Dict[str, float]]:
         """Inverse of `_side_props`: return (hot, cold) from a (tube, shell) pair."""
@@ -1634,9 +1650,10 @@ class ShellAndTubeHX(HeatExchanger):
             # PRESSURE DROP
             # ======================================================
     
-            tube_stream, shell_stream = self._side_streams()
-            t_tube_k = self._safe_float(tube_stream.temperature.to("K"), "tube_stream.temperature")
-            t_shell_k = self._safe_float(shell_stream.temperature.to("K"), "shell_stream.temperature")
+            # The wall lies between the two bulk temperatures the properties
+            # are at, nearer the side with the larger film coefficient.
+            t_tube_k = tube.get("t_props_k", tube["t_k"])
+            t_shell_k = shell.get("t_props_k", shell["t_k"])
             h_sum = max(h_t + h_s, 1e-12)
             self._estimated_wall_temperature_k = (h_t * t_tube_k + h_s * t_shell_k) / h_sum
 
