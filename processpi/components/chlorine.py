@@ -4,6 +4,12 @@ class Chlorine(Component):
     name = "Chlorine"
     formula = "Cl2"
     molecular_weight = 70.906
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "vapor"
+    _hx_corrosion_key = "acid"
+    _hx_velocity_key = "chlorine"
     _critical_temperature = Temperature(417.15, "K")
     _critical_pressure = Pressure(7.71, "MPa") 
     _critical_volume = Volume(0.124, "m3")  # Placeholder for critical volume per Kmole
@@ -16,11 +22,3 @@ class Chlorine(Component):
     _vapor_pressure_constants = [71.334,-3855,-8.5171,1.24E-02, 1] 
     _enthalpy_constants = [3.068E-7, 0.8458, -0.9001,0.453, 0]  # Placeholder for enthalpy constants
 
-
-    def hx_data(self):
-        p = self.pressure.to("Pa").value
-        pvap = self.vapor_pressure().to("Pa").value
-        # A known phase (set by the stream or the exchanger) overrides the
-        # vapour pressure test, as in Component.phase().
-        phase = "vapor" if self.phase() == "gas" else "liquid"
-        return {"family": "gas", "phase": phase, "velocity_key": "chlorine", "u_key": "gas", "fouling_key": "gas", "corrosion_key": "gas"}
