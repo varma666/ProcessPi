@@ -36,6 +36,11 @@ class DiethanolAmine(Component):
     name = "Diethanol amine"
     formula = "C4H11NO2"
     molecular_weight = 105.136
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "amine"
 
     # Critical properties
     _critical_temperature = Temperature(736.6, "K")

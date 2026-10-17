@@ -36,6 +36,11 @@ class Ethyltrichlorosilane(Component):
     name = "Ethyltrichlorosilane"
     formula = "C2H5Cl3Si"
     molecular_weight = 163.506
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "acid"
 
     # Critical properties
     _critical_temperature = Temperature(559.95, "K")

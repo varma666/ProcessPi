@@ -36,6 +36,11 @@ class _12Dichloropropane(Component):
     name = "12Dichloropropane"
     formula = "C3H6Cl2"
     molecular_weight = 112.986
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(572.0, "K")

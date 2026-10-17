@@ -4,6 +4,12 @@ class CarbonTetrachloride(Component):
     name = "Carbon Tetrachloride"
     formula = "CO"
     molecular_weight = 153.823
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = "carbon_tetrachloride"
     _critical_temperature = Temperature(556.35, "K")
     _critical_pressure = Pressure(4.56, "MPa") 
     _critical_volume = Volume(0.276, "m3")  # Placeholder for critical volume per Kmole

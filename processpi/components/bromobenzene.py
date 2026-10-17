@@ -36,6 +36,11 @@ class Bromobenzene(Component):
     name = "Bromobenzene"
     formula = "C6H5Br"
     molecular_weight = 157.008
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(670.15, "K")

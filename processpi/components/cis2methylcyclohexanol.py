@@ -36,6 +36,11 @@ class Cis2Methylcyclohexanol(Component):
     name = "cis2Methylcyclohexanol"
     formula = "C7H14O"
     molecular_weight = 114.185
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(614.0, "K")

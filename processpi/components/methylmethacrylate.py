@@ -36,6 +36,11 @@ class MethylMethacrylate(Component):
     name = "Methyl methacrylate"
     formula = "C5H8O2"
     molecular_weight = 100.116
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(566.0, "K")

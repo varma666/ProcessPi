@@ -36,6 +36,11 @@ class Undecane(Component):
     name = "Undecane"
     formula = "C11H24"
     molecular_weight = 156.308
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(639.0, "K")

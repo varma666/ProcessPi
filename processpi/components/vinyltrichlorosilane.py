@@ -36,6 +36,11 @@ class VinylTrichlorosilane(Component):
     name = "Vinyl trichlorosilane"
     formula = "C2H3Cl3Si"
     molecular_weight = 161.49
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "acid"
 
     # Critical properties
     _critical_temperature = Temperature(543.15, "K")

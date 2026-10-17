@@ -37,6 +37,12 @@ class AceticAcid(Component):
     name = "Acetic Acid"
     formula = "CH3COOH"
     molecular_weight = 60.052
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "acid"
+    _hx_velocity_key = "acetic_acid"
     
     # Critical properties for the compound
     _critical_temperature = Temperature(591.95, "K")

@@ -38,6 +38,12 @@ class Air(Component):
     hx_type = "gas_low_pressure"
     formula = "Mixture"
     molecular_weight = 28.96
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "vapor"
+    _hx_corrosion_key = "inert_gas"
+    _hx_velocity_key = "air"
     
     # Critical properties for the compound
     _critical_temperature = Temperature(132.45, "K")

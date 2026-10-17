@@ -36,6 +36,11 @@ class Hydrazine(Component):
     name = "Hydrazine"
     formula = "H4N2"
     molecular_weight = 32.045
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "amine"
 
     # Critical properties
     _critical_temperature = Temperature(653.15, "K")

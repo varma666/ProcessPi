@@ -36,6 +36,11 @@ class Cyclopentane(Component):
     name = "Cyclopentane"
     formula = "C5H10"
     molecular_weight = 70.133
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(511.7, "K")

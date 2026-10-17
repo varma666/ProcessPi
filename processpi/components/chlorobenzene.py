@@ -4,6 +4,12 @@ class ChloroBenzene(Component):
     name = "Chloro Benzene"
     formula = "C6​H5​Cl"
     molecular_weight = 112.557
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = "chlorobenzene"
     _critical_temperature = Temperature(632.35, "K")
     _critical_pressure = Pressure(4.519, "MPa") 
     _critical_volume = Volume(0.308, "m3")  # Placeholder for critical volume per Kmole

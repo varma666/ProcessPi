@@ -6,6 +6,12 @@ class Carbondioxide(Component):
     name = "Carbon Dioxide"
     formula = "CO2"
     molecular_weight = 44.01
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "vapor"
+    _hx_corrosion_key = "inert_gas"
+    _hx_velocity_key = "carbon_dioxide"
     _critical_temperature = Temperature(304.21, "K")
     _critical_pressure = Pressure(7.383, "MPa") 
     _critical_volume = Volume(0.094, "m3")  # Placeholder for critical volume per Kmole

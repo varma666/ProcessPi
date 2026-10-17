@@ -7,6 +7,12 @@ class Methanol(Component):
     name = "Methanol"
     formula = "CH3OH"
     molecular_weight = 32.042
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = "methanol"
     _critical_temperature = Temperature(512.6, "K")
     _critical_pressure = Pressure(8.1, "MPa")
     _critical_volume = Volume(0.117, "m3")  # Placeholder for critical volume per Kmole

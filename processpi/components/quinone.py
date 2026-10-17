@@ -36,6 +36,11 @@ class Quinone(Component):
     name = "Quinone"
     formula = "C6H4O2"
     molecular_weight = 108.095
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(683.0, "K")

@@ -36,6 +36,11 @@ class DimethylSulfoxide(Component):
     name = "Dimethyl sulfoxide"
     formula = "C2H6OS"
     molecular_weight = 78.133
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(729.0, "K")

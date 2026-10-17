@@ -44,6 +44,12 @@ class Cyclohexane(Component):
     formula = "C6H12"
     # Molecular weight and critical properties: Table 2-141, p. 2-139.
     molecular_weight = 84.159
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = "cyclohexane"
 
     # Critical properties
     _critical_temperature = Temperature(553.8, "K")

@@ -36,6 +36,11 @@ class DiisopropylEther(Component):
     name = "Diisopropyl ether"
     formula = "C6H14O"
     molecular_weight = 102.175
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(500.05, "K")

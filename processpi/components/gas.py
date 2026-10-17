@@ -7,6 +7,12 @@ class Gas(Component):
     hx_type = "gas_low_pressure"
     formula = "Gas"
     molecular_weight = 28.0  # g/mol
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "vapor"
+    _hx_corrosion_key = "inert_gas"
+    _hx_velocity_key = "gas"
     # Gas phase unless a phase is given (viscosity, Cp and k follow phase()).
     _default_phase = "gas"
 

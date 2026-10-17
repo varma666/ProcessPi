@@ -36,6 +36,11 @@ class _1Pentanol(Component):
     name = "1Pentanol"
     formula = "C5H12O"
     molecular_weight = 88.148
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(588.1, "K")

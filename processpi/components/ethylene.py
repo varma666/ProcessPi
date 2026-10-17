@@ -6,6 +6,12 @@ class Ethylene(Component):
     name = "Ethylene"
     formula = "C2H4"
     molecular_weight = 28.053
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = "ethylene"
     _critical_temperature = Temperature(282.34, "K")
     _critical_pressure = Pressure(5.41, "MPa") 
     _critical_volume = Volume(0.131, "m3")  # Placeholder for critical volume per Kmole

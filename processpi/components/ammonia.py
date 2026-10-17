@@ -37,6 +37,12 @@ class Ammonia(Component):
     name = "Ammonia"
     formula = "NH3"
     molecular_weight = 17.031
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "vapor"
+    _hx_corrosion_key = "amine"
+    _hx_velocity_key = "ammonia"
     
     # Critical properties for the compound
     _critical_temperature = Temperature(405.65, "K")

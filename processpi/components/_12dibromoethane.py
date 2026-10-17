@@ -36,6 +36,11 @@ class _12Dibromoethane(Component):
     name = "12Dibromoethane"
     formula = "C2H4Br2"
     molecular_weight = 187.861
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(650.15, "K")

@@ -36,6 +36,11 @@ class _12Butadiene(Component):
     name = "12Butadiene"
     formula = "C4H6"
     molecular_weight = 54.09
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(452.0, "K")

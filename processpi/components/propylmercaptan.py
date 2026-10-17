@@ -36,6 +36,11 @@ class PropylMercaptan(Component):
     name = "Propyl mercaptan"
     formula = "C3H8S"
     molecular_weight = 76.161
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(536.6, "K")

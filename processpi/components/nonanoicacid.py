@@ -36,6 +36,11 @@ class NonanoicAcid(Component):
     name = "Nonanoic acid"
     formula = "C9H18O2"
     molecular_weight = 158.238
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "acid"
 
     # Critical properties
     _critical_temperature = Temperature(710.7, "K")

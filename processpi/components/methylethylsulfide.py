@@ -36,6 +36,11 @@ class MethylethylSulfide(Component):
     name = "Methylethyl sulfide"
     formula = "C3H8S"
     molecular_weight = 76.161
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(533.0, "K")

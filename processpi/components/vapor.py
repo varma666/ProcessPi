@@ -6,6 +6,12 @@ class Vapor(Component):
     hx_type = "vapor"
     formula = "Gas"
     molecular_weight = 28.0
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "vapor"
+    _hx_corrosion_key = "inert_gas"
+    _hx_velocity_key = "vapor"
     # Gas phase unless a phase is given: density from the ideal gas law.
     _default_phase = "gas"
     _critical_temperature = Temperature(400, "K")

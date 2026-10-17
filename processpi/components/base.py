@@ -36,6 +36,18 @@ class Component(ABC):
     # Phase reported when none is given, instead of the vapour-pressure test.
     _default_phase = None
 
+    # Heat exchanger data, read by hx_data() and httype(). Each component
+    # file sets its own; these are the values for a generic organic liquid.
+    # The keys name rows of FOULING_FACTOR_DATABASE, CORROSION_SEVERITY_DATABASE
+    # and RECOMMENDED_VELOCITIES in equipment/heatexchangers/standards.py, and
+    # the types are fluid categories of HX_U_STANDARDS.
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_vapor_type = None           # None: "vapor" below Tc, a gas above it
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = None         # None: the generic row for the phase
+
     def __init__(
         self,
         temperature: Temperature = None,
@@ -112,6 +124,44 @@ class Component(ABC):
         P = self.pressure.to("Pa").value
         Pvap = self.vapor_pressure().to("Pa").value
         return "gas" if P < Pvap else "liquid"
+
+    # ----------------------------------------------------------------------
+    # Heat exchanger data
+    # ----------------------------------------------------------------------
+    def httype(self) -> str:
+        """Fluid category for the U lookup, at the component's phase.
+
+        A liquid is its ``_hx_liquid_type``. A vapour below the critical
+        temperature can condense and is "vapor" (water: "steam"); above it the
+        component is a gas, split at 3 bar as in the exchanger's own lookup.
+        """
+        if self.phase() != "gas":
+            return self._hx_liquid_type
+        if self._hx_vapor_type:
+            return self._hx_vapor_type
+        tc = getattr(self, "_critical_temperature", None)
+        if tc is not None and self.temperature.to("K").value < tc.to("K").value:
+            return "vapor"
+        p_bar = self.pressure.to("Pa").value / 1e5
+        return "gas_low_pressure" if p_bar <= 3.0 else "gas_high_pressure"
+
+    def hx_data(self) -> dict:
+        """Service keys the heat exchanger reads for this component."""
+        phase = "vapor" if self.phase() == "gas" else "liquid"
+        velocity_key = self._hx_velocity_key
+        if velocity_key is None:
+            if phase == "vapor":
+                velocity_key = "vapor"
+            else:
+                velocity_key = "inorganic_liquid" if self._hx_family == "inorganic" else "organic_liquid"
+        return {
+            "family": self._hx_family,
+            "phase": phase,
+            "velocity_key": velocity_key,
+            "u_key": self.httype(),
+            "fouling_key": self._hx_fouling_key,
+            "corrosion_key": self._hx_corrosion_key,
+        }
 
     # ----------------------------------------------------------------------
     # Density

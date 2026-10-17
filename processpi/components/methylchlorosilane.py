@@ -36,6 +36,11 @@ class Methylchlorosilane(Component):
     name = "Methylchlorosilane"
     formula = "CH5ClSi"
     molecular_weight = 80.589
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "acid"
 
     # Critical properties
     _critical_temperature = Temperature(442.0, "K")

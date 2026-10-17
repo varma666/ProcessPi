@@ -6,6 +6,12 @@ class BenzoicAcid(Component):
     name = "Benzoic Acid"
     formula = "C7H6O"
     molecular_weight = 122.121
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "acid"
+    _hx_velocity_key = "benzoic_acid"
     _critical_temperature = Temperature(751, "K")
     _critical_pressure = Pressure(4.47, "MPa") 
     _critical_volume = Volume(0.344, "m3")  # Placeholder for critical volume per Kmole

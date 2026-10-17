@@ -36,6 +36,11 @@ class Cis2Butene(Component):
     name = "cis2Butene"
     formula = "C4H8"
     molecular_weight = 56.106
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(435.5, "K")

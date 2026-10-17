@@ -36,6 +36,11 @@ class DiisopropylAmine(Component):
     name = "Diisopropyl amine"
     formula = "C6H15N"
     molecular_weight = 101.19
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "amine"
 
     # Critical properties
     _critical_temperature = Temperature(523.1, "K")

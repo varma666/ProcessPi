@@ -890,6 +890,7 @@ CORROSION_SEVERITY_DATABASE = {
     "crude": "medium-high",
 
     "amine": "high",
+    "inert_gas": "low",
 
 }
 

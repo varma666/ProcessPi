@@ -36,6 +36,11 @@ class _2Pentyne(Component):
     name = "2Pentyne"
     formula = "C5H8"
     molecular_weight = 68.117
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(519.0, "K")

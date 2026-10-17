@@ -36,6 +36,11 @@ class SiliconTetrafluoride(Component):
     name = "Silicon tetrafluoride"
     formula = "F4Si"
     molecular_weight = 104.079
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "vapor"
+    _hx_corrosion_key = "acid"
 
     # Critical properties
     _critical_temperature = Temperature(259.0, "K")

@@ -6,6 +6,12 @@ class Bromine(Component):
     name = "Bromine"
     formula = "Br2"
     molecular_weight = 159.808
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "acid"
+    _hx_velocity_key = "bromine"
     _critical_temperature = Temperature(584.15, "K")
     _critical_pressure = Pressure(10.3, "MPa") 
     _critical_volume = Volume(0.135, "m3")  # Placeholder for critical volume per Kmole

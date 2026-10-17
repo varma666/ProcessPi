@@ -36,6 +36,11 @@ class Dibromomethane(Component):
     name = "Dibromomethane"
     formula = "CH2Br2"
     molecular_weight = 173.835
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(611.0, "K")

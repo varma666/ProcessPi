@@ -4,6 +4,12 @@ class ChloroMethane(Component):
     name = "Chloro Methane"
     formula = "CH3Cl​"
     molecular_weight = 50.488
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = "chloromethane"
     _critical_temperature = Temperature(416.25, "K")
     _critical_pressure = Pressure(6.68, "MPa") 
     _critical_volume = Volume(0.143, "m3")  # Placeholder for critical volume per Kmole

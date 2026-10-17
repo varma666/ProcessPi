@@ -36,6 +36,11 @@ class _246Trinitrotoluene(Component):
     name = "246Trinitrotoluene"
     formula = "C7H5N3O6"
     molecular_weight = 227.131
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(828.0, "K")

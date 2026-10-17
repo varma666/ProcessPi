@@ -36,6 +36,11 @@ class HeptanoicAcid(Component):
     name = "Heptanoic acid"
     formula = "C7H14O2"
     molecular_weight = 130.185
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "acid"
 
     # Critical properties
     _critical_temperature = Temperature(677.3, "K")
