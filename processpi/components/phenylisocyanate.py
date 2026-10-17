@@ -36,6 +36,11 @@ class PhenylIsocyanate(Component):
     name = "Phenyl isocyanate"
     formula = "C7H5NO"
     molecular_weight = 119.121
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(653.0, "K")

@@ -6,6 +6,12 @@ class InorganicLiquid(Component):
     hx_type = "water"
     formula = "Inorganic"
     molecular_weight = 80.0
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "water"
+    _hx_fouling_key = "treated_water"
+    _hx_corrosion_key = "treated_water"
+    _hx_velocity_key = "inorganic_liquid"
     _critical_temperature = Temperature(600, "K")
     _critical_pressure = Pressure(5.0, "MPa")
     _critical_volume = Volume(0.23, "m3")

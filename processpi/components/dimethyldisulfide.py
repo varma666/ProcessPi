@@ -36,6 +36,11 @@ class DimethylDisulfide(Component):
     name = "Dimethyl disulfide"
     formula = "C2H6S2"
     molecular_weight = 94.199
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(615.0, "K")

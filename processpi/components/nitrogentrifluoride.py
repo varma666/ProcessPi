@@ -36,6 +36,11 @@ class NitrogenTrifluoride(Component):
     name = "Nitrogen trifluoride"
     formula = "F3N"
     molecular_weight = 71.002
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "vapor"
+    _hx_corrosion_key = "inert_gas"
 
     # Critical properties
     _critical_temperature = Temperature(234.0, "K")

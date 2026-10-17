@@ -36,6 +36,11 @@ class _1Decanol(Component):
     name = "1Decanol"
     formula = "C10H22O"
     molecular_weight = 158.281
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(688.0, "K")

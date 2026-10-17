@@ -36,6 +36,11 @@ class HydrogenBromide(Component):
     name = "Hydrogen bromide"
     formula = "HBr"
     molecular_weight = 80.912
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "vapor"
+    _hx_corrosion_key = "acid"
 
     # Critical properties
     _critical_temperature = Temperature(363.15, "K")

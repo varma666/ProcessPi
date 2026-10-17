@@ -36,6 +36,11 @@ class Octane(Component):
     name = "Octane"
     formula = "C8H18"
     molecular_weight = 114.229
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(568.7, "K")

@@ -36,6 +36,11 @@ class SuccinicAcid(Component):
     name = "Succinic acid"
     formula = "C4H6O4"
     molecular_weight = 118.088
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "acid"
 
     # Critical properties
     _critical_temperature = Temperature(806.0, "K")

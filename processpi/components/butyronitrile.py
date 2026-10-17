@@ -36,6 +36,11 @@ class Butyronitrile(Component):
     name = "Butyronitrile"
     formula = "C4H7N"
     molecular_weight = 69.105
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(582.25, "K")

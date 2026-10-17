@@ -36,6 +36,11 @@ class Hexadecane(Component):
     name = "Hexadecane"
     formula = "C16H34"
     molecular_weight = 226.441
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(723.0, "K")

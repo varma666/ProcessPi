@@ -36,6 +36,11 @@ class Difluoromethane(Component):
     name = "Difluoromethane"
     formula = "CH2F2"
     molecular_weight = 52.023
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(351.255, "K")

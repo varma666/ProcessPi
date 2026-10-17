@@ -4,6 +4,12 @@ class Cyanogen(Component):
     name = "Cyanogen"
     formula = "C2N2​"
     molecular_weight = 52.035
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "vapor"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = "cyanogen"
     _critical_temperature = Temperature(400.15, "K")
     _critical_pressure = Pressure(5.98, "MPa") 
     _critical_volume = Volume(0.195, "m3")  # Placeholder for critical volume per Kmole

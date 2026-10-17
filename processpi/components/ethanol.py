@@ -7,6 +7,12 @@ class Ethanol(Component):
     name = "Ethanol"
     formula = "C2H5OH"
     molecular_weight = 46.068
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = "ethanol"
     _critical_temperature = Temperature(514.00, "K")
     _critical_pressure = Pressure(6.137, "MPa") 
     _critical_volume = Volume(0.168, "m3")  # Placeholder for critical volume per Kmole

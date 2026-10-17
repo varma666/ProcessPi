@@ -36,6 +36,11 @@ class _1Octanol(Component):
     name = "1Octanol"
     formula = "C8H18O"
     molecular_weight = 130.228
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(652.3, "K")

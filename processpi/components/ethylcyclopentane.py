@@ -36,6 +36,11 @@ class Ethylcyclopentane(Component):
     name = "Ethylcyclopentane"
     formula = "C7H14"
     molecular_weight = 98.186
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(569.5, "K")

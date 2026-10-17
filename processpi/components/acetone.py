@@ -37,6 +37,12 @@ class Acetone(Component):
     name = "Acetone"
     formula = "C3H6O"
     molecular_weight = 58.080
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = "acetone"
     
     # Critical properties for the compound
     _critical_temperature = Temperature(508.1, "K")

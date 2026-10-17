@@ -36,6 +36,11 @@ class MethylIsocyanate(Component):
     name = "Methyl Isocyanate"
     formula = "C2H3NO"
     molecular_weight = 57.051
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(488.0, "K")

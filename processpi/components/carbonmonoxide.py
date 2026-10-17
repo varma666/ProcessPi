@@ -4,6 +4,12 @@ class CarbonMonoxide(Component):
     name = "Carbon Monoxide"
     formula = "CO"
     molecular_weight = 28.01
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "vapor"
+    _hx_corrosion_key = "inert_gas"
+    _hx_velocity_key = "carbon_monoxide"
     _critical_temperature = Temperature(132.92, "K")
     _critical_pressure = Pressure(3.499, "MPa") 
     _critical_volume = Volume(0.0944, "m3")  # Placeholder for critical volume per Kmole

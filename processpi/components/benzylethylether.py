@@ -36,6 +36,11 @@ class BenzylEthylEther(Component):
     name = "Benzyl ethyl ether"
     formula = "C9H12O"
     molecular_weight = 136.191
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(662.0, "K")

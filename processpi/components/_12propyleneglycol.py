@@ -36,6 +36,11 @@ class _12PropyleneGlycol(Component):
     name = "12Propylene glycol"
     formula = "C3H8O2"
     molecular_weight = 76.094
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(626.0, "K")

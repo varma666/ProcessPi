@@ -36,6 +36,11 @@ class VinylChloride(Component):
     name = "Vinyl chloride"
     formula = "C2H3Cl"
     molecular_weight = 62.498
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(432.0, "K")

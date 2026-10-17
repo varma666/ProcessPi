@@ -36,6 +36,11 @@ class MethylAmine(Component):
     name = "Methyl amine"
     formula = "CH5N"
     molecular_weight = 31.057
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "amine"
 
     # Critical properties
     _critical_temperature = Temperature(430.05, "K")

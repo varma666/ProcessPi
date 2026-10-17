@@ -36,6 +36,11 @@ class EthylFormate(Component):
     name = "Ethyl formate"
     formula = "C3H6O2"
     molecular_weight = 74.079
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(508.4, "K")

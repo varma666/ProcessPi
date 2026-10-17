@@ -6,6 +6,12 @@ class Butane(Component):
     name = "Butane"
     formula = "C4H10"
     molecular_weight = 58.122
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = "butane"
     _critical_temperature = Temperature(425.12, "K")
     _critical_pressure = Pressure(3.796, "MPa") 
     _critical_volume = Volume(0.255, "m3")  # Placeholder for critical volume per Kmole

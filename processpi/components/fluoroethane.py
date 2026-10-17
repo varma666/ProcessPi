@@ -36,6 +36,11 @@ class Fluoroethane(Component):
     name = "Fluoroethane"
     formula = "C2H5F"
     molecular_weight = 48.06
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(375.31, "K")

@@ -36,6 +36,11 @@ class Cyclohexene(Component):
     name = "Cyclohexene"
     formula = "C6H10"
     molecular_weight = 82.144
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(560.4, "K")

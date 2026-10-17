@@ -36,6 +36,11 @@ class _1234Tetrahydronaphthalene(Component):
     name = "1234Tetrahydronaphthalene"
     formula = "C10H12"
     molecular_weight = 132.202
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(720.0, "K")

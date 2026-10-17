@@ -36,6 +36,11 @@ class SulfurTrioxide(Component):
     name = "Sulfur trioxide"
     formula = "O3S"
     molecular_weight = 80.063
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "acid"
 
     # Critical properties
     _critical_temperature = Temperature(490.85, "K")

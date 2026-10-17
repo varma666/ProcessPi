@@ -4,6 +4,12 @@ class FluoroBenzene(Component):
     name = "Fluorobenzene"
     formula = "C6H5F"
     molecular_weight = 96.102
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
+    _hx_velocity_key = "fluorobenzene"
     _critical_temperature = Temperature(560.09, "K")
     _critical_pressure = Pressure(4.551, "MPa") 
     _critical_volume = Volume(0.269, "m3")  # Placeholder for critical volume per Kmole

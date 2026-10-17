@@ -21,6 +21,12 @@ class Steam(Component):
     hx_type = "steam"
     formula = "H2O"
     molecular_weight = 18.015
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "inorganic"
+    _hx_liquid_type = "water"
+    _hx_fouling_key = "steam"
+    _hx_corrosion_key = "steam_condensate"
+    _hx_vapor_type = "steam"
 
     def __init__(
         self,

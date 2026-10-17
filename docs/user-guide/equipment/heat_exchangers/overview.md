@@ -272,6 +272,37 @@ The HeatExchangerEngine integrates directly with:
 Material properties are obtained directly from `MaterialStream` objects,
 allowing realistic process simulations.
 
+## Fluid service data from the component
+
+Every component supplies `hx_data()` and `httype()`, which the exchanger
+reads for fouling factors, corrosion severity (which fluid goes in the
+tubes), velocity bands and the U category:
+
+``` python
+from processpi.components import AceticAcid
+from processpi.units import Temperature
+
+AceticAcid(temperature=Temperature(70, "C")).hx_data()
+# {'family': 'organic', 'phase': 'liquid', 'velocity_key': 'acetic_acid',
+#  'u_key': 'organic', 'fouling_key': 'hydrocarbons', 'corrosion_key': 'acid'}
+```
+
+Each component file sets a few class attributes; `Component` turns them
+into the dictionary at the stream's phase:
+
+| Attribute | Meaning | Rows it names |
+|---|---|---|
+| `_hx_family` | `organic` or `inorganic` | |
+| `_hx_liquid_type` | U category as a liquid | `HX_U_STANDARDS` |
+| `_hx_vapor_type` | U category as a vapour, if fixed (`steam`) | `HX_U_STANDARDS` |
+| `_hx_fouling_key` | fouling row | `FOULING_FACTOR_DATABASE` |
+| `_hx_corrosion_key` | corrosion row (`acid`, `amine`, `inert_gas`, ...) | `CORROSION_SEVERITY_DATABASE` |
+| `_hx_velocity_key` | velocity row, when the fluid has its own | `RECOMMENDED_VELOCITIES` |
+
+`httype()` gives the liquid type for a liquid, `vapor` for a vapour below
+its critical temperature, and `gas_low_pressure` (up to 3 bar) or
+`gas_high_pressure` above it.
+
 ------------------------------------------------------------------------
 
 # Key Features

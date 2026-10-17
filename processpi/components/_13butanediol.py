@@ -36,6 +36,11 @@ class _13Butanediol(Component):
     name = "13Butanediol"
     formula = "C4H10O2"
     molecular_weight = 90.121
+    # Heat exchanger data, read by Component.hx_data() and httype()
+    _hx_family = "organic"
+    _hx_liquid_type = "organic"
+    _hx_fouling_key = "hydrocarbons"
+    _hx_corrosion_key = "hydrocarbon"
 
     # Critical properties
     _critical_temperature = Temperature(676.0, "K")
