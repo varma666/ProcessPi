@@ -45,7 +45,8 @@ PLACEHOLDERS = {"Air", "Gas", "Vapor", "Oil", "OrganicLiquid", "InorganicLiquid"
 NOT_CHECKED_AT_TC = PLACEHOLDERS | {"Steam", "Water", "_2Nonanol"}
 
 ATOMIC_MASS = {"C": 12.011, "H": 1.008, "O": 15.999, "N": 14.007, "S": 32.06, "Cl": 35.45,
-               "Br": 79.904, "F": 18.998, "Si": 28.085, "Ar": 39.948, "D": 2.014}
+               "Br": 79.904, "F": 18.998, "Si": 28.085, "Ar": 39.948, "D": 2.014,
+               "He": 4.0026, "Ne": 20.180}
 
 
 def _pvap(name, t_k):
