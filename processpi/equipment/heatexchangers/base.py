@@ -371,11 +371,43 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
                 "latent_heat",
             )
 
+        # Resolve from the actual component on the phase-change side before
+        # using any legacy steam-only fallback. This path is also used when
+        # energy-balance flow resolution calls this method without stream props.
+        side = self._latent_side_for_energy_balance()
+        if side is None:
+            service = str(
+                self.specs.get("service")
+                or getattr(self, "service_type", "")
+                or ""
+            ).lower()
+            if service in {"condenser", "total_condenser", "partial_condenser"}:
+                side = "hot"
+            elif service in {"evaporator", "reboiler", "kettle_reboiler", "thermosyphon_reboiler"}:
+                boiling_side = str(getattr(self, "boiling_side", self.specs.get("boiling_side", "shell"))).lower()
+                side = "hot" if boiling_side == "tube" else "cold"
+
+        stream = self._stream_for_side(side) if side in {"hot", "cold"} else None
+        component = getattr(stream, "component", None) if stream is not None else None
+        if component is not None:
+            for property_name in ("latent_heat", "enthalpy"):
+                try:
+                    property_value = getattr(component, property_name, None)
+                    if property_value is None:
+                        continue
+                    value = property_value() if callable(property_value) else property_value
+                    if value is None:
+                        continue
+                    if hasattr(value, "to"):
+                        value = value.to("J/kg")
+                    value = self._safe_float(value, property_name)
+                    if value > 0.0:
+                        return value
+                except (AttributeError, TypeError, ValueError, ZeroDivisionError):
+                    continue
+
         if hot is not None and cold is not None:
-            return self._resolve_phase_change_latent_heat(
-                hot,
-                cold,
-            )
+            return self._resolve_phase_change_latent_heat(hot, cold)
 
         return None
 
@@ -1059,10 +1091,40 @@ class HeatExchanger(HeatExchangerBaseMixin, Equipment):
         cold_boiling = cold_in_phase == "liquid" and cold_out_phase == "vapor"
         service_phase_change = service in {"condenser", "reboiler", "evaporator"}
 
-        if hot_condensing or service == "condenser":
+        latent_side = self._latent_side_for_energy_balance()
+        if latent_side is None:
+            if hot_condensing or service in {"condenser", "total_condenser", "partial_condenser"}:
+                latent_side = "hot"
+            elif cold_boiling or service_phase_change:
+                boiling_side = str(getattr(self, "boiling_side", self.specs.get("boiling_side", "shell"))).lower()
+                latent_side = "hot" if boiling_side == "tube" else "cold"
+
+        stream = self._stream_for_side(latent_side) if latent_side in {"hot", "cold"} else None
+        component = getattr(stream, "component", None) if stream is not None else None
+        if component is not None:
+            for property_name in ("latent_heat", "enthalpy"):
+                try:
+                    property_value = getattr(component, property_name, None)
+                    if property_value is None:
+                        continue
+                    value = property_value() if callable(property_value) else property_value
+                    if value is None:
+                        continue
+                    if hasattr(value, "to"):
+                        value = value.to("J/kg")
+                    value = self._safe_float(value, property_name)
+                    if value > 0.0:
+                        return value
+                except (AttributeError, TypeError, ValueError, ZeroDivisionError):
+                    continue
+
+        # Retain the legacy steam fallback only when no usable component
+        # latent-heat correlation is available.
+        if latent_side == "hot" and (hot_condensing or service in {"condenser", "total_condenser", "partial_condenser"}):
             return self._lookup_steam_latent_heat(hot.get("p_bar", 1.0))
-        if cold_boiling or service_phase_change:
-            if cold_in_phase == "steam" or getattr(self.cold_in.component, "name", "").lower() == "steam":
+        if latent_side == "cold" and (cold_boiling or service_phase_change):
+            cold_component_name = str(getattr(getattr(self.cold_in, "component", None), "name", "")).lower()
+            if cold_in_phase in {"steam", "vapor", "vapour", "gas"} or cold_component_name == "steam":
                 return self._lookup_steam_latent_heat(cold.get("p_bar", 1.0))
             return 2257000.0
         return None
