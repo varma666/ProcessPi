@@ -354,9 +354,12 @@ class Component(ABC):
     
         # Convert kmol → kg
         dH = dH / self.molecular_weight
+
+        
     
         # Safety
         if dH < 0 or isinstance(dH, complex):
             dH = 0.0
     
         return HeatOfVaporization(dH, "J/kg")
+    latent_heat = enthalpy
