@@ -18,7 +18,7 @@ import pytest
 import processpi.components as components
 from processpi.units import Pressure, Temperature
 
-ALL = [name for name in components.__all__ if name != "Component"]
+ALL = [name for name in components.__all__ if name not in {"Component", "Mixture"}]
 
 
 def _with_tc():
