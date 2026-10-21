@@ -338,8 +338,9 @@ class HeatExchangerResults:
                 output += f"• {recommendation}\n"
     
         return output
-    def detailed_summary(self) -> Dict[str, Any]:
-        return self.data
+    def detailed_summary(self) -> None:
+        for k, v in self.data.items():
+            print(f"{k:25s} : {v}")
 
     def trace(self) -> str:
         trace_entries = self.data.get("calculation_trace", [])
