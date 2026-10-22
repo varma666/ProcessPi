@@ -2400,13 +2400,17 @@ class ShellAndTubeHX(HeatExchanger):
     
             status = "PRESSURE_DROP_FAILURE"
     
-        elif assessment == "OVERSIZED":
-    
-            status = "OVERSIZED"
-    
+        # A thermally oversized exchanger can still be hydraulically
+        # infeasible. Report the failed engineering constraint first; keep the
+        # oversize assessment as a separate diagnostic rather than allowing it
+        # to mask a velocity violation.
         elif not hydraulic_ok:
     
             status = "HYDRAULIC_LIMITED"
+    
+        elif assessment == "OVERSIZED":
+    
+            status = "OVERSIZED"
     
         elif assessment in [
     
