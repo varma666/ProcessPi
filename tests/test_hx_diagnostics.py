@@ -276,6 +276,14 @@ def test_hydraulic_violation_does_not_block_convergence():
     assert data["convergence_history"][-1] < 1.0
     assert data["status"] != "FAILED_CONVERGENCE"
 
+    # Convergence is numerical, not engineering feasibility. When the only
+    # failed constraint is hydraulic, that failure must not be hidden by the
+    # thermal area assessment (for example, OVERSIZED).
+    feasibility = data["feasibility_summary"]
+    if (feasibility["thermal_ok"] and feasibility["pressure_drop_ok"]
+            and not feasibility["hydraulic_ok"]):
+        assert data["status"] == "HYDRAULIC_LIMITED"
+
 
 def test_shell_is_never_smaller_than_the_bundle():
     """Shrinking the shell to raise the shell velocity had no floor, so this
