@@ -114,7 +114,7 @@ def _stream_data(data: Dict[str, Any], side: str) -> Dict[str, Any]:
             mass_flow = None
     props["m_dot_kg_h"] = read_unit(mass_flow, "kg/h")
     props["temperature"] = read_unit(getattr(stream, "temperature", None), "C")
-    props["pressure"] = read_unit(getattr(stream, "pressure", None), "Pa")
+    props["pressure"] = read_unit(getattr(stream, "pressure", None), "mmH2O")
     props["density"] = read_unit(getattr(stream, "density", None), "kg/m3")
     cp = getattr(stream, "specific_heat", None)
     props["specific_heat"] = read_unit(cp, "kJ/kgK")
@@ -134,7 +134,12 @@ def _stream_data(data: Dict[str, Any], side: str) -> Dict[str, Any]:
             if raw is not None:
                 value = raw
                 break
-        props[attr] = value
+        if attr == "viscosity":
+            props[attr] = read_unit(value, "cP")
+        elif attr == "thermal_conductivity":
+            props[attr] = read_unit(value, "W/mK")
+        else:
+            props[attr] = value
     return props
 
 
