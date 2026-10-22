@@ -171,8 +171,16 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     }
     for number, label, unit in CONSTRUCTION_FIELDS:
         key_a, key_b = construction_keys[number]
-        value_a = _first(geometry, key_a, specs.get(key_a), data.get(key_a))
-        value_b = _first(geometry, key_b, specs.get(key_b), data.get(key_b))
+        value_a = geometry.get(key_a)
+        if value_a is None:
+            value_a = specs.get(key_a)
+        if value_a is None:
+            value_a = data.get(key_a)
+        value_b = geometry.get(key_b)
+        if value_b is None:
+            value_b = specs.get(key_b)
+        if value_b is None:
+            value_b = data.get(key_b)
         # For common geometry values use actual result keys when present.
         if number == 36:
             value_a = _first(data, "shell_passes", specs.get("shell_passes"))
