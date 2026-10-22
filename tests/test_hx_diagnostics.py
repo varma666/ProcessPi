@@ -92,6 +92,13 @@ def test_condenser_still_requires_latent_heat_when_unavailable():
         condenser._latent_heat_j_kg()
 
 
+@pytest.mark.parametrize("latent_heat", [0.0, 1e-35, 0.5, -1.0])
+def test_condenser_rejects_negligible_latent_heat(latent_heat):
+    condenser = CondenserHX(latent_heat=latent_heat)
+    with pytest.raises(ValueError, match="physically negligible"):
+        condenser._latent_heat_j_kg()
+
+
 def test_results_after_run_are_returned():
     engine = _benzene_cooler()
     _quiet(engine.run)
