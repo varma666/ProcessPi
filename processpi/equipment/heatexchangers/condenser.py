@@ -92,9 +92,15 @@ class CondenserHX(ShellAndTubeHX):
                     "a unit-aware quantity convertible to J/kg."
                 ) from exc
 
-        if latent_heat_j_kg <= 0:
+        # A missing component property can evaluate to a tiny positive
+        # floating-point residue (for example ~1e-35 J/kg). Treat that as
+        # unavailable data rather than producing a near-zero condenser duty
+        # that appears thermally feasible.
+        if not latent_heat_j_kg > 1.0:
             raise ValueError(
-                f"latent_heat must be positive; got {latent_heat_j_kg!r} J/kg"
+                "latent_heat is unavailable or physically negligible: "
+                f"got {latent_heat_j_kg!r} J/kg. Supply a valid latent_heat "
+                "in J/kg or provide component latent-heat data."
             )
 
         return latent_heat_j_kg
