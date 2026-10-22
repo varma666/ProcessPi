@@ -12,6 +12,7 @@ from processpi.units.pressure import Pressure
 from processpi.units.velocity import Velocity
 
 from .base import HeatExchanger, resolve_u_keywords
+from .datasheet import build_datasheet, export_excel as _export_datasheet_excel, export_pdf as _export_datasheet_pdf
 from .condenser import CondenserHX
 from .double_pipe import DoublePipeHX
 from .evaporator import EvaporatorHX
@@ -338,6 +339,22 @@ class HeatExchangerResults:
                 output += f"• {recommendation}\n"
     
         return output
+    def result(self) -> list[Dict[str, Any]]:
+        """Return the heat-exchanger result as datasheet rows.
+
+        Each row contains the reference row number, label, unit, shell-side
+        value and tube-side value. Run the engine before requesting results.
+        """
+        return build_datasheet(self.data)
+
+    def export_excel(self, path: str = "heat_exchanger_datasheet.xlsx") -> str:
+        """Export the last heat-exchanger result to an editable XLSX datasheet."""
+        return _export_datasheet_excel(self.data, path)
+
+    def export_pdf(self, path: str = "heat_exchanger_datasheet.pdf") -> str:
+        """Export the last heat-exchanger result to a printable PDF datasheet."""
+        return _export_datasheet_pdf(self.data, path)
+
     def detailed_summary(self) -> None:
         for k, v in self.data.items():
             print(f"{k:25s} : {v}")
@@ -681,6 +698,24 @@ class HeatExchangerEngine:
         if not self._results:
             return None
         return self._results.summary()
+
+    def result(self):
+        """Return the last run as reference-style datasheet rows."""
+        if self._results is None:
+            raise RuntimeError("Run the model first using hx.run()")
+        return self._results.result()
+
+    def export_excel(self, path: str = "heat_exchanger_datasheet.xlsx") -> str:
+        """Export the last run to an editable Excel datasheet."""
+        if self._results is None:
+            raise RuntimeError("Run the model first using hx.run()")
+        return self._results.export_excel(path)
+
+    def export_pdf(self, path: str = "heat_exchanger_datasheet.pdf") -> str:
+        """Export the last run to a printable PDF datasheet."""
+        if self._results is None:
+            raise RuntimeError("Run the model first using hx.run()")
+        return self._results.export_pdf(path)
 
     def results(self):
         """
