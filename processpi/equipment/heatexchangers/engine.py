@@ -690,6 +690,13 @@ class HeatExchangerEngine:
         if self._hx_type_selection is not None:
             results["hx_type_selection"] = dict(self._hx_type_selection)
     
+        results.setdefault('hot_in', self.data.get('hot_in'))
+        results.setdefault('cold_in', self.data.get('cold_in'))
+        results.setdefault('hot_out', self.data.get('hot_out'))
+        results.setdefault('cold_out', self.data.get('cold_out'))
+        results.setdefault('specs', dict(self.data.get('specs', {})))
+        results.setdefault('hx_type', hx_type)
+
         self._results = HeatExchangerResults(results)
     
         return self._results
