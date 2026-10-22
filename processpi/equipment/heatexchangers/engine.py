@@ -699,6 +699,24 @@ class HeatExchangerEngine:
             return None
         return self._results.summary()
 
+    def result(self):
+        """Return the last run as reference-style datasheet rows."""
+        if self._results is None:
+            raise RuntimeError("Run the model first using hx.run()")
+        return self._results.result()
+
+    def export_excel(self, path: str = "heat_exchanger_datasheet.xlsx") -> str:
+        """Export the last run to an editable Excel datasheet."""
+        if self._results is None:
+            raise RuntimeError("Run the model first using hx.run()")
+        return self._results.export_excel(path)
+
+    def export_pdf(self, path: str = "heat_exchanger_datasheet.pdf") -> str:
+        """Export the last run to a printable PDF datasheet."""
+        if self._results is None:
+            raise RuntimeError("Run the model first using hx.run()")
+        return self._results.export_pdf(path)
+
     def results(self):
         """
         Return the results of the last run.
