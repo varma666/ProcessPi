@@ -145,6 +145,15 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     hot = _stream_data(data, "hot")
     cold = _stream_data(data, "cold")
     tube_side = data.get("tube_side", "hot")
+    # Prefer the exchanger's actual assignment when it is reported.
+    tube_fluid = data.get("tube_side_fluid")
+    if tube_fluid:
+        hot_name = hot.get("name")
+        cold_name = cold.get("name")
+        if str(tube_fluid) == str(hot_name):
+            tube_side = "hot"
+        elif str(tube_fluid) == str(cold_name):
+            tube_side = "cold"
     sides = {"Shell Side": cold if tube_side == "hot" else hot,
              "Tube Side": hot if tube_side == "hot" else cold}
 
