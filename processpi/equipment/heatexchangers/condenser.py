@@ -67,10 +67,16 @@ class CondenserHX(ShellAndTubeHX):
         """
         latent_heat = self.specs.get("latent_heat")
 
+        # Match the phase-change energy-balance resolver: when the caller
+        # omits an explicit value, use the condensing component's latent heat
+        # (or enthalpy alias) when available.
+        if latent_heat is None:
+            latent_heat = self._latent_heat_for_energy_balance()
+
         if latent_heat is None:
             raise ValueError(
-                "Condenser requires latent_heat in J/kg "
-                "or a unit-aware latent-heat quantity."
+                "Condenser requires latent_heat in J/kg, a component with "
+                "latent-heat data, or a unit-aware latent-heat quantity."
             )
 
         if hasattr(latent_heat, "to") and callable(latent_heat.to):

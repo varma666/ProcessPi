@@ -13,6 +13,7 @@ import pytest
 
 from processpi.components import Benzene, Water
 from processpi.equipment.heatexchangers import HeatExchangerEngine
+from processpi.equipment.heatexchangers.condenser import CondenserHX
 from processpi.equipment.heatexchangers.shell_and_tube import ShellAndTubeHX
 from processpi.streams import MaterialStream
 from processpi.units import (
@@ -74,6 +75,21 @@ def test_results_before_run_raises():
     engine = _benzene_cooler()
     with pytest.raises(RuntimeError):
         engine.results()
+
+
+def test_condenser_uses_component_latent_heat_when_not_specified(monkeypatch):
+    """An omitted latent_heat should use the base component-property resolver."""
+    condenser = CondenserHX()
+    monkeypatch.setattr(
+        condenser, "_latent_heat_for_energy_balance", lambda: 394000.0
+    )
+    assert condenser._latent_heat_j_kg() == pytest.approx(394000.0)
+
+
+def test_condenser_still_requires_latent_heat_when_unavailable():
+    condenser = CondenserHX()
+    with pytest.raises(ValueError, match="component with latent-heat data"):
+        condenser._latent_heat_j_kg()
 
 
 def test_results_after_run_are_returned():
