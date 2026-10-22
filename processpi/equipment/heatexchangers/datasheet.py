@@ -87,9 +87,55 @@ def _first(data: Dict[str, Any], *keys: str) -> Any:
 
 
 def _stream_data(data: Dict[str, Any], side: str) -> Dict[str, Any]:
+    """Normalize MaterialStream inputs and optional precomputed properties."""
     streams = data.get("stream_properties") or data.get("streams") or {}
-    value = streams.get(side, {}) if isinstance(streams, dict) else {}
-    return value if isinstance(value, dict) else {}
+    candidate = streams.get(side, {}) if isinstance(streams, dict) else {}
+    if isinstance(candidate, dict) and candidate:
+        return candidate
+    stream = data.get("hot_in" if side == "hot" else "cold_in")
+    if stream is None:
+        return {}
+    component = getattr(stream, "component", None)
+    name = getattr(component, "name", None) or getattr(stream, "name", None)
+    props: Dict[str, Any] = {"name": name}
+    def read_unit(value: Any, unit: str) -> Any:
+        if value is None:
+            return None
+        try:
+            converted = value.to(unit) if hasattr(value, "to") else value
+            return getattr(converted, "original_value", getattr(converted, "value", converted))
+        except Exception:
+            return value
+    mass_flow = getattr(stream, "mass_flow", None)
+    if callable(mass_flow):
+        try:
+            mass_flow = mass_flow()
+        except Exception:
+            mass_flow = None
+    props["m_dot_kg_h"] = read_unit(mass_flow, "kg/h")
+    props["temperature"] = read_unit(getattr(stream, "temperature", None), "C")
+    props["pressure"] = read_unit(getattr(stream, "pressure", None), "Pa")
+    props["density"] = read_unit(getattr(stream, "density", None), "kg/m3")
+    cp = getattr(stream, "specific_heat", None)
+    props["specific_heat"] = read_unit(cp, "kJ/kgK")
+    props["molecular_weight_vapor"] = getattr(component, "mw", None)
+    for attr, keys in (
+        ("viscosity", ("viscosity",)),
+        ("thermal_conductivity", ("thermal_conductivity", "conductivity")),
+    ):
+        value = None
+        for key in keys:
+            raw = getattr(component, key, None) if component is not None else None
+            if callable(raw):
+                try:
+                    raw = raw()
+                except Exception:
+                    raw = None
+            if raw is not None:
+                value = raw
+                break
+        props[attr] = value
+    return props
 
 
 def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
