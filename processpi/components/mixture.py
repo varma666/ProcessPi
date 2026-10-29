@@ -21,7 +21,8 @@ bubble-point pressure, gas at or below the dew-point pressure, and "two-phase"
 in between, where no single-phase property exists and the methods raise.
 """
 
-from math import exp, isfinite, log
+from functools import lru_cache
+from math import exp, isfinite, log, sqrt
 from typing import Dict, Iterable, Mapping, Optional, Union
 
 from processpi.constants import R_UNIVERSAL  # 8.314 J/mol-K
@@ -41,6 +42,117 @@ def _component_class(component) -> type:
 
 def _normalise(name: str) -> str:
     return "".join(ch for ch in name.lower() if ch.isalnum())
+
+
+# ----------------------------------------------------------------------
+# Transport-property mixing rules
+# ----------------------------------------------------------------------
+# Each takes {name: value} dicts over the same names; the units only need to
+# be consistent (the rules use ratios).
+
+def wilke_viscosity(x: Mapping[str, float], mu: Mapping[str, float], mw: Mapping[str, float]) -> float:
+    """
+    Low-pressure gas mixture viscosity, Wilke's rule as given in the API
+    Technical Data Book, Procedure 11B2.1 (Bromley and Wilke, Ind. Eng. Chem.
+    43, 1641 (1951)), about 3 percent average deviation:
+
+        mu_m   = sum_i mu_i / (1 + sum_{j != i} phi_ij x_j / x_i)
+        phi_ij = [1 + (mu_i/mu_j)^(1/2) (M_j/M_i)^(1/4)]^2 / (8 (1 + M_i/M_j))^(1/2)
+
+    The printed Eq. (11B2.1-2) reads (M_i/M_j)^(1/4); the procedure's own
+    hydrogen/propane example (phi_12 = 3.59, phi_21 = 0.15) only follows from
+    (M_j/M_i)^(1/4), which is Wilke's original form.
+    """
+    total = 0.0
+    for i, xi in x.items():
+        # phi_ii = 1, so 1 + sum_{j != i} phi_ij x_j / x_i = sum_j phi_ij x_j / x_i.
+        denominator = sum(
+            xj * (1.0 + sqrt(mu[i] / mu[j]) * (mw[j] / mw[i]) ** 0.25) ** 2 / sqrt(8.0 * (1.0 + mw[i] / mw[j]))
+            for j, xj in x.items()
+        )
+        total += xi * mu[i] / denominator
+    return total
+
+
+def lindsay_bromley_conductivity(
+    y: Mapping[str, float],
+    k: Mapping[str, float],
+    mu: Mapping[str, float],
+    mw: Mapping[str, float],
+    sutherland: Mapping[str, float],
+    t_k: float,
+) -> float:
+    """
+    Gas mixture thermal conductivity, API Technical Data Book Procedure 12B2.1
+    (the Wassiljewa form with Lindsay-Bromley coefficients):
+
+        k_m  = sum_i y_i k_i / sum_j y_j A_ij
+        A_ij = 1/4 {1 + [(mu_i/mu_j) (M_j/M_i)^(3/4) (1 + S_i/T)/(1 + S_j/T)]^(1/2)}^2
+               * (1 + S_ij/T) / (1 + S_i/T),        S_ij = (S_i S_j)^(1/2)
+
+    with S the Sutherland constants, in the same unit as T.
+    """
+    total = 0.0
+    for i, yi in y.items():
+        si = sutherland[i]
+        denominator = 0.0
+        for j, yj in y.items():
+            sj = sutherland[j]
+            ratio = (mu[i] / mu[j]) * (mw[j] / mw[i]) ** 0.75 * (1.0 + si / t_k) / (1.0 + sj / t_k)
+            a_ij = 0.25 * (1.0 + sqrt(ratio)) ** 2 * (1.0 + sqrt(si * sj) / t_k) / (1.0 + si / t_k)
+            denominator += yj * a_ij
+        total += yi * k[i] / denominator
+    return total
+
+
+def li_conductivity(x: Mapping[str, float], k: Mapping[str, float], molar_volume: Mapping[str, float]) -> float:
+    """
+    Liquid mixture thermal conductivity, Li correlation (Li, AIChE J. 22, 927
+    (1976)), Perry's 8th ed. Eq. (2-113), 4 to 8 percent:
+
+        k = sum_i sum_j phi_i phi_j 2 k_i k_j / (k_i + k_j),   phi_i = x_i V_i / sum_j x_j V_j
+
+    with V_i the pure-liquid molar volume (1 / molar density).
+    """
+    volume = sum(x[n] * molar_volume[n] for n in x)
+    phi = {n: x[n] * molar_volume[n] / volume for n in x}
+    return sum(
+        phi[i] * phi[j] * 2.0 * k[i] * k[j] / (k[i] + k[j])
+        for i in x for j in x
+    )
+
+
+# API TDB Eq. (12B2.1-4): S = 142 R (78.9 K) for hydrogen, deuterium and helium.
+_SUTHERLAND_LIGHT_GASES_K = {"Hydrogen": 142.0 / 1.8, "Deuterium": 142.0 / 1.8, "Helium": 142.0 / 1.8}
+
+
+@lru_cache(maxsize=None)
+def _normal_boiling_point(cls: type) -> float:
+    """Temperature, K, at which the component's vapour pressure is 1 atm (bisection)."""
+    one_atm = 101325.0
+    t_c = cls._critical_temperature.to("K").value
+
+    def excess(t_k: float) -> float:
+        return cls(temperature=Temperature(t_k, "K"), pressure=Pressure(one_atm, "Pa")).vapor_pressure().to("Pa").value - one_atm
+
+    lo, hi = 0.2 * t_c, 0.999 * t_c
+    f_lo, f_hi = excess(lo), excess(hi)
+    if not (f_lo < 0.0 < f_hi):
+        raise ValueError(f"{cls.name}: vapour pressure does not cross 1 atm below Tc, so no normal boiling point.")
+    for _ in range(100):
+        mid = 0.5 * (lo + hi)
+        if excess(mid) < 0.0:
+            lo = mid
+        else:
+            hi = mid
+        if hi - lo < 1e-6:
+            break
+    return 0.5 * (lo + hi)
+
+
+def _sutherland_constant(cls: type) -> float:
+    """Sutherland constant, K, per API TDB Eqs. (12B2.1-3, -4): 1.5 Tb, or 78.9 K for H2, D2 and He."""
+    return _SUTHERLAND_LIGHT_GASES_K.get(cls.__name__) or 1.5 * _normal_boiling_point(cls)
 
 
 class Mixture(Component):
@@ -321,11 +433,18 @@ class Mixture(Component):
 
     latent_heat = enthalpy
 
+    def _mw_values(self) -> Dict[str, float]:
+        return {n: float(cls.molecular_weight) for n, cls in self._classes.items()}
+
     @PropertyMethod
     def viscosity(self) -> Viscosity:
         """
-        Liquid: ln mu = sum x_i ln mu_i (ideal logarithmic mixing).
-        Gas: mole-fraction average of the pure-component viscosities.
+        Liquid: ln mu = sum x_i ln mu_i, the Grunberg-Nissan equation (Perry's
+        8th ed. Eq. 2-98) with G_ij = 0, which Perry gives for hydrocarbon
+        mixtures at about 15 percent; G_ij must otherwise be fitted to mixture
+        data.
+        Gas: Wilke's rule, API TDB Procedure 11B2.1 (see `wilke_viscosity`),
+        for reduced pressures below 0.6.
         """
         if self._viscosity is not None:
             return self._viscosity
@@ -334,18 +453,30 @@ class Mixture(Component):
         if phase == "liquid":
             mu = exp(sum(x * log(mu_i[n]) for n, x in self._mole_fractions.items()))
         else:
-            mu = sum(x * mu_i[n] for n, x in self._mole_fractions.items())
+            mu = wilke_viscosity(self._mole_fractions, mu_i, self._mw_values())
         return Viscosity(mu, "Pa·s")
 
     @PropertyMethod
     def thermal_conductivity(self) -> ThermalConductivity:
-        """Mass-fraction average (liquid) or mole-fraction average (gas)."""
+        """
+        Liquid: Li correlation, Perry's 8th ed. Eq. (2-113), with the molar
+        volumes from the pure-liquid densities (see `li_conductivity`).
+        Gas: API TDB Procedure 12B2.1, Lindsay-Bromley coefficients, with
+        Sutherland constants 1.5 Tb (see `lindsay_bromley_conductivity`).
+        """
         if self._thermal_conductivity is not None:
             return self._thermal_conductivity
         phase = self._single_phase()
         k_i = self._pure_values("thermal_conductivity", phase, "W/mK")
-        fractions = self._mass_fractions if phase == "liquid" else self._mole_fractions
-        return ThermalConductivity(sum(f * k_i[n] for n, f in fractions.items()), "W/mK")
+        mw = self._mw_values()
+        if phase == "liquid":
+            rho_i = self._pure_values("density", "liquid", "kg/m3")
+            k = li_conductivity(self._mole_fractions, k_i, {n: mw[n] / rho_i[n] for n in k_i})
+        else:
+            mu_i = self._pure_values("viscosity", "gas", "Pa·s")
+            sutherland = {n: _sutherland_constant(cls) for n, cls in self._classes.items()}
+            k = lindsay_bromley_conductivity(self._mole_fractions, k_i, mu_i, mw, sutherland, self._t_k())
+        return ThermalConductivity(k, "W/mK")
 
     def __repr__(self) -> str:
         comp = ", ".join(f"{n}: {x:.4g}" for n, x in self._mole_fractions.items())

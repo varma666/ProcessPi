@@ -10,7 +10,10 @@ Mixing rules checked here (ideal solution, ideal gas):
     M      = sum x_i M_i
     liquid 1/rho = sum w_i / rho_i        gas rho = P M / (R T)
     cp     = sum w_i cp_i                 dHv = sum w_i dHv_i
-    liquid ln mu = sum x_i ln mu_i
+    liquid ln mu = sum x_i ln mu_i        (Grunberg-Nissan, G_ij = 0, Perry 8th Eq. 2-98)
+    liquid k: Li, Perry 8th Eq. (2-113)
+    gas mu: Wilke, API Technical Data Book Procedure 11B2.1
+    gas k: Lindsay-Bromley, API Technical Data Book Procedure 12B2.1
     bubble P = sum x_i Psat_i             dew 1/P = sum y_i / Psat_i
 
 Reference values: 40/60 mol% benzene/toluene, M = 0.4 * 78.114 + 0.6 * 92.138
@@ -26,6 +29,10 @@ import math
 import pytest
 
 from processpi.components import Benzene, Component, Methane, Mixture, Toluene, Water
+from processpi.components.mixture import (
+    _normal_boiling_point, _sutherland_constant, li_conductivity, lindsay_bromley_conductivity,
+    wilke_viscosity,
+)
 from processpi.equipment.distillation.vle import IdealVLE
 from processpi.equipment.heatexchangers import HeatExchangerEngine
 from processpi.streams import MaterialStream
@@ -203,9 +210,78 @@ def test_gas_properties_use_each_component_in_the_gas_phase():
     assert _value(mix.specific_heat()) == pytest.approx(
         w["Benzene"] * _value(b.specific_heat()) + w["Toluene"] * _value(t.specific_heat()), rel=1e-6
     )
-    assert _value(mix.viscosity()) == pytest.approx(
-        x["Benzene"] * _value(b.viscosity()) + x["Toluene"] * _value(t.viscosity()), rel=1e-6
+    mu = {"Benzene": _value(b.viscosity()), "Toluene": _value(t.viscosity())}
+    mw = {"Benzene": Benzene.molecular_weight, "Toluene": Toluene.molecular_weight}
+    assert _value(mix.viscosity()) == pytest.approx(wilke_viscosity(x, mu, mw), rel=1e-6)
+    k = {"Benzene": _value(b.thermal_conductivity()), "Toluene": _value(t.thermal_conductivity())}
+    s = {"Benzene": 1.5 * _normal_boiling_point(Benzene), "Toluene": 1.5 * _normal_boiling_point(Toluene)}
+    assert _value(mix.thermal_conductivity()) == pytest.approx(
+        lindsay_bromley_conductivity(x, k, mu, mw, s, 403.15), rel=1e-6
     )
+
+
+def test_liquid_conductivity_is_the_li_correlation_on_molar_volumes():
+    mix = _btx(80, phase="liquid")
+    b, t = _pure(Benzene, 80), _pure(Toluene, 80)
+    k = {"Benzene": _value(b.thermal_conductivity()), "Toluene": _value(t.thermal_conductivity())}
+    v = {
+        "Benzene": Benzene.molecular_weight / _value(b.density()),
+        "Toluene": Toluene.molecular_weight / _value(t.density()),
+    }
+    assert _value(mix.thermal_conductivity()) == pytest.approx(
+        li_conductivity(mix.mole_fractions(), k, v), rel=1e-6
+    )
+    lo, hi = sorted(k.values())
+    assert lo <= _value(mix.thermal_conductivity()) <= hi
+
+
+# ----------------------------------------------------------------------------
+# Mixing rules against their sources
+# ----------------------------------------------------------------------------
+
+def test_wilke_reproduces_the_api_hydrogen_propane_example():
+    # API TDB Procedure 11B2.1, Example A: 58.18 mol% H2 / 41.82 mol% propane,
+    # 77 F, 14.7 psia; mu_H2 = 0.00891 cP, mu_C3H8 = 0.00822 cP, M = 2.02, 44.10.
+    # The book gives 0.009289 cP with phi_12 rounded to 3.59 (unrounded 3.65);
+    # the experimental value is 0.009240 cP.
+    x = {"H2": 0.5818, "C3H8": 0.4182}
+    mu = wilke_viscosity(x, {"H2": 0.00891, "C3H8": 0.00822}, {"H2": 2.02, "C3H8": 44.10})
+    assert mu == pytest.approx(0.009289, rel=0.01)
+    assert mu == pytest.approx(0.009240, rel=0.005)
+
+
+def test_li_reproduces_the_perry_ether_methanol_example():
+    # Perry's 8th ed. p. 2-512/2-513: 30.2 mol% diethyl ether / 69.8 mol% methanol
+    # at 273.15 K; k = 0.1383, 0.2069 W/mK; molar densities 9.9335, 25.371 kmol/m3.
+    # Li correlation result: 0.167 W/mK.
+    k = li_conductivity(
+        {"ether": 0.302, "methanol": 0.698},
+        {"ether": 0.1383, "methanol": 0.2069},
+        {"ether": 1 / 9.9335, "methanol": 1 / 25.371},
+    )
+    assert k == pytest.approx(0.167, abs=5e-4)
+
+
+def test_lindsay_bromley_limits():
+    # Pure component: A_ii = 1, so k_m = k_i.
+    assert lindsay_bromley_conductivity(
+        {"a": 1.0}, {"a": 0.05}, {"a": 1e-5}, {"a": 30.0}, {"a": 400.0}, 350.0
+    ) == pytest.approx(0.05)
+    # Components alike in mu, M and S: every A_ij = 1, so k_m is the mole-fraction average.
+    y = {"a": 0.3, "b": 0.7}
+    k = lindsay_bromley_conductivity(
+        y, {"a": 0.02, "b": 0.04}, {"a": 1e-5, "b": 1e-5}, {"a": 30.0, "b": 30.0}, {"a": 400.0, "b": 400.0}, 350.0
+    )
+    assert k == pytest.approx(0.3 * 0.02 + 0.7 * 0.04)
+
+
+def test_sutherland_constants_follow_api_12b2_1():
+    from processpi.components import Hydrogen
+
+    t_b = _normal_boiling_point(Benzene)
+    assert _value(_pure(Benzene, t_b - 273.15).vapor_pressure()) == pytest.approx(101325, rel=1e-5)
+    assert _sutherland_constant(Benzene) == pytest.approx(1.5 * t_b)
+    assert _sutherland_constant(Hydrogen) == pytest.approx(142 / 1.8)
 
 
 # ----------------------------------------------------------------------------
