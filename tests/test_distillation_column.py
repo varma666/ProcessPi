@@ -4,12 +4,16 @@ import math
 
 import pytest
 
-from processpi.components import Benzene, ChloroBenzene, Hexane, Toluene, Water
+import contextlib
+import io
+
+from processpi.components import Benzene, ChloroBenzene, Hexane, Mixture, Toluene, Water
 from processpi.equipment import DistillationColumn
 from processpi.equipment.distillation import IdealVLE
+from processpi.equipment.heatexchangers import HeatExchanger
 from processpi.integration.flowsheet import Flowsheet
 from processpi.streams import MaterialStream
-from processpi.units import MassFlowRate, MolarFlowRate, Pressure, Temperature
+from processpi.units import Density, MassFlowRate, MolarFlowRate, Pressure, SpecificHeat, Temperature
 
 ATM = Pressure(1.01325, "bar")
 
@@ -365,6 +369,74 @@ def test_simulate_writes_the_product_streams():
     # The written stream has what MaterialStream needs for its own mass flow.
     assert distillate.mass_flow() is not None
     assert out["condenser_duty"] is data["condenser_duty"]
+
+
+def test_simulate_gives_the_products_their_properties():
+    # A product stream used to carry only a composition (component None, no
+    # specific heat), so no exchanger downstream could take it.
+    distillate, bottoms = MaterialStream("D"), MaterialStream("B")
+    column = bt_column(distillate=distillate, bottoms=bottoms)
+    column.simulate()
+    vle = IdealVLE([Benzene(), Toluene()])
+    for stream, x in ((distillate, {"Benzene": 0.97, "Toluene": 0.03}), (bottoms, {"Benzene": 0.02, "Toluene": 0.98})):
+        mix = stream.component
+        assert isinstance(mix, Mixture)
+        assert mix.mole_fractions() == pytest.approx(x)
+        assert mix.phase() == "liquid"
+        t_k = stream.temperature.to("K").value
+        assert mix.temperature.to("K").value == pytest.approx(t_k)
+        assert mix.pressure.to("Pa").value == pytest.approx(ATM.to("Pa").value)
+        # Density: the mixture and the column's VLE use the same ideal-solution rule.
+        assert isinstance(stream.density, Density)
+        assert stream.density.to("kg/m3").value == pytest.approx(vle.mixture_liquid_density(x, t_k), rel=1e-9)
+        # Heat capacity: mass-weighted pure-liquid values at the product temperature.
+        w = mix.mass_fractions()
+        cp = sum(w[n] * cls(temperature=Temperature(t_k, "K"), pressure=ATM, phase="liquid").specific_heat().to("J/kgK").value
+                 for n, cls in (("Benzene", Benzene), ("Toluene", Toluene)))
+        assert isinstance(stream.specific_heat, SpecificHeat)
+        assert stream.specific_heat.to("J/kgK").value == pytest.approx(cp, rel=1e-9)
+        assert mix.viscosity().to("Pa·s").value > 0
+        assert mix.thermal_conductivity().to("W/mK").value > 0
+
+
+def test_values_given_on_an_outlet_do_not_survive_the_column():
+    distillate = MaterialStream("D", density=Density(1000, "kg/m3"), specific_heat=SpecificHeat(4200, "J/kgK"))
+    bt_column(distillate=distillate, bottoms=MaterialStream("B")).simulate()
+    assert distillate.given_density is None and distillate.given_specific_heat is None
+    assert distillate.specific_heat.to("J/kgK").value == pytest.approx(
+        distillate.component.specific_heat().to("J/kgK").value
+    )
+
+
+def test_column_distillate_feeds_an_exchanger_in_a_flowsheet():
+    # Issue #130, first gap: the distillate goes straight into a cooler.
+    feed, distillate, bottoms = bt_feed(), MaterialStream("D"), MaterialStream("B")
+    column = DistillationColumn(
+        name="T-101", components=[Benzene(), Toluene()], light_key="Benzene", heavy_key="Toluene",
+        distillate_lk_fraction=0.97, bottoms_lk_fraction=0.02,
+    )
+    cooler = HeatExchanger(name="E-101", hot_out_temperature=Temperature(40, "C"))
+    water = MaterialStream("CW", component=Water(), temperature=Temperature(30, "C"),
+                           pressure=Pressure(3, "bar"), mass_flow=MassFlowRate(10, "kg/s"))
+    cooled, water_out = MaterialStream("D cooled"), MaterialStream("CW out")
+    fs = Flowsheet("BTX")
+    fs.connect(feed, column, "feed")
+    column.connect_outlet("bottoms", bottoms)
+    fs.connect(distillate, column, "distillate", cooler, "hot_in")
+    fs.connect(water, cooler, "cold_in")
+    cooler.connect_outlet("hot_out", cooled)
+    cooler.connect_outlet("cold_out", water_out)
+    with contextlib.redirect_stdout(io.StringIO()):
+        fs.run()
+
+    m = distillate.mass_flow().to("kg/s").value
+    cp = distillate.specific_heat.to("J/kgK").value
+    duty = m * cp * (distillate.temperature.to("K").value - 313.15)
+    assert duty > 0
+    assert cooler.data["Q"].to("W").value == pytest.approx(duty, rel=1e-9)
+    assert cooled.temperature.to("K").value == pytest.approx(313.15)
+    cp_water = water.specific_heat.to("J/kgK").value
+    assert water_out.temperature.to("K").value == pytest.approx(303.15 + duty / (10 * cp_water), rel=1e-6)
 
 
 def test_simulate_needs_both_outlets():
