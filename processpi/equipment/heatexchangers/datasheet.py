@@ -289,21 +289,34 @@ def export_excel(data: Dict[str, Any], path: str) -> str:
     wb = Workbook()
     ws = wb.active
     ws.title = "HX Datasheet"
+    metadata = data.get("datasheet_metadata") or {}
     ws.merge_cells("A1:E1")
-    ws["A1"] = "PROCESSPI — HEAT EXCHANGER DATASHEET"
+    ws["A1"] = metadata.get("title", "HEAT EXCHANGER SPECIFICATION SHEET")
     ws["A1"].font = Font(bold=True, size=14)
     ws["A1"].alignment = Alignment(horizontal="center")
-    ws.merge_cells("A2:E2")
-    ws["A2"] = f"Type: {data.get('hx_type', 'Heat exchanger')}    Status: {data.get('status', '')}"
-    ws["A2"].alignment = Alignment(horizontal="center")
+    meta_rows = [
+        ("Company", metadata.get("company"), "Location", metadata.get("location"), "Service", metadata.get("service_of_unit")),
+        ("Item No.", metadata.get("item_no"), "Prepared by", metadata.get("prepared_by"), "Date", metadata.get("date")),
+        ("Rev No.", metadata.get("revision"), "Job No.", metadata.get("job_no"), "Size", metadata.get("size")),
+        ("Type", metadata.get("type"), "Connected in", metadata.get("connected_in"), "Arrangement", metadata.get("arrangement")),
+        ("Surface", metadata.get("surface"), "Shells/unit", metadata.get("shells_per_unit"), "Shells", metadata.get("shells")),
+    ]
+    for row_no, fields in enumerate(meta_rows, 2):
+        ws.cell(row_no, 1, fields[0]); ws.cell(row_no, 2, fields[1])
+        ws.cell(row_no, 3, fields[2]); ws.cell(row_no, 4, fields[3])
+        ws.cell(row_no, 5, f"{fields[4]}: {fields[5] if fields[5] is not None else ''}")
+    ws.merge_cells("A7:E7")
+    ws["A7"] = "PERFORMANCE OF ONE UNIT"
+    ws["A7"].font = Font(bold=True)
+    ws["A7"].alignment = Alignment(horizontal="center")
     headers = ["Ref. row", "Description", "Unit", "Shell Side", "Tube Side"]
     for col, value in enumerate(headers, 1):
-        cell = ws.cell(4, col, value)
+        cell = ws.cell(8, col, value)
         cell.font = Font(bold=True)
         cell.fill = PatternFill("solid", fgColor="D9EAF7")
     rows = build_datasheet(data)
-    current = 5
-    sections = {10: "PERFORMANCE OF ONE UNIT", 34: "CONSTRUCTION OF ONE SHELL"}
+    current = 9
+    sections = {34: "CONSTRUCTION OF ONE SHELL"}
     thin = Side(style="thin", color="333333")
     for row in rows:
         if row["row"] in sections:
