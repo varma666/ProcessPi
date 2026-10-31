@@ -113,12 +113,15 @@ def _stream_data(data: Dict[str, Any], side: str) -> Dict[str, Any]:
         except Exception:
             mass_flow = None
     props["m_dot_kg_h"] = read_unit(mass_flow, "kg/h")
-    props["temperature"] = read_unit(getattr(stream, "temperature", None), "C")
+    outlet = data.get("hot_out" if side == "hot" else "cold_out")
+    t_in = read_unit(getattr(stream, "temperature", None), "C")
+    t_out = read_unit(getattr(outlet, "temperature", None), "C") if outlet is not None else None
+    props["temperature"] = (t_in, t_out)
     props["pressure"] = read_unit(getattr(stream, "pressure", None), "mmH2O")
     props["density"] = read_unit(getattr(stream, "density", None), "kg/m3")
     cp = getattr(stream, "specific_heat", None)
     props["specific_heat"] = read_unit(cp, "kJ/kgK")
-    props["molecular_weight_vapor"] = getattr(component, "mw", None)
+    props["molecular_weight_vapor"] = getattr(component, "molecular_weight", None)
     for attr, keys in (
         ("viscosity", ("viscosity",)),
         ("thermal_conductivity", ("thermal_conductivity", "conductivity")),
@@ -197,6 +200,14 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
         elif field == "fouling_resistance":
             shell = _first(specs, "shell_fouling_resistance", "shell_fouling")
             tube = _first(specs, "tube_fouling_resistance", "tube_fouling")
+        elif field in {"velocity", "pressure_drop"}:
+            shell_value = data.get("shell_velocity" if field == "velocity" else "shell_dp")
+            tube_value = data.get("tube_velocity" if field == "velocity" else "tube_dp")
+            if field == "pressure_drop":
+                shell = (data.get("shell_dp_limit", specs.get("shell_dp")), shell_value)
+                tube = (data.get("tube_dp_limit", specs.get("tube_dp")), tube_value)
+            else:
+                shell, tube = shell_value, tube_value
         else:
             shell, tube = get_side("Shell Side", field), get_side("Tube Side", field)
         rows.append({"row": number, "label": label, "unit": unit,
