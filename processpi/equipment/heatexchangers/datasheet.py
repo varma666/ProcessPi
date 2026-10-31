@@ -87,9 +87,63 @@ def _first(data: Dict[str, Any], *keys: str) -> Any:
 
 
 def _stream_data(data: Dict[str, Any], side: str) -> Dict[str, Any]:
+    """Normalize MaterialStream inputs and optional precomputed properties."""
     streams = data.get("stream_properties") or data.get("streams") or {}
-    value = streams.get(side, {}) if isinstance(streams, dict) else {}
-    return value if isinstance(value, dict) else {}
+    candidate = streams.get(side, {}) if isinstance(streams, dict) else {}
+    if isinstance(candidate, dict) and candidate:
+        return candidate
+    stream = data.get("hot_in" if side == "hot" else "cold_in")
+    if stream is None:
+        return {}
+    component = getattr(stream, "component", None)
+    name = getattr(component, "name", None) or getattr(stream, "name", None)
+    props: Dict[str, Any] = {"name": name}
+    def read_unit(value: Any, unit: str) -> Any:
+        if value is None:
+            return None
+        try:
+            converted = value.to(unit) if hasattr(value, "to") else value
+            return getattr(converted, "original_value", getattr(converted, "value", converted))
+        except Exception:
+            return value
+    mass_flow = getattr(stream, "mass_flow", None)
+    if callable(mass_flow):
+        try:
+            mass_flow = mass_flow()
+        except Exception:
+            mass_flow = None
+    props["m_dot_kg_h"] = read_unit(mass_flow, "kg/h")
+    outlet = data.get("hot_out" if side == "hot" else "cold_out")
+    t_in = read_unit(getattr(stream, "temperature", None), "C")
+    t_out = read_unit(getattr(outlet, "temperature", None), "C") if outlet is not None else None
+    props["temperature"] = (t_in, t_out)
+    props["pressure"] = read_unit(getattr(stream, "pressure", None), "mmH2O")
+    props["density"] = read_unit(getattr(stream, "density", None), "kg/m3")
+    cp = getattr(stream, "specific_heat", None)
+    props["specific_heat"] = read_unit(cp, "kJ/kgK")
+    props["molecular_weight_vapor"] = getattr(component, "molecular_weight", None)
+    for attr, keys in (
+        ("viscosity", ("viscosity",)),
+        ("thermal_conductivity", ("thermal_conductivity", "conductivity")),
+    ):
+        value = None
+        for key in keys:
+            raw = getattr(component, key, None) if component is not None else None
+            if callable(raw):
+                try:
+                    raw = raw()
+                except Exception:
+                    raw = None
+            if raw is not None:
+                value = raw
+                break
+        if attr == "viscosity":
+            props[attr] = read_unit(value, "cP")
+        elif attr == "thermal_conductivity":
+            props[attr] = read_unit(value, "W/mK")
+        else:
+            props[attr] = value
+    return props
 
 
 def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -99,6 +153,15 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     hot = _stream_data(data, "hot")
     cold = _stream_data(data, "cold")
     tube_side = data.get("tube_side", "hot")
+    # Prefer the exchanger's actual assignment when it is reported.
+    tube_fluid = data.get("tube_side_fluid")
+    if tube_fluid:
+        hot_name = hot.get("name")
+        cold_name = cold.get("name")
+        if str(tube_fluid) == str(hot_name):
+            tube_side = "hot"
+        elif str(tube_fluid) == str(cold_name):
+            tube_side = "cold"
     sides = {"Shell Side": cold if tube_side == "hot" else hot,
              "Tube Side": hot if tube_side == "hot" else cold}
 
@@ -137,6 +200,14 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
         elif field == "fouling_resistance":
             shell = _first(specs, "shell_fouling_resistance", "shell_fouling")
             tube = _first(specs, "tube_fouling_resistance", "tube_fouling")
+        elif field in {"velocity", "pressure_drop"}:
+            shell_value = data.get("shell_velocity" if field == "velocity" else "shell_dp")
+            tube_value = data.get("tube_velocity" if field == "velocity" else "tube_dp")
+            if field == "pressure_drop":
+                shell = (data.get("shell_dp_limit", specs.get("shell_dp")), shell_value)
+                tube = (data.get("tube_dp_limit", specs.get("tube_dp")), tube_value)
+            else:
+                shell, tube = shell_value, tube_value
         else:
             shell, tube = get_side("Shell Side", field), get_side("Tube Side", field)
         rows.append({"row": number, "label": label, "unit": unit,
@@ -218,21 +289,34 @@ def export_excel(data: Dict[str, Any], path: str) -> str:
     wb = Workbook()
     ws = wb.active
     ws.title = "HX Datasheet"
+    metadata = data.get("datasheet_metadata") or {}
     ws.merge_cells("A1:E1")
-    ws["A1"] = "PROCESSPI — HEAT EXCHANGER DATASHEET"
+    ws["A1"] = metadata.get("title", "HEAT EXCHANGER SPECIFICATION SHEET")
     ws["A1"].font = Font(bold=True, size=14)
     ws["A1"].alignment = Alignment(horizontal="center")
-    ws.merge_cells("A2:E2")
-    ws["A2"] = f"Type: {data.get('hx_type', 'Heat exchanger')}    Status: {data.get('status', '')}"
-    ws["A2"].alignment = Alignment(horizontal="center")
+    meta_rows = [
+        ("Company", metadata.get("company"), "Location", metadata.get("location"), "Service", metadata.get("service_of_unit")),
+        ("Item No.", metadata.get("item_no"), "Prepared by", metadata.get("prepared_by"), "Date", metadata.get("date")),
+        ("Rev No.", metadata.get("revision"), "Job No.", metadata.get("job_no"), "Size", metadata.get("size")),
+        ("Type", metadata.get("type"), "Connected in", metadata.get("connected_in"), "Arrangement", metadata.get("arrangement")),
+        ("Surface", metadata.get("surface"), "Shells/unit", metadata.get("shells_per_unit"), "Shells", metadata.get("shells")),
+    ]
+    for row_no, fields in enumerate(meta_rows, 2):
+        ws.cell(row_no, 1, fields[0]); ws.cell(row_no, 2, fields[1])
+        ws.cell(row_no, 3, fields[2]); ws.cell(row_no, 4, fields[3])
+        ws.cell(row_no, 5, f"{fields[4]}: {fields[5] if fields[5] is not None else ''}")
+    ws.merge_cells("A7:E7")
+    ws["A7"] = "PERFORMANCE OF ONE UNIT"
+    ws["A7"].font = Font(bold=True)
+    ws["A7"].alignment = Alignment(horizontal="center")
     headers = ["Ref. row", "Description", "Unit", "Shell Side", "Tube Side"]
     for col, value in enumerate(headers, 1):
-        cell = ws.cell(4, col, value)
+        cell = ws.cell(8, col, value)
         cell.font = Font(bold=True)
         cell.fill = PatternFill("solid", fgColor="D9EAF7")
     rows = build_datasheet(data)
-    current = 5
-    sections = {10: "PERFORMANCE OF ONE UNIT", 34: "CONSTRUCTION OF ONE SHELL"}
+    current = 9
+    sections = {34: "CONSTRUCTION OF ONE SHELL"}
     thin = Side(style="thin", color="333333")
     for row in rows:
         if row["row"] in sections:
