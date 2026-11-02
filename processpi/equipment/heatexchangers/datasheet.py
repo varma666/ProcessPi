@@ -372,10 +372,10 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
             # Tube count is an exchanger-wide count; dimensional details belong
             # together in the tube-side column. Geometry values are stored in m.
             value_a = _first(data, "tube_count", specs.get("tube_count"))
-            od = _length_mm(_first(data, "tube_od", geometry.get("tube_od"), specs.get("tube_od")))
-            inside = _length_mm(_first(data, "tube_id", geometry.get("tube_id"), specs.get("tube_id")))
-            length = _length_mm(_first(data, "tube_length", geometry.get("tube_length"), specs.get("tube_length")))
-            pitch = _length_mm(_first(data, "tube_pitch", geometry.get("tube_pitch"), specs.get("tube_pitch")))
+            od = _length_mm(_first(data, "tube_od") or geometry.get("tube_od") or specs.get("tube_od"))
+            inside = _length_mm(_first(data, "tube_id") or geometry.get("tube_id") or specs.get("tube_id"))
+            length = _length_mm(_first(data, "tube_length") or geometry.get("tube_length") or specs.get("tube_length"))
+            pitch = _length_mm(_first(data, "tube_pitch") or geometry.get("tube_pitch") or specs.get("tube_pitch"))
             thickness = (float(od) - float(inside)) / 2.0 if od is not None and inside is not None else None
             details = []
             for name, val in (("OD", od), ("wall", thickness), ("length", length), ("pitch", pitch)):
@@ -383,11 +383,11 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
                     details.append(f"{name} {_fmt(val)}")
             value_b = "; ".join(details) if details else None
         elif number == 43:
-            value_a = _length_mm(_first(data, "shell_diameter", geometry.get("shell_diameter"), specs.get("shell_diameter")))
-            value_b = _length_mm(_first(data, "shell_thickness", specs.get("shell_thickness")))
+            value_a = _length_mm(_first(data, "shell_diameter") or geometry.get("shell_diameter") or specs.get("shell_diameter"))
+            value_b = _length_mm(_first(data, "shell_thickness") or specs.get("shell_thickness"))
         elif number == 47:
-            cut = _first(data, "baffle_cut", geometry.get("baffle_cut"), specs.get("baffle_cut"))
-            spacing = _length_mm(_first(data, "baffle_spacing", geometry.get("baffle_spacing"), specs.get("baffle_spacing")))
+            cut = _first(data, "baffle_cut") or geometry.get("baffle_cut") or specs.get("baffle_cut")
+            spacing = _length_mm(_first(data, "baffle_spacing") or geometry.get("baffle_spacing") or specs.get("baffle_spacing"))
             details = []
             if cut is not None:
                 try:
@@ -402,7 +402,7 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
         elif number == 48:
             # This row describes longitudinal baffle/seal/inlet details, not
             # baffle spacing. Do not duplicate row 47's spacing here.
-            value_a = _first(data, "baffle_longitudinal", geometry.get("baffle_longitudinal"), specs.get("baffle_longitudinal"))
+            value_a = _first(data, "baffle_longitudinal") or geometry.get("baffle_longitudinal") or specs.get("baffle_longitudinal")
             value_b = _first(data, "baffle_seal_type", specs.get("baffle_seal_type"), data.get("baffle_inlet"))
         rows.append({"row": number, "label": label, "unit": unit,
                      "shell_side": _plain(value_a), "tube_side": _plain(value_b)})
