@@ -346,17 +346,16 @@ class HeatExchangerResults:
     def result(self, tablefmt: str = "grid") -> str:
         """Return the heat-exchanger datasheet as a readable table.
 
-        The table follows the reference datasheet columns: reference number,
-        description, unit, shell side and tube side. Use result_rows() when
-        structured dictionaries are required. tablefmt accepts formats
-        supported by the tabulate dependency (for example grid, github or plain).
+        The table shows description, unit, shell-side and tube-side values.
+        Use result_rows() when structured dictionaries (including row numbers)
+        are required. tablefmt accepts formats supported by tabulate.
         """
         from tabulate import tabulate
 
         rows = self.result_rows()
-        headers = ["Ref. No.", "Description", "Unit", "Shell Side", "Tube Side"]
+        headers = ["Description", "Unit", "Shell Side", "Tube Side"]
         table = [
-            [row["row"], row["label"], row["unit"],
+            [row["label"], row["unit"],
              "" if row["shell_side"] is None else row["shell_side"],
              "" if row["tube_side"] is None else row["tube_side"]]
             for row in rows
