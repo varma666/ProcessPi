@@ -339,13 +339,28 @@ class HeatExchangerResults:
                 output += f"• {recommendation}\n"
     
         return output
-    def result(self) -> list[Dict[str, Any]]:
-        """Return the heat-exchanger result as datasheet rows.
-
-        Each row contains the reference row number, label, unit, shell-side
-        value and tube-side value. Run the engine before requesting results.
-        """
+    def result_rows(self) -> list[Dict[str, Any]]:
+        """Return the datasheet as structured rows for programmatic use."""
         return build_datasheet(self.data)
+
+    def result(self, tablefmt: str = "grid") -> str:
+        """Return the heat-exchanger datasheet as a readable table.
+
+        The table shows description, unit, shell-side and tube-side values.
+        Use result_rows() when structured dictionaries (including row numbers)
+        are required. tablefmt accepts formats supported by tabulate.
+        """
+        from tabulate import tabulate
+
+        rows = self.result_rows()
+        headers = ["Description", "Unit", "Shell Side", "Tube Side"]
+        table = [
+            [row["label"], row["unit"],
+             "" if row["shell_side"] is None else row["shell_side"],
+             "" if row["tube_side"] is None else row["tube_side"]]
+            for row in rows
+        ]
+        return tabulate(table, headers=headers, tablefmt=tablefmt, stralign="left")
 
     def export_excel(self, path: str = "heat_exchanger_datasheet.xlsx") -> str:
         """Export the last heat-exchanger result to an editable XLSX datasheet."""
@@ -706,11 +721,17 @@ class HeatExchangerEngine:
             return None
         return self._results.summary()
 
-    def result(self):
-        """Return the last run as reference-style datasheet rows."""
+    def result(self, tablefmt: str = "grid") -> str:
+        """Return the last run as a formatted, reference-style datasheet table."""
         if self._results is None:
             raise RuntimeError("Run the model first using hx.run()")
-        return self._results.result()
+        return self._results.result(tablefmt=tablefmt)
+
+    def result_rows(self) -> list[Dict[str, Any]]:
+        """Return the last run as structured datasheet rows."""
+        if self._results is None:
+            raise RuntimeError("Run the model first using hx.run()")
+        return self._results.result_rows()
 
     def export_excel(self, path: str = "heat_exchanger_datasheet.xlsx") -> str:
         """Export the last run to an editable Excel datasheet."""
