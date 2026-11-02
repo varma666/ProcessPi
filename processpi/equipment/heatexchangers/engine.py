@@ -722,11 +722,17 @@ class HeatExchangerEngine:
             return None
         return self._results.summary()
 
-    def result(self):
-        """Return the last run as reference-style datasheet rows."""
+    def result(self, tablefmt: str = "grid") -> str:
+        """Return the last run as a formatted, reference-style datasheet table."""
         if self._results is None:
             raise RuntimeError("Run the model first using hx.run()")
-        return self._results.result()
+        return self._results.result(tablefmt=tablefmt)
+
+    def result_rows(self) -> list[Dict[str, Any]]:
+        """Return the last run as structured datasheet rows."""
+        if self._results is None:
+            raise RuntimeError("Run the model first using hx.run()")
+        return self._results.result_rows()
 
     def export_excel(self, path: str = "heat_exchanger_datasheet.xlsx") -> str:
         """Export the last run to an editable Excel datasheet."""
