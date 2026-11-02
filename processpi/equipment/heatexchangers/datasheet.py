@@ -86,6 +86,31 @@ def _first(data: Dict[str, Any], *keys: str) -> Any:
     return None
 
 
+def _length_mm(value: Any) -> Any:
+    """Convert a length quantity or an internal SI-metre value to mm."""
+    if value is None:
+        return None
+    if hasattr(value, "to"):
+        try:
+            converted = value.to("mm")
+            return getattr(converted, "original_value", getattr(converted, "value", converted))
+        except Exception:
+            pass
+    try:
+        return float(value) * 1000.0
+    except (TypeError, ValueError):
+        return value
+
+
+def _fmt(value: Any, digits: int = 2) -> Any:
+    if value is None:
+        return None
+    try:
+        return f"{float(value):.{digits}f}".rstrip("0").rstrip(".")
+    except (TypeError, ValueError):
+        return value
+
+
 def _stream_data(data: Dict[str, Any], side: str) -> Dict[str, Any]:
     """Normalize MaterialStream inputs and optional precomputed properties."""
     streams = data.get("stream_properties") or data.get("streams") or {}
@@ -344,14 +369,41 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
             value_a = _first(data, "shell_passes", specs.get("shell_passes"))
             value_b = _first(data, "tube_passes", specs.get("tube_passes"))
         elif number == 41:
+            # Tube count is an exchanger-wide count; dimensional details belong
+            # together in the tube-side column. Geometry values are stored in m.
             value_a = _first(data, "tube_count", specs.get("tube_count"))
-            value_b = _first(data, "tube_length", specs.get("tube_length"))
+            od = _length_mm(_first(data, "tube_od", geometry.get("tube_od"), specs.get("tube_od")))
+            inside = _length_mm(_first(data, "tube_id", geometry.get("tube_id"), specs.get("tube_id")))
+            length = _length_mm(_first(data, "tube_length", geometry.get("tube_length"), specs.get("tube_length")))
+            pitch = _length_mm(_first(data, "tube_pitch", geometry.get("tube_pitch"), specs.get("tube_pitch")))
+            thickness = (float(od) - float(inside)) / 2.0 if od is not None and inside is not None else None
+            details = []
+            for name, val in (("OD", od), ("wall", thickness), ("length", length), ("pitch", pitch)):
+                if val is not None:
+                    details.append(f"{name} {_fmt(val)}")
+            value_b = "; ".join(details) if details else None
         elif number == 43:
-            value_a = _first(data, "shell_diameter", specs.get("shell_diameter"))
-            value_b = _first(data, "shell_thickness", specs.get("shell_thickness"))
+            value_a = _length_mm(_first(data, "shell_diameter", geometry.get("shell_diameter"), specs.get("shell_diameter")))
+            value_b = _length_mm(_first(data, "shell_thickness", specs.get("shell_thickness")))
         elif number == 47:
-            value_a = _first(data, "baffle_cut", specs.get("baffle_cut"))
-            value_b = _first(data, "baffle_spacing", specs.get("baffle_spacing"))
+            cut = _first(data, "baffle_cut", geometry.get("baffle_cut"), specs.get("baffle_cut"))
+            spacing = _length_mm(_first(data, "baffle_spacing", geometry.get("baffle_spacing"), specs.get("baffle_spacing")))
+            details = []
+            if cut is not None:
+                try:
+                    cut_value = float(cut)
+                    details.append(f"cut {_fmt(cut_value * 100 if cut_value <= 1 else cut_value)}%")
+                except (TypeError, ValueError):
+                    details.append(f"cut {cut}")
+            if spacing is not None:
+                details.append(f"spacing {_fmt(spacing)} mm")
+            value_a = "; ".join(details) if details else None
+            value_b = None
+        elif number == 48:
+            # This row describes longitudinal baffle/seal/inlet details, not
+            # baffle spacing. Do not duplicate row 47's spacing here.
+            value_a = _first(data, "baffle_longitudinal", geometry.get("baffle_longitudinal"), specs.get("baffle_longitudinal"))
+            value_b = _first(data, "baffle_seal_type", specs.get("baffle_seal_type"), data.get("baffle_inlet"))
         rows.append({"row": number, "label": label, "unit": unit,
                      "shell_side": _plain(value_a), "tube_side": _plain(value_b)})
     return rows
