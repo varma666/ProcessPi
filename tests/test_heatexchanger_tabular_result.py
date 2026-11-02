@@ -95,3 +95,47 @@ def test_datasheet_uses_calculated_energy_balance_outlet_temperatures():
     pressure_drop = rows["Pressure drop, allow./calc."]
     assert pressure_drop["shell_side"] == (98066.5 / 9.80665, 19613.3 / 9.80665)
     assert pressure_drop["tube_side"] == (49033.25 / 9.80665, 9806.65 / 9.80665)
+
+
+
+def test_datasheet_reports_tube_geometry_and_converts_shell_and_baffle_lengths():
+    from processpi.equipment.heatexchangers.datasheet import build_datasheet
+
+    data = {
+        "tube_count": 176,
+        "tube_od": 0.01905,
+        "tube_id": 0.01428,
+        "tube_length": 5.0,
+        "tube_pitch": 0.02381,
+        "shell_diameter": 0.4115,
+        "baffle_spacing": 0.1646,
+        "baffle_cut": 0.25,
+        "geometry": {
+            "tube_od": 0.01905,
+            "tube_id": 0.01428,
+            "tube_length": 5.0,
+            "tube_pitch": 0.02381,
+            "shell_diameter": 0.4115,
+            "baffle_spacing": 0.1646,
+        },
+    }
+    rows = {row["label"]: row for row in build_datasheet(data)}
+
+    tube = rows["Tube No. / OD / average thickness / length / pitch"]
+    assert tube["shell_side"] == 176
+    assert "OD 19.05" in tube["tube_side"]
+    assert "wall 2.39" in tube["tube_side"]
+    assert "length 5000" in tube["tube_side"]
+    assert "pitch 23.81" in tube["tube_side"]
+
+    shell = rows["Shell ID / OD / thickness"]
+    assert shell["shell_side"] == 411.5
+
+    baffle = rows["Baffle crossing / type / cut / spacing"]
+    assert "cut 25%" in baffle["shell_side"]
+    assert "spacing 164.6 mm" in baffle["shell_side"]
+    assert baffle["tube_side"] is None
+
+    longitudinal = rows["Baffle-long / seal type / inlet"]
+    assert longitudinal["shell_side"] is None
+    assert longitudinal["tube_side"] is None
