@@ -243,8 +243,12 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
                 )
                 if calculated is not None:
                     try:
-                        calculated = calculated.to("C") if hasattr(calculated, "to") else calculated
-                        calculated = getattr(calculated, "original_value", getattr(calculated, "value", calculated))
+                        if hasattr(calculated, "to"):
+                            converted = calculated.to("C")
+                            calculated = getattr(converted, "original_value", getattr(converted, "value", converted))
+                        elif isinstance(calculated, (int, float)):
+                            # Exchanger solver outlet temperatures are stored internally in K.
+                            calculated = float(calculated) - 273.15
                     except Exception:
                         pass
                     return (t_in, calculated)
