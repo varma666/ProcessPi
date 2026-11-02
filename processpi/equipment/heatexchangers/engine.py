@@ -339,13 +339,29 @@ class HeatExchangerResults:
                 output += f"• {recommendation}\n"
     
         return output
-    def result(self) -> list[Dict[str, Any]]:
-        """Return the heat-exchanger result as datasheet rows.
-
-        Each row contains the reference row number, label, unit, shell-side
-        value and tube-side value. Run the engine before requesting results.
-        """
+    def result_rows(self) -> list[Dict[str, Any]]:
+        """Return the datasheet as structured rows for programmatic use."""
         return build_datasheet(self.data)
+
+    def result(self, tablefmt: str = "grid") -> str:
+        """Return the heat-exchanger datasheet as a readable table.
+
+        The table follows the reference datasheet columns: reference number,
+        description, unit, shell side and tube side. Use result_rows() when
+        structured dictionaries are required. tablefmt accepts formats
+        supported by the tabulate dependency (for example grid, github or plain).
+        """
+        from tabulate import tabulate
+
+        rows = self.result_rows()
+        headers = ["Ref. No.", "Description", "Unit", "Shell Side", "Tube Side"]
+        table = [
+            [row["row"], row["label"], row["unit"],
+             "" if row["shell_side"] is None else row["shell_side"],
+             "" if row["tube_side"] is None else row["tube_side"]]
+            for row in rows
+        ]
+        return tabulate(table, headers=headers, tablefmt=tablefmt, stralign="left")
 
     def export_excel(self, path: str = "heat_exchanger_datasheet.xlsx") -> str:
         """Export the last heat-exchanger result to an editable XLSX datasheet."""
