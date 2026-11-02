@@ -117,7 +117,7 @@ def _stream_data(data: Dict[str, Any], side: str) -> Dict[str, Any]:
     t_in = read_unit(getattr(stream, "temperature", None), "C")
     t_out = read_unit(getattr(outlet, "temperature", None), "C") if outlet is not None else None
     props["temperature"] = (t_in, t_out)
-    props["pressure"] = read_unit(getattr(stream, "pressure", None), "mmH2O")
+    props["pressure"] = read_unit(getattr(stream, "pressure", None), "Pa")
     props["density"] = read_unit(getattr(stream, "density", None), "kg/m3")
     cp = getattr(stream, "specific_heat", None)
     props["specific_heat"] = read_unit(cp, "kJ/kgK")
@@ -196,20 +196,103 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
                 q = None
             shell = tube = q
         elif field == "heat_transfer_coefficient":
-            shell = tube = _first(data, "U_calculated", "U", "overall_U")
+            shell = tube = _first(data, "U_calculated", "U", "overall_U", "u_calculated", "u_calc")
         elif field == "fouling_resistance":
             shell = _first(specs, "shell_fouling_resistance", "shell_fouling")
             tube = _first(specs, "tube_fouling_resistance", "tube_fouling")
         elif field in {"velocity", "pressure_drop"}:
-            shell_value = data.get("shell_velocity" if field == "velocity" else "shell_dp")
-            tube_value = data.get("tube_velocity" if field == "velocity" else "tube_dp")
+            shell_value = _first(data, "shell_velocity", "v_shell") if field == "velocity" else _first(data, "shell_dp", "shell_pressure_drop")
+            tube_value = _first(data, "tube_velocity", "v_tube") if field == "velocity" else _first(data, "tube_dp", "tube_pressure_drop")
             if field == "pressure_drop":
-                shell = (data.get("shell_dp_limit", specs.get("shell_dp")), shell_value)
-                tube = (data.get("tube_dp_limit", specs.get("tube_dp")), tube_value)
+                # Internal hydraulic results and limits are in Pa; the reference
+                # datasheet reports mmH2O (1 mmH2O = 9.80665 Pa).
+                def mmh2o(value: Any) -> Any:
+                    if value is None:
+                        return None
+                    if hasattr(value, "to"):
+                        try:
+                            return value.to("mmH2O")
+                        except Exception:
+                            pass
+                    try:
+                        return float(value) / 9.80665
+                    except (TypeError, ValueError):
+                        return value
+                shell = (mmh2o(_first(data, "shell_dp_limit", specs.get("shell_dp"))), mmh2o(shell_value))
+                tube = (mmh2o(_first(data, "tube_dp_limit", specs.get("tube_dp"))), mmh2o(tube_value))
             else:
                 shell, tube = shell_value, tube_value
+        elif field == "temperature":
+            def outlet_temperature(side_name: str) -> Any:
+                props = sides[side_name]
+                pair = get_side(side_name, "temperature")
+                if isinstance(pair, (tuple, list)):
+                    t_in = pair[0] if pair else None
+                    t_out = pair[1] if len(pair) > 1 else None
+                else:
+                    t_in, t_out = pair, None
+                if t_out is not None:
+                    return (t_in, t_out)
+                # Prefer temperatures explicitly calculated by the exchanger.
+                side_key = "hot" if (side_name == "Tube Side") == (tube_side == "hot") else "cold"
+                calculated = _first(
+                    data,
+                    f"{side_key}_out_temperature",
+                    f"{side_key}_outlet_temperature",
+                    f"{side_key}_temperature_out",
+                )
+                if calculated is not None:
+                    try:
+                        calculated = calculated.to("C") if hasattr(calculated, "to") else calculated
+                        calculated = getattr(calculated, "original_value", getattr(calculated, "value", calculated))
+                    except Exception:
+                        pass
+                    return (t_in, calculated)
+                # For a sensible-heat side with a known duty, close the outlet
+                # temperature from Q = m_dot * Cp * delta-T. q_watts_original
+                # is explicitly W in the exchanger result payload.
+                latent_side = str(data.get("latent_side") or specs.get("latent_side") or "").lower()
+                service = str(data.get("service") or data.get("hx_type") or "").lower()
+                if latent_side == side_key or (service in {"condenser", "total_condenser", "partial_condenser"} and side_key == "hot") or (service in {"reboiler", "evaporator", "kettle_reboiler", "thermosyphon_reboiler"} and side_key == "cold"):
+                    return (t_in, None)
+                q_w = _first(data, "q_watts_original", "q_watts_effective")
+                if q_w is None:
+                    q_obj = data.get("Q")
+                    if hasattr(q_obj, "to"):
+                        try:
+                            q_w = q_obj.to("W").value
+                        except Exception:
+                            q_w = None
+                stream = data.get("hot_in" if side_key == "hot" else "cold_in")
+                if q_w is None or stream is None or t_in is None:
+                    return (t_in, None)
+                mass = getattr(stream, "mass_flow", None)
+                try:
+                    mass = mass() if callable(mass) else mass
+                    mass = mass.to("kg/s").value if hasattr(mass, "to") else float(mass)
+                    cp = getattr(stream, "specific_heat", None)
+                    cp = cp.to("J/kgK").value if hasattr(cp, "to") else float(cp)
+                    delta = float(q_w) / (mass * cp)
+                    # Hot stream cools; cold stream warms.
+                    return (t_in, float(t_in) - delta if side_key == "hot" else float(t_in) + delta)
+                except (TypeError, ValueError, AttributeError, ZeroDivisionError):
+                    return (t_in, None)
+            shell = outlet_temperature("Shell Side")
+            tube = outlet_temperature("Tube Side")
         else:
             shell, tube = get_side("Shell Side", field), get_side("Tube Side", field)
+        if field == "pressure":
+            # Convert absolute pressure from Pa to the datasheet's mmH2O(g)
+            # display unit. This is a unit conversion only; gauge reference is
+            # not inferred, so the displayed value is pressure head equivalent.
+            def pressure_head(value: Any) -> Any:
+                if value is None:
+                    return None
+                try:
+                    return float(value) / 9.80665
+                except (TypeError, ValueError):
+                    return value
+            shell, tube = pressure_head(shell), pressure_head(tube)
         rows.append({"row": number, "label": label, "unit": unit,
                      "shell_side": _plain(shell), "tube_side": _plain(tube)})
 
