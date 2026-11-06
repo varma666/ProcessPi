@@ -89,8 +89,9 @@ def test_datasheet_uses_calculated_energy_balance_outlet_temperatures():
     assert temperature["shell_side"] == (288.15, 318.15)
 
     pressure = rows["Pressure"]
-    assert pressure["tube_side"] == 101325.0 / 9.80665
-    assert pressure["shell_side"] == 202650.0 / 9.80665
+    # Stream pressures are absolute by default; datasheet pressure is gauge.
+    assert pressure["tube_side"] == 0.0
+    assert pressure["shell_side"] == 101325.0 / 9.80665
 
     pressure_drop = rows["Pressure drop, allow./calc."]
     assert pressure_drop["shell_side"] == (98066.5 / 9.80665, 19613.3 / 9.80665)
@@ -139,3 +140,71 @@ def test_datasheet_reports_tube_geometry_and_converts_shell_and_baffle_lengths()
     longitudinal = rows["Baffle-long / seal type / inlet"]
     assert longitudinal["shell_side"] is None
     assert longitudinal["tube_side"] is None
+
+
+
+def test_datasheet_converts_processpi_pressure_and_length_objects():
+    from processpi.equipment.heatexchangers.datasheet import build_datasheet
+    from processpi.units.length import Length
+    from processpi.units.pressure import Pressure
+
+    data = {
+        "shell_dp_limit": Pressure(1, "bar"),
+        "shell_dp": Pressure(0.2, "bar"),
+        "tube_dp_limit": Pressure(0.5, "bar"),
+        "tube_dp": Pressure(0.1, "bar"),
+        "shell_diameter": Length(0.4115, "m"),
+        "tube_od": Length(19.05, "mm"),
+        "tube_id": Length(14.28, "mm"),
+        "tube_length": Length(5, "m"),
+        "tube_pitch": Length(23.81, "mm"),
+        "tube_count": 176,
+    }
+    rows = {row["label"]: row for row in build_datasheet(data)}
+
+    dp = rows["Pressure drop, allow./calc."]
+    assert dp["shell_side"] == (100000 / 9.80665, 20000 / 9.80665)
+    assert dp["tube_side"] == (50000 / 9.80665, 10000 / 9.80665)
+
+    shell = rows["Shell ID / OD / thickness"]
+    assert shell["shell_side"] == 411.5
+
+    tube = rows["Tube No. / OD / average thickness / length / pitch"]
+    assert tube["shell_side"] == 176
+    assert "OD 19.05" in tube["tube_side"]
+    assert "length 5000" in tube["tube_side"]
+
+
+def test_datasheet_pressure_can_be_explicitly_declared_gauge():
+    from processpi.equipment.heatexchangers.datasheet import build_datasheet
+
+    data = {
+        "pressure_basis": "gauge",
+        "stream_properties": {
+            "hot": {"name": "Hot", "pressure": 200000},
+            "cold": {"name": "Cold", "pressure": 100000},
+        },
+    }
+    rows = {row["label"]: row for row in build_datasheet(data)}
+    pressure = rows["Pressure"]
+    assert pressure["tube_side"] == 200000 / 9.80665
+    assert pressure["shell_side"] == 100000 / 9.80665
+
+
+def test_datasheet_uses_specs_fallbacks_for_limits_and_geometry():
+    from processpi.equipment.heatexchangers.datasheet import build_datasheet
+
+    data = {
+        "specs": {
+            "shell_dp": 100000,
+            "tube_dp": 50000,
+            "shell_passes": 1,
+            "tube_passes": 2,
+            "tube_count": 88,
+        },
+    }
+    rows = {row["label"]: row for row in build_datasheet(data)}
+    assert rows["Pressure drop, allow./calc."]["shell_side"][0] == 100000 / 9.80665
+    assert rows["Number passes per shell"]["shell_side"] == 1
+    assert rows["Number passes per shell"]["tube_side"] == 2
+    assert rows["Tube No. / OD / average thickness / length / pitch"]["shell_side"] == 88
