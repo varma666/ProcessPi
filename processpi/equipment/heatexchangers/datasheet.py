@@ -73,8 +73,10 @@ def _plain(value: Any) -> Any:
         return value
     if isinstance(value, dict):
         return "; ".join(f"{k}: {_plain(v)}" for k, v in value.items())
-    if isinstance(value, (list, tuple)):
-        return ", ".join(str(_plain(v)) for v in value)
+    if isinstance(value, tuple):
+        return tuple(_plain(v) for v in value)
+    if isinstance(value, list):
+        return [_plain(v) for v in value]
     return str(value)
 
 
@@ -234,17 +236,20 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
                 def mmh2o(value: Any) -> Any:
                     if value is None:
                         return None
-                    if hasattr(value, "to"):
-                        try:
-                            return value.to("mmH2O")
-                        except Exception:
-                            pass
+                    # ProcessPI Pressure.value is the SI base value (Pa).
+                    raw = getattr(value, "value", value)
                     try:
-                        return float(value) / 9.80665
+                        return float(raw) / 9.80665
                     except (TypeError, ValueError):
                         return value
-                shell = (mmh2o(_first(data, "shell_dp_limit", specs.get("shell_dp"))), mmh2o(shell_value))
-                tube = (mmh2o(_first(data, "tube_dp_limit", specs.get("tube_dp"))), mmh2o(tube_value))
+                shell_limit = data.get("shell_dp_limit")
+                if shell_limit is None:
+                    shell_limit = specs.get("shell_dp")
+                tube_limit = data.get("tube_dp_limit")
+                if tube_limit is None:
+                    tube_limit = specs.get("tube_dp")
+                shell = (mmh2o(shell_limit), mmh2o(shell_value))
+                tube = (mmh2o(tube_limit), mmh2o(tube_value))
             else:
                 shell, tube = shell_value, tube_value
         elif field == "temperature":
@@ -311,17 +316,25 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
         else:
             shell, tube = get_side("Shell Side", field), get_side("Tube Side", field)
         if field == "pressure":
-            # Convert absolute pressure from Pa to the datasheet's mmH2O(g)
-            # display unit. This is a unit conversion only; gauge reference is
-            # not inferred, so the displayed value is pressure head equivalent.
-            def pressure_head(value: Any) -> Any:
+            # Stream pressure is absolute unless the result payload explicitly
+            # identifies gauge pressure. The datasheet requests mmH2O(g).
+            def pressure_head(value: Any, props: Dict[str, Any]) -> Any:
                 if value is None:
                     return None
+                if props.get("pressure_mmh2o") is not None and props.get("pressure") is None:
+                    return value
+                raw = getattr(value, "value", value)  # ProcessPI Pressure.value is Pa.
                 try:
-                    return float(value) / 9.80665
+                    pressure_pa = float(raw)
+                    basis = str(data.get("pressure_basis", specs.get("pressure_basis", "absolute"))).lower()
+                    if basis in {"absolute", "abs"}:
+                        pressure_pa -= float(data.get("atmospheric_pressure_pa", 101325.0))
+                    elif basis not in {"gauge", "g", "relative"}:
+                        return value
+                    return pressure_pa / 9.80665
                 except (TypeError, ValueError):
                     return value
-            shell, tube = pressure_head(shell), pressure_head(tube)
+            shell, tube = pressure_head(shell, sides["Shell Side"]), pressure_head(tube, sides["Tube Side"])
         rows.append({"row": number, "label": label, "unit": unit,
                      "shell_side": _plain(shell), "tube_side": _plain(tube)})
 
@@ -366,12 +379,12 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
             value_b = data.get(key_b)
         # For common geometry values use actual result keys when present.
         if number == 36:
-            value_a = _first(data, "shell_passes", specs.get("shell_passes"))
-            value_b = _first(data, "tube_passes", specs.get("tube_passes"))
+            value_a = data.get("shell_passes", specs.get("shell_passes"))
+            value_b = data.get("tube_passes", specs.get("tube_passes"))
         elif number == 41:
             # Tube count is an exchanger-wide count; dimensional details belong
             # together in the tube-side column. Geometry values are stored in m.
-            value_a = _first(data, "tube_count", specs.get("tube_count"))
+            value_a = data.get("tube_count", specs.get("tube_count"))
             od = _length_mm(_first(data, "tube_od") or geometry.get("tube_od") or specs.get("tube_od"))
             inside = _length_mm(_first(data, "tube_id") or geometry.get("tube_id") or specs.get("tube_id"))
             length = _length_mm(_first(data, "tube_length") or geometry.get("tube_length") or specs.get("tube_length"))
@@ -403,7 +416,11 @@ def build_datasheet(data: Dict[str, Any]) -> List[Dict[str, Any]]:
             # This row describes longitudinal baffle/seal/inlet details, not
             # baffle spacing. Do not duplicate row 47's spacing here.
             value_a = _first(data, "baffle_longitudinal") or geometry.get("baffle_longitudinal") or specs.get("baffle_longitudinal")
-            value_b = _first(data, "baffle_seal_type", specs.get("baffle_seal_type"), data.get("baffle_inlet"))
+            value_b = data.get("baffle_seal_type")
+            if value_b is None:
+                value_b = specs.get("baffle_seal_type")
+            if value_b is None:
+                value_b = data.get("baffle_inlet")
         rows.append({"row": number, "label": label, "unit": unit,
                      "shell_side": _plain(value_a), "tube_side": _plain(value_b)})
     return rows
