@@ -1,4 +1,4 @@
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 from setuptools import setup, find_packages
 from pathlib import Path
@@ -24,7 +24,7 @@ setup(
         "networkx>=3.1",
         "CoolProp>=6.5.0",
         "tqdm>=4.65.0",
-        "plotly>=5.18.0",  # Added Plotly for interactive visualizations
+        "plotly>=5.18.0",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -34,14 +34,14 @@ setup(
         "Topic :: Scientific/Engineering :: Chemical Engineering",
     ],
     project_urls={
-            "Homepage": "https://processpi.org",
-            "Documentation": "https://processpi.org/user-guide/introduction/",
-            "Repository": "https://github.com/varma666/ProcessPi",
-            "Issue Tracker": "https://github.com/varma666/ProcessPi/issues",
-        },
+        "Homepage": "https://processpi.org",
+        "Documentation": "https://processpi.org/user-guide/introduction/",
+        "Repository": "https://github.com/varma666/ProcessPi",
+        "Issue Tracker": "https://github.com/varma666/ProcessPi/issues",
+    },
     entry_points={
         "console_scripts": [
-            "processpi=processpi.cli:main",  # CLI entry point
+            "processpi=processpi.cli:main",
         ],
     },
 )
