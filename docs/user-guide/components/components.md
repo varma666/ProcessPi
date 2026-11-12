@@ -14,7 +14,7 @@ water = Water(
 )
 print(water.name)
 print(water.density().to("kg/m3"))
-print(water.viscosity().to("Pa*s"))
+print(water.viscosity().to("Pa·s"))
 ~~~
 
 Pass ProcessPI unit objects to the constructor and convert returned quantities with .to("unit"). Pressure is absolute pressure in the base implementation.
@@ -51,7 +51,7 @@ Legacy compatibility aliases EthlylAcetate and Ethlylene are also exported. Pref
 
 ## Constructor parameters
 
-All substance classes inherit the Component constructor. The defaults and accepted inputs are:
+Most chemical component classes inherit the Component constructor. The defaults and accepted inputs for those classes are listed below. Some exported classes override the constructor; in particular, Steam accepts temperature, pressure, and phase only, so the other arguments in this table do not apply to Steam.
 
 | Parameter | Type | Default | Purpose |
 |---|---|---|---|
@@ -97,11 +97,11 @@ The exact constants and valid ranges are component-specific. Do not reuse one su
 
 ## Inherited methods and calculated properties
 
-The base class uses PropertyMethod descriptors. Calling water.density() evaluates the property and returns a Density object. Accessing water.density without parentheses returns a callable wrapper; its .value attribute contains the evaluated result. The same access pattern applies to phase, specific_heat, viscosity, thermal_conductivity, vapor_pressure, and enthalpy.
+Call calculated-property members with parentheses to obtain their evaluated result; for example, water.density() returns a Density object. Do not assume that accessing water.density without parentheses returns a quantity: the uncalled attribute may be a callable wrapper or a bound method, depending on the component and member.
 
 | Member | Return type | Explanation |
 |---|---|---|
-| phase() | str | Calling phase() returns gas or liquid. Accessing phase without parentheses returns the descriptor wrapper; phase.value contains the evaluated string. An explicit phase override takes priority; otherwise the base class considers the default phase, critical temperature, and vapour pressure. |
+| phase() | str | Calling phase() returns gas or liquid. Use the call form to obtain the evaluated phase string. An explicit phase override takes priority; otherwise the base class considers the default phase, critical temperature, and vapour pressure. |
 | density() | Density | Returns supplied density if present; otherwise calculates gas density using the ideal-gas equation or liquid density using the component's DIPPR-style correlation. |
 | specific_heat() | SpecificHeat | Returns supplied Cp if present; otherwise uses an available ideal-gas Cp correlation for gas phase or the component temperature polynomial. |
 | viscosity() | Viscosity | Returns supplied dynamic viscosity if present; otherwise evaluates the liquid correlation or gas-phase Sutherland approximation. |
@@ -137,7 +137,7 @@ print(acid.formula)
 print(acid.molecular_weight)
 print(acid.phase())
 print(acid.density().to("kg/m3"))
-print(acid.viscosity().to("Pa*s"))
+print(acid.viscosity().to("Pa·s"))
 print(acid.specific_heat().to("J/kgK"))
 print(acid.thermal_conductivity().to("W/mK"))
 print(acid.vapor_pressure().to("Pa"))
