@@ -21,33 +21,309 @@ Pass ProcessPI unit objects to the constructor and convert returned quantities w
 
 ## Component catalogue
 
-The current package exports 353 names in total: 345 chemical component classes, six general fluid-category classes (Gas, InorganicLiquid, Oil, OrganicLiquid, Steam, and Vapor), and two legacy compatibility aliases (EthlylAcetate and Ethlylene). The list below follows the package's exported names in processpi/components/__init__.py. Class names are used as import names.
+The package exports **353 component classes** (excluding the shared `Component` base class): **254 chemical substances**, **6 general fluid categories**, and **2 legacy compatibility aliases**.
 
-### Numeric and positional-name compounds
+To make the catalogue easier to browse, names are grouped alphabetically. Expand only the section you need. The class names are the exact Python import names exported by `processpi.components`.
 
-_112Trichloroethane, _11Dibromoethane, _11Dichloroethane, _11Dichloropropane, _11Difluoroethane, _11Dimethoxyethane, _11Dimethylcyclohexane, _123Trimethylbenzene, _1234Tetrahydronaphthalene, _124Trimethylbenzene, _12Butadiene, _12Butanediol, _12Dibromoethane, _12Dichloroethane, _12Dichloropropane, _12Difluoroethane, _12Dimethoxypropane, _12PropyleneGlycol, _135Trinitrobenzene, _13Butadiene, _13Butanediol, _14Dioxane, _1Butanol, _1Butene, _1Butyne, _1Chloropropane, _1Decanol, _1Decene, _1Decyne, _1Heptanol, _1Heptene, _1Heptyne, _1Hexanol, _1Hexene, _1Hexyne, _1Methylcyclohexanol, _1Methylcyclopentene, _1Nonanol, _1Nonene, _1Nonyne, _1Octanol, _1Octene, _1Octyne, _1Pentanol, _1Pentene, _1Pentyne, _1Propanol, _1Undecanol, _2233Tetramethylbutane, _224Trimethylpentane, _233Trimethylpentane, _23Dimethylbutane, _23Dimethylpentane, _246Trinitrotoluene, _2Butanol, _2Chloropropane, _2EthylButanoicAcid, _2EthylHexanoicAcid, _2Heptanol, _2Heptanone, _2Hexanol, _2Hexanone, _2Hexyne, _2Methyl1Butene, _2Methyl1Butene3Yne, _2Methyl2Butene, _2Methyl2Propanol, _2Methylbutane, _2MethylbutanoicAcid, _2MethyloctanoicAcid, _2Methylpentane, _2Methylpropane, _2MethylPropene, _2Nonanol, _2Octanol, _2Octanone, _2Pentanol, _2Pentanone, _2PentylMercaptan, _2Pentyne, _2Propanol, _2PropylMercaptan, _3Heptanone, _3Hexanone, _3Hexyne, _3Methyl12Butadiene, _3Methyl1Butanol, _3Methyl1Butyne, _3Methylcyclopentene, _3Octanone, _3Pentanone.
+~~~python
+from processpi.components import AceticAcid, Benzene, Water
+~~~
 
-### A–C
+<details>
+<summary><strong>0–9 · Numbered compounds (91)</strong></summary>
 
-Acetaldehyde, Acetamide, AceticAcid, AceticAnhydride, Acetone, Acetonitrile, Acetylene, Acrolein, AcrylicAcid, Acrylonitrile, Air, AlphaMethylStyrene, Ammonia, Anisole, Argon, Benzamide, Benzene, Benzenethiol, BenzoicAcid, Benzonitrile, Benzophenone, BenzylAlcohol, BenzylEthylEther, BenzylMercaptan, Biphenyl, Bromine, Bromobenzene, Bromoethane, Bromomethane, Butane, ButylAcetate, Butylbenzene, ButylMercaptan, Butyraldehyde, ButyricAcid, Butyronitrile, Carbondioxide, CarbonDisulfide, CarbonMonoxide, CarbonTetrachloride, CarbonTetrafluoride, Chlorine, ChloroBenzene, Chloroethane, Chloroform, ChloroMethane, Cis12Dimethylcyclohexane, Cis2Butene, Cis2Methylcyclohexanol, Cumene, Cyanogen, Cyclobutane, Cyclohexane, Cyclohexanol, Cyclohexanone, Cyclohexene, CyclohexylMercaptan, Cyclopentane, Cyclopentene, Cyclopropane.
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `_112Trichloroethane` | `_11Dibromoethane` | `_11Dichloroethane` | `_11Dichloropropane` |
+| `_11Difluoroethane` | `_11Dimethoxyethane` | `_11Dimethylcyclohexane` | `_123Trimethylbenzene` |
+| `_1234Tetrahydronaphthalene` | `_124Trimethylbenzene` | `_12Butadiene` | `_12Butanediol` |
+| `_12Dibromoethane` | `_12Dichloroethane` | `_12Dichloropropane` | `_12Difluoroethane` |
+| `_12Dimethoxypropane` | `_12PropyleneGlycol` | `_135Trinitrobenzene` | `_13Butadiene` |
+| `_13Butanediol` | `_14Dioxane` | `_1Butanol` | `_1Butene` |
+| `_1Butyne` | `_1Chloropropane` | `_1Decanol` | `_1Decene` |
+| `_1Decyne` | `_1Heptanol` | `_1Heptene` | `_1Heptyne` |
+| `_1Hexanol` | `_1Hexene` | `_1Hexyne` | `_1Methylcyclohexanol` |
+| `_1Methylcyclopentene` | `_1Nonanol` | `_1Nonene` | `_1Nonyne` |
+| `_1Octanol` | `_1Octene` | `_1Octyne` | `_1Pentanol` |
+| `_1Pentene` | `_1Pentyne` | `_1Propanol` | `_1Undecanol` |
+| `_2233Tetramethylbutane` | `_224Trimethylpentane` | `_233Trimethylpentane` | `_23Dimethylbutane` |
+| `_23Dimethylpentane` | `_246Trinitrotoluene` | `_2Butanol` | `_2Chloropropane` |
+| `_2EthylButanoicAcid` | `_2EthylHexanoicAcid` | `_2Heptanol` | `_2Heptanone` |
+| `_2Hexanol` | `_2Hexanone` | `_2Hexyne` | `_2Methyl1Butene` |
+| `_2Methyl1Butene3Yne` | `_2Methyl2Butene` | `_2Methyl2Propanol` | `_2Methylbutane` |
+| `_2MethylbutanoicAcid` | `_2MethyloctanoicAcid` | `_2Methylpentane` | `_2Methylpropane` |
+| `_2MethylPropene` | `_2Nonanol` | `_2Octanol` | `_2Octanone` |
+| `_2Pentanol` | `_2Pentanone` | `_2PentylMercaptan` | `_2Pentyne` |
+| `_2Propanol` | `_2PropylMercaptan` | `_3Heptanone` | `_3Hexanone` |
+| `_3Hexyne` | `_3Methyl12Butadiene` | `_3Methyl1Butanol` | `_3Methyl1Butyne` |
+| `_3Methylcyclopentene` | `_3Octanone` | `_3Pentanone` | — |
 
-### D–H
+</details>
 
-Decanal, Decane, DecanoicAcid, DecylMercaptan, Deuterium, Dibromomethane, DibutylEther, Dichloromethane, DiethanolAmine, DiethylAmine, DiethylEther, DiethylSulfide, Difluoromethane, DiisopropylAmine, DiisopropylEther, DiisopropylKetone, DimethylAcetylene, DimethylAmine, DimethylDisulfide, DimethylEther, DimethylPhthalate, Dimethylsilane, DimethylSulfide, DimethylSulfoxide, DimethylTerephthalate, DiphenylEther, DipropylAmine, Dodecane, Eicosane, Ethane, Ethanol, EthylAcetate, EthylAmine, Ethylbenzene, EthylBenzoate, EthylButyrate, Ethylcyclohexane, Ethylcyclopentane, Ethylene, Ethylenediamine, EthyleneGlycol, Ethyleneimine, EthyleneOxide, EthylFormate, EthylhexylEther, EthylisopropylEther, EthylisopropylKetone, EthylMercaptan, EthylPropionate, EthylpropylEther, Ethyltrichlorosilane, Fluorine, FluoroBenzene, Fluoroethane, Fluoromethane, Formaldehyde, Formamide, FormicAcid, Furan, Helium, Heptadecane, Heptanal, Heptane, HeptanoicAcid, HeptylMercaptan, Hexadecane, Hexanal, Hexane, HexanoicAcid, HexylMercaptan, Hydrazine, Hydrogen, HydrogenBromide, HydrogenChloride, HydrogenCyanide, HydrogenFluoride, HydrogenSulfide.
+<details>
+<summary><strong>A · 15 components</strong></summary>
 
-### I–M
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Acetaldehyde` | `Acetamide` | `AceticAcid` | `AceticAnhydride` |
+| `Acetone` | `Acetonitrile` | `Acetylene` | `Acrolein` |
+| `AcrylicAcid` | `Acrylonitrile` | `Air` | `AlphaMethylStyrene` |
+| `Ammonia` | `Anisole` | `Argon` | — |
 
-IsobutyricAcid, IsopropylAmine, MalonicAcid, Mcresol, Mdichlorobenzene, MethacrylicAcid, Methane, Methanol, MethylAcetate, MethylAcetylene, MethylAcrylate, MethylAmine, MethylBenzoate, MethylbutylEther, MethylbutylSulfide, MethylButyrate, Methylchlorosilane, Methylcyclohexane, Methylcyclopentane, Methyldichlorosilane, MethylethylEther, MethylethylKetone, MethylethylSulfide, MethylFormate, MethylisobutylEther, MethylisobutylKetone, MethylIsocyanate, MethylisopropylEther, MethylisopropylKetone, MethylisopropylSulfide, MethylMercaptan, MethylMethacrylate, MethylPentylEther, MethylPropionate, MethylpropylEther, MethylpropylSulfide, Methylsilane, MethylTertButylEther, MethylVinylEther, Mxylene.
+</details>
 
-### N–R
+<details>
+<summary><strong>B · 21 components</strong></summary>
 
-Naphthalene, Neon, NitricOxide, Nitroethane, Nitrogen, NitrogenTrifluoride, Nitromethane, NitrousOxide, NmethylAcetamide, NndimethylFormamide, Nonadecane, Nonanal, Nonane, NonanoicAcid, NonylMercaptan, Ocresol, Octadecane, Octanal, Octane, OctanoicAcid, OctylMercaptan, Odichlorobenzene, Oterphenyl, OxalicAcid, Oxygen, Oxylene, Ozone, Pcresol, Pdichlorobenzene, Pentadecane, Pentanal, Pentane, PentanoicAcid, PentylMercaptan, Phenanthrene, Phenol, PhenylIsocyanate, PhthalicAnhydride, Propadiene, Propane, Propenylcyclohexene, Propionaldehyde, PropionicAcid, Propionitrile, PropylAcetate, PropylAmine, Propylbenzene, Propylene, PropylFormate, PropylMercaptan, Pxylene, Quinone.
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Benzamide` | `Benzene` | `Benzenethiol` | `BenzoicAcid` |
+| `Benzonitrile` | `Benzophenone` | `BenzylAlcohol` | `BenzylEthylEther` |
+| `BenzylMercaptan` | `Biphenyl` | `Bromine` | `Bromobenzene` |
+| `Bromoethane` | `Bromomethane` | `Butane` | `ButylAcetate` |
+| `Butylbenzene` | `ButylMercaptan` | `Butyraldehyde` | `ButyricAcid` |
+| `Butyronitrile` | — | — | — |
 
-### S–Z and general fluid classes
+</details>
 
-SeButylmercaptan, SiliconTetrafluoride, Styrene, SuccinicAcid, SulfurDioxide, SulfurHexafluoride, SulfurTrioxide, TerephthalicAcid, Tetradecane, Tetrahydrofuran, Tetrahydrothiophene, Thiophene, Toluene, Trans12Dimethylcyclohexane, Trans2Butene, Trans2Methylcyclohexanol, Tridecane, TriethylAmine, TrimethylAmine, Undecane, VinylAcetate, VinylAcetylene, VinylChloride, VinylTrichlorosilane, Water, Gas, InorganicLiquid, Oil, OrganicLiquid, Steam, Vapor.
+<details>
+<summary><strong>C · 24 components</strong></summary>
 
-Legacy compatibility aliases EthlylAcetate and Ethlylene are also exported. Prefer EthylAcetate and Ethylene in new code.
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Carbondioxide` | `CarbonDisulfide` | `CarbonMonoxide` | `CarbonTetrachloride` |
+| `CarbonTetrafluoride` | `Chlorine` | `ChloroBenzene` | `Chloroethane` |
+| `Chloroform` | `ChloroMethane` | `Cis12Dimethylcyclohexane` | `Cis2Butene` |
+| `Cis2Methylcyclohexanol` | `Cumene` | `Cyanogen` | `Cyclobutane` |
+| `Cyclohexane` | `Cyclohexanol` | `Cyclohexanone` | `Cyclohexene` |
+| `CyclohexylMercaptan` | `Cyclopentane` | `Cyclopentene` | `Cyclopropane` |
+
+</details>
+
+<details>
+<summary><strong>D · 28 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Decanal` | `Decane` | `DecanoicAcid` | `DecylMercaptan` |
+| `Deuterium` | `Dibromomethane` | `DibutylEther` | `Dichloromethane` |
+| `DiethanolAmine` | `DiethylAmine` | `DiethylEther` | `DiethylSulfide` |
+| `Difluoromethane` | `DiisopropylAmine` | `DiisopropylEther` | `DiisopropylKetone` |
+| `DimethylAcetylene` | `DimethylAmine` | `DimethylDisulfide` | `DimethylEther` |
+| `DimethylPhthalate` | `Dimethylsilane` | `DimethylSulfide` | `DimethylSulfoxide` |
+| `DimethylTerephthalate` | `DiphenylEther` | `DipropylAmine` | `Dodecane` |
+
+</details>
+
+<details>
+<summary><strong>E · 25 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Eicosane` | `Ethane` | `Ethanol` | `EthylAcetate` |
+| `EthylAmine` | `Ethylbenzene` | `EthylBenzoate` | `EthylButyrate` |
+| `Ethylcyclohexane` | `Ethylcyclopentane` | `Ethylene` | `Ethylenediamine` |
+| `EthyleneGlycol` | `Ethyleneimine` | `EthyleneOxide` | `EthylFormate` |
+| `EthylhexylEther` | `EthylisopropylEther` | `EthylisopropylKetone` | `EthylMercaptan` |
+| `EthylPropionate` | `EthylpropylEther` | `Ethyltrichlorosilane` | — |
+
+**General categories and compatibility aliases**
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `EthlylAcetate` | `Ethlylene` | — | — |
+
+</details>
+
+<details>
+<summary><strong>F · 8 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Fluorine` | `FluoroBenzene` | `Fluoroethane` | `Fluoromethane` |
+| `Formaldehyde` | `Formamide` | `FormicAcid` | `Furan` |
+
+</details>
+
+<details>
+<summary><strong>G · 1 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+
+**General categories and compatibility aliases**
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Gas` | — | — | — |
+
+</details>
+
+<details>
+<summary><strong>H · 18 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Helium` | `Heptadecane` | `Heptanal` | `Heptane` |
+| `HeptanoicAcid` | `HeptylMercaptan` | `Hexadecane` | `Hexanal` |
+| `Hexane` | `HexanoicAcid` | `HexylMercaptan` | `Hydrazine` |
+| `Hydrogen` | `HydrogenBromide` | `HydrogenChloride` | `HydrogenCyanide` |
+| `HydrogenFluoride` | `HydrogenSulfide` | — | — |
+
+</details>
+
+<details>
+<summary><strong>I · 3 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `IsobutyricAcid` | `IsopropylAmine` | — | — |
+
+**General categories and compatibility aliases**
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `InorganicLiquid` | — | — | — |
+
+</details>
+
+<details>
+<summary><strong>M · 38 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `MalonicAcid` | `Mcresol` | `Mdichlorobenzene` | `MethacrylicAcid` |
+| `Methane` | `Methanol` | `MethylAcetate` | `MethylAcetylene` |
+| `MethylAcrylate` | `MethylAmine` | `MethylBenzoate` | `MethylbutylEther` |
+| `MethylbutylSulfide` | `MethylButyrate` | `Methylchlorosilane` | `Methylcyclohexane` |
+| `Methylcyclopentane` | `Methyldichlorosilane` | `MethylethylEther` | `MethylethylKetone` |
+| `MethylethylSulfide` | `MethylFormate` | `MethylisobutylEther` | `MethylisobutylKetone` |
+| `MethylIsocyanate` | `MethylisopropylEther` | `MethylisopropylKetone` | `MethylisopropylSulfide` |
+| `MethylMercaptan` | `MethylMethacrylate` | `MethylPentylEther` | `MethylPropionate` |
+| `MethylpropylEther` | `MethylpropylSulfide` | `Methylsilane` | `MethylTertButylEther` |
+| `MethylVinylEther` | `Mxylene` | — | — |
+
+</details>
+
+<details>
+<summary><strong>N · 15 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Naphthalene` | `Neon` | `NitricOxide` | `Nitroethane` |
+| `Nitrogen` | `NitrogenTrifluoride` | `Nitromethane` | `NitrousOxide` |
+| `NmethylAcetamide` | `NndimethylFormamide` | `Nonadecane` | `Nonanal` |
+| `Nonane` | `NonanoicAcid` | `NonylMercaptan` | — |
+
+</details>
+
+<details>
+<summary><strong>O · 14 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Ocresol` | `Octadecane` | `Octanal` | `Octane` |
+| `OctanoicAcid` | `OctylMercaptan` | `Odichlorobenzene` | `Oterphenyl` |
+| `OxalicAcid` | `Oxygen` | `Oxylene` | `Ozone` |
+
+**General categories and compatibility aliases**
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Oil` | `OrganicLiquid` | — | — |
+
+</details>
+
+<details>
+<summary><strong>P · 24 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Pcresol` | `Pdichlorobenzene` | `Pentadecane` | `Pentanal` |
+| `Pentane` | `PentanoicAcid` | `PentylMercaptan` | `Phenanthrene` |
+| `Phenol` | `PhenylIsocyanate` | `PhthalicAnhydride` | `Propadiene` |
+| `Propane` | `Propenylcyclohexene` | `Propionaldehyde` | `PropionicAcid` |
+| `Propionitrile` | `PropylAcetate` | `PropylAmine` | `Propylbenzene` |
+| `Propylene` | `PropylFormate` | `PropylMercaptan` | `Pxylene` |
+
+</details>
+
+<details>
+<summary><strong>Q · 1 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Quinone` | — | — | — |
+
+</details>
+
+<details>
+<summary><strong>S · 8 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `SeButylmercaptan` | `SiliconTetrafluoride` | `Styrene` | `SuccinicAcid` |
+| `SulfurDioxide` | `SulfurHexafluoride` | `SulfurTrioxide` | — |
+
+**General categories and compatibility aliases**
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Steam` | — | — | — |
+
+</details>
+
+<details>
+<summary><strong>T · 12 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `TerephthalicAcid` | `Tetradecane` | `Tetrahydrofuran` | `Tetrahydrothiophene` |
+| `Thiophene` | `Toluene` | `Trans12Dimethylcyclohexane` | `Trans2Butene` |
+| `Trans2Methylcyclohexanol` | `Tridecane` | `TriethylAmine` | `TrimethylAmine` |
+
+</details>
+
+<details>
+<summary><strong>U · 1 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Undecane` | — | — | — |
+
+</details>
+
+<details>
+<summary><strong>V · 5 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `VinylAcetate` | `VinylAcetylene` | `VinylChloride` | `VinylTrichlorosilane` |
+
+**General categories and compatibility aliases**
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Vapor` | — | — | — |
+
+</details>
+
+<details>
+<summary><strong>W · 1 components</strong></summary>
+
+| Component | Component | Component | Component |
+|---|---|---|---|
+| `Water` | — | — | — |
+
+</details>
+
+### General fluid categories
+
+These classes represent broad fluid types rather than individual chemical species: `Gas`, `InorganicLiquid`, `Oil`, `OrganicLiquid`, `Steam`, and `Vapor`.
+
+### Legacy import aliases
+
+`EthlylAcetate` and `Ethlylene` remain exported for backward compatibility. Prefer `EthylAcetate` and `Ethylene` in new code.
 
 ## Constructor parameters
 
