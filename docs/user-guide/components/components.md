@@ -23,31 +23,147 @@ Pass ProcessPI unit objects to the constructor and convert returned quantities w
 
 The current package exports 353 names in total: 345 chemical component classes, six general fluid-category classes (Gas, InorganicLiquid, Oil, OrganicLiquid, Steam, and Vapor), and two legacy compatibility aliases (EthlylAcetate and Ethlylene). The list below follows the package's exported names in processpi/components/__init__.py. Class names are used as import names.
 
-### Numeric and positional-name compounds
+The catalogue below is generated from the public exports in `processpi.components.__all__`. Expand only the range you need; names are the exact Python import names. There are 91 numeric/positional-name classes and 254 alphabetic chemical component classes.
 
-_112Trichloroethane, _11Dibromoethane, _11Dichloroethane, _11Dichloropropane, _11Difluoroethane, _11Dimethoxyethane, _11Dimethylcyclohexane, _123Trimethylbenzene, _1234Tetrahydronaphthalene, _124Trimethylbenzene, _12Butadiene, _12Butanediol, _12Dibromoethane, _12Dichloroethane, _12Dichloropropane, _12Difluoroethane, _12Dimethoxypropane, _12PropyleneGlycol, _135Trinitrobenzene, _13Butadiene, _13Butanediol, _14Dioxane, _1Butanol, _1Butene, _1Butyne, _1Chloropropane, _1Decanol, _1Decene, _1Decyne, _1Heptanol, _1Heptene, _1Heptyne, _1Hexanol, _1Hexene, _1Hexyne, _1Methylcyclohexanol, _1Methylcyclopentene, _1Nonanol, _1Nonene, _1Nonyne, _1Octanol, _1Octene, _1Octyne, _1Pentanol, _1Pentene, _1Pentyne, _1Propanol, _1Undecanol, _2233Tetramethylbutane, _224Trimethylpentane, _233Trimethylpentane, _23Dimethylbutane, _23Dimethylpentane, _246Trinitrotoluene, _2Butanol, _2Chloropropane, _2EthylButanoicAcid, _2EthylHexanoicAcid, _2Heptanol, _2Heptanone, _2Hexanol, _2Hexanone, _2Hexyne, _2Methyl1Butene, _2Methyl1Butene3Yne, _2Methyl2Butene, _2Methyl2Propanol, _2Methylbutane, _2MethylbutanoicAcid, _2MethyloctanoicAcid, _2Methylpentane, _2Methylpropane, _2MethylPropene, _2Nonanol, _2Octanol, _2Octanone, _2Pentanol, _2Pentanone, _2PentylMercaptan, _2Pentyne, _2Propanol, _2PropylMercaptan, _3Heptanone, _3Hexanone, _3Hexyne, _3Methyl12Butadiene, _3Methyl1Butanol, _3Methyl1Butyne, _3Methylcyclopentene, _3Octanone, _3Pentanone.
+<details>
+<summary>0–9 — 91 classes</summary>
 
-### A–C
+| Class name | Class name | Class name | Class name |
+|---|---|---|---|
+| `_112Trichloroethane` | `_1Butene` | `_1Propanol` | `_2MethylbutanoicAcid` |
+| `_11Dibromoethane` | `_1Butyne` | `_1Undecanol` | `_2MethyloctanoicAcid` |
+| `_11Dichloroethane` | `_1Chloropropane` | `_2233Tetramethylbutane` | `_2Methylpentane` |
+| `_11Dichloropropane` | `_1Decanol` | `_224Trimethylpentane` | `_2Methylpropane` |
+| `_11Difluoroethane` | `_1Decene` | `_233Trimethylpentane` | `_2Nonanol` |
+| `_11Dimethoxyethane` | `_1Decyne` | `_23Dimethylbutane` | `_2Octanol` |
+| `_11Dimethylcyclohexane` | `_1Heptanol` | `_23Dimethylpentane` | `_2Octanone` |
+| `_1234Tetrahydronaphthalene` | `_1Heptene` | `_246Trinitrotoluene` | `_2Pentanol` |
+| `_123Trimethylbenzene` | `_1Heptyne` | `_2Butanol` | `_2Pentanone` |
+| `_124Trimethylbenzene` | `_1Hexanol` | `_2Chloropropane` | `_2PentylMercaptan` |
+| `_12Butadiene` | `_1Hexene` | `_2EthylButanoicAcid` | `_2Pentyne` |
+| `_12Butanediol` | `_1Hexyne` | `_2EthylHexanoicAcid` | `_2Propanol` |
+| `_12Dibromoethane` | `_1Methylcyclohexanol` | `_2Heptanol` | `_2PropylMercaptan` |
+| `_12Dichloroethane` | `_1Methylcyclopentene` | `_2Heptanone` | `_3Heptanone` |
+| `_12Dichloropropane` | `_1Nonanol` | `_2Hexanol` | `_3Hexanone` |
+| `_12Difluoroethane` | `_1Nonene` | `_2Hexanone` | `_3Hexyne` |
+| `_12Dimethoxypropane` | `_1Nonyne` | `_2Hexyne` | `_3Methyl12Butadiene` |
+| `_12PropyleneGlycol` | `_1Octanol` | `_2Methyl1Butene` | `_3Methyl1Butanol` |
+| `_135Trinitrobenzene` | `_1Octene` | `_2Methyl1Butene3Yne` | `_3Methyl1Butyne` |
+| `_13Butadiene` | `_1Octyne` | `_2Methyl2Butene` | `_3Methylcyclopentene` |
+| `_13Butanediol` | `_1Pentanol` | `_2Methyl2Propanol` | `_3Octanone` |
+| `_14Dioxane` | `_1Pentene` | `_2MethylPropene` | `_3Pentanone` |
+| `_1Butanol` | `_1Pentyne` | `_2Methylbutane` |  |
 
-Acetaldehyde, Acetamide, AceticAcid, AceticAnhydride, Acetone, Acetonitrile, Acetylene, Acrolein, AcrylicAcid, Acrylonitrile, Air, AlphaMethylStyrene, Ammonia, Anisole, Argon, Benzamide, Benzene, Benzenethiol, BenzoicAcid, Benzonitrile, Benzophenone, BenzylAlcohol, BenzylEthylEther, BenzylMercaptan, Biphenyl, Bromine, Bromobenzene, Bromoethane, Bromomethane, Butane, ButylAcetate, Butylbenzene, ButylMercaptan, Butyraldehyde, ButyricAcid, Butyronitrile, Carbondioxide, CarbonDisulfide, CarbonMonoxide, CarbonTetrachloride, CarbonTetrafluoride, Chlorine, ChloroBenzene, Chloroethane, Chloroform, ChloroMethane, Cis12Dimethylcyclohexane, Cis2Butene, Cis2Methylcyclohexanol, Cumene, Cyanogen, Cyclobutane, Cyclohexane, Cyclohexanol, Cyclohexanone, Cyclohexene, CyclohexylMercaptan, Cyclopentane, Cyclopentene, Cyclopropane.
+</details>
 
-### D–H
+<details>
+<summary>A–C — 60 classes</summary>
 
-Decanal, Decane, DecanoicAcid, DecylMercaptan, Deuterium, Dibromomethane, DibutylEther, Dichloromethane, DiethanolAmine, DiethylAmine, DiethylEther, DiethylSulfide, Difluoromethane, DiisopropylAmine, DiisopropylEther, DiisopropylKetone, DimethylAcetylene, DimethylAmine, DimethylDisulfide, DimethylEther, DimethylPhthalate, Dimethylsilane, DimethylSulfide, DimethylSulfoxide, DimethylTerephthalate, DiphenylEther, DipropylAmine, Dodecane, Eicosane, Ethane, Ethanol, EthylAcetate, EthylAmine, Ethylbenzene, EthylBenzoate, EthylButyrate, Ethylcyclohexane, Ethylcyclopentane, Ethylene, Ethylenediamine, EthyleneGlycol, Ethyleneimine, EthyleneOxide, EthylFormate, EthylhexylEther, EthylisopropylEther, EthylisopropylKetone, EthylMercaptan, EthylPropionate, EthylpropylEther, Ethyltrichlorosilane, Fluorine, FluoroBenzene, Fluoroethane, Fluoromethane, Formaldehyde, Formamide, FormicAcid, Furan, Helium, Heptadecane, Heptanal, Heptane, HeptanoicAcid, HeptylMercaptan, Hexadecane, Hexanal, Hexane, HexanoicAcid, HexylMercaptan, Hydrazine, Hydrogen, HydrogenBromide, HydrogenChloride, HydrogenCyanide, HydrogenFluoride, HydrogenSulfide.
+| Class name | Class name | Class name | Class name |
+|---|---|---|---|
+| `Acetaldehyde` | `Benzamide` | `ButylAcetate` | `Chloroform` |
+| `Acetamide` | `Benzene` | `ButylMercaptan` | `Cis12Dimethylcyclohexane` |
+| `AceticAcid` | `Benzenethiol` | `Butylbenzene` | `Cis2Butene` |
+| `AceticAnhydride` | `BenzoicAcid` | `Butyraldehyde` | `Cis2Methylcyclohexanol` |
+| `Acetone` | `Benzonitrile` | `ButyricAcid` | `Cumene` |
+| `Acetonitrile` | `Benzophenone` | `Butyronitrile` | `Cyanogen` |
+| `Acetylene` | `BenzylAlcohol` | `CarbonDisulfide` | `Cyclobutane` |
+| `Acrolein` | `BenzylEthylEther` | `CarbonMonoxide` | `Cyclohexane` |
+| `AcrylicAcid` | `BenzylMercaptan` | `CarbonTetrachloride` | `Cyclohexanol` |
+| `Acrylonitrile` | `Biphenyl` | `CarbonTetrafluoride` | `Cyclohexanone` |
+| `Air` | `Bromine` | `Carbondioxide` | `Cyclohexene` |
+| `AlphaMethylStyrene` | `Bromobenzene` | `Chlorine` | `CyclohexylMercaptan` |
+| `Ammonia` | `Bromoethane` | `ChloroBenzene` | `Cyclopentane` |
+| `Anisole` | `Bromomethane` | `ChloroMethane` | `Cyclopentene` |
+| `Argon` | `Butane` | `Chloroethane` | `Cyclopropane` |
 
-### I–M
+</details>
 
-IsobutyricAcid, IsopropylAmine, MalonicAcid, Mcresol, Mdichlorobenzene, MethacrylicAcid, Methane, Methanol, MethylAcetate, MethylAcetylene, MethylAcrylate, MethylAmine, MethylBenzoate, MethylbutylEther, MethylbutylSulfide, MethylButyrate, Methylchlorosilane, Methylcyclohexane, Methylcyclopentane, Methyldichlorosilane, MethylethylEther, MethylethylKetone, MethylethylSulfide, MethylFormate, MethylisobutylEther, MethylisobutylKetone, MethylIsocyanate, MethylisopropylEther, MethylisopropylKetone, MethylisopropylSulfide, MethylMercaptan, MethylMethacrylate, MethylPentylEther, MethylPropionate, MethylpropylEther, MethylpropylSulfide, Methylsilane, MethylTertButylEther, MethylVinylEther, Mxylene.
+<details>
+<summary>D–H — 77 classes</summary>
 
-### N–R
+| Class name | Class name | Class name | Class name |
+|---|---|---|---|
+| `Decanal` | `DimethylPhthalate` | `Ethylcyclopentane` | `Heptadecane` |
+| `Decane` | `DimethylSulfide` | `Ethylene` | `Heptanal` |
+| `DecanoicAcid` | `DimethylSulfoxide` | `EthyleneGlycol` | `Heptane` |
+| `DecylMercaptan` | `DimethylTerephthalate` | `EthyleneOxide` | `HeptanoicAcid` |
+| `Deuterium` | `Dimethylsilane` | `Ethylenediamine` | `HeptylMercaptan` |
+| `Dibromomethane` | `DiphenylEther` | `Ethyleneimine` | `Hexadecane` |
+| `DibutylEther` | `DipropylAmine` | `EthylhexylEther` | `Hexanal` |
+| `Dichloromethane` | `Dodecane` | `EthylisopropylEther` | `Hexane` |
+| `DiethanolAmine` | `Eicosane` | `EthylisopropylKetone` | `HexanoicAcid` |
+| `DiethylAmine` | `Ethane` | `EthylpropylEther` | `HexylMercaptan` |
+| `DiethylEther` | `Ethanol` | `Ethyltrichlorosilane` | `Hydrazine` |
+| `DiethylSulfide` | `EthylAcetate` | `Fluorine` | `Hydrogen` |
+| `Difluoromethane` | `EthylAmine` | `FluoroBenzene` | `HydrogenBromide` |
+| `DiisopropylAmine` | `EthylBenzoate` | `Fluoroethane` | `HydrogenChloride` |
+| `DiisopropylEther` | `EthylButyrate` | `Fluoromethane` | `HydrogenCyanide` |
+| `DiisopropylKetone` | `EthylFormate` | `Formaldehyde` | `HydrogenFluoride` |
+| `DimethylAcetylene` | `EthylMercaptan` | `Formamide` | `HydrogenSulfide` |
+| `DimethylAmine` | `EthylPropionate` | `FormicAcid` |  |
+| `DimethylDisulfide` | `Ethylbenzene` | `Furan` |  |
+| `DimethylEther` | `Ethylcyclohexane` | `Helium` |  |
 
-Naphthalene, Neon, NitricOxide, Nitroethane, Nitrogen, NitrogenTrifluoride, Nitromethane, NitrousOxide, NmethylAcetamide, NndimethylFormamide, Nonadecane, Nonanal, Nonane, NonanoicAcid, NonylMercaptan, Ocresol, Octadecane, Octanal, Octane, OctanoicAcid, OctylMercaptan, Odichlorobenzene, Oterphenyl, OxalicAcid, Oxygen, Oxylene, Ozone, Pcresol, Pdichlorobenzene, Pentadecane, Pentanal, Pentane, PentanoicAcid, PentylMercaptan, Phenanthrene, Phenol, PhenylIsocyanate, PhthalicAnhydride, Propadiene, Propane, Propenylcyclohexene, Propionaldehyde, PropionicAcid, Propionitrile, PropylAcetate, PropylAmine, Propylbenzene, Propylene, PropylFormate, PropylMercaptan, Pxylene, Quinone.
+</details>
 
-### S–Z and general fluid classes
+<details>
+<summary>I–M — 40 classes</summary>
 
-SeButylmercaptan, SiliconTetrafluoride, Styrene, SuccinicAcid, SulfurDioxide, SulfurHexafluoride, SulfurTrioxide, TerephthalicAcid, Tetradecane, Tetrahydrofuran, Tetrahydrothiophene, Thiophene, Toluene, Trans12Dimethylcyclohexane, Trans2Butene, Trans2Methylcyclohexanol, Tridecane, TriethylAmine, TrimethylAmine, Undecane, VinylAcetate, VinylAcetylene, VinylChloride, VinylTrichlorosilane, Water, Gas, InorganicLiquid, Oil, OrganicLiquid, Steam, Vapor.
+| Class name | Class name | Class name | Class name |
+|---|---|---|---|
+| `IsobutyricAcid` | `MethylAcrylate` | `MethylTertButylEther` | `MethylethylSulfide` |
+| `IsopropylAmine` | `MethylAmine` | `MethylVinylEther` | `MethylisobutylEther` |
+| `MalonicAcid` | `MethylBenzoate` | `MethylbutylEther` | `MethylisobutylKetone` |
+| `Mcresol` | `MethylButyrate` | `MethylbutylSulfide` | `MethylisopropylEther` |
+| `Mdichlorobenzene` | `MethylFormate` | `Methylchlorosilane` | `MethylisopropylKetone` |
+| `MethacrylicAcid` | `MethylIsocyanate` | `Methylcyclohexane` | `MethylisopropylSulfide` |
+| `Methane` | `MethylMercaptan` | `Methylcyclopentane` | `MethylpropylEther` |
+| `Methanol` | `MethylMethacrylate` | `Methyldichlorosilane` | `MethylpropylSulfide` |
+| `MethylAcetate` | `MethylPentylEther` | `MethylethylEther` | `Methylsilane` |
+| `MethylAcetylene` | `MethylPropionate` | `MethylethylKetone` | `Mxylene` |
 
-Legacy compatibility aliases EthlylAcetate and Ethlylene are also exported. Prefer EthylAcetate and Ethylene in new code.
+</details>
+
+<details>
+<summary>N–R — 52 classes</summary>
+
+| Class name | Class name | Class name | Class name |
+|---|---|---|---|
+| `Naphthalene` | `NonanoicAcid` | `Ozone` | `Propane` |
+| `Neon` | `NonylMercaptan` | `Pcresol` | `Propenylcyclohexene` |
+| `NitricOxide` | `Ocresol` | `Pdichlorobenzene` | `Propionaldehyde` |
+| `Nitroethane` | `Octadecane` | `Pentadecane` | `PropionicAcid` |
+| `Nitrogen` | `Octanal` | `Pentanal` | `Propionitrile` |
+| `NitrogenTrifluoride` | `Octane` | `Pentane` | `PropylAcetate` |
+| `Nitromethane` | `OctanoicAcid` | `PentanoicAcid` | `PropylAmine` |
+| `NitrousOxide` | `OctylMercaptan` | `PentylMercaptan` | `PropylFormate` |
+| `NmethylAcetamide` | `Odichlorobenzene` | `Phenanthrene` | `PropylMercaptan` |
+| `NndimethylFormamide` | `Oterphenyl` | `Phenol` | `Propylbenzene` |
+| `Nonadecane` | `OxalicAcid` | `PhenylIsocyanate` | `Propylene` |
+| `Nonanal` | `Oxygen` | `PhthalicAnhydride` | `Pxylene` |
+| `Nonane` | `Oxylene` | `Propadiene` | `Quinone` |
+
+</details>
+
+<details>
+<summary>S–Z — 25 classes</summary>
+
+| Class name | Class name | Class name | Class name |
+|---|---|---|---|
+| `SeButylmercaptan` | `TerephthalicAcid` | `Trans2Butene` | `VinylAcetylene` |
+| `SiliconTetrafluoride` | `Tetradecane` | `Trans2Methylcyclohexanol` | `VinylChloride` |
+| `Styrene` | `Tetrahydrofuran` | `Tridecane` | `VinylTrichlorosilane` |
+| `SuccinicAcid` | `Tetrahydrothiophene` | `TriethylAmine` | `Water` |
+| `SulfurDioxide` | `Thiophene` | `TrimethylAmine` |  |
+| `SulfurHexafluoride` | `Toluene` | `Undecane` |  |
+| `SulfurTrioxide` | `Trans12Dimethylcyclohexane` | `VinylAcetate` |  |
+
+</details>
+
+**General fluid-category classes:** `Gas`, `InorganicLiquid`, `Oil`, `OrganicLiquid`, `Steam`, and `Vapor`.
+
+**Legacy aliases:** `EthlylAcetate` and `Ethlylene` remain exported for compatibility. Prefer `EthylAcetate` and `Ethylene` in new code.
 
 ## Constructor parameters
 
@@ -69,31 +185,40 @@ Use unit objects, not bare numeric values. A phase override is useful for a pres
 
 ## Public metadata properties
 
-| Attribute | Meaning |
-|---|---|
-| name | Human-readable component name |
-| formula | Chemical formula |
-| molecular_weight | Molecular weight in g/mol |
+Every chemical component class exposes three identity fields. These values describe the substance and are defined by the component class; they are not calculated from the operating temperature or pressure.
 
-Component classes may also define internal critical-property and correlation data. These are implementation details and should not normally be changed by application code:
+| Attribute | Type / unit | Meaning | Example (`Water`) |
+|---|---|---|---|
+| `name` | `str` | Human-readable substance name | `"Water"` |
+| `formula` | `str` | Chemical formula using the class's stored notation | `"H2O"` |
+| `molecular_weight` | `float`, g/mol | Molecular weight used in molar-to-mass conversions and gas-density calculations | `18.015` |
 
-| Internal attribute | Meaning |
-|---|---|
-| _critical_temperature | Critical temperature |
-| _critical_pressure | Critical pressure |
-| _critical_volume | Critical molar volume |
-| _critical_zc | Critical compressibility factor |
-| _critical_acentric_factor | Acentric factor |
-| _density_constants | Liquid-density correlation constants |
-| _specific_heat_constants | Heat-capacity correlation constants |
-| _ideal_gas_heat_capacity_constants | Optional ideal-gas Cp correlation constants |
-| _viscosity_constants | Liquid-viscosity correlation constants |
-| _thermal_conductivity_constants | Liquid thermal-conductivity correlation constants |
-| _vapor_thermal_conductivity_constants | Optional gas/vapour conductivity constants |
-| _vapor_pressure_constants | Vapour-pressure correlation constants |
-| _enthalpy_constants | Heat-of-vaporisation correlation constants |
+Read them directly from an instance or class:
 
-The exact constants and valid ranges are component-specific. Do not reuse one substance's constants for another substance.
+~~~python
+from processpi.components import Water
+
+water = Water()
+print(water.name)              # Water
+print(water.formula)           # H2O
+print(water.molecular_weight)  # 18.015 g/mol
+~~~
+
+### Operating-condition attributes
+
+These are instance attributes, not chemical identity metadata:
+
+| Attribute | Type | Meaning |
+|---|---|---|
+| `temperature` | `Temperature` | Current temperature used when evaluating properties; defaults to 25 °C in the base constructor |
+| `pressure` | `Pressure` | Current absolute pressure; defaults to 101325 Pa in the base constructor |
+| `hx_type` | `str` | Heat-exchanger fluid category used by the HX standards lookup; inferred by the base class unless the component defines an override |
+
+The evaluated phase is obtained through `phase()`; the heat-exchanger classification is available through `httype()` and the detailed service mapping through `hx_data()`. These are methods, not identity fields.
+
+### Internal correlation data
+
+Attributes beginning with an underscore (for example, `_critical_temperature`, `_density_constants`, and `_vapor_pressure_constants`) are implementation data used by property correlations. Their presence varies by component. They are not part of the stable public metadata API and should not be modified by application code.
 
 ## Inherited methods and calculated properties
 
