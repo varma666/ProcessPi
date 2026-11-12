@@ -97,11 +97,11 @@ The exact constants and valid ranges are component-specific. Do not reuse one su
 
 ## Inherited methods and calculated properties
 
-The base class supports both property-style and call-style access for its decorated properties. For example, both water.density and water.density() return the density result.
+The base class uses PropertyMethod descriptors. Calling water.density() evaluates the property and returns a Density object. Accessing water.density without parentheses returns a callable wrapper; its .value attribute contains the evaluated result. The same access pattern applies to phase, specific_heat, viscosity, thermal_conductivity, vapor_pressure, and enthalpy.
 
 | Member | Return type | Explanation |
 |---|---|---|
-| phase() | str | Returns gas or liquid. An explicit phase override takes priority; otherwise the base class considers the default phase, critical temperature, and vapour pressure. |
+| phase() | str | Calling phase() returns gas or liquid. Accessing phase without parentheses returns the descriptor wrapper; phase.value contains the evaluated string. An explicit phase override takes priority; otherwise the base class considers the default phase, critical temperature, and vapour pressure. |
 | density() | Density | Returns supplied density if present; otherwise calculates gas density using the ideal-gas equation or liquid density using the component's DIPPR-style correlation. |
 | specific_heat() | SpecificHeat | Returns supplied Cp if present; otherwise uses an available ideal-gas Cp correlation for gas phase or the component temperature polynomial. |
 | viscosity() | Viscosity | Returns supplied dynamic viscosity if present; otherwise evaluates the liquid correlation or gas-phase Sutherland approximation. |
