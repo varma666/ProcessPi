@@ -21,7 +21,7 @@ Pass ProcessPI unit objects to the constructor and convert returned quantities w
 
 ## Component catalogue
 
-The public component exports are maintained in processpi/components/__init__.py. The list below follows the package's exported classes. Class names are used as import names.
+The current package exports 353 names in total: 345 chemical component classes, six general fluid-category classes (Gas, InorganicLiquid, Oil, OrganicLiquid, Steam, and Vapor), and two legacy compatibility aliases (EthlylAcetate and Ethlylene). The list below follows the package's exported names in processpi/components/__init__.py. Class names are used as import names.
 
 ### Numeric and positional-name compounds
 
