@@ -21,7 +21,7 @@ Pass ProcessPI unit objects to the constructor and convert returned quantities w
 
 ## Component catalogue
 
-The package exports **353 component classes** (excluding the shared `Component` base class): **254 chemical substances**, **6 general fluid categories**, and **2 legacy compatibility aliases**.
+The package exports **353 component classes** (excluding the shared `Component` base class): **345 chemical substances**, **6 general fluid categories**, and **2 legacy compatibility aliases**.
 
 To make the catalogue easier to browse, names are grouped alphabetically. Expand only the section you need. The class names are the exact Python import names exported by `processpi.components`.
 
