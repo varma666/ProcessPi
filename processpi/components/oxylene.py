@@ -55,3 +55,6 @@ class Oxylene(Component):
     _thermal_conductivity_constants = [0.19989, -0.0002299,0,0,0]
     _vapor_pressure_constants = [90.405, -7955.20, -10.086, 5.96e-06, 2.0]
     _enthalpy_constants = [5.5395e-7, 0.37788,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 247.98-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 344, o-Xylene).
+    _vapor_viscosity_constants = [8.3436E-07, 0.49713, 365.86, 0]

@@ -55,3 +55,6 @@ class Benzophenone(Component):
     _thermal_conductivity_constants = [0.25867, -0.00022516,0,0,0]
     _vapor_pressure_constants = [88.404, -11769, -8.9014, 1.93e-18, 6.0]
     _enthalpy_constants = [10.523e-7, 0.87091, -0.45568,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 321.35-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 20, Benzophenone).
+    _vapor_viscosity_constants = [3.779E-07, 0.6005, 409, 0]

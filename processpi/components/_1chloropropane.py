@@ -55,3 +55,6 @@ class _1Chloropropane(Component):
     _thermal_conductivity_constants = [0.20143, -0.00028925,0,0,0]
     _vapor_pressure_constants = [79.24, -5718.80, -8.789, 8.45e-06, 2.0]
     _enthalpy_constants = [3.989e-7, 0.37956,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 150.35-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 57, 1-Chloropropane).
+    _vapor_viscosity_constants = [3.638E-07, 0.6417, 208.3, 0]

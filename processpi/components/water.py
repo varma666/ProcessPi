@@ -15,6 +15,9 @@ class Water(Component):
     _thermal_conductivity_constants = [-0.432, 0.0057255, -0.000008078,1.861E-09,0]
     _vapor_pressure_constants = [73.649, -7258.2, -7.3037, 4.1653E-06, 2] 
     _enthalpy_constants = [5.2053E-7, 0.3199, -0.212, 0.25795, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 273.16-1073.15 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 342, Water).
+    _vapor_viscosity_constants = [1.7096E-08, 1.1146, 0, 0]
 
     def density(self, temperature: Temperature = None) -> Density:
         temperature = temperature or self.temperature

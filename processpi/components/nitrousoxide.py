@@ -14,7 +14,7 @@ class NitrousOxide(Component):
     Section 2, compound no. 252, in the equation forms `Component` uses.
     At 25 C and 1 atm nitrous oxide is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
 
     **Properties:**
     - `name`: The common name of the compound.
@@ -84,3 +84,6 @@ class NitrousOxide(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 182.3-1000 K:
     # Table 2-314, p. 2-437.
     _vapor_thermal_conductivity_constants = [0.001096, 0.667, 540, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 182.30-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 252, Nitrous oxide).
+    _vapor_viscosity_constants = [2.115E-06, 0.4642, 305.7, 0]

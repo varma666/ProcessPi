@@ -55,3 +55,6 @@ class MethylAcetate(Component):
     _thermal_conductivity_constants = [0.2777, -0.000417, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [61.267, -5618.60, -5.6473, 2.11e-17, 6.0]
     _enthalpy_constants = [4.492e-7, 0.3685, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 250.00-800 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 196, Methyl acetate).
+    _vapor_viscosity_constants = [1.3226E-06, 0.4885, 504.3, 0]

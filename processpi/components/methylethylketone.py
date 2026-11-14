@@ -55,3 +55,6 @@ class MethylethylKetone(Component):
     _thermal_conductivity_constants = [0.2197, -0.0002505, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [72.698, -6143.60, -7.5779, 5.65e-06, 2.0]
     _enthalpy_constants = [4.622e-7, 0.355, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 186.48-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 222, Methylethyl ketone).
+    _vapor_viscosity_constants = [2.6552E-08, 0.98316, 0, 0]

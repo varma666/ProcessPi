@@ -55,3 +55,6 @@ class _1Methylcyclohexanol(Component):
     _thermal_conductivity_constants = [0.21558, -0.00022728, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [134.63, -10682, -16.511, 8.44e-06, 2.0]
     _enthalpy_constants = [6.477e-7, 0.4853, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 299.15-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 214, 1-Methylcyclohexanol).
+    _vapor_viscosity_constants = [8.5736E-08, 0.80277, 100.77, 0]

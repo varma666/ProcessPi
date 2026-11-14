@@ -55,3 +55,6 @@ class Cis12Dimethylcyclohexane(Component):
     _thermal_conductivity_constants = [0.18092, -0.0002108, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [78.952, -7075.40, -8.4344, 4.5e-06, 2.0]
     _enthalpy_constants = [5.2852e-7, 0.41607, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 402.94-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 109, cis-1,2-Dimethylcyclohexane).
+    _vapor_viscosity_constants = [8.4576E-07, 0.487, 398, 0]

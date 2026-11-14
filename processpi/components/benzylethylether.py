@@ -55,3 +55,6 @@ class BenzylEthylEther(Component):
     _thermal_conductivity_constants = [0.2029, -0.0002226,0,0,0]
     _vapor_pressure_constants = [68.541, -7886.20, -6.5804, 2.43e-06, 2.0]
     _enthalpy_constants = [6.228e-7, 0.3411,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 458.15-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 22, Benzyl ethyl ether).
+    _vapor_viscosity_constants = [1.56E-07, 0.7181, 180, 0]

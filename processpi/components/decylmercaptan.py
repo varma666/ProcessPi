@@ -55,3 +55,6 @@ class DecylMercaptan(Component):
     _thermal_conductivity_constants = [0.20134, -0.00020826,0,0,0]
     _vapor_pressure_constants = [91.91, -10565, -9.5957, 5.7e-18, 6.0]
     _enthalpy_constants = [8.0617e-7, 0.41045,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 247.56-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 78, Decyl mercaptan).
+    _vapor_viscosity_constants = [3.272E-08, 0.9302, 39.13, 0]

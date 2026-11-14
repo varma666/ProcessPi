@@ -55,3 +55,6 @@ class Fluoromethane(Component):
     _thermal_conductivity_constants = [0.445, -0.001023, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [59.123, -3043.70, -6.1845, 1.66e-05, 2.0]
     _enthalpy_constants = [2.4708e-7, 0.37014, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 131.35-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 152, Fluoromethane).
+    _vapor_viscosity_constants = [1.2269E-07, 0.82167, 0, 0]

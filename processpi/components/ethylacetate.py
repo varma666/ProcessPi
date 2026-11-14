@@ -23,6 +23,9 @@ class EthylAcetate(Component):
     _thermal_conductivity_constants = [0.2501, -0.0003563,0,0,0]
     _vapor_pressure_constants = [66.824,-6227.60,-6.41,1.79E-17, 6] 
     _enthalpy_constants = [4.933E-7,0.3847, 0,0, 0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 189.60-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 127, Ethyl acetate).
+    _vapor_viscosity_constants = [3.214E-06, 0.3572, 667, 0]
 
 
 class EthlylAcetate(EthylAcetate):

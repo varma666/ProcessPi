@@ -55,3 +55,6 @@ class _1Octanol(Component):
     _thermal_conductivity_constants = [0.2316, -0.0002407, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [144.111, -13667, -16.826, 9.37e-18, 6.0]
     _enthalpy_constants = [7.2468e-7, -1.2464, 3.6797, -2.0665,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 257.65-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 267, 1-Octanol).
+    _vapor_viscosity_constants = [1.752E-07, 0.6941, 206.8, 0]

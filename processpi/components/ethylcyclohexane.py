@@ -55,3 +55,6 @@ class Ethylcyclohexane(Component):
     _thermal_conductivity_constants = [0.17662, -0.0002014, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [80.208, -7203.20, -8.6023, 4.59e-06, 2.0]
     _enthalpy_constants = [5.3832e-7, 0.41763, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 161.84-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 133, Ethylcyclohexane).
+    _vapor_viscosity_constants = [4.107E-07, 0.57143, 230.06, 0]

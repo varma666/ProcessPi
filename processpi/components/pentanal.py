@@ -55,3 +55,6 @@ class Pentanal(Component):
     _thermal_conductivity_constants = [0.22697, -0.00033227, 1.18e-07, 0.0, 0.0]
     _vapor_pressure_constants = [149.58, -8890, -20.697, 0.0221, 1.0]
     _enthalpy_constants = [5.1478e-7, 0.37541, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 182.00-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 278, Pentanal).
+    _vapor_viscosity_constants = [2.27E-07, 0.6767, 191.74, 0]

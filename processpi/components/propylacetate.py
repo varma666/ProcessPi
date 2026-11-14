@@ -55,3 +55,6 @@ class PropylAcetate(Component):
     _thermal_conductivity_constants = [0.2332, -0.0003096, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [115.16, -8433.90, -13.934, 1.03e-05, 2.0]
     _enthalpy_constants = [5.4327e-7, 0.407, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 178.15-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 302, Propyl acetate).
+    _vapor_viscosity_constants = [2.1372E-07, 0.6894, 178.57, 0]

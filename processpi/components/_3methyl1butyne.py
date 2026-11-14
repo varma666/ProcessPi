@@ -55,3 +55,6 @@ class _3Methyl1Butyne(Component):
     _thermal_conductivity_constants = [0.20348, -0.0003106, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [69.459, -5250.0, -7.1125, 7.93e-17, 6.0]
     _enthalpy_constants = [3.792e-7, 0.3565, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 183.45-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 210, 3-Methyl-1-butyne).
+    _vapor_viscosity_constants = [4.0748E-08, 0.92709, 0, 0]

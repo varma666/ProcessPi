@@ -55,3 +55,6 @@ class TrimethylAmine(Component):
     _thermal_conductivity_constants = [0.23813, -0.00038397, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [134.68, -6055.80, -19.415, 0.0286, 1.0]
     _enthalpy_constants = [3.305e-7, 0.354, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 156.08-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 329, Trimethyl amine).
+    _vapor_viscosity_constants = [1.2434E-06, 0.4832, 447.7, 0]

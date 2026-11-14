@@ -55,3 +55,6 @@ class _1Nonene(Component):
     _thermal_conductivity_constants = [0.20468, -0.00025738, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [63.313, -7040.40, -5.8055, 7.58e-18, 6.0]
     _enthalpy_constants = [5.9054e-7, 0.61039, -0.54533, 0.30683]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 191.91-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 260, 1-Nonene).
+    _vapor_viscosity_constants = [6.6329E-08, 0.82027, 76.204, 0]

@@ -79,3 +79,6 @@ class PropionicAcid(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 414.32-1000 K:
     # Table 2-314, p. 2-437.
     _vapor_thermal_conductivity_constants = [0.00022286, 0.91704, 678.21, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 252.45-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 300, Propionic acid).
+    _vapor_viscosity_constants = [1.61E-07, 0.7457, 159.3, 0]

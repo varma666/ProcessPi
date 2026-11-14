@@ -23,3 +23,6 @@ class Butane(Component):
     _thermal_conductivity_constants = [0.27349, -0.00071267,5.16E-07,0,0]
     _vapor_pressure_constants = [66.343,-4363.20,-7.046,9.45E-06, 2] 
     _enthalpy_constants = [3.6238E-7, 0.8337, -0.82274,0.39613, 0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 134.86-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 31, Butane).
+    _vapor_viscosity_constants = [3.4387E-08, 0.94604, 0, 0]

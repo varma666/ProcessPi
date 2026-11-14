@@ -23,3 +23,6 @@ class BenzoicAcid(Component):
     _thermal_conductivity_constants = [0.2391, -0.0002325, 0,0,0]
     _vapor_pressure_constants = [88.513, -11829, -8.6826, 2.32E-19, 6] 
     _enthalpy_constants = [10.19E-7, 0.478,0,0,0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 395.45-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 18, Benzoic acid).
+    _vapor_viscosity_constants = [7.4266E-08, 0.8289, 91.197, 0]

@@ -55,3 +55,6 @@ class _2Methylbutane(Component):
     _thermal_conductivity_constants = [0.21246, -0.00033581, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [71.308, -4976, -7.7169, 8.73e-06, 2.0]
     _enthalpy_constants = [3.7593e-7, 0.39173, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 150.00-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 202, 2-Methylbutane).
+    _vapor_viscosity_constants = [2.4344E-08, 0.97376, -91.597, 18720]

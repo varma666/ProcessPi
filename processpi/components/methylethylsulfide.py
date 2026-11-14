@@ -55,3 +55,6 @@ class MethylethylSulfide(Component):
     _thermal_conductivity_constants = [0.22136, -0.00028938, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [79.07, -6114.10, -8.631, 6.53e-06, 2.0]
     _enthalpy_constants = [4.4842e-7, 0.41151, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 167.23-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 223, Methylethyl sulfide).
+    _vapor_viscosity_constants = [8.6219E-08, 0.83591, 72.564, 0]

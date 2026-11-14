@@ -55,3 +55,6 @@ class Pentadecane(Component):
     _thermal_conductivity_constants = [0.20649, -0.00021911, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [135.57, -13478, -16.022, 5.61e-06, 2.0]
     _enthalpy_constants = [9.6741e-7, 0.45399, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 283.07-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 277, Pentadecane).
+    _vapor_viscosity_constants = [4.0828E-08, 0.8766, 212.68, 0]

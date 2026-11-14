@@ -55,3 +55,6 @@ class DimethylAmine(Component):
     _thermal_conductivity_constants = [0.2454, -0.000338,0,0,0]
     _vapor_pressure_constants = [71.738, -5302, -7.3324, 6.42e-17, 6.0]
     _enthalpy_constants = [4.09e-7, 0.42005,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 180.96-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 106, Dimethyl amine).
+    _vapor_viscosity_constants = [2.757E-07, 0.6841, 133.2, 0]

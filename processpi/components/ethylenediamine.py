@@ -55,3 +55,6 @@ class Ethylenediamine(Component):
     _thermal_conductivity_constants = [0.36434, -0.0004433, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [73.51, -7572.70, -7.1435, 1.21e-17, 6.0]
     _enthalpy_constants = [5.7521e-7, 0.34513, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 284.29-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 136, Ethylenediamine).
+    _vapor_viscosity_constants = [1.3744E-07, 0.7557, 122.8, 0]

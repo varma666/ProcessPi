@@ -23,6 +23,9 @@ class Ethylene(Component):
     _thermal_conductivity_constants = [0.4194,-0.001591,0.000001306,0,0]
     _vapor_pressure_constants = [53.963,-2443,-5.5643,0.000019079,2] 
     _enthalpy_constants = [1.8844E-7,0.36485, 0,0, 0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 169.41-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 135, Ethylene).
+    _vapor_viscosity_constants = [2.0789E-06, 0.4163, 352.7, 0]
 
 
 class Ethlylene(Ethylene):

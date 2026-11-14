@@ -55,3 +55,6 @@ class DimethylTerephthalate(Component):
     _thermal_conductivity_constants = [0.21593, -0.00020805, 0, 0, 0]
     _vapor_pressure_constants = [43.541, -8204.80, -2.7519, 1.05e-18, 6.0]
     _enthalpy_constants = [7.236e-7, 0.2424, 0, 0, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 413.80-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 119, Dimethyl terephthalate).
+    _vapor_viscosity_constants = [4.8739E-08, 0.8749, 51.885, 0]

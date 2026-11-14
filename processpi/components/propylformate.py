@@ -55,3 +55,6 @@ class PropylFormate(Component):
     _thermal_conductivity_constants = [0.2247, -0.000264, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [104.08, -7535.90, -12.348, 9.6e-06, 2.0]
     _enthalpy_constants = [4.9687e-7, 0.4025, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 180.25-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 306, Propyl formate).
+    _vapor_viscosity_constants = [6.0741E-07, 0.5863, 367.29, 0]

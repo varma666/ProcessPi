@@ -55,3 +55,6 @@ class Propadiene(Component):
     _thermal_conductivity_constants = [0.23081, -0.0004078, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [57.069, -3682.70, -5.5662, 6.51e-06, 2.0]
     _enthalpy_constants = [2.9535e-7, 0.41367, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 136.87-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 294, Propadiene).
+    _vapor_viscosity_constants = [6.0758E-07, 0.53845, 173.45, 0]

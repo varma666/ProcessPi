@@ -55,3 +55,6 @@ class EthylhexylEther(Component):
     _thermal_conductivity_constants = [0.19356, -0.00024102, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [77.523, -7978.80, -7.7757, 1.01e-17, 6.0]
     _enthalpy_constants = [6.2786e-7, 0.39513, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 180.00-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 142, Ethylhexyl ether).
+    _vapor_viscosity_constants = [7.9129E-08, 0.79565, 83.193, 0]

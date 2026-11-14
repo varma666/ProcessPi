@@ -55,3 +55,6 @@ class _124Trimethylbenzene(Component):
     _thermal_conductivity_constants = [0.19216, -0.0002105,0,0,0]
     _vapor_pressure_constants = [85.301, -8215.90, -9.2166, 4.8e-06, 2.0]
     _enthalpy_constants = [5.9254e-7, 0.35709,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 229.33-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 331, 1,2,4-Trimethylbenzene).
+    _vapor_viscosity_constants = [6.8812E-07, 0.51063, 330.88, 0]

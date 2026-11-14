@@ -55,3 +55,6 @@ class _1234Tetrahydronaphthalene(Component):
     _thermal_conductivity_constants = [0.14563, -5.36e-05,0,0,0]
     _vapor_pressure_constants = [137.23, -10620, -17.908, 0.0145, 1.0]
     _enthalpy_constants = [6.8086e-7, 0.43054,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 237.38-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 321, 1,2,3,4-Tetrahydronaphthalene).
+    _vapor_viscosity_constants = [5.0784E-07, 0.5614, 328.55, 0]

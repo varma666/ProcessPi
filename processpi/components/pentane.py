@@ -55,3 +55,6 @@ class Pentane(Component):
     _thermal_conductivity_constants = [0.2537, -0.000576, 3.44e-07]
     _vapor_pressure_constants = [78.741, -5420.30, -8.8253, 9.62e-06, 2.0]
     _enthalpy_constants = [3.9109e-7, 0.38681, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 143.42-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 279, Pentane).
+    _vapor_viscosity_constants = [6.3412E-08, 0.84758, 41.718, 0]

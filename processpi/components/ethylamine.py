@@ -55,3 +55,6 @@ class EthylAmine(Component):
     _thermal_conductivity_constants = [0.30059, -0.000581, 6.6e-07, 0, 0]
     _vapor_pressure_constants = [81.56, -5596.90, -9.0779, 8.79e-06, 2.0]
     _enthalpy_constants = [4.275e-7, 0.5857, -0.332, 0.169, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 192.15-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 128, Ethyl amine).
+    _vapor_viscosity_constants = [4.934E-07, 0.5924, 239.17, 0]

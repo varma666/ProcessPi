@@ -72,3 +72,6 @@ class Air(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 70-2000 K: Perry's
     # 8th ed., Table 2-314, p. 2-433. 0.0261 W/mK at 300 K.
     _vapor_thermal_conductivity_constants = [0.00031417, 0.7786, -0.7116, 2121.7]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 80.00-2000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 11, Air).
+    _vapor_viscosity_constants = [1.425E-06, 0.5039, 108.3, 0]

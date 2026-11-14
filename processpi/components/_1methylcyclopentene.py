@@ -55,3 +55,6 @@ class _1Methylcyclopentene(Component):
     _thermal_conductivity_constants = [0.20023, -0.00025581, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [52.732, -5286.90, -4.4509, 1.09e-17, 6.0]
     _enthalpy_constants = [4.3541e-7, 0.36805, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 146.62-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 218, 1-Methylcyclopentene).
+    _vapor_viscosity_constants = [3.7026E-08, 0.92849, 0, 0]

@@ -21,3 +21,6 @@ class Fluorine(Component):
     _thermal_conductivity_constants = [0.2758,-0.0016297,0,0,0]
     _vapor_pressure_constants = [42.393,-1103.3,-4.1203,0.000057815,2] 
     _enthalpy_constants = [0.88757E-7,0.34072, 0,0, 0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 53.48-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 149, Fluorine).
+    _vapor_viscosity_constants = [6.36E-07, 0.6638, 61.6, 0]

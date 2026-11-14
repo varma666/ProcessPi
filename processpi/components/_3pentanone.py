@@ -55,3 +55,6 @@ class _3Pentanone(Component):
     _thermal_conductivity_constants = [0.21569, -0.00024081,0,0,0]
     _vapor_pressure_constants = [44.286, -5415.10, -3.0913, 1.86e-18, 6.0]
     _enthalpy_constants = [5.2359e-7, 0.40465,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 234.18-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 284, 3-Pentanone).
+    _vapor_viscosity_constants = [1.164E-07, 0.7615, 107.94, 0]

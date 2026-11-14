@@ -14,7 +14,7 @@ class Oxygen(Component):
     Section 2, compound no. 275, in the equation forms `Component` uses.
     At 25 C and 1 atm oxygen is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
 
     **Properties:**
     - `name`: The common name of the compound.
@@ -84,3 +84,6 @@ class Oxygen(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 80-2000 K:
     # Table 2-314, p. 2-437.
     _vapor_thermal_conductivity_constants = [0.00044994, 0.7456, 56.699, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 54.35-1500 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 275, Oxygen).
+    _vapor_viscosity_constants = [1.101E-06, 0.5634, 96.3, 0]

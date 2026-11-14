@@ -55,3 +55,6 @@ class Trans2Butene(Component):
     _thermal_conductivity_constants = [0.21153, -0.00035056,0,0,0]
     _vapor_pressure_constants = [71.704, -4563.10, -7.9053, 1.13e-05, 2.0]
     _enthalpy_constants = [3.3191e-7, 0.36968,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 167.62-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 38, trans-2-Butene).
+    _vapor_viscosity_constants = [1.05E-06, 0.4867, 358.7, 0]

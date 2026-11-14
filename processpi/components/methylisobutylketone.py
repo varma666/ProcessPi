@@ -55,3 +55,6 @@ class MethylisobutylKetone(Component):
     _thermal_conductivity_constants = [0.2301, -0.00028899, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [80.503, -7421.80, -8.379, 1.81e-17, 6.0]
     _enthalpy_constants = [5.4687e-7, 0.40583, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 189.15-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 226, Methylisobutyl ketone).
+    _vapor_viscosity_constants = [9.4257E-08, 0.7845, 90.183, 0]
