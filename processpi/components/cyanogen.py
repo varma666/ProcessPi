@@ -19,5 +19,8 @@ class Cyanogen(Component):
     _specific_heat_constants = [65516,-144.7,0.063229,0,0]
     _viscosity_constants = [-12.086,994.23,0,0,0] 
     _thermal_conductivity_constants = [0.4685, -0.00086594,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 252.00-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 63, Cyanogen).
+    _vapor_thermal_conductivity_constants = [0.000026933, 1.137, 28.119, 0]
     _vapor_pressure_constants = [81.565,-4808.90,-9.3748,1.39E-05, 2] 
     _enthalpy_constants = [3.384E-7,0.3707, 0,0, 0]  # Placeholder for enthalpy constants

@@ -53,5 +53,8 @@ class _1Butene(Component):
     _specific_heat_constants = [182050,-1611,11.963,-0.03745,4.5e-5]
     _viscosity_constants = [-10.773, 591.61,0,0,0]
     _thermal_conductivity_constants = [0.22153, -0.00035023,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 266.91-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 36, 1-Butene).
+    _vapor_thermal_conductivity_constants = [0.000096809, 1.1153, 781.82, 0]
     _vapor_pressure_constants = [51.836, -4019.20, -4.5229, 4.88e-17, 6.0]
     _enthalpy_constants = [3.3774e-7, 0.5107, -0.17304, 0.05181,0]

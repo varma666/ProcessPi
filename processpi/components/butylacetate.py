@@ -53,5 +53,8 @@ class ButylAcetate(Component):
     _specific_heat_constants = [111850,384.52,0,0,0]
     _viscosity_constants = [-17.488, 1478.2, 0.91828,0,0]
     _thermal_conductivity_constants = [0.21721, -0.00026563,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.00-800 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 39, Butyl acetate).
+    _vapor_thermal_conductivity_constants = [5.86E-09, 2.376, -401.32, 69280]
     _vapor_pressure_constants = [122.82, -9253.20, -14.99, 1.05e-05, 2.0]
     _enthalpy_constants = [5.8276e-7, 0.38854,0,0,0]

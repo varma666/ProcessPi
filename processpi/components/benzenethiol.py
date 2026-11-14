@@ -53,5 +53,8 @@ class Benzenethiol(Component):
     _specific_heat_constants = [119780,180.34,0,0,0]
     _viscosity_constants = [-8.4562, 1024.4, -0.30635,0,0]
     _thermal_conductivity_constants = [0.20996, -0.0002146,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 442.29-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 17, Benzenethiol).
+    _vapor_thermal_conductivity_constants = [0.00047951, 0.7818, 463.4, 189410]
     _vapor_pressure_constants = [77.765, -8455.10, -7.7404, 4.31e-18, 6.0]
     _enthalpy_constants = [6.225e-7, 0.4412,0,0,0]

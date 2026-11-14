@@ -53,5 +53,8 @@ class Anisole(Component):
     _specific_heat_constants = [150940,93.455,0.23602,0,0]
     _viscosity_constants = [-15.407, 1518.7, 0.60172,0,0]
     _thermal_conductivity_constants = [0.23494, -0.00026477,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 426.73-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 13, Anisole).
+    _vapor_thermal_conductivity_constants = [0.00059858, 0.7527, 354.04, 241830]
     _vapor_pressure_constants = [128.06, -9307.70, -16.693, 0.0149, 1.0]
     _enthalpy_constants = [5.8662e-7, 0.37127,0,0,0]

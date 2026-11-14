@@ -53,5 +53,8 @@ class Tridecane(Component):
     _specific_heat_constants = [350180, -104.7, 1.0022, 0.0, 0.0]
     _viscosity_constants = [-4.1103, 1005.3, -1.0188, 1e+19, -8.0]
     _thermal_conductivity_constants = [0.20447, -0.00022612, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 508.62-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 327, Tridecane).
+    _vapor_thermal_conductivity_constants = [5.3701E-06, 1.4751, 599.09, 0]
     _vapor_pressure_constants = [137.45, -12549, -16.543, 7.13e-06, 2.0]
     _enthalpy_constants = [8.4339e-7, 0.4257, 0.0, 0.0, 0.0]

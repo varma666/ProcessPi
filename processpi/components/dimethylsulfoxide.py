@@ -53,5 +53,8 @@ class DimethylSulfoxide(Component):
     _specific_heat_constants = [240300, -595.0, 1.013, 0.0, 0.0]
     _viscosity_constants = [-37.347, 2835.0, 3.7937, 0, 0]
     _thermal_conductivity_constants = [0.3142, -0.00030809, 0, 0, 0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 462.15-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 118, Dimethyl sulfoxide).
+    _vapor_thermal_conductivity_constants = [0.00064761, 0.7716, 1013.3, 82563]
     _vapor_pressure_constants = [56.273, -7620.60, -4.6279, 4.38e-07, 2.0]
     _enthalpy_constants = [6.629e-7, 0.4084, 0, 0, 0]

@@ -53,5 +53,8 @@ class Mxylene(Component):
     _specific_heat_constants = [133860, 7.8754, 0.52265, 0.0, 0.0]
     _viscosity_constants = [-11.91, 1094.9, 0.13825,0,0,0]
     _thermal_conductivity_constants = [0.20044, -0.00023544,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 320-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 343, m-Xylene).
+    _vapor_thermal_conductivity_constants = [3.0593E-09, 2.4182, -569.28, 121060]
     _vapor_pressure_constants = [85.099, -7615.90, -9.3072, 5.56e-06, 2.0]
     _enthalpy_constants = [5.4626e-7, 0.37289,0,0,0]

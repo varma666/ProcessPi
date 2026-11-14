@@ -53,5 +53,8 @@ class EthyleneOxide(Component):
     _specific_heat_constants = [144710, -758.87, 2.8261, -0.003064, 0.0]
     _viscosity_constants = [-8.521, 634.2, -0.3314, 0.0, 0.0]
     _thermal_conductivity_constants = [0.26957, -0.0003984, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.15-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 139, Ethylene oxide).
+    _vapor_thermal_conductivity_constants = [-0.0003788, 1.115, -5641, 0]
     _vapor_pressure_constants = [91.944, -5293.40, -11.682, 0.0149, 1.0]
     _enthalpy_constants = [3.6652e-7, 0.37878, 0.0, 0.0, 0.0]

@@ -53,5 +53,8 @@ class MethylethylKetone(Component):
     _specific_heat_constants = [132300, 200.87, -0.9597, 0.0019533, 0.0]
     _viscosity_constants = [-1.0598, 520.68, -1.4961, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2197, -0.0002505, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 352.79-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 222, Methylethyl ketone).
+    _vapor_thermal_conductivity_constants = [-4202700, -0.1524, 2084600000, -1.4577E+13]
     _vapor_pressure_constants = [72.698, -6143.60, -7.5779, 5.65e-06, 2.0]
     _enthalpy_constants = [4.622e-7, 0.355, 0.0, 0.0, 0.0]

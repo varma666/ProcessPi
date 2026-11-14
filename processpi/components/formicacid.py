@@ -19,5 +19,8 @@ class FormicAcid(Component):
     _specific_heat_constants = [78060,71.54,0,0,0]
     _viscosity_constants = [-48.529,3394.7,5.3903,0,0] 
     _thermal_conductivity_constants = [0.302,-0.000108,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 373.71-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 155, Formic acid).
+    _vapor_thermal_conductivity_constants = [0.0003754, 0.8459, 674.4, 0]
     _vapor_pressure_constants = [50.323,-5378.2,-4.203,0.0000034697,2] 
     _enthalpy_constants = [2.3195E-7,1.9091,-5.0003,3.2641, 0]  # Placeholder for enthalpy constants

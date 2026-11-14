@@ -53,5 +53,8 @@ class _2Methyl2Propanol(Component):
     _specific_heat_constants = [-925460, 7894.90, -17.661, 0.013617, 0.0]
     _viscosity_constants = [51.356, -1249.5, -9.4593, 3.69e+24, -9.8759]
     _thermal_conductivity_constants = [0.21258, -0.00029864, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 333.82-766.87 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 237, 2-Methyl-2-propanol).
+    _vapor_thermal_conductivity_constants = [1.1776E-06, 1.6618, 0, 0]
     _vapor_pressure_constants = [172.27, -11589, -22.113, 1.37e-05, 2.0]
     _enthalpy_constants = [7.7646e-7, 0.56757, 0.0, 0.0, 0.0]

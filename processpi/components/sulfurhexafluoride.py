@@ -53,5 +53,8 @@ class SulfurHexafluoride(Component):
     _specific_heat_constants = [119500, 0.0, 0.0, 0.0, 0.0]
     _viscosity_constants = [3.8305, 41.21, -2.1342, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2544, -0.0006595, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.15-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 315, Sulfur hexafluoride).
+    _vapor_thermal_conductivity_constants = [0.00048883, 0.6518, -117.08, 78863]
     _vapor_pressure_constants = [29.16, -2383.60, -1.1342, 0.0, 0.0]
     _enthalpy_constants = [2.571e-7, 0.383, 0.0, 0.0, 0.0]

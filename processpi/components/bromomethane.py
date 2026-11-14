@@ -53,5 +53,8 @@ class Bromomethane(Component):
     _specific_heat_constants = [129730,-596.54,2.16,-0.0024234,0]
     _viscosity_constants = [-8.103, 570.8, -0.32958,0,0]
     _thermal_conductivity_constants = [0.1912, -0.000299,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.00-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 28, Bromomethane).
+    _vapor_thermal_conductivity_constants = [0.000038314, 1.0484, 287.38, 0]
     _vapor_pressure_constants = [72.586, -4698.60, -7.9966, 1.16e-05, 2.0]
     _enthalpy_constants = [3.169e-7, 0.3015,0,0,0]

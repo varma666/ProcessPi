@@ -53,5 +53,8 @@ class DecanoicAcid(Component):
     _specific_heat_constants = [219840,140.41,0.9968,0,0]
     _viscosity_constants = [-12.305, 2324.1, -0.055494,0,0,0]
     _thermal_conductivity_constants = [0.206, -0.0002,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 543.15-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 75, Decanoic acid).
+    _vapor_thermal_conductivity_constants = [0.00017047, 0.9313, 757.67, 0]
     _vapor_pressure_constants = [123.36, -14680, -13.474, 1.95e-18, 6.0]
     _enthalpy_constants = [13.107e-7, 1.0674, -0.97372, 0.40491,0]

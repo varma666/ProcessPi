@@ -53,5 +53,8 @@ class MethylbutylEther(Component):
     _specific_heat_constants = [177850, -171.57, 0.74379, 0.0, 0.0]
     _viscosity_constants = [-11.278, 949.12, -0.00012343, 0, 0]
     _thermal_conductivity_constants = [0.22235, -0.0003044, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.15-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 208, Methylbutyl ether).
+    _vapor_thermal_conductivity_constants = [0.000023993, 1.1976, 58.59, 35667]
     _vapor_pressure_constants = [60.164, -5621.70, -5.53, 1.86e-17, 6.0]
     _enthalpy_constants = [4.5302e-7, 0.37779, 0.0, 0.0, 0.0]

@@ -53,5 +53,8 @@ class MethylFormate(Component):
     _specific_heat_constants = [130200, -396.0, 1.21, 0.0, 0.0]
     _viscosity_constants = [-39.641, 2113.3, 4.308, 0.0, 0.0]
     _thermal_conductivity_constants = [0.3246, -0.000468, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 300.00-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 224, Methyl formate).
+    _vapor_thermal_conductivity_constants = [-800040, -0.2285, 248100000, -1.5034E+12]
     _vapor_pressure_constants = [77.184, -5606.10, -8.392, 7.85e-06, 2.0]
     _enthalpy_constants = [4.103e-7, 0.3825, 0.0, 0.0, 0.0]

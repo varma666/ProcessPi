@@ -53,5 +53,8 @@ class Difluoromethane(Component):
     _specific_heat_constants = [263980,-1791.10,4.36666,0,0]
     _viscosity_constants = [-17.723, 850.2, 1.0601, -1.17e-18, 7.0]
     _thermal_conductivity_constants = [0.37296, -0.00088707, 2.58e-07,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 221.50-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 99, Difluoromethane).
+    _vapor_thermal_conductivity_constants = [0.000013015, 1.1897, 0, 0]
     _vapor_pressure_constants = [69.132, -3847.70, -7.5868, 1.51e-05, 2.0]
     _enthalpy_constants = [2.8081e-7, 0.3364,0,0,0]

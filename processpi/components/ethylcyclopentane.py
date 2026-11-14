@@ -53,5 +53,8 @@ class Ethylcyclopentane(Component):
     _specific_heat_constants = [178520, -518.35, 2.3255, -0.0016818, 0.0]
     _viscosity_constants = [-6.894, 818.6, -0.5941, 0.0, 0.0]
     _thermal_conductivity_constants = [0.18334, -0.0002228, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 376.62-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 134, Ethylcyclopentane).
+    _vapor_thermal_conductivity_constants = [0.0043244, 0.5429, 333.67, 570470]
     _vapor_pressure_constants = [88.671, -7012.70, -10.045, 7.46e-06, 2.0]
     _enthalpy_constants = [4.8287e-7, 0.37804, 0.0, 0.0, 0.0]

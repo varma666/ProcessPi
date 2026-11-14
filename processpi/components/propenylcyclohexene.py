@@ -53,5 +53,8 @@ class Propenylcyclohexene(Component):
     _specific_heat_constants = [201400, -450.6, 1.7053, 0.0, 0.0]
     _viscosity_constants = [-11.208, 1079.8, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.1831, -0.00020275, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 431.65-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 298, Propenylcyclohexene).
+    _vapor_thermal_conductivity_constants = [0.00010242, 1.0486, 701.56, 0]
     _vapor_pressure_constants = [64.268, -7298.90, -5.9109, 4.85e-18, 6.0]
     _enthalpy_constants = [5.8866e-7, 0.38533, 0.0, 0.0, 0.0]

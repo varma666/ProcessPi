@@ -53,5 +53,8 @@ class Tetradecane(Component):
     _specific_heat_constants = [353140, 29.13, 0.86116, 0.0, 0.0]
     _viscosity_constants = [-14.493, 1710.8, 0.4417, 3.09e+28, -12.0]
     _thermal_conductivity_constants = [0.20293, -0.00021798, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 526.73-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 319, Tetradecane).
+    _vapor_thermal_conductivity_constants = [-163.62, 0.9193, -1.0876E+09, 0]
     _vapor_pressure_constants = [140.47, -13231, -16.859, 6.59e-06, 2.0]
     _enthalpy_constants = [9.0539e-7, 0.44467, 0.0, 0.0, 0.0]

@@ -53,5 +53,8 @@ class _1Decanol(Component):
     _specific_heat_constants = [4988500, -52898, 216.35, -0.37538, 0.00023674]
     _viscosity_constants = [-69.985, 5818.8, 8.0715,0,0]
     _thermal_conductivity_constants = [0.228, -0.000223, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 504.07-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 76, 1-Decanol).
+    _vapor_thermal_conductivity_constants = [-0.3072, 0.489, -67500, -29400000]
     _vapor_pressure_constants = [156.239, -15212, -18.424, 8.5e-18, 6.0]
     _enthalpy_constants = [7.9041e-7, -1.36, 4.0854, -2.3871,0]

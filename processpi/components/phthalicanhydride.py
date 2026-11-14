@@ -53,5 +53,8 @@ class PhthalicAnhydride(Component):
     _specific_heat_constants = [145400, 252.4, 0.0, 0.0, 0.0]
     _viscosity_constants = [195.25, -11072.0, -29.084, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22946, -0.00021345, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 557.65-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 293, Phthalic anhydride).
+    _vapor_thermal_conductivity_constants = [0.0000593, 1.046, 765.5, 0]
     _vapor_pressure_constants = [126.5, -12551, -15.002, 7.75e-06, 2.0]
     _enthalpy_constants = [6.916e-7, 0.1755, 0.0, 0.0, 0.0]

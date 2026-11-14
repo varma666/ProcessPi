@@ -53,5 +53,8 @@ class _1Undecanol(Component):
     _specific_heat_constants = [129450, -3039.50, 27.927, -0.061847, 4.3e-05]
     _viscosity_constants = [-69.778, 5905.2, 8.0214,0,0]
     _thermal_conductivity_constants = [0.21211, -0.00021815,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 520.30-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 337, 1-Undecanol).
+    _vapor_thermal_conductivity_constants = [2498.8, 0.95209, 2.0167E+10, 0]
     _vapor_pressure_constants = [182.571, -17112, -22.125, 1.13e-17, 6.0]
     _enthalpy_constants = [8.7274e-7, -1.5834, 5.0913, -3.2171,0]

@@ -53,5 +53,8 @@ class Ethyleneimine(Component):
     _specific_heat_constants = [46848, 205.35, 0.0, 0.0, 0.0]
     _viscosity_constants = [-11.012, 967.4, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.3097, -0.0004023, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 329.00-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 138, Ethyleneimine).
+    _vapor_thermal_conductivity_constants = [0.00077079, 0.7713, 446.16, 197930]
     _vapor_pressure_constants = [66.51, -6019.20, -6.3332, 1.04e-17, 6.0]
     _enthalpy_constants = [4.94e-7, 0.466, 0.0, 0.0, 0.0]

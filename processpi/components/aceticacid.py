@@ -56,5 +56,8 @@ class AceticAcid(Component):
     _specific_heat_constants = [139640,-320.8,0.8985,0,0]
     _viscosity_constants = [-9.03, 1212.3, -0.322, 0, 0] 
     _thermal_conductivity_constants = [0.214, -0.0001834, 0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 294.70-686.88 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 3, Acetic acid).
+    _vapor_thermal_conductivity_constants = [0.000001691, 1.6692, 658, -95400]
     _vapor_pressure_constants = [53.27, -6304.5, -4.2985, 8.8865E-18, 6] 
     _enthalpy_constants = [4.0179E-7, 2.6037, -5.0031,2.7069, 0]  # Placeholder for enthalpy constants

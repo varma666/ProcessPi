@@ -53,5 +53,8 @@ class PentanoicAcid(Component):
     _specific_heat_constants = [145080, 28.344, 0.6372, 0.0, 0.0]
     _viscosity_constants = [-37.067, 2856.7, 3.7344, 0.0, 0.0]
     _thermal_conductivity_constants = [0.1848, -0.0001434, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 458.65-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 280, Pentanoic acid).
+    _vapor_thermal_conductivity_constants = [0.00024601, 0.8946, 696.42, 0]
     _vapor_pressure_constants = [101.7, -10955, -10.829, 7.19e-18, 6.0]
     _enthalpy_constants = [7.3197e-7, 1.2093, -1.9114, 1.1591, 0.0]

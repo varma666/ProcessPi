@@ -53,5 +53,8 @@ class NmethylAcetamide(Component):
     _specific_heat_constants = [62600, 243.4, 0.0, 0.0, 0.0]
     _viscosity_constants = [-4.648, 1832.0, -1.2191, 0.0, 0.0]
     _thermal_conductivity_constants = [0.23743, -0.0002362, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 478.15-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 195, N-Methyl acetamide).
+    _vapor_thermal_conductivity_constants = [0.034177, 0.3312, 2070, 1195600]
     _vapor_pressure_constants = [79.128, -9523.90, -7.7355, 3.16e-18, 6.0]
     _enthalpy_constants = [7.3402e-7, 0.38974, 0.0, 0.0, 0.0]

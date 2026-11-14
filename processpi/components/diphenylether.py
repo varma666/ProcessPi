@@ -53,5 +53,8 @@ class DiphenylEther(Component):
     _specific_heat_constants = [134160, 447.67, 0.0, 0.0, 0.0]
     _viscosity_constants = [-12.373, 2017.5, 0, 0, 0]
     _thermal_conductivity_constants = [0.18686, -0.00014953, 0, 0, 0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 531.46-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 121, Diphenyl ether).
+    _vapor_thermal_conductivity_constants = [0.00014629, 0.9377, 745.89, 0]
     _vapor_pressure_constants = [59.969, -8585.50, -5.1538, 2e-18, 6.0]
     _enthalpy_constants = [6.8243e-7, 0.30877, 0, 0, 0]

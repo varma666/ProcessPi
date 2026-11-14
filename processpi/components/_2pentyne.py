@@ -53,5 +53,8 @@ class _2Pentyne(Component):
     _specific_heat_constants = [68671, 246.66, 0.0, 0.0, 0.0]
     _viscosity_constants = [-3.7241, 516.54, -1.1167,0,0]
     _thermal_conductivity_constants = [0.21282, -0.0002856,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 329.27-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 289, 2-Pentyne).
+    _vapor_thermal_conductivity_constants = [0.00025623, 1.0073, 1423.7, 0]
     _vapor_pressure_constants = [137.29, -7447.10, -19.01, 0.0214, 1.0]
     _enthalpy_constants = [4.4158e-7, 0.44347,0,0,0]

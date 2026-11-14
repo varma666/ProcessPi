@@ -53,5 +53,8 @@ class Odichlorobenzene(Component):
     _specific_heat_constants = [93093, 183.97, 0.2314, 0.0, 0.0]
     _viscosity_constants = [-30.6, 2153.4, 2.9371, 0.0, 0.0]
     _thermal_conductivity_constants = [0.16994, -0.0001637, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 453.57-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 86, o-Dichlorobenzene).
+    _vapor_thermal_conductivity_constants = [-1420, 0.7614, -4.5040E+09, 0]
     _vapor_pressure_constants = [77.105, -8111.10, -7.8886, 2.73e-06, 2.0]
     _enthalpy_constants = [6.2117e-7, 0.42845, 0.0, 0.0, 0.0]

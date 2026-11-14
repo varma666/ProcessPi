@@ -53,5 +53,8 @@ class Nonane(Component):
     _specific_heat_constants = [383080, -1139.80, 2.7101, 0.0, 0.0]
     _viscosity_constants = [-68.54, 3165.3, 9.0919, -1.3519e-05, 2.0]
     _thermal_conductivity_constants = [0.209, -0.000264, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 423.97-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 256, Nonane).
+    _vapor_thermal_conductivity_constants = [-0.065771, 0.27198, -3482.3, -1580300]
     _vapor_pressure_constants = [109.35, -9030.40, -12.882, 7.85e-06, 2.0]
     _enthalpy_constants = [6.037e-7, 0.38522, 0.0, 0.0, 0.0]

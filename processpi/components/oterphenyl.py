@@ -53,5 +53,8 @@ class Oterphenyl(Component):
     _specific_heat_constants = [182900, 635.09, 0.0, 0.0, 0.0]
     _viscosity_constants = [-215.09, 11612.0, 31.849, -0.026882, 1.0]
     _thermal_conductivity_constants = [0.16853, -0.00010817,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 373.15-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 318, o-Terphenyl).
+    _vapor_thermal_conductivity_constants = [0.000078652, 0.95174, -282.82, 289490]
     _vapor_pressure_constants = [110.52, -14045, -11.861, 2.21e-18, 6.0]
     _enthalpy_constants = [8.7165e-7, 0.3224,0,0,0]

@@ -53,5 +53,8 @@ class Ethyltrichlorosilane(Component):
     _specific_heat_constants = [105150, 85.318, 0.46693, 0.0, 0.0]
     _viscosity_constants = [7.8744, -106.34, -2.6884, 42800000000000.0, -6.0]
     _thermal_conductivity_constants = [0.19769, -0.00017713, -1.54e-07, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 373.15-573.15 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 148, Ethyltrichlorosilane).
+    _vapor_thermal_conductivity_constants = [2.9354E-06, 1.4153, 0, 0]
     _vapor_pressure_constants = [62.614, -6148.20, -5.84, 1.09e-17, 6.0]
     _enthalpy_constants = [4.9482e-7, 0.39871, 0.0, 0.0, 0.0]

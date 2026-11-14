@@ -53,6 +53,9 @@ class _11Difluoroethane(Component):
     _specific_heat_constants = [67.155, 0.0, 310.21, -490.54, 0.0]
     _viscosity_constants = [10.501, -52.181, -3.3459, 0.0, 0.0]
     _thermal_conductivity_constants = [0.27019, -0.000661, 3.44e-07, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 248.95-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 97, 1,1-Difluoroethane).
+    _vapor_thermal_conductivity_constants = [0.000059249, 1.0713, 101.84, 45974]
     _vapor_pressure_constants = [73.491, -4385.90, -8.1851, 1.3e-05, 2.0]
     _enthalpy_constants = [3.2312e-7, 0.37653, 0.0, 0.0, 0.0]
 

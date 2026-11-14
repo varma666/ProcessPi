@@ -53,5 +53,8 @@ class Chloroethane(Component):
     _specific_heat_constants = [127900,-345.15,0.915,0,0]
     _viscosity_constants = [-10.216, 702.0, -0.072,0,0]
     _thermal_conductivity_constants = [0.2438, -0.000419,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.15-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 54, Chloroethane).
+    _vapor_thermal_conductivity_constants = [-19.283, 0.20238, -715050, -271300000]
     _vapor_pressure_constants = [65.988, -4661.30, -6.8586, 7.94e-06, 2.0]
     _enthalpy_constants = [3.524e-7, 0.3652,0,0,0]

@@ -53,5 +53,8 @@ class _2233Tetramethylbutane(Component):
     _specific_heat_constants = [43326, 630.73, 0.0, 0.0, 0.0]
     _viscosity_constants = [5.5351, 632.38, -2.6576,0,0]
     _thermal_conductivity_constants = [0.17835, -0.00023704,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 379.44-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 323, 2,2,3,3-Tetramethylbutane).
+    _vapor_thermal_conductivity_constants = [0.000015235, 1.2816, -111.88, 124120]
     _vapor_pressure_constants = [57.963, -5901.50, -5.2048, 9.13e-18, 6.0]
     _enthalpy_constants = [4.9055e-7, 0.40678,0,0,0]

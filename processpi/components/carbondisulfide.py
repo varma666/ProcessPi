@@ -53,5 +53,8 @@ class CarbonDisulfide(Component):
     _specific_heat_constants = [85600,-122,0.5605,-0.001452,2.01e-6]
     _viscosity_constants = [-10.306, 703.01,0,0,0]
     _thermal_conductivity_constants = [0.2333, -0.000275,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.15-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 48, Carbon disulfide).
+    _vapor_thermal_conductivity_constants = [0.0003467, 0.7345, 479, 0]
     _vapor_pressure_constants = [67.114, -4820.40, -7.5303, 0.00917, 1.0]
     _enthalpy_constants = [3.496e-7, 0.2986,0,0,0]

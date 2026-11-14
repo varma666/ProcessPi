@@ -53,5 +53,8 @@ class _1Nonyne(Component):
     _specific_heat_constants = [253580, -366.3, 1.4881, 0.0, 0.0]
     _viscosity_constants = [-2.3409, 715.52, -1.222, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20954, -0.00024588, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 423.85-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 262, 1-Nonyne).
+    _vapor_thermal_conductivity_constants = [0.000016681, 1.218, -199.41, 144580]
     _vapor_pressure_constants = [114.77, -9430.80, -13.631, 8.19e-06, 2.0]
     _enthalpy_constants = [6.3337e-7, 0.3975,0.0, 0.0, 0.0]

@@ -53,5 +53,8 @@ class MalonicAcid(Component):
     _specific_heat_constants = [157850, -41.619, 0.42817, 0.0, 0.0]
     _viscosity_constants = [-19.834, 2784.5, 1.1161, 0, 0]
     _thermal_conductivity_constants = [0.28918, -0.0002614, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 580.00-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 191, Malonic acid).
+    _vapor_thermal_conductivity_constants = [0.00033075, 0.81895, 777.75, 0]
     _vapor_pressure_constants = [122.92, -16258, -13.113, 2.06e-18, 6.0]
     _enthalpy_constants = [11.767e-7, 0.37877, 0.0, 0.0, 0.0]

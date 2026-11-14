@@ -53,5 +53,8 @@ class Methylsilane(Component):
     _specific_heat_constants = [113470, 0.0, 0.0, 0.0, 0.0]
     _viscosity_constants = [0,0,0,0,0]
     _thermal_conductivity_constants = [0.2774, -0.00054608, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 216.25-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 242, Methylsilane).
+    _vapor_thermal_conductivity_constants = [12.248, -0.5611, -1067, 2715200]
     _vapor_pressure_constants = [37.205, -2590.30, -2.5993, 6.05e-06, 2.0]
     _enthalpy_constants = [2.2656e-7, 0.30269, 0.0, 0.0, 0.0]

@@ -53,5 +53,8 @@ class HexanoicAcid(Component):
     _specific_heat_constants = [161980, 44.116, 0.709, 0.0, 0.0]
     _viscosity_constants = [-46.402, 3448.6, 5.0849, 0, 0]
     _thermal_conductivity_constants = [0.1855, -0.000146, 0, 0, 0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 478.85-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 172, Hexanoic acid).
+    _vapor_thermal_conductivity_constants = [0.00021014, 0.91616, 727.64, 0]
     _vapor_pressure_constants = [114.05, -12332, -12.45, 5.63e-18, 6.0]
     _enthalpy_constants = [9.0746e-7, 0.8926, -0.75172, 0.34378]

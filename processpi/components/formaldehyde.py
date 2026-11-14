@@ -53,5 +53,8 @@ class Formaldehyde(Component):
     _specific_heat_constants = [61900, 28.3, 0.0, 0.0, 0.0]
     _viscosity_constants = [-11.24, 751.69, -0.024579, 0.0, 0.0]
     _thermal_conductivity_constants = [0.37329, -0.00065, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 254.05-994.05 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 153, Formaldehyde).
+    _vapor_thermal_conductivity_constants = [44.847, -0.7096, -3493.5, 5353200]
     _vapor_pressure_constants = [101.51, -4917.20, -13.765, 0.022, 1.0]
     _enthalpy_constants = [3.076e-7, 0.2954, 0.0, 0.0, 0.0]

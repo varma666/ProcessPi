@@ -53,5 +53,8 @@ class Hydrazine(Component):
     _specific_heat_constants = [79815, 50.929, 0.043379, 0.0, 0.0]
     _viscosity_constants = [-75.781, 4175.4, 9.6508, -7.27e-09, 3.0]
     _thermal_conductivity_constants = [1.3675, -0.0015895, 0, 0, 0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 386.65-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 182, Hydrazine).
+    _vapor_thermal_conductivity_constants = [0.00043196, 0.86603, 641.48, 0]
     _vapor_pressure_constants = [76.858, -7245.20, -8.22, 0.00616, 1.0]
     _enthalpy_constants = [5.9794e-7, 0.9424, -1.398, 0.8862]

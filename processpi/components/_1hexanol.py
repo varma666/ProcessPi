@@ -53,5 +53,8 @@ class _1Hexanol(Component):
     _specific_heat_constants = [1638600, -17261, 71.721, -0.12026, 7.1087e-05]
     _viscosity_constants = [-39.324, 3841.0, 3.6933, -2.12e-30, 10.485]
     _thermal_conductivity_constants = [0.2193, -0.00022, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 429.90-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 173, 1-Hexanol).
+    _vapor_thermal_conductivity_constants = [-4935500, -0.1653, 1563100000, -1.5752E+13]
     _vapor_pressure_constants = [135.421, -12288, -15.732, 1.27e-17, 6.0]
     _enthalpy_constants = [7.035e-7, -0.9575, 3.1431, -1.8066, 0.0]

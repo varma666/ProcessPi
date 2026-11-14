@@ -53,5 +53,8 @@ class Quinone(Component):
     _specific_heat_constants = [45810, 368.33, 0.0, 0.0, 0.0]
     _viscosity_constants = [-14.846, 1829.4, 0.3729, 0.0, 0.0]
     _thermal_conductivity_constants = [0.26524, -0.00028676, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 454.00-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 310, Quinone).
+    _vapor_thermal_conductivity_constants = [-5678600, -0.045252, 2615700000, -3.5415E+13]
     _vapor_pressure_constants = [48.651, -7289.50, -3.4453, 1.01e-18, 6.0]
     _enthalpy_constants = [6.49e-7, 0.3112, 0.0, 0.0, 0.0]

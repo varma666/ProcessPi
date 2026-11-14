@@ -53,5 +53,8 @@ class DiethylEther(Component):
     _specific_heat_constants = [44400,1301,-5.5,0.008763,0]
     _viscosity_constants = [10.197, -63.8, -3.226,0,0]
     _thermal_conductivity_constants = [0.2495, -0.000407,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 200.00-600 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 95, Diethyl ether).
+    _vapor_thermal_conductivity_constants = [-0.0044894, 0.6155, -3266.3, 0]
     _vapor_pressure_constants = [136.9, -6954.30, -19.254, 0.0245, 1.0]
     _enthalpy_constants = [4.06e-7, 0.3868,0,0,0]

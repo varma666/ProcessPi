@@ -13,6 +13,9 @@ class Water(Component):
     _specific_heat_constants = [276370,-2090.10,8.125,-0.014116,9.37e-6]
     _viscosity_constants = [-52.843, 3703.6, 5.866, -5.879e-29, 10] 
     _thermal_conductivity_constants = [-0.432, 0.0057255, -0.000008078,1.861E-09,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.16-1073.15 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 342, Water).
+    _vapor_thermal_conductivity_constants = [6.2041E-06, 1.3973, 0, 0]
     _vapor_pressure_constants = [73.649, -7258.2, -7.3037, 4.1653E-06, 2] 
     _enthalpy_constants = [5.2053E-7, 0.3199, -0.212, 0.25795, 0]
 

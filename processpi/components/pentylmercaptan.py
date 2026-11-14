@@ -53,5 +53,8 @@ class PentylMercaptan(Component):
     _specific_heat_constants = [213760, -324.4, 0.9472, 0.0, 0.0]
     _viscosity_constants = [-11.677, 1091.2, 0.10658, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2086, -0.00024536, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 399.79-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 287, Pentyl mercaptan).
+    _vapor_thermal_conductivity_constants = [0.00011261, 1.034, 693.05, 0]
     _vapor_pressure_constants = [67.309, -6880.80, -6.4449, 1.01e-17, 6.0]
     _enthalpy_constants = [5.4315e-7, 0.3972, 0.0, 0.0, 0.0]

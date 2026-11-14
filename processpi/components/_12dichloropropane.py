@@ -53,5 +53,8 @@ class _12Dichloropropane(Component):
     _specific_heat_constants = [111560, 149.44, 0.0, 0.0, 0.0]
     _viscosity_constants = [-11.269, 1195.3, 0.012736, 0.0, 0.0]
     _thermal_conductivity_constants = [0.19653, -0.00025012, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 369.52-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 92, 1,2-Dichloropropane).
+    _vapor_thermal_conductivity_constants = [0.000062435, 1.103, 913.43, 0]
     _vapor_pressure_constants = [65.955, -6015.60, -6.5509, 4.32e-06, 2.0]
     _enthalpy_constants = [4.675e-7, 0.36529, 0.0, 0.0, 0.0]

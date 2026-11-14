@@ -53,5 +53,8 @@ class MethylMethacrylate(Component):
     _specific_heat_constants = [255100, -938.4, 2.413, 0.0, 0.0]
     _viscosity_constants = [-0.099, 496.0, -1.5939, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2583, -0.000379, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 373.45-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 232, Methyl methacrylate).
+    _vapor_thermal_conductivity_constants = [0.00072502, 0.7395, 365.68, 204360]
     _vapor_pressure_constants = [107.36, -8085.30, -12.72, 8.33e-06, 2.0]
     _enthalpy_constants = [5.468e-7, 0.4472, 0.0, 0.0, 0.0]

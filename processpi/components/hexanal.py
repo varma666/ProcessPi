@@ -53,5 +53,8 @@ class Hexanal(Component):
     _specific_heat_constants = [117700, 329.52, 0.0, 0.0, 0.0]
     _viscosity_constants = [-10.745, 1021.4, -5.5427e-05, 0, 0]
     _thermal_conductivity_constants = [0.22196, -0.00032053, 1.16e-07, 0, 0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 401.45-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 170, Hexanal).
+    _vapor_thermal_conductivity_constants = [-7157100, -0.05819, 4089000000, -4.5826E+13]
     _vapor_pressure_constants = [81.507, -7776.80, -8.4516, 1.51e-17, 6.0]
     _enthalpy_constants = [5.6661e-7, 0.38533, 0, 0, 0]

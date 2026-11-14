@@ -53,5 +53,8 @@ class Propylbenzene(Component):
     _specific_heat_constants = [174380, -101.8, 0.79, 0.0, 0.0]
     _viscosity_constants = [-18.282, 1549.7, 1.0454, 0.0, 0.0]
     _thermal_conductivity_constants = [0.18707, -0.00019846, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 432.39-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 304, Propylbenzene).
+    _vapor_thermal_conductivity_constants = [0.16992, 0.021288, -54.484, 1624800]
     _vapor_pressure_constants = [91.379, -8276.80, -10.176, 5.62e-06, 2.0]
     _enthalpy_constants = [5.8887e-7, 0.38534, 0.0, 0.0, 0.0]

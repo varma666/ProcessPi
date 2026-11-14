@@ -53,5 +53,8 @@ class Thiophene(Component):
     _specific_heat_constants = [84864, 91.725, 0.13243, 0.0, 0.0]
     _viscosity_constants = [-16.671, 1342.5, 0.8388, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20571, -0.00020028, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 357.31-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 324, Thiophene).
+    _vapor_thermal_conductivity_constants = [0.00013384, 0.98115, 645.95, 0]
     _vapor_pressure_constants = [93.193, -7001.50, -10.738, 8.23e-06, 2.0]
     _enthalpy_constants = [4.5854e-7, 0.38756, 0.0, 0.0, 0.0]

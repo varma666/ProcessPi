@@ -53,5 +53,8 @@ class TriethylAmine(Component):
     _specific_heat_constants = [111480, 368.13, 0.0, 0.0, 0.0]
     _viscosity_constants = [-3.7067, 585.78, -1.0926, 0.0, 0.0]
     _thermal_conductivity_constants = [0.1918, -0.0002453, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.15-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 328, Triethyl amine).
+    _vapor_thermal_conductivity_constants = [0.000106, 1.0161, 91, 132900]
     _vapor_pressure_constants = [56.55, -5681.90, -4.9815, 1.24e-17, 6.0]
     _enthalpy_constants = [4.664e-7, 0.3663, 0.0, 0.0, 0.0]

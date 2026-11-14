@@ -53,5 +53,8 @@ class MethylPropionate(Component):
     _specific_heat_constants = [71140, 335.5, 0.0, 0.0, 0.0]
     _viscosity_constants = [-4.841, 696.7, -0.9194, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22534, -0.0002683, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 350.00-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 239, Methyl propionate).
+    _vapor_thermal_conductivity_constants = [-200.9, -0.1321, 104000, -846000000]
     _vapor_pressure_constants = [70.717, -6439.7, -6.9845, 2.0129E-17, 6]
     _enthalpy_constants = [5.008e-7, 0.3959, 0.0, 0.0, 0.0]

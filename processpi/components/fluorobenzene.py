@@ -19,5 +19,8 @@ class FluoroBenzene(Component):
     _specific_heat_constants = [-991200,11734,-40.669,0.047333,0]
     _viscosity_constants = [-10.064,1058.7,-0.17162,0,0] 
     _thermal_conductivity_constants = [0.20962,-0.00028034,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 357.88-600 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 150, Fluorobenzene).
+    _vapor_thermal_conductivity_constants = [0.000053432, 1.1576, 760.75, 0]
     _vapor_pressure_constants = [51.915,-5439,-4.2896,8.7527E-18,6] 
     _enthalpy_constants = [4.582E-7,0.3717, 0,0, 0]  # Placeholder for enthalpy constants

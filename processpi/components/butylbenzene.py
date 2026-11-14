@@ -53,5 +53,8 @@ class Butylbenzene(Component):
     _specific_heat_constants = [182470,-13.912,0.72897,0,0]
     _viscosity_constants = [-23.802, 1887.2, 1.8479,0,0,0]
     _thermal_conductivity_constants = [0.18707, -0.00020037,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 456.46-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 40, Butylbenzene).
+    _vapor_thermal_conductivity_constants = [0.1807, 0.0082225, -129.42, 1691500]
     _vapor_pressure_constants = [101.22, -9255.40, -11.538, 5.92e-06, 2.0]
     _enthalpy_constants = [6.3487e-7, 0.38222,0,0,0]

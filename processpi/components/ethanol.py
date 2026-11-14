@@ -22,5 +22,8 @@ class Ethanol(Component):
     _specific_heat_constants = [102640,-139.63,-0.030341,0.0020386,0]
     _viscosity_constants = [7.875, 781.98, -3.0418, 0, 0] 
     _thermal_conductivity_constants = [0.2468, -0.000264, 0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 293.15-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 126, Ethanol).
+    _vapor_thermal_conductivity_constants = [-0.010109, 0.6475, -7332, -268000]
     _vapor_pressure_constants = [73.304, -7122.3, -7.1424, 0.0000028853, 2] 
     _enthalpy_constants = [5.5789E-7, 0.31245, 0, 0, 0]  # Placeholder for enthalpy constants

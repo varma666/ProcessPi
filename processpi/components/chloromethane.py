@@ -19,5 +19,8 @@ class ChloroMethane(Component):
     _specific_heat_constants = [96910,-207.9,0.37456,0.000488,0]
     _viscosity_constants = [-25.132,1381.9,2.0811,-4.50E-27,10] 
     _thermal_conductivity_constants = [0.41067, -0.0008478,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 213.15-750 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 56, Chloromethane).
+    _vapor_thermal_conductivity_constants = [-22136, 0.7666, -4.8749E+10, 0]
     _vapor_pressure_constants = [64.697,-4048.10,-6.8066,1.04E-05, 2] 
     _enthalpy_constants = [2.9745E-7,0.353, 0,0, 0]  # Placeholder for enthalpy constants

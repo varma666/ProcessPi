@@ -53,5 +53,8 @@ class Propionaldehyde(Component):
     _specific_heat_constants = [99306, 115.73, 0.0, 0.0, 0.0]
     _viscosity_constants = [-9.9177, 839.53, -0.16735, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2498, -0.00030075, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 321.15-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 299, Propionaldehyde).
+    _vapor_thermal_conductivity_constants = [1165.1, 0.90419, 5472900000, 0]
     _vapor_pressure_constants = [80.581, -5896.10, -8.9301, 8.22e-06, 2.0]
     _enthalpy_constants = [4.1492e-7, 0.36751, 0.0, 0.0, 0.0]

@@ -19,5 +19,8 @@ class ChloroBenzene(Component):
     _specific_heat_constants = [-1307500,15338,-53.974,0.063483,0]
     _viscosity_constants = [0.15772,540.5,-1.6075,1.50E+14,-6.00E+00] 
     _thermal_conductivity_constants = [0.1841, -0.0001917,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 400.00-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 53, Chlorobenzene).
+    _vapor_thermal_conductivity_constants = [0.0004783, 0.8994, 1845.5, 163000]
     _vapor_pressure_constants = [54.144,-6244.40,-4.5343,4.70E-18, 6] 
     _enthalpy_constants = [5.148E-7,0.36614, 0,0, 0]  # Placeholder for enthalpy constants

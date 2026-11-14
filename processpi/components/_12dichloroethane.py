@@ -53,5 +53,8 @@ class _12Dichloroethane(Component):
     _specific_heat_constants = [179170, -444.74, 0.93009, 0.0, 0.0]
     _viscosity_constants = [15.312, -41.12, -3.919, 0.0, 0.0]
     _thermal_conductivity_constants = [0.214, -0.000266, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 356.59-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 89, 1,2-Dichloroethane).
+    _vapor_thermal_conductivity_constants = [0.00021054, 0.9574, 1414, 0]
     _vapor_pressure_constants = [92.355, -6920.40, -10.651, 9.14e-06, 2.0]
     _enthalpy_constants = [4.5507e-7, 0.34444, 0.0, 0.0, 0.0]

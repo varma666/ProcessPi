@@ -53,5 +53,8 @@ class Biphenyl(Component):
     _specific_heat_constants = [121770,429.3,0,0,0]
     _viscosity_constants = [-9.9265, 1576.3, -0.21119,0,0]
     _thermal_conductivity_constants = [0.19053, -0.00015145,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 373.15-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 24, Biphenyl).
+    _vapor_thermal_conductivity_constants = [2.8646E-06, 1.4098, -391.35, 156820]
     _vapor_pressure_constants = [77.314, -9910.4, -7.5079, 2.24e-18, 6.0]
     _enthalpy_constants = [7.635e-7, 0.39182,0,0,0]

@@ -53,5 +53,8 @@ class _1Pentene(Component):
     _specific_heat_constants = [156100, -456.94, 2.255, -0.003163, 2.38e-06]
     _viscosity_constants = [-10.667, 659.56,0,0,0]
     _thermal_conductivity_constants = [0.21361, -0.00030777,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 303.22-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 285, 1-Pentene).
+    _vapor_thermal_conductivity_constants = [2.7081E-06, 1.5493, 41.075, 8301.3]
     _vapor_pressure_constants = [46.994, -4289.50, -3.7345, 2.54e-17, 6.0]
     _enthalpy_constants = [3.5027e-7, 0.3481, -0.19672, 0.22394,0]

@@ -53,5 +53,8 @@ class EthylBenzoate(Component):
     _specific_heat_constants = [124500, 370.6, 0.0, 0.0, 0.0]
     _viscosity_constants = [-40.706, 3035.0, 4.2655, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20771, -0.00021265, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 486.55-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 130, Ethyl benzoate).
+    _vapor_thermal_conductivity_constants = [0.00002012, 1.1513, -89.583, 125410]
     _vapor_pressure_constants = [52.923, -7531.70, -4.2347, 1.18e-06, 2.0]
     _enthalpy_constants = [6.7093e-7, 0.33273, 0.0, 0.0, 0.0]

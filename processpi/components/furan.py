@@ -53,5 +53,8 @@ class Furan(Component):
     _specific_heat_constants = [114370, -215.69, 0.72691, 0.0, 0.0]
     _viscosity_constants = [-10.923, 894.63, -0.00068418, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2198, -0.00031405, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 304.50-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 156, Furan).
+    _vapor_thermal_conductivity_constants = [-644950, 0.2862, -1.6794E+10, -1.7372E+13]
     _vapor_pressure_constants = [74.738, -5417, -8.0636, 7.47e-06, 2.0]
     _enthalpy_constants = [4.005e-7, 0.3995, 0.0, 0.0, 0.0]

@@ -53,5 +53,8 @@ class MethylAcetylene(Component):
     _specific_heat_constants = [79791, 89.49, 0.0, 0.0, 0.0]
     _viscosity_constants = [-2.8737, 301.35, -1.2271, 0, 0]
     _thermal_conductivity_constants = [0.23648, -0.00041639, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 249.94-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 197, Methyl acetylene).
+    _vapor_thermal_conductivity_constants = [0.00026544, 0.8921, 222.19, 79869]
     _vapor_pressure_constants = [50.242, -3811.90, -4.2526, 6.53e-17, 6.0]
     _enthalpy_constants = [3.1889e-7, 0.37881, 0.0, 0.0, 0.0]

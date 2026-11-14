@@ -53,5 +53,8 @@ class EthylButyrate(Component):
     _specific_heat_constants = [82434, 422.45, 0.20992, 0.0, 0.0]
     _viscosity_constants = [-15.485, 1325.6, 0.6432, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21043, -0.00024903, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 394.65-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 132, Ethyl butyrate).
+    _vapor_thermal_conductivity_constants = [829.29, 1.0156, 8955300000, 0]
     _vapor_pressure_constants = [57.661, -6346.50, -5.032, 8.25e-18, 6.0]
     _enthalpy_constants = [5.6419e-7, 0.37985, 0.0, 0.0, 0.0]

@@ -53,5 +53,8 @@ class _11Dimethoxyethane(Component):
     _specific_heat_constants = [187790, -313.41, 1.1023, 0.0, 0.0]
     _viscosity_constants = [-10.968, 885.49, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22078, -0.00031271, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 337.45-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 103, 1,1-Dimethoxyethane).
+    _vapor_thermal_conductivity_constants = [0.00046265, 0.81968, 539.34, 104530]
     _vapor_pressure_constants = [53.637,-5251.20, -4.5649, 1.68e-17, 6.0]
     _enthalpy_constants = [4.3872e-7, 0.56226, -0.60662, 0.4202, 0.0]
