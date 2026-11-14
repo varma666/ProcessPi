@@ -54,4 +54,4 @@ class _2EthylHexanoicAcid(Component):
     _viscosity_constants = [-13.037, 2346.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20954, -0.00022251, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [117.52, -12991, -12.895, 6.13e-18, 6.0]
-    _enthalpy_constants = [11.184e-7, 0.86189, -0.47845, 0.048646]
+    _enthalpy_constants = [11.184E7, 0.86189, -0.47845, 0.048646, 0]  # Perry's 8th ed., Table 2-150, no. 141

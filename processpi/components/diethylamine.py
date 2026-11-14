@@ -54,4 +54,4 @@ class DiethylAmine(Component):
     _viscosity_constants = [-17.57, 1385.7, 0.85647,0,0]
     _thermal_conductivity_constants = [0.2587, -0.00054343, 4.21e-07,0,0]
     _vapor_pressure_constants = [49.314, -4949, -3.9256, 9.2e-18, 6.0]
-    _enthalpy_constants = [4.6133, 0.42628]
+    _enthalpy_constants = [4.6133E7, 0.42628, 0, 0, 0]  # Perry's 8th ed., Table 2-150, no. 94

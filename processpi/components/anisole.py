@@ -53,5 +53,5 @@ class Anisole(Component):
     _specific_heat_constants = [150940,93.455,0.23602,0,0]
     _viscosity_constants = [-15.407, 1518.7, 0.60172,0,0]
     _thermal_conductivity_constants = [0.23494, -0.00026477,0,0,0]
-    _vapor_pressure_constants = [128.06, -9307.70, -16.693, 0.0149, 1.0]
+    _vapor_pressure_constants = [128.06, -9307.7, -16.693, 1.4919E-02, 1]  # Perry's 8th ed., Table 2-8, no. 13
     _enthalpy_constants = [5.8662e-7, 0.37127,0,0,0]

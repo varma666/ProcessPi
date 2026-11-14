@@ -54,4 +54,4 @@ class OctanoicAcid(Component):
     _viscosity_constants = [-60.795, 4617.8, 7.028, 0.0, 0.0]
     _thermal_conductivity_constants = [0.203, -0.0002, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [140.16, -14813, -16.004, 6.42e-18, 6.0]
-    _enthalpy_constants = [12.23e-7, 0.69294, 0.12287, -0.36132]
+    _enthalpy_constants = [12.23E7, 0.69294, 0.12287, -0.36132, 0]  # Perry's 8th ed., Table 2-150, no. 266

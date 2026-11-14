@@ -50,8 +50,8 @@ class Acetonitrile(Component):
     _critical_acentric_factor = 0.3379
 
     _density_constants = [1.3064, 0.22597, 545.5, 0.28678]
-    _specific_heat_constants = [0.0, -122.2, 0.34085, 0.0, 0.0, 0.8748, 0.9713]
-    _viscosity_constants = [-10.906, 872.02]
+    _specific_heat_constants = [97582, -122.2, 0.34085, 0, 0]  # Perry's 8th ed., Table 2-153, no. 6
+    _viscosity_constants = [-10.906, 872.02, 0, 0, 0]  # Perry's 8th ed., Table 2-313, no. 6
     _thermal_conductivity_constants = [0.33192, -0.00043243]
     _vapor_pressure_constants = [58.302, -5385.6, -5.4954, 5.3634E-06, 2]
-    _enthalpy_constants = [4.3511, 0.34765]
+    _enthalpy_constants = [4.3511E7, 0.34765, 0, 0, 0]  # Perry's 8th ed., Table 2-150, no. 6

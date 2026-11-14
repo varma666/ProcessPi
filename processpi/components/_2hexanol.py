@@ -54,4 +54,4 @@ class _2Hexanol(Component):
     _viscosity_constants = [-82.705, 7404.9, 6.4721, 1.5016, 0.41014]
     _thermal_conductivity_constants = [0.21391, -0.00026042, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [109.42, -10449, -12.051, 2.61e-46, 16.0]
-    _enthalpy_constants = [11.55, 2.2877, -3.6724, 2.1326, 0.0]
+    _enthalpy_constants = [11.55E7, 2.2877, -3.6724, 2.1326, 0]  # Perry's 8th ed., Table 2-150, no. 174

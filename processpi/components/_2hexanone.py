@@ -53,5 +53,5 @@ class _2Hexanone(Component):
     _specific_heat_constants = [208205, -107.47, 0.2062, 0.00070293, 0.0]
     _viscosity_constants = [-11.445, 1187.2, 0.0029076, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21076, -0.00024, 0.0, 0.0, 0.0]
-    _vapor_pressure_constants = [107.44, -8258.60, -12.679, 8.46e-06, 2.0]
+    _vapor_pressure_constants = [107.44, -8528.6, -12.679, 8.4606E-06, 2]  # Perry's 8th ed., Table 2-8, no. 175
     _enthalpy_constants = [5.6231e-7, 0.38207, 0.0, 0.0, 0.0]

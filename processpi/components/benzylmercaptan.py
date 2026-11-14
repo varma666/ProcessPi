@@ -50,7 +50,7 @@ class BenzylMercaptan(Component):
     _critical_acentric_factor = 0.3126
 
     _density_constants = [0.70797, 0.25982, 718.0, 0.32144]
-    _specific_heat_constants = [1000320,346.89,0,0,0]
+    _specific_heat_constants = [100320, 346.89, 0, 0, 0]  # Perry's 8th ed., Table 2-153, no. 23
     _viscosity_constants = [-11.459, 1334.4, 0.00049694,0,0,0]
     _thermal_conductivity_constants = [0.20316, -0.00019912,0,0,0]
     _vapor_pressure_constants = [118.02, -10527, -13.91, 6.48e-06, 2.0]

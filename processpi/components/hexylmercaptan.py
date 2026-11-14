@@ -50,7 +50,7 @@ class HexylMercaptan(Component):
     _critical_acentric_factor = 0.3681
 
     _density_constants = [0.66372, 0.27345, 623.0, 0.29185]
-    _specific_heat_constants = [303320, 0.0, 3.3885, -0.002762, 0.0, 2.1495, 2.7639]
+    _specific_heat_constants = [303320, -1009, 3.3885, -0.002762, 0]  # Perry's 8th ed., Table 2-153, no. 179
     _viscosity_constants = [-10.073, 1123.3, -0.16515, 0, 0]
     _thermal_conductivity_constants = [0.2058, -0.0002324, 0, 0, 0]
     _vapor_pressure_constants = [68.467, -7390.50, -6.5456, 7.76e-18, 6.0]

@@ -20,6 +20,6 @@ class Bromine(Component):
     _density_constants = [2.1872, 0.29527, 584.15,0.3295]
     _specific_heat_constants = [179400,-667.11,1.0701,0,0]
     _viscosity_constants = [16.775,-314,-3.9763,0, 0] 
-    _thermal_conductivity_constants = [-0.2185, 0.0042143,-0.000017753,3.10E-08,-2.01E-11]
-    _vapor_pressure_constants = [108.26, -6592, -14.16,1.60E-02, 1] 
+    _thermal_conductivity_constants = [-0.2185, 0.0042143, -0.000017753, 3.1041E-08, -2.0108E-11]  # Perry's 8th ed., Table 2-315, no. 25
+    _vapor_pressure_constants = [108.26, -6592, -14.16, 1.6043E-02, 1]  # Perry's 8th ed., Table 2-8, no. 25
     _enthalpy_constants = [4E-7, 0.351, 0,0, 0]  # Placeholder for enthalpy constants

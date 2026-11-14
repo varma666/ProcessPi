@@ -19,7 +19,7 @@ class Butane(Component):
     _critical_acentric_factor = 0.2002  # Placeholder for critical acentric factor
     _density_constants = [1.0677, 0.27188,425.12,0.28688]
     _specific_heat_constants = [191030,-1675,12.5,-0.03874,4.61E-05]
-    _viscosity_constants = [-7.2471,534.82,-0.57469,-4.66E-27, 0] 
+    _viscosity_constants = [-7.2471, 534.82, -0.57469, -4.6625E-27, 10]  # Perry's 8th ed., Table 2-313, no. 31
     _thermal_conductivity_constants = [0.27349, -0.00071267,5.16E-07,0,0]
     _vapor_pressure_constants = [66.343,-4363.20,-7.046,9.45E-06, 2] 
     _enthalpy_constants = [3.6238E-7, 0.8337, -0.82274,0.39613, 0]  # Placeholder for enthalpy constants

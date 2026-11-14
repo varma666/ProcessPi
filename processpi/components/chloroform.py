@@ -19,5 +19,5 @@ class Chloroform(Component):
     _specific_heat_constants = [124850,-166.34,0.43209,0,0]
     _viscosity_constants = [-14.109,1049.2,0.5377,0,0] 
     _thermal_conductivity_constants = [0.1778, -0.0002023,0,0,0]
-    _vapor_pressure_constants = [146.43,-7792.30,-20.614,2.46E-02, 1] 
+    _vapor_pressure_constants = [146.43, -7792.3, -20.614, 2.4578E-02, 1]  # Perry's 8th ed., Table 2-8, no. 55
     _enthalpy_constants = [4.186E-7,0.3584, 0,0, 0]  # Placeholder for enthalpy constants

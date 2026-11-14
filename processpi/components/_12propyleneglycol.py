@@ -53,5 +53,5 @@ class _12PropyleneGlycol(Component):
     _specific_heat_constants = [58080, 445.2, 0.0, 0.0, 0.0]
     _viscosity_constants = [-804.54, 30487.0, 130.79, -0.15449, 1.0]
     _thermal_conductivity_constants = [0.2152, -4.97e-05,0,0,0]
-    _vapor_pressure_constants = [212.8, -15420, -28.109, 2.16e-05, 2.0]
+    _vapor_pressure_constants = [212.8, -15420, -28.109, 2.1564E-05, 2]  # Perry's 8th ed., Table 2-8, no. 309
     _enthalpy_constants = [8.07e-7, 0.295,0,0,0]

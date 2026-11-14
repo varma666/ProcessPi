@@ -16,7 +16,7 @@ class Cyanogen(Component):
     _critical_zc = 0.351  # Placeholder for critical compressibility factor
     _critical_acentric_factor = 0.279  # Placeholder for critical acentric factor
     _density_constants = [1.0743,0.20948,400.15,0.20724]
-    _specific_heat_constants = [65516,-144.7,0.063229,0,0]
+    _specific_heat_constants = [65516, 144.7, 0.063229, 0, 0]  # Perry's 8th ed., Table 2-153, no. 63
     _viscosity_constants = [-12.086,994.23,0,0,0] 
     _thermal_conductivity_constants = [0.4685, -0.00086594,0,0,0]
     _vapor_pressure_constants = [81.565,-4808.90,-9.3748,1.39E-05, 2] 

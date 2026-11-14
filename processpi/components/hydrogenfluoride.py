@@ -51,7 +51,7 @@ class HydrogenFluoride(Component):
 
     _density_constants = [2.5635, 0.1766, 461.15, 0.3733]
     _specific_heat_constants = [62520, -223.02, 0.6297, 0.0, 0.0]
-    _viscosity_constants = [353.99, 13928.0, -41.717, 0.0, -0.5]
+    _viscosity_constants = [353.99, 13928, -41.717, -2962, -0.5]  # Perry's 8th ed., Table 2-313, no. 187
     _thermal_conductivity_constants = [0.7516, -0.0010874, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [59.544, -4143.80, -6.1764, 1.42e-05, 2.0]
     _enthalpy_constants = [13.451e-7, 13.36, -23.383, 10.785, 0.0]

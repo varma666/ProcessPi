@@ -53,5 +53,5 @@ class PropylAcetate(Component):
     _specific_heat_constants = [83400, 384.1, 0.0, 0.0, 0.0]
     _viscosity_constants = [17.797, -252.43, -4.291, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2332, -0.0003096, 0.0, 0.0, 0.0]
-    _vapor_pressure_constants = [115.16, -8433.90, -13.934, 1.03e-05, 2.0]
+    _vapor_pressure_constants = [115.16, -8433.9, -13.934, 1.0346E-05, 2]  # Perry's 8th ed., Table 2-8, no. 302
     _enthalpy_constants = [5.4327e-7, 0.407, 0.0, 0.0, 0.0]

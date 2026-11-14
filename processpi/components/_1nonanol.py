@@ -54,4 +54,4 @@ class _1Nonanol(Component):
     _viscosity_constants = [-39.863, 4089.0, 3.7631, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2292, -0.00023, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [162.854, -15205, -19.424, 1.07e-17, 6.0]
-    _enthalpy_constants = [7.5429e-7, -1.5966, 4.6489, -2.7229]
+    _enthalpy_constants = [7.5429E7, -1.5966, 4.6489, -2.7229, 0]  # Perry's 8th ed., Table 2-150, no. 258

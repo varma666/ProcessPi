@@ -53,5 +53,5 @@ class _2Methylpropane(Component):
     _specific_heat_constants = [172370, -1783.90, 14.759, -0.047909, 5.805e-05]
     _viscosity_constants = [-13.912, 797.09, 0.45308, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20455, -0.00036589, 0.0, 0.0, 0.0]
-    _vapor_pressure_constants = [108.43, -5039.90, -15.012, 0.0227, 1.0]
+    _vapor_pressure_constants = [108.43, -5039.9, -15.012, 2.2725E-02, 1]  # Perry's 8th ed., Table 2-8, no. 236
     _enthalpy_constants = [3.188e-7, 0.39006, 0.0, 0.0, 0.0]

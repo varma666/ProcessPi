@@ -50,7 +50,7 @@ class _1Octyne(Component):
     _critical_acentric_factor = 0.4233
 
     _density_constants = [0.58945, 0.26052, 574.0, 0.28532]
-    _specific_heat_constants = [42642, 886.67, -0.69315, 0.0, 0.0, 1.9225, 2.8619]
+    _specific_heat_constants = [42642, 886.67, -0.69315, 0, 0]  # Perry's 8th ed., Table 2-153, no. 273
     _viscosity_constants = [-3.8552, 684.22, -1.0071, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2095, -0.00025334, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [64.612,-6802.50, -6.0261, 1.1e-17, 6.0]

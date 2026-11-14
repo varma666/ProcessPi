@@ -53,5 +53,5 @@ class Acrolein(Component):
     _specific_heat_constants = [103090,-247.8,1.0343,0,0]
     _viscosity_constants = [-12.032, 867.34, 0.19534,0,0]
     _thermal_conductivity_constants = [0.2703, -0.0003764,0,0,0]
-    _vapor_pressure_constants = [138.4, -7122.70, -19.638, 0.0264, 1.0]
+    _vapor_pressure_constants = [138.4, -7122.7, -19.638, 2.6447E-02, 1]  # Perry's 8th ed., Table 2-8, no. 8
     _enthalpy_constants = [3.8736e-7, 0.29335,0,0,0]
