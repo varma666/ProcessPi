@@ -258,8 +258,11 @@ class Component(ABC):
     def viscosity(self) -> Viscosity:
         """
         Returns viscosity (Pa·s):
-        - Liquid: DIPPR correlation
-        - Gas: Sutherland approximation
+        - Liquid: DIPPR Eq. 101 (`_viscosity_constants`, Perry's 8th ed.,
+          Table 2-313)
+        - Gas: DIPPR Eq. 102 (`_vapor_viscosity_constants`, Perry's 8th ed.,
+          Table 2-312) when the component gives them, otherwise Sutherland's
+          law with air's constants
         """
         if self._viscosity is not None:
             return self._viscosity
@@ -276,7 +279,15 @@ class Component(ABC):
             mu = exp(po)
             return Viscosity(mu, "Pa·s")
 
-        # --- Gas phase: Sutherland's law ---
+        # --- Gas phase: DIPPR Eq. 102 (Perry's 8th ed., Table 2-312) ---
+        #     mu = C1 * T^C2 / (1 + C3/T + C4/T^2), mu in Pa s, T in K.
+        constants = getattr(self, "_vapor_viscosity_constants", None)
+        if constants:
+            C1, C2, C3, C4 = constants
+            return Viscosity(C1 * T ** C2 / (1 + C3 / T + C4 / T ** 2), "Pa·s")
+
+        # --- Gas phase without component data (generic Gas / Vapor):
+        # Sutherland's law with air's constants ---
         mu0 = getattr(self, "_gas_viscosity_ref", 1.8e-5)  # air baseline (Pa·s)
         T0 = getattr(self, "_gas_viscosity_Tref", 300.0)   # reference K
         C = getattr(self, "_sutherland_constant", 120.0)   # Sutherland constant

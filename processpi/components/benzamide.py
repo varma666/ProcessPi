@@ -55,3 +55,6 @@ class Benzamide(Component):
     _thermal_conductivity_constants = [0.28485, -0.00025225,0,0,0]
     _vapor_pressure_constants = [85.474, -11932, -8.3348, 1.2850E-18, 6]
     _enthalpy_constants = [8.7809e-7, 0.1933, 0.30877, -0.14162,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 403.00-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 15, Benzamide).
+    _vapor_viscosity_constants = [2.5082E-08, 0.96663, 0, 0]

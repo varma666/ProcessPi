@@ -55,6 +55,9 @@ class Hydrogen(Component):
     _thermal_conductivity_constants = [-0.0917, 0.017678, -0.000382, -3.33e-06, 1.03e-07]
     _vapor_pressure_constants = [12.69, -94.896, 1.1125, 0.000329, 2.0]
     _enthalpy_constants = [0.10127e-7, 0.698, -1.817, 1.447,0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 13.95-3000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 183, Hydrogen).
+    _vapor_viscosity_constants = [1.797E-07, 0.685, -0.59, 140]
 
     @property
     def specific_heat(self):

@@ -55,3 +55,6 @@ class Nonanal(Component):
     _thermal_conductivity_constants = [0.21523, -0.0002799, 9.57e-08, 0.0, 0.0]
     _vapor_pressure_constants = [337.71, -18506, -50.224, 0.0473, 1.0]
     _enthalpy_constants = [7.3363e-7, 0.41735, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 255.15-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 255, Nonanal).
+    _vapor_viscosity_constants = [7.1902E-08, 0.8013, 92.051, 0]

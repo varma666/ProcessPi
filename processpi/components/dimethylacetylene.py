@@ -55,3 +55,6 @@ class DimethylAcetylene(Component):
     _thermal_conductivity_constants = [0.22773, -0.00034804,0,0,0]
     _vapor_pressure_constants = [66.592, -4999.80, -6.8387, 6.68e-06, 2.0]
     _enthalpy_constants = [3.856e-7, 0.3737,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 240.91-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 105, Dimethyl acetylene).
+    _vapor_viscosity_constants = [1.9377E-06, 0.4093, 492.69, 0]

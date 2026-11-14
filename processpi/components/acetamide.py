@@ -56,3 +56,6 @@ class Acetamide(Component):
     _vapor_pressure_constants = [125.81, -12376, -14.589, 5.08e-06, 2.0]
     # Perry's 8th ed., Table 2-150, p. 2-150 prints C1 x 1E-07 = 8.107 (J/kmol).
     _enthalpy_constants = [8.107E7, 0.42,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 353.33-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 2, Acetamide).
+    _vapor_viscosity_constants = [1.423E-07, 0.7574, 272.14, 0]

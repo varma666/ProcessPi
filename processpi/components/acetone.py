@@ -58,3 +58,6 @@ class Acetone(Component):
     _thermal_conductivity_constants = [0.2878, -0.000427, 0,0,0]
     _vapor_pressure_constants = [69.006, -5599.6, -7.0985, 0.0000062237, 2] 
     _enthalpy_constants = [4.215E-7, 0.3397, 0, 0, 0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 178.45-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 5, Acetone).
+    _vapor_viscosity_constants = [3.1005E-08, 0.9762, 23.139, 0]

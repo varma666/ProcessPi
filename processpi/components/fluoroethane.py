@@ -55,3 +55,6 @@ class Fluoroethane(Component):
     _thermal_conductivity_constants = [0.2595, -0.0005008, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [56.639, -3576.70, -5.5801, 9.9e-06, 2.0]
     _enthalpy_constants = [2.7617e-7, 0.32162, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 129.95-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 151, Fluoroethane).
+    _vapor_viscosity_constants = [8.8742E-07, 0.5404, 251.82, 0]

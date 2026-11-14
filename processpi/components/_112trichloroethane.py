@@ -55,3 +55,6 @@ class _112Trichloroethane(Component):
     _thermal_conductivity_constants = [0.20731, -0.00024997,0,0,0]
     _vapor_pressure_constants = [54.153,-6041.80, -4.5383, 4.98e-18, 6.0]
     _enthalpy_constants = [5.0929e-7, 0.38013,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 236.50-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 326, 1,1,2-Trichloroethane).
+    _vapor_viscosity_constants = [2.7081E-07, 0.6955, 187.93, 0]

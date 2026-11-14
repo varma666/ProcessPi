@@ -55,3 +55,6 @@ class Cyclopentane(Component):
     _thermal_conductivity_constants = [0.2066, -0.0002696,0,0,0]
     _vapor_pressure_constants = [66.341, -5198.50, -6.8103, 6.19e-06, 2.0]
     _enthalpy_constants = [3.8911e-7, 0.36111,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 179.28-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 69, Cyclopentane).
+    _vapor_viscosity_constants = [2.3619E-07, 0.67465, 139, 0]

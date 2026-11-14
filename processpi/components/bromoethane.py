@@ -55,3 +55,6 @@ class Bromoethane(Component):
     _thermal_conductivity_constants = [0.1799, -0.000262,0,0,0]
     _vapor_pressure_constants = [62.217, -5113.30, -5.9761, 4.72e-17, 6.0]
     _enthalpy_constants = [3.9004e-7, 0.38012,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 154.55-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 27, Bromoethane).
+    _vapor_viscosity_constants = [5.29E-07, 0.632, 226, 0]

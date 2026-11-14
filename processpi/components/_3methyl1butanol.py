@@ -55,3 +55,6 @@ class _3Methyl1Butanol(Component):
     _thermal_conductivity_constants = [0.17471, -0.0001256, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [121.85, -10976, -13.869, 1.43e-17, 6.0]
     _enthalpy_constants = [10.178e-7, 1.3211, -1.2234, 0.44836, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 155.95-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 204, 3-Methyl-1-butanol).
+    _vapor_viscosity_constants = [8.8783E-08, 0.80279, 77.075, 0]

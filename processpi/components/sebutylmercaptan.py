@@ -55,3 +55,6 @@ class SeButylmercaptan(Component):
     _thermal_conductivity_constants = [0.2069, -0.0002568,0,0,0]
     _vapor_pressure_constants = [60.649, -5785.90, -5.6113, 1.59e-17, 6.0]
     _enthalpy_constants = [4.6432e-7, 0.399,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 133.02-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 42, sec-Butyl mercaptan).
+    _vapor_viscosity_constants = [3.1378E-08, 0.96513, 0, 0]

@@ -63,3 +63,6 @@ class _1Propanol(Component):
     # Heat of vaporization, J/kmol, 146.95-536.8 K: Perry's 8th ed., Table
     # 2-150, p. 2-154. The table prints C1 x 1E-07 = 6.8988; C5 is blank (0).
     _enthalpy_constants = [6.8988E7, 0.6458, -0.5384, 0.3317, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 200.00-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 296, 1-Propanol).
+    _vapor_viscosity_constants = [7.942E-07, 0.5491, 415.8, 0]

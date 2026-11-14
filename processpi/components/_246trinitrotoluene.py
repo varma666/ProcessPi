@@ -55,3 +55,6 @@ class _246Trinitrotoluene(Component):
     _thermal_conductivity_constants = [-1.5128, 0.0079553, -1.0066e-05,0,0]
     _vapor_pressure_constants = [302.0, -24324, -40.13, 1.74e-05, 2.0]
     _enthalpy_constants = [10.686e-7, 0.40074,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 354.00-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 335, 2,4,6-Trinitrotoluene).
+    _vapor_viscosity_constants = [2.8471E-08, 0.96571, 30.83, 0]

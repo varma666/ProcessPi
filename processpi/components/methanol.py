@@ -24,3 +24,6 @@ class Methanol(Component):
     _thermal_conductivity_constants = [0.2837, -0.000281, 0,0,0]
     _vapor_pressure_constants = [82.718, -6904.5, -8.8622, 0.0000074664, 2] 
     _enthalpy_constants = [5.0451e-7, 0.33594, 0, 0, 0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 240.00-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 194, Methanol).
+    _vapor_viscosity_constants = [3.0663E-07, 0.69655, 205, 0]

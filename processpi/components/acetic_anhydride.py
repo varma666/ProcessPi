@@ -56,3 +56,6 @@ class AceticAnhydride(Component):
     _vapor_pressure_constants = [100.95, -8873.20, -11.451, 6.13e-6,2]
     # Perry's 8th ed., Table 2-150, p. 2-150 prints C1 x 1E-07 = 6.352 (J/kmol).
     _enthalpy_constants = [6.352E7, 0.3986,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 200.15-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 4, Acetic anhydride).
+    _vapor_viscosity_constants = [1.20E-07, 0.7915, 105.3, 0]

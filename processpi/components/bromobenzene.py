@@ -55,3 +55,6 @@ class Bromobenzene(Component):
     _thermal_conductivity_constants = [0.16983, -0.0001981,0,0,0]
     _vapor_pressure_constants = [63.749,-7130.20, -5.879, 5.21e-18, 6.0]
     _enthalpy_constants = [5.552e-7, 0.37694,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 429.24-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 26, Bromobenzene).
+    _vapor_viscosity_constants = [2.232E-07, 0.7146, 184.9, 0]

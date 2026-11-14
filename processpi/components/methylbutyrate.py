@@ -55,3 +55,6 @@ class MethylButyrate(Component):
     _thermal_conductivity_constants = [0.21748, -0.00025913, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [71.87, -6885.70, -7.0944, 1.49e-17, 6.0]
     _enthalpy_constants = [5.3781e-7, 0.39523, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 187.35-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 211, Methyl butyrate).
+    _vapor_viscosity_constants = [3.733E-07, 0.6177, 256.5, 0]

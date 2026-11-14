@@ -55,3 +55,6 @@ class _23Dimethylbutane(Component):
     _thermal_conductivity_constants = [0.1774, -0.0002436, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [77.161, -5691.10, -8.501, 8.03e-06, 2.0]
     _enthalpy_constants = [4.1509e-7, 0.38383, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 145.19-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 107, 2,3-Dimethylbutane).
+    _vapor_viscosity_constants = [6.8567E-07, 0.52542, 278.82, 0]

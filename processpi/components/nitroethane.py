@@ -55,3 +55,6 @@ class Nitroethane(Component):
     _thermal_conductivity_constants = [0.247, -0.0002814, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [75.632, -7202.30, -7.6464, 1.83e-17, 6.0]
     _enthalpy_constants = [5.1459e-7, 0.33017, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 183.63-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 248, Nitroethane).
+    _vapor_viscosity_constants = [2.4391E-07, 0.702, 280, 0]

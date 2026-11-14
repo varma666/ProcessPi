@@ -55,3 +55,6 @@ class Nitromethane(Component):
     _thermal_conductivity_constants = [0.3276, -0.000405, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [57.278, -6089, -4.9821, 1.22e-17, 6.0]
     _enthalpy_constants = [4.7417e-7, 0.3062, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 244.60-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 251, Nitromethane).
+    _vapor_viscosity_constants = [4.070E-07, 0.6485, 367.5, 0]

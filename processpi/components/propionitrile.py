@@ -55,3 +55,6 @@ class Propionitrile(Component):
     _thermal_conductivity_constants = [0.26626, -0.0003307, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [82.699, -6703.50, -9.1506, 7.54e-06, 2.0]
     _enthalpy_constants = [4.9348e-7, 0.41873, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 180.26-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 301, Propionitrile).
+    _vapor_viscosity_constants = [1.0111E-07, 0.7821, 89.5, 0]

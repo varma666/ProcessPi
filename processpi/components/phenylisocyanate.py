@@ -55,3 +55,6 @@ class PhenylIsocyanate(Component):
     _thermal_conductivity_constants = [0.16326, -0.00017777, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [86.779, -8101.80, -9.5303, 6.14e-06, 2.0]
     _enthalpy_constants = [5.5769e-7, 0.30346, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 243.15-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 292, Phenyl isocyanate).
+    _vapor_viscosity_constants = [8.536E-08, 0.80872, 88.273, 0]

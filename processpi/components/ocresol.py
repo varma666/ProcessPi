@@ -55,3 +55,6 @@ class Ocresol(Component):
     _thermal_conductivity_constants = [0.19186, -0.0001303,0,0,0]
     _vapor_pressure_constants = [210.88, -13928, -29.483, 0.0252, 1.0]
     _enthalpy_constants = [7.1979e-7, 0.40317,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 304.19-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 60, o-Cresol).
+    _vapor_viscosity_constants = [8.7371E-08, 0.80775, 98.538, 0]

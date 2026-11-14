@@ -55,3 +55,6 @@ class _12Difluoroethane(Component):
     _thermal_conductivity_constants = [0.23171, -0.00038503, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [84.625, -5217.40, -9.871, 1.31e-05, 2.0]
     _enthalpy_constants = [3.4552e-7, 0.3499, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 215.00-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 98, 1,2-Difluoroethane).
+    _vapor_viscosity_constants = [4.3934E-07, 0.64867, 169.64, 0]

@@ -55,3 +55,6 @@ class IsopropylAmine(Component):
     _thermal_conductivity_constants = [0.237, -0.000332, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [136.66, -7201.50, -18.934, 0.0223, 1.0]
     _enthalpy_constants = [4.4041e-7, 0.43325, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 177.95-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 190, Isopropyl amine).
+    _vapor_viscosity_constants = [5.2542E-08, 0.88063, 0, 0]

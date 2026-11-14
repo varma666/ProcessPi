@@ -55,3 +55,6 @@ class _11Dichloroethane(Component):
     _thermal_conductivity_constants = [0.18881, -0.00026083, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [66.611, -5493.10, -6.7301, 5.36e-06, 2.0]
     _enthalpy_constants = [4.2117e-7, 0.36927, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 176.19-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 88, 1,1-Dichloroethane).
+    _vapor_viscosity_constants = [2.0135E-07, 0.73421, 111.98, 0]

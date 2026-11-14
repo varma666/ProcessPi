@@ -55,3 +55,6 @@ class _2Methylpentane(Component):
     _thermal_conductivity_constants = [0.19334, -0.00028038, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [53.579, -5041.20, -4.6404, 1.94e-17, 6.0]
     _enthalpy_constants = [4.2522e-7, 0.3807, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 119.55-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 234, 2-Methylpentane).
+    _vapor_viscosity_constants = [1.1164E-06, 0.4537, 374.74, 0]

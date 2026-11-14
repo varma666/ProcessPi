@@ -55,3 +55,6 @@ class _2Octanone(Component):
     _thermal_conductivity_constants = [0.2132, -0.0002494, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [63.775, -7711.30, -5.7359, 3.09e-18, 6.0]
     _enthalpy_constants = [6.5363e-7, 0.38718, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 252.85-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 269, 2-Octanone).
+    _vapor_viscosity_constants = [8.0901E-08, 0.79062, 99.338, 0]

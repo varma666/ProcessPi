@@ -55,3 +55,6 @@ class VinylTrichlorosilane(Component):
     _thermal_conductivity_constants = [0.21831, -0.00029122, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [54.571, -5561.50, -4.712, 1.07e-17, 6.0]
     _enthalpy_constants = [4.5659e-7, 0.36278, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 178.35-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 341, Vinyl trichlorosilane).
+    _vapor_viscosity_constants = [3.6429E-08, 0.95924, 0, 0]

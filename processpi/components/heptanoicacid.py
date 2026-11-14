@@ -55,3 +55,6 @@ class HeptanoicAcid(Component):
     _thermal_conductivity_constants = [0.202, -0.0002, 0, 0, 0]
     _vapor_pressure_constants = [120.47, -13106, -13.31, 5.84e-18, 6.0]
     _enthalpy_constants = [11.274e-7, 0.86047, -0.40661, -0.012644, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 265.83-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 161, Heptanoic acid).
+    _vapor_viscosity_constants = [7.2834E-08, 0.81279, 89.874, 0]

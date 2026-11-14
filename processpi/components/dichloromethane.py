@@ -55,3 +55,6 @@ class Dichloromethane(Component):
     _thermal_conductivity_constants = [0.23847, -0.00033366,0,0,0]
     _vapor_pressure_constants = [101.6, -6541.60, -12.247, 1.23e-05, 2.0]
     _enthalpy_constants = [4.186e-7, 0.4092,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 178.01-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 90, Dichloromethane).
+    _vapor_viscosity_constants = [7.6787E-07, 0.5741, 276.16, 0]

@@ -55,3 +55,6 @@ class Decane(Component):
     _thermal_conductivity_constants = [0.2063, -0.00025,0,0,0]
     _vapor_pressure_constants = [112.73, -9749.60, -13.245, 7.13e-06, 2.0]
     _enthalpy_constants = [6.6126e-7, 0.39797,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 243.51-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 74, Decane).
+    _vapor_viscosity_constants = [2.64E-08, 0.9487, 71, 0]

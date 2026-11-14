@@ -79,3 +79,6 @@ class Styrene(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 418.31-1000 K:
     # Table 2-314, p. 2-438.
     _vapor_thermal_conductivity_constants = [0.010048, 0.4033, 553.74, 685570]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 242.54-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 312, Styrene).
+    _vapor_viscosity_constants = [6.3863E-07, 0.5254, 295.1, 0]

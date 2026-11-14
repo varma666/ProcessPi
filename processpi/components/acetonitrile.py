@@ -55,3 +55,6 @@ class Acetonitrile(Component):
     _thermal_conductivity_constants = [0.33192, -0.00043243]
     _vapor_pressure_constants = [58.302, -5385.6, -5.4954, 5.3634E-06, 2]
     _enthalpy_constants = [4.3511, 0.34765]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 229.32-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 6, Acetonitrile).
+    _vapor_viscosity_constants = [5.1964E-08, 0.8857, 38.805, 0]

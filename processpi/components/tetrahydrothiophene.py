@@ -55,3 +55,6 @@ class Tetrahydrothiophene(Component):
     _thermal_conductivity_constants = [0.20414, -0.00021217, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [75.881, -6910.60, -7.9499, 4.43e-06, 2.0]
     _enthalpy_constants = [5.0642e-7, 0.38904, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 176.99-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 322, Tetrahydrothiophene).
+    _vapor_viscosity_constants = [8.5988E-08, 0.82841, 68.172, 0]

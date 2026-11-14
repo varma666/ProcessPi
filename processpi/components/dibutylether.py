@@ -55,3 +55,6 @@ class DibutylEther(Component):
     _thermal_conductivity_constants = [0.19418, -0.00022246,0,0,0]
     _vapor_pressure_constants = [72.227, -7537.60, -7.0596, 9.14e-18, 6.0]
     _enthalpy_constants = [5.9616e-7, 0.38833,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 175.30-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 84, Dibutyl ether).
+    _vapor_viscosity_constants = [7.7147E-08, 0.79906, 80.765, 0]
