@@ -53,5 +53,8 @@ class Pdichlorobenzene(Component):
     _specific_heat_constants = [133950, -24.84, 0.48191, 0.0, 0.0]
     _viscosity_constants = [31.63, -1080.0, -6.114, 0.0, 0.0]
     _thermal_conductivity_constants = [0.16977, -0.0001799, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 447.21-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 87, p-Dichlorobenzene).
+    _vapor_thermal_conductivity_constants = [-1520.8, 0.754, -4.3328E+09, 0]
     _vapor_pressure_constants = [88.31, -8463.50, -9.6308, 4.58e-06, 2.0]
     _enthalpy_constants = [5.9765e-7, 0.38559, 0.0, 0.0, 0.0]

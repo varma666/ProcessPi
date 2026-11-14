@@ -53,5 +53,8 @@ class MethylBenzoate(Component):
     _specific_heat_constants = [125630, 279.75, 0.0, 0.0, 0.0]
     _viscosity_constants = [-21.971, 2267.4, 1.4173, 0, 0]
     _thermal_conductivity_constants = [0.22142, -0.00022759, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 472.65-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 200, Methyl benzoate).
+    _vapor_thermal_conductivity_constants = [0.000023963, 1.1308, -67.272, 125720]
     _vapor_pressure_constants = [84.828, -9334.70, -8.7063, 6.17e-18, 6.0]
     _enthalpy_constants = [6.8504e-7, 0.38852, 0.0, 0.0, 0.0]

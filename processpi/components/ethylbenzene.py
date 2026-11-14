@@ -53,5 +53,8 @@ class Ethylbenzene(Component):
     _specific_heat_constants = [154040, -142.29, 0.80539, 0.0, 0.0]
     _viscosity_constants = [-13.563, 1208.6, 0.377,0.0, 0.0]
     _thermal_conductivity_constants = [0.1999, -0.00023823, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 409.35-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 129, Ethylbenzene).
+    _vapor_thermal_conductivity_constants = [0.000017537, 1.3144, 560.65, 0]
     _vapor_pressure_constants = [89.063, -7733.30, -9.917, 5.99e-06, 2.0]
     _enthalpy_constants = [5.4805e-7, 0.39524,0,0,0]

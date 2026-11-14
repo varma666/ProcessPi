@@ -53,5 +53,8 @@ class OxalicAcid(Component):
     _specific_heat_constants = [175510, -381.36, 0.64623, 0.0, 0.0]
     _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.3074, -0.00028101, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 569.00-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 274, Oxalic acid).
+    _vapor_thermal_conductivity_constants = [0.05881, 0.278, 14815, 0]
     _vapor_pressure_constants = [122.04, -16050, -12.986, 2.09e-18, 6.0]
     _enthalpy_constants = [11.473e-7, 0.37238, 0.0, 0.0, 0.0]

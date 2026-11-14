@@ -53,5 +53,8 @@ class _2EthylButanoicAcid(Component):
     _specific_heat_constants = [56359, 603.02, 0.0, 0.0, 0.0]
     _viscosity_constants = [-12.24, 1836.4, 0.021868, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2175, -0.0002407, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 466.95-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 131, 2-Ethyl butanoic acid).
+    _vapor_thermal_conductivity_constants = [0.00017727, 0.9428, 712.4, 0]
     _vapor_pressure_constants = [90.464, -10243, -9.2836, 5.26e-18, 6.0]
     _enthalpy_constants = [7.898e-7, 0.39445, 0.0, 0.0, 0.0]

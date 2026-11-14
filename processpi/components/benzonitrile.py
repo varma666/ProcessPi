@@ -53,5 +53,8 @@ class Benzonitrile(Component):
     _specific_heat_constants = [93383,242.61,0,0,0]
     _viscosity_constants = [-20.236, 1737.4, 1.3531,0,0]
     _thermal_conductivity_constants = [0.21284, -0.00021587,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 464.15-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 19, Benzonitrile).
+    _vapor_thermal_conductivity_constants = [0.00015674, 0.95503, 711.32, 0]
     _vapor_pressure_constants = [138.5, -11195, -17.085, 9.56e-06, 2.0]
     _enthalpy_constants = [6.8077e-7, 0.63344, -0.27365,0,0]

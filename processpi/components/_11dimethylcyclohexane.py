@@ -53,5 +53,8 @@ class _11Dimethylcyclohexane(Component):
     _specific_heat_constants = [134500, 8.765, 0.81151, 0.0, 0.0]
     _viscosity_constants = [-10.716, 1140.5, -0.047736, 0.0, 0.0]
     _thermal_conductivity_constants = [0.1807, -0.0002177, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 392.70-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 108, 1,1-Dimethylcyclohexane).
+    _vapor_thermal_conductivity_constants = [0.008856, 0.4215, -50.645, 764580]
     _vapor_pressure_constants = [81.184, -6927, -8.8498, 5.46e-06, 2.0]
     _enthalpy_constants = [5.0402e-7, 0.4036, 0.0, 0.0, 0.0]

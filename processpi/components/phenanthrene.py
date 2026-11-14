@@ -53,5 +53,8 @@ class Phenanthrene(Component):
     _specific_heat_constants = [103370, 527.03, 0.0, 0.0, 0.0]
     _viscosity_constants = [-22.472, 2566.9, 1.5749, 0.0, 0.0]
     _thermal_conductivity_constants = [0.13753, -2.5247e-05, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 610.03-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 290, Phenanthrene).
+    _vapor_thermal_conductivity_constants = [0.00010167, 0.988, 797, 0]
     _vapor_pressure_constants = [72.958, -10943, -6.7902, 1.09e-18, 6.0]
     _enthalpy_constants = [8.3482e-7, 0.33172, 0.0, 0.0, 0.0]

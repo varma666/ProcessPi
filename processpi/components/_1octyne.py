@@ -53,5 +53,8 @@ class _1Octyne(Component):
     _specific_heat_constants = [42642, 886.67, -0.69315, 0.0, 0.0, 1.9225, 2.8619]
     _viscosity_constants = [-3.8552, 684.22, -1.0071, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2095, -0.00025334, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 399.35-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 273, 1-Octyne).
+    _vapor_thermal_conductivity_constants = [0.000060734, 1.0516, -124.91, 158300]
     _vapor_pressure_constants = [64.612,-6802.50, -6.0261, 1.1e-17, 6.0]
     _enthalpy_constants = [5.4046e-7, 0.35299, 0.0, 0.0, 0.0]

@@ -56,5 +56,8 @@ class AcrylicAcid(Component):
     _specific_heat_constants = [55300,300,0,0,0]
     _viscosity_constants = [-28.12, 2280.2, 2.3956, 0, 0] 
     _thermal_conductivity_constants = [0.2441, -0.0002904, 0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 414.15-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 9, Acrylic acid).
+    _vapor_thermal_conductivity_constants = [0.0009265, 0.7035, 627.58, 112460]
     _vapor_pressure_constants = [46.745, -6587.1, -3.2208, 0.00000052253, 2] 
     _enthalpy_constants = [4.3756E-7, 2.2571,-4.5116,2.5738, 0]  # Placeholder for enthalpy constants

@@ -53,5 +53,8 @@ class _1Nonanol(Component):
     _specific_heat_constants = [10483000, -115220, 476.87, -0.85381, 0.00056246]
     _viscosity_constants = [-39.863, 4089.0, 3.7631, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2292, -0.00023, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 485.20-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 258, 1-Nonanol).
+    _vapor_thermal_conductivity_constants = [-30.715, -0.1075, 8107, -156830000]
     _vapor_pressure_constants = [162.854, -15205, -19.424, 1.07e-17, 6.0]
     _enthalpy_constants = [7.5429e-7, -1.5966, 4.6489, -2.7229]

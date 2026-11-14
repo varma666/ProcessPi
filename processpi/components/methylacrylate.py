@@ -53,5 +53,8 @@ class MethylAcrylate(Component):
     _specific_heat_constants = [275500, -1147, 2.568, 0.0, 0.0]
     _viscosity_constants = [10.848, 75.0, -3.297, 0, 0]
     _thermal_conductivity_constants = [0.26082, -0.0003506, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 353.35-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 198, Methyl acrylate).
+    _vapor_thermal_conductivity_constants = [0.4734, -0.1111, 533.57, 1649600]
     _vapor_pressure_constants = [107.69, -7027.20, -13.916, 0.0152, 1.0]
     _enthalpy_constants = [4.68e-7, 0.349, 0.0, 0.0, 0.0]

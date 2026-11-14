@@ -53,5 +53,8 @@ class Propylene(Component):
     _specific_heat_constants = [114140, -343.72, 1.0905, 0.0, 0.0]
     _viscosity_constants = [-92.082, 1907.3, 15.639, -0.043098, 1.0]
     _thermal_conductivity_constants = [0.24719, -0.00048824, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 225.45-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 305, Propylene).
+    _vapor_thermal_conductivity_constants = [0.0000449, 1.2018, 421, 0]
     _vapor_pressure_constants = [43.905, -3097.80, -3.4425, 1e-16, 6.0]
     _enthalpy_constants = [2.5216e-7, 0.33721, -0.18399, 0.22377]

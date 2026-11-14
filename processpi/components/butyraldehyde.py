@@ -53,5 +53,8 @@ class Butyraldehyde(Component):
     _specific_heat_constants = [65682,1329.10,-7.1579,0.012755,0]
     _viscosity_constants = [-10.057, 903.73, -0.13186,0,0]
     _thermal_conductivity_constants = [0.21915, -0.00024846,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 347.95-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 44, Butyraldehyde).
+    _vapor_thermal_conductivity_constants = [1138.6, 0.95596, 7.5086E+09, 0]
     _vapor_pressure_constants = [99.33, -7083.60, -11.733, 1e-05, 2.0]
     _enthalpy_constants = [4.6403e-7, 0.3849,0,0,0]

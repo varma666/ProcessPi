@@ -53,5 +53,8 @@ class CarbonTetrafluoride(Component):
     _specific_heat_constants = [104600,-500.6,2.2851,0,0]
     _viscosity_constants = [-9.9212, 300.5,0,0,0]
     _thermal_conductivity_constants = [0.20771, -0.00078883,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 145.10-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 51, Carbon tetrafluoride).
+    _vapor_thermal_conductivity_constants = [0.000092004, 1.0164, 270.83, 0]
     _vapor_pressure_constants = [61.89,-2296.30, -7.086, 3.47e-05, 2.0]
     _enthalpy_constants = [1.9311e-7, 0.94983, -1.0615, 0.51894,0]

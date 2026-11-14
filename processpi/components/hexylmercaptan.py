@@ -53,5 +53,8 @@ class HexylMercaptan(Component):
     _specific_heat_constants = [303320, 0.0, 3.3885, -0.002762, 0.0, 2.1495, 2.7639]
     _viscosity_constants = [-10.073, 1123.3, -0.16515, 0, 0]
     _thermal_conductivity_constants = [0.2058, -0.0002324, 0, 0, 0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 425.81-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 179, Hexyl mercaptan).
+    _vapor_thermal_conductivity_constants = [0.074318, 0.30035, 4470.1, 1775800]
     _vapor_pressure_constants = [68.467, -7390.50, -6.5456, 7.76e-18, 6.0]
     _enthalpy_constants = [5.8422e-7, 0.38704, 0, 0, 0]

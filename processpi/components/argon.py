@@ -53,5 +53,8 @@ class Argon(Component):
     _specific_heat_constants = [134390,-1989.40,11.043,0,0]
     _viscosity_constants = [-8.8685, 204.29, -0.38305, -1.29e-22, 10.0]
     _thermal_conductivity_constants = [0.1819, -0.0003176, -4.11e-06,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 90.00-3273.1 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 14, Argon).
+    _vapor_thermal_conductivity_constants = [0.000633, 0.6221, 70, 0]
     _vapor_pressure_constants = [42.127, -1093.10, -4.1425, 5.73e-05, 2.0]
     _enthalpy_constants = [0.87308e-7, 0.3526,0,0,0]

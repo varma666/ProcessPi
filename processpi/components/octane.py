@@ -53,5 +53,8 @@ class Octane(Component):
     _specific_heat_constants = [224830, -186.63, 0.95891, 0.0, 0.0]
     _viscosity_constants = [-7.556, 881.09, -0.52502, 4.63e+22, -10.0]
     _thermal_conductivity_constants = [0.2156, -0.00029483, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 339.00-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 265, Octane).
+    _vapor_thermal_conductivity_constants = [-8758, 0.8448, -2.7121E+10, 0]
     _vapor_pressure_constants = [96.084, -7900.20, -11.003, 7.18e-06, 2.0]
     _enthalpy_constants = [5.518e-7, 0.38467, 0.0, 0.0, 0.0]

@@ -53,5 +53,8 @@ class Hexadecane(Component):
     _specific_heat_constants = [370350, 231.47, 0.68632, 0.0, 0.0]
     _viscosity_constants = [-20.182, 2203.5, 1.2289, 0, 0]
     _thermal_conductivity_constants = [0.20749, -0.00021917, 0, 0, 0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 560.01-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 169, Hexadecane).
+    _vapor_thermal_conductivity_constants = [0.000004438, 1.4949, 682, 0]
     _vapor_pressure_constants = [156.06, -15015, -18.941, 6.82e-06, 2.0]
     _enthalpy_constants = [10.156e-7, 0.45726, 0, 0, 0]

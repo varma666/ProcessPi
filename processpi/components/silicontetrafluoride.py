@@ -53,5 +53,8 @@ class SiliconTetrafluoride(Component):
     _specific_heat_constants = [829380, -7311.50, 19.203, 0.0, 0.0]
     _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 333.55-702.45 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 311, Silicon tetrafluoride).
+    _vapor_thermal_conductivity_constants = [0.0000955, 0.928, 63.6, 0]
     _vapor_pressure_constants = [272.85, -9548.90, -40.089, 6.37e-15, 6.0]
     _enthalpy_constants = [2.4105e-7, 0.37988, 0.0, 0.0, 0.0]

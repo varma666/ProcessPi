@@ -53,5 +53,8 @@ class NonylMercaptan(Component):
     _specific_heat_constants = [265350, -46.22, 0.79154, 0.0, 0.0]
     _viscosity_constants = [-11.319, 1428.0, -0.022545, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20244, -0.00021343, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 492.95-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 261, Nonyl mercaptan).
+    _vapor_thermal_conductivity_constants = [0.047041, 0.29733, 2460.6, 1367200]
     _vapor_pressure_constants = [106.2, -10982, -11.696, 8.9e-18, 6.0]
     _enthalpy_constants = [7.5239e-7, 0.3991, 0.0, 0.0, 0.0]

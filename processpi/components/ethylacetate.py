@@ -21,6 +21,9 @@ class EthylAcetate(Component):
     _specific_heat_constants = [226230,-624.8,1.472,0,0]
     _viscosity_constants = [14.354,-154.6,-3.7887,0,0] 
     _thermal_conductivity_constants = [0.2501, -0.0003563,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.15-990.21 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 127, Ethyl acetate).
+    _vapor_thermal_conductivity_constants = [1.3575E-07, 1.9681, 0, 0]
     _vapor_pressure_constants = [66.824,-6227.60,-6.41,1.79E-17, 6] 
     _enthalpy_constants = [4.933E-7,0.3847, 0,0, 0]  # Placeholder for enthalpy constants
 

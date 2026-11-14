@@ -53,5 +53,8 @@ class _23Dimethylpentane(Component):
     _specific_heat_constants = [146420, 59.2, 0.604, 0.0, 0.0]
     _viscosity_constants = [-12.08, 1112.2, 0.09654, 0.0, 0.0]
     _thermal_conductivity_constants = [0.17964, -0.000246, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 362.93-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 114, 2,3-Dimethylpentane).
+    _vapor_thermal_conductivity_constants = [0.000022421, 1.2137, -146.91, 131830]
     _vapor_pressure_constants = [78.335, -6348.70, -8.5105, 6.43e-06, 2.0]
     _enthalpy_constants = [4.6533e-7, 0.37577, 0.0, 0.0, 0.0]

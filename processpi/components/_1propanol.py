@@ -57,6 +57,9 @@ class _1Propanol(Component):
     _specific_heat_constants = [158760, -635.0, 1.969, 0.0, 0.0]
     _viscosity_constants = [23.467, 116.07, -5.3372, 2880000000.0, -4.0267]
     _thermal_conductivity_constants = [0.2203, -0.0002155]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 370.35-720.25 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 296, 1-Propanol).
+    _vapor_thermal_conductivity_constants = [-613.84, 0.7927, -1157400000, 0]
     # Vapour pressure, Pa: Perry's 8th ed., Table 2-8, p. 2-59. C2 is
     # -8,307.2; the thousands comma had turned it into 0.0.
     _vapor_pressure_constants = [84.6642, -8307.2, -8.5767, 7.51e-18, 6.0]

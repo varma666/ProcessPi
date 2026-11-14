@@ -53,5 +53,8 @@ class Cyclohexanone(Component):
     _specific_heat_constants = [6110.40,600.94,0,0,0]
     _viscosity_constants = [-44.877, 3227.7, 4.887,0,0]
     _thermal_conductivity_constants = [0.17557, -0.00012392,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 428.58-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 67, Cyclohexanone).
+    _vapor_thermal_conductivity_constants = [-1095.5, -0.023408, 498780, -7.8355E+09]
     _vapor_pressure_constants = [85.424, -7944.40, -9.2862, 5e-06, 2.0]
     _enthalpy_constants = [5.6772e-7, 0.37431,0,0,0]

@@ -53,5 +53,8 @@ class MethylIsocyanate(Component):
     _specific_heat_constants = [149770, -529.82, 1.3499, 0.0, 0.0]
     _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2822, -0.00042037, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 312.00-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 227, Methyl Isocyanate).
+    _vapor_thermal_conductivity_constants = [0.0026136, 0.62, 1631.7, 126720]
     _vapor_pressure_constants = [57.612, -5197.90, -5.1269, 2.17e-17, 6.0]
     _enthalpy_constants = [4.2967e-7, 0.37922, 0.0, 0.0, 0.0]

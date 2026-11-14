@@ -53,5 +53,8 @@ class Cyclobutane(Component):
     _specific_heat_constants = [101920,-215.81,0.8103,0,0]
     _viscosity_constants = [-3.4968, 397.94, -1.1087,0,0]
     _thermal_conductivity_constants = [0.22262, -0.00034082,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 285.66-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 64, Cyclobutane).
+    _vapor_thermal_conductivity_constants = [-449910, 0.27364, -1.0001E+10, -9.8654E+12]
     _vapor_pressure_constants = [85.899, -4884.40, -10.883, 0.0149, 1.0]
     _enthalpy_constants = [3.334e-7, 0.3395,0,0,0]

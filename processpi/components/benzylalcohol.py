@@ -53,5 +53,8 @@ class BenzylAlcohol(Component):
     _specific_heat_constants = [-334997,3644.21,-7.77514,0.00591102,0]
     _viscosity_constants = [-14.152, 2652.0,0,0,0]
     _thermal_conductivity_constants = [0.17847, -6.5843e-05,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 478.60-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 21, Benzyl alcohol).
+    _vapor_thermal_conductivity_constants = [0.00023476, 0.8639, 187.8, 193840]
     _vapor_pressure_constants = [100.68, -11059, -10.709, 3.06e-18, 6.0]
     _enthalpy_constants = [8.4762e-7, 0.35251, 0.43853, -0.3026,0]

@@ -53,5 +53,8 @@ class Pcresol(Component):
     _specific_heat_constants = [259980,-1112.30,4.9427,-0.0054376,0]
     _viscosity_constants = [-1.6355, 1052.9, -1.3891, 3.68e+17, -7.0]
     _thermal_conductivity_constants = [0.17971, -0.00012037,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 475.13-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 61, p-Cresol).
+    _vapor_thermal_conductivity_constants = [0.00019063, 0.9282, 716.91, 0]
     _vapor_pressure_constants = [118.53, -11957, -13.293, 8.7e-18, 6.0]
     _enthalpy_constants = [8.4942e-7, 0.50234,0,0,0]

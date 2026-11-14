@@ -53,5 +53,8 @@ class _12Butadiene(Component):
     _specific_heat_constants = [135150,-311.14,0.97007,-0.0001523,0]
     _viscosity_constants = [-10.143, 472.79, -0.028241,0,0]
     _thermal_conductivity_constants = [0.21966, -0.0003436,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 284.00-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 29, 1,2-Butadiene).
+    _vapor_thermal_conductivity_constants = [0.000088221, 1.0273, 75.316, 99063]
     _vapor_pressure_constants = [39.714, -3769.90, -2.6407, 6.94e-18, 6.0]
     _enthalpy_constants = [3.522e-7, 0.395,0,0,0]

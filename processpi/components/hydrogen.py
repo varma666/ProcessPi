@@ -53,6 +53,9 @@ class Hydrogen(Component):
     _specific_heat_constants = [66.653, 6765.90, -123.63, 478.27, 0.0]
     _viscosity_constants = [-11.661, 24.7, -0.261, -4.1e-16, 10.0]
     _thermal_conductivity_constants = [-0.0917, 0.017678, -0.000382, -3.33e-06, 1.03e-07]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 22.00-1600 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 183, Hydrogen).
+    _vapor_thermal_conductivity_constants = [0.002653, 0.7452, 12, 0]
     _vapor_pressure_constants = [12.69, -94.896, 1.1125, 0.000329, 2.0]
     _enthalpy_constants = [0.10127e-7, 0.698, -1.817, 1.447,0.0]
 

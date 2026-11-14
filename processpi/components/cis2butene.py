@@ -53,5 +53,8 @@ class Cis2Butene(Component):
     _specific_heat_constants = [126680,-65.47,-0.64,0.002912,0]
     _viscosity_constants = [-10.346, 522.3, -0.011847,0,0]
     _thermal_conductivity_constants = [0.21378, -0.00035445,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.15-1273.15 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 37, cis-2-Butene).
+    _vapor_thermal_conductivity_constants = [0.000067737, 1.0709, -65.881, 129390]
     _vapor_pressure_constants = [72.541, -4691.20, -7.9776, 1.04e-05, 2.0]
     _enthalpy_constants = [3.4358e-7, 0.38004,0,0,0]

@@ -28,6 +28,9 @@ class Benzene(Component):
     _specific_heat_constants_2 = [162940, -344.94, 0.85562, 0, 0]
     _viscosity_constants = [7.5117, 294.68, -2.794, 0, 0]
     _thermal_conductivity_constants = [0.23444, -0.00030572, 0, 0, 0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 339.15-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 16, Benzene).
+    _vapor_thermal_conductivity_constants = [0.00001652, 1.3117, 491, 0]
     _vapor_pressure_constants = [83.107, -6486.2, -9.2194, 0.0000069844, 2]
     _enthalpy_constants = [4.5346E-7, 0.39053, 0, 0, 0]  # Placeholder for enthalpy constants
     

@@ -53,5 +53,8 @@ class Nonadecane(Component):
     _specific_heat_constants = [342570, 762.08, 0.20481, 0.0, 0.0]
     _viscosity_constants = [-16.403, 2119.5, 0.6881, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21229, -0.00022, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 603.05-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 254, Nonadecane).
+    _vapor_thermal_conductivity_constants = [0.000049571, 1.2652, 3332.3, 0]
     _vapor_pressure_constants = [182.54, -17897, -22.498, 7.4e-06, 2.0]
     _enthalpy_constants = [11.674e-7, 0.45865, 0.0, 0.0, 0.0]

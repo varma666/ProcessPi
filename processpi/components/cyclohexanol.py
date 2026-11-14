@@ -53,5 +53,8 @@ class Cyclohexanol(Component):
     _specific_heat_constants = [-40000,853,0,0,0]
     _viscosity_constants = [280.87, -31869.0, -38.837, 0.0, -2.002]
     _thermal_conductivity_constants = [0.1715, -0.0001255,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 434.00-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 66, Cyclohexanol).
+    _vapor_thermal_conductivity_constants = [0.0032207, 0.5991, 608.69, 509290]
     _vapor_pressure_constants = [189.19, -14337, -24.148, 1.07e-05, 2.0]
     _enthalpy_constants = [9.1791e-7, 0.6382,0,0,0]

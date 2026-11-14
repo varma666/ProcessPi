@@ -53,5 +53,8 @@ class _2MethylbutanoicAcid(Component):
     _specific_heat_constants = [74200, 417.4, 0.0, 0.0, 0.0]
     _viscosity_constants = [-1.035, 1048.5, -1.5474, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22284, -0.0002516, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 450.15-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 203, 2-Methylbutanoic acid).
+    _vapor_thermal_conductivity_constants = [0.0001799, 0.9457, 704.6, 0]
     _vapor_pressure_constants = [85.383, -9575.40, -8.6164, 5.61e-18, 6.0]
     _enthalpy_constants = [7.48e-7, 0.3933, 0.0, 0.0, 0.0]

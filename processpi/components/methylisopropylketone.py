@@ -53,5 +53,8 @@ class MethylisopropylKetone(Component):
     _specific_heat_constants = [191170, -331.04, 0.98445, 0.0, 0.0]
     _viscosity_constants = [-11.272, 1048.9, 0.00030493, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2332, -0.0003044, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 367.55-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 229, Methylisopropyl ketone).
+    _vapor_thermal_conductivity_constants = [-5935000, -0.089497, 3098800000, -2.7994E+13]
     _vapor_pressure_constants = [45.242, -5324.40, -3.2551, 3.04e-18, 6.0]
     _enthalpy_constants = [4.7075e-7, 0.33601, 0.0, 0.0, 0.0]

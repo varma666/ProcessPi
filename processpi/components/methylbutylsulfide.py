@@ -53,5 +53,8 @@ class MethylbutylSulfide(Component):
     _specific_heat_constants = [198390, -220.35, 0.76096, 0.0, 0.0]
     _viscosity_constants = [-10.97, 1067.3, -0.017484, 0, 0]
     _thermal_conductivity_constants = [0.20698, -0.00024439, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 396.58-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 209, Methylbutyl sulfide).
+    _vapor_thermal_conductivity_constants = [0.079414, 0.23442, 2671.9, 1366100]
     _vapor_pressure_constants = [96.344, -7856.30, -11.058, 7.31e-06, 2.0]
     _enthalpy_constants = [5.3416e-7, 0.3835, 0.0, 0.0, 0.0]

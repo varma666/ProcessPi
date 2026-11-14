@@ -19,5 +19,8 @@ class Chloroform(Component):
     _specific_heat_constants = [124850,-166.34,0.43209,0,0]
     _viscosity_constants = [-14.109,1049.2,0.5377,0,0] 
     _thermal_conductivity_constants = [0.1778, -0.0002023,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 334.33-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 55, Chloroform).
+    _vapor_thermal_conductivity_constants = [0.00043073, 0.83878, 1874.5, 0]
     _vapor_pressure_constants = [146.43,-7792.30,-20.614,2.46E-02, 1] 
     _enthalpy_constants = [4.186E-7,0.3584, 0,0, 0]  # Placeholder for enthalpy constants

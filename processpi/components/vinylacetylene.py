@@ -53,5 +53,8 @@ class VinylAcetylene(Component):
     _specific_heat_constants = [68720, 135.0, 0.0, 0.0, 0.0]
     _viscosity_constants = [-2.2333, 320.37, -1.2915, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22838, -0.00035173, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 278.25-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 339, Vinyl acetylene).
+    _vapor_thermal_conductivity_constants = [0.000054197, 1.0632, -70.589, 90617]
     _vapor_pressure_constants = [55.682, -4439.30, -5.0136, 1.97e-17, 6.0]
     _enthalpy_constants = [3.649e-7, 0.4, 0.043, 0.0, 0.0]

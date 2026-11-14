@@ -53,5 +53,8 @@ class Heptanal(Component):
     _specific_heat_constants = [222360, -105.17, 0.65074, 0.0, 0.0]
     _viscosity_constants = [-10.443, 1063.2, -0.031488, 0, 0]
     _thermal_conductivity_constants = [0.21816, -0.0003015, 1.03e-07, 0, 0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 425.95-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 159, Heptanal).
+    _vapor_thermal_conductivity_constants = [1556.7, 1.0284, 17049000000, 0]
     _vapor_pressure_constants = [92.252, -8349, -10.274, 5.93e-06, 2.0]
     _enthalpy_constants = [5.956e-7, 0.36474, 0, 0, 0]

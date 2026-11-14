@@ -53,5 +53,8 @@ class MethylAmine(Component):
     _specific_heat_constants = [92520, 37.45, 0.0, 0.0, 0.0]
     _viscosity_constants = [-17.044, 1074.0, 0.84203,0,0]
     _thermal_conductivity_constants = [0.33446, -0.00067427, 8.03e-07]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 266.82-650 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 199, Methyl amine).
+    _vapor_thermal_conductivity_constants = [-55.13, 1.065, -448200000, 0]
     _vapor_pressure_constants = [75.206, -5082.80, -8.0919, 8.11e-06, 2.0]
     _enthalpy_constants = [3.858e-7, 0.404, 0.0, 0.0, 0.0]

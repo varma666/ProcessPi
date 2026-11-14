@@ -53,5 +53,8 @@ class EthylMercaptan(Component):
     _specific_heat_constants = [134670, -234.39, 0.59656, 0.0, 0.0]
     _viscosity_constants = [-9.7574, 729.43, -0.14912, 0.0, 0.0]
     _thermal_conductivity_constants = [0.23392, -0.0003206, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 308.15-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 145, Ethyl mercaptan).
+    _vapor_thermal_conductivity_constants = [0.0015251, 0.70243, 1347.5, 35085]
     _vapor_pressure_constants = [65.551, -5027.40, -6.6853, 6.32e-06, 2.0]
     _enthalpy_constants = [3.844e-7, 0.37534, 0.0, 0.0, 0.0]

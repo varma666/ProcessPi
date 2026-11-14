@@ -53,5 +53,8 @@ class _2Pentanone(Component):
     _specific_heat_constants = [194590, -263.86, 0.76808, 0.0, 0.0]
     _viscosity_constants = [-11.055, 1005.3, 0.0039301,0,0]
     _thermal_conductivity_constants = [0.2161, -0.00024866,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.00-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 283, 2-Pentanone).
+    _vapor_thermal_conductivity_constants = [-0.01719, 0.4832, -3798, -1235000]
     _vapor_pressure_constants = [84.635, -7078.40, -9.3, 6.27e-06, 2.0]
     _enthalpy_constants = [5.174e-7, 0.39422,0,0,0]

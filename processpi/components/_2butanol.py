@@ -53,5 +53,8 @@ class _2Butanol(Component):
     _specific_heat_constants = [426790,-3694.30,13.828,-0.0135,0]
     _viscosity_constants = [-16.323, 3141.7,0,0,0]
     _thermal_conductivity_constants = [0.22787, -0.00030727,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 372.90-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 35, 2-Butanol).
+    _vapor_thermal_conductivity_constants = [4.5894E-06, 1.4484, 0, 0]
     _vapor_pressure_constants = [114.68, -9850.20, -12.963, 1.87e-17, 6.0]
     _enthalpy_constants = [7.9227e-7, 0.58361, 0.02016, -0.08654,0]

@@ -53,5 +53,8 @@ class SuccinicAcid(Component):
     _specific_heat_constants = [244770, -236.96, 0.63148, 0.0, 0.0]
     _viscosity_constants = [-13.422, 3431.8, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.28215, -0.0002585, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 591.00-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 313, Succinic acid).
+    _vapor_thermal_conductivity_constants = [0.00032875, 0.8172, 740.97, 0]
     _vapor_pressure_constants = [128.65, -16958, -13.872, 2.16e-18, 6.0]
     _enthalpy_constants = [12.018e-7, 0.37149, 0.0, 0.0, 0.0]

@@ -53,5 +53,8 @@ class Formamide(Component):
     _specific_heat_constants = [63400, 150.6, 0.0, 0.0, 0.0]
     _viscosity_constants = [40.153, -912.39, -7.5664, 1.69e+24, -10.0]
     _thermal_conductivity_constants = [0.3847, -0.0001065, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 493.00-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 154, Formamide).
+    _vapor_thermal_conductivity_constants = [0.00025893, 0.9083, 723.6, 0]
     _vapor_pressure_constants = [100.3, -10763, -10.946, 3.85e-06, 2.0]
     _enthalpy_constants = [7.358e-7, 0.3564, 0.0, 0.0, 0.0]

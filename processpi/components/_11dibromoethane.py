@@ -53,5 +53,8 @@ class _11Dibromoethane(Component):
     _specific_heat_constants = [149400, -231.8, 0.5946, 0.0, 0.0]
     _viscosity_constants = [-10.457, 1101.1, -0.0031354, 0.0, 0.0]
     _thermal_conductivity_constants = [0.1426, -0.00016402, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 381.15-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 81, 1,1-Dibromoethane).
+    _vapor_thermal_conductivity_constants = [0.00021231, 0.8052, 649.51, 0]
     _vapor_pressure_constants = [62.711, -6503.50, -5.7669, 1.04e-06, 2.0]
     _enthalpy_constants = [5.712e-7, 0.5255, 0.0, 0.0, 0.0]

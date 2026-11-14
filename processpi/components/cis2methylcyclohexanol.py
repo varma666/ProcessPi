@@ -53,5 +53,8 @@ class Cis2Methylcyclohexanol(Component):
     _specific_heat_constants = [118600, 447.07, 0.0, 0.0, 0.0]
     _viscosity_constants = [-6.6904, 3150.5, -1.392, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21839, -0.00025776, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 438.15-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 215, cis-2-Methylcyclohexanol).
+    _vapor_thermal_conductivity_constants = [0.069565, 0.1633, 208.7, 1209500]
     _vapor_pressure_constants = [125.1, -10288, -15.157, 1.09e-05, 2.0]
     _enthalpy_constants = [7.8011e-7, 0.4172, 0.0, 0.0, 0.0]

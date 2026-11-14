@@ -53,5 +53,8 @@ class Acetylene(Component):
     _specific_heat_constants = [-122020,3082.70,-15.894,0.02773,0]
     _viscosity_constants = [6.224, -151.8, -2.6554,0,0]
     _thermal_conductivity_constants = [0.33363, -0.00083655,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 189.35-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 7, Acetylene).
+    _vapor_thermal_conductivity_constants = [0.000075782, 1.0327, -36.227, 31432]
     _vapor_pressure_constants = [39.63,-2552.20,-2.78, 2.39e-16, 6.0]
     _enthalpy_constants = [2.3214e-07, 0.35938,0,0,0]

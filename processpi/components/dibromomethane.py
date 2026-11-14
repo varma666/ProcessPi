@@ -53,5 +53,8 @@ class Dibromomethane(Component):
     _specific_heat_constants = [202580,-726.3,1.3377,0,0]
     _viscosity_constants = [-10.013, 921.31,0,0,0]
     _thermal_conductivity_constants = [0.17558, -0.00022499,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 370.10-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 83, Dibromomethane).
+    _vapor_thermal_conductivity_constants = [0.00021302, 0.8719, 1620, 0]
     _vapor_pressure_constants = [86.295, -7010.30, -9.5972, 6.78e-06, 2.0]
     _enthalpy_constants = [4.82e-7, 0.3771,0,0,0]

@@ -53,6 +53,9 @@ class Acrylonitrile(Component):
     _specific_heat_constants = [109900,-109.75,0.35441,0,0]
     _viscosity_constants = [2.019, 239.7, -1.8975,0,0]
     _thermal_conductivity_constants = [0.28941, -0.00041691,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 350.50-990.5 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 10, Acrylonitrile).
+    _vapor_thermal_conductivity_constants = [0.0013784, 1.2093, 50594, 0]
     _vapor_pressure_constants = [87.604,-6392.70,-10.101,1.09e-5,2]
     # Perry's 8th ed., Table 2-150, p. 2-150 prints C1 x 1E-07 = 4.155 (J/kmol).
     _enthalpy_constants = [4.155E7, 0.2733,0,0,0]

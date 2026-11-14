@@ -53,5 +53,8 @@ class Octadecane(Component):
     _specific_heat_constants = [399430, 374.64, 0.58156, 0.0, 0.0]
     _viscosity_constants = [-22.688, 2466.0, 1.5703, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2137, -0.0002252, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 589.86-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 263, Octadecane).
+    _vapor_thermal_conductivity_constants = [-291.08, 1.0615, -6019900000, 0]
     _vapor_pressure_constants = [157.68, -16093, -18.954, 5.93e-06, 2.0]
     _enthalpy_constants = [10.969e-7, 0.44327, 0.0, 0.0, 0.0]

@@ -53,5 +53,8 @@ class HydrogenFluoride(Component):
     _specific_heat_constants = [62520, -223.02, 0.6297, 0.0, 0.0]
     _viscosity_constants = [353.99, 13928.0, -41.717, 0.0, -0.5]
     _thermal_conductivity_constants = [0.7516, -0.0010874, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 350.00-450 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 187, Hydrogen fluoride).
+    _vapor_thermal_conductivity_constants = [0.000034629, 1.1224, 18.744, 0]
     _vapor_pressure_constants = [59.544, -4143.80, -6.1764, 1.42e-05, 2.0]
     _enthalpy_constants = [13.451e-7, 13.36, -23.383, 10.785, 0.0]

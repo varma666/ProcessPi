@@ -53,5 +53,8 @@ class _2Methylpropane(Component):
     _specific_heat_constants = [172370, -1783.90, 14.759, -0.047909, 5.805e-05]
     _viscosity_constants = [-13.912, 797.09, 0.45308, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20455, -0.00036589, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 261.43-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 236, 2-Methylpropane).
+    _vapor_thermal_conductivity_constants = [0.089772, 0.18501, 639.23, 1114700]
     _vapor_pressure_constants = [108.43, -5039.90, -15.012, 0.0227, 1.0]
     _enthalpy_constants = [3.188e-7, 0.39006, 0.0, 0.0, 0.0]

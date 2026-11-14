@@ -53,6 +53,9 @@ class Heptane(Component):
     _specific_heat_constants = [61.26, 314410, 1824.60,-2547.90, 0.0]
     _viscosity_constants = [-9.4622, 877.07, -0.23445, 1.4e+22, -10.0]
     _thermal_conductivity_constants = [0.215, -0.000303, 0, 0, 0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 339.15-1000 K:
+    # Table 2-314, p. 2-435 (cmpd. no. 160, Heptane).
+    _vapor_thermal_conductivity_constants = [-0.070028, 0.38068, -7049.9, -2400500]
     _vapor_pressure_constants = [87.829, -6996.40, -9.8802, 7.21e-06, 2.0]
     _enthalpy_constants = [5.0014e-7, 0.38795, 0, 0, 0]
 

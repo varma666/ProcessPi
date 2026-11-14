@@ -53,5 +53,8 @@ class PropylAmine(Component):
     _specific_heat_constants = [139530, 78.0, 0.0, 0.0, 0.0]
     _viscosity_constants = [-9.8074, 1010.4, -0.25697, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2632, -0.0004278, 4.12e-07, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 321.00-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 303, Propyl amine).
+    _vapor_thermal_conductivity_constants = [0.2833, 0.055046, 1325.9, 1817600]
     _vapor_pressure_constants = [58.398, -5312.70, -5.2876, 1.99e-06, 2.0]
     _enthalpy_constants = [4.4488e-7, 0.39494, 0.0, 0.0, 0.0]

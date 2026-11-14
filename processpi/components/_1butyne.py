@@ -53,5 +53,8 @@ class _1Butyne(Component):
     _specific_heat_constants = [136340,-300.4,1.0216,0,0]
     _viscosity_constants = [-3.4644, 334.5, -1.0811,0,0]
     _thermal_conductivity_constants = [0.22334, -0.0003515,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 281.22-1000 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 43, 1-Butyne).
+    _vapor_thermal_conductivity_constants = [0.000037269, 1.1427, -43.844, 79421]
     _vapor_pressure_constants = [77.004, -5054.50, -8.5665, 1.02e-05, 2.0]
     _enthalpy_constants = [3.6972e-7, 0.39168,0,0,0]

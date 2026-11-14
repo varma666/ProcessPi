@@ -53,5 +53,8 @@ class DiisopropylAmine(Component):
     _specific_heat_constants = [98434,429.40,0,0,0]
     _viscosity_constants = [-1.7366, 599.8, -1.4237,0,0]
     _thermal_conductivity_constants = [0.1844, -0.000239,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 357.05-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 100, Di-isopropyl amine).
+    _vapor_thermal_conductivity_constants = [0.00051305, 0.8076, 360.19, 154510]
     _vapor_pressure_constants = [462.84, -18227, -73.734, 0.0928, 1.0]
     _enthalpy_constants = [5.007e-7, 0.4362,0,0,0]

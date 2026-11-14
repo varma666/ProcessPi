@@ -53,5 +53,8 @@ class _3Methyl12Butadiene(Component):
     _specific_heat_constants = [135370, -133.34, 0.63868, 0.0, 0.0]
     _viscosity_constants = [-10.481, 648.37, -0.041947, 0.0, 0.0]
     _thermal_conductivity_constants = [0.1983, -0.0002822, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 314.00-1000 K:
+    # Table 2-314, p. 2-436 (cmpd. no. 201, 3-Methyl-1,2-butadiene).
+    _vapor_thermal_conductivity_constants = [0.0002509, 0.899, 253.4, 149500]
     _vapor_pressure_constants = [66.575, -5213.40, -6.7693, 4.81e-06, 2.0]
     _enthalpy_constants = [4.1233e-7, 0.426, 0.0, 0.0, 0.0]

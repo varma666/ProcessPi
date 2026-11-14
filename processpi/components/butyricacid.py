@@ -53,5 +53,8 @@ class ButyricAcid(Component):
     _specific_heat_constants = [237700,-746.4,1.829,0,0]
     _viscosity_constants = [-9.817, 1388.0, -0.238,0,0]
     _thermal_conductivity_constants = [0.1967, -0.000168,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 436.40-526.32 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 45, Butyric acid).
+    _vapor_thermal_conductivity_constants = [0.002751, 0.2734, -314.55, 0]
     _vapor_pressure_constants = [93.815, -9942.20, -9.8019, 9.31e-18, 6.0]
     _enthalpy_constants = [6.1947e-7, 1.6524, -2.8505, 1.6285,0]

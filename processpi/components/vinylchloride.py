@@ -53,5 +53,8 @@ class VinylChloride(Component):
     _specific_heat_constants = [-10320, 322.8, 0.0, 0.0, 0.0]
     _viscosity_constants = [0.26297, 276.55, -1.7282, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2333, -0.00039223, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 259.25-1000 K:
+    # Table 2-314, p. 2-438 (cmpd. no. 340, Vinyl chloride).
+    _vapor_thermal_conductivity_constants = [-229.41, 0.59582, -169430000, 0]
     _vapor_pressure_constants = [91.432, -5141.70, -10.981, 1.43e-05, 2.0]
     _enthalpy_constants = [3.4125e-7, 0.4513, 0.0, 0.0, 0.0]

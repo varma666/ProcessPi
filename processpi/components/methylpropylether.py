@@ -53,5 +53,8 @@ class MethylpropylEther(Component):
     _specific_heat_constants = [140110, -102.09, 0.58113, 0.0, 0.0]
     _viscosity_constants = [-10.705, 788.94, -0.048383, 0.0, 0.0]
     _thermal_conductivity_constants = [0.24817, -0.0003774, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 312.20-1000 K:
+    # Table 2-314, p. 2-437 (cmpd. no. 240, Methylpropyl ether).
+    _vapor_thermal_conductivity_constants = [0.011136, 0.4831, 2170.3, 281220]
     _vapor_pressure_constants = [67.942, -5419.10, -6.8067, 4.78e-17, 6.0]
     _enthalpy_constants = [4.2719e-7, 0.43175, 0.0, 0.0, 0.0]
