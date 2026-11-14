@@ -36,7 +36,7 @@ from processpi.units import HeatTransferCoefficient, MassFlowRate, Pressure, Tem
 
 U_TYPES = {fluid for service in HX_U_STANDARDS["shell_and_tube"].values() for pair in service for fluid in pair}
 STATES = [(25, 1), (150, 1), (25, 20)]  # (C, bar)
-ALL_COMPONENTS = [name for name in components.__all__ if name != "Component"]
+ALL_COMPONENTS = [name for name in components.__all__ if name not in {"Component", "Mixture"}]
 
 
 @pytest.mark.parametrize("name", ALL_COMPONENTS)

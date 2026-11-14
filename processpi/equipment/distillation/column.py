@@ -34,6 +34,7 @@ from __future__ import annotations
 import math
 from typing import Any, Dict, List, Optional
 
+from processpi.components.mixture import Mixture
 from processpi.streams.material import MaterialStream
 from processpi.units import (
     Area, Density, Diameter, HeatFlow, Length, MassFlowRate, MolarFlowRate, Pressure,
@@ -626,13 +627,32 @@ class DistillationColumn(Equipment):
         stream.temperature = temperature
         stream.phase = "liquid"
         stream.specific_heat = None
-        if vle is not None:
-            stream.molecular_weights = {n: vle.molecular_weight(n) for n in x}
-            # MaterialStream.mass_flow() does not derive a mass flow from a molar one.
-            stream._mass_flow = MassFlowRate(flow.value * vle.mixture_mw(x) / 1000.0, "kg/s")
-            stream.density = Density(vle.mixture_liquid_density(x, temperature.value), "kg/m3") if temperature is not None else None
-        else:
-            stream.density = None
+        stream.density = None
+        # The product's properties come from its composition, not from values
+        # given when the stream was created.
+        stream.given_density = None
+        stream.given_specific_heat = None
+        if vle is None:
+            return
+        stream.molecular_weights = {n: vle.molecular_weight(n) for n in x}
+        # MaterialStream.mass_flow() does not derive a mass flow from a molar one.
+        stream._mass_flow = MassFlowRate(flow.value * vle.mixture_mw(x) / 1000.0, "kg/s")
+        if temperature is None:
+            return
+        # Saturated liquid (total condenser, reboiler liquid): a Mixture gives
+        # the stream the density, heat capacity, viscosity and conductivity an
+        # exchanger or a pipe downstream needs.
+        stream.component = Mixture.from_names(
+            x, [vle.component_class(n) for n in vle.names],
+            temperature=temperature, pressure=pressure, phase="liquid",
+        )
+        try:
+            stream.density = stream.component.density()
+            stream.specific_heat = stream.component.specific_heat()
+        except ValueError:
+            # No liquid properties to mix (a component above its critical
+            # temperature); the component explains why when they are asked for.
+            pass
 
     def results(self) -> DistillationResults:
         if self._results is None:

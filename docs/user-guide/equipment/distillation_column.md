@@ -133,7 +133,10 @@ These are the keyword arguments of `fit()` (and of `DistillationColumn`).
 `DistillationColumn` is an `Equipment` with the inlet port `feed` and the
 outlet ports `distillate` and `bottoms`. `simulate()` runs the design and
 writes the products (composition, molar and mass flow, pressure, and the
-condenser and reboiler temperatures) to the outlet streams.
+condenser and reboiler temperatures) to the outlet streams. Each product's
+`component` is a `Mixture` of its composition, as saturated liquid at that
+temperature and pressure, and the stream's `density` and `specific_heat` come
+from it, so the product can feed an exchanger or another unit directly.
 
 ```python
 from processpi.equipment import DistillationColumn
