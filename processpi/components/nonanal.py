@@ -53,5 +53,5 @@ class Nonanal(Component):
     _specific_heat_constants = [136820, 531.29, 0.0, 0.0, 0.0]
     _viscosity_constants = [-12.94, 1257.6, 0.37191, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21523, -0.0002799, 9.57e-08, 0.0, 0.0]
-    _vapor_pressure_constants = [337.71, -18506, -50.224, 0.0473, 1.0]
+    _vapor_pressure_constants = [337.71, -18506, -50.224, 4.7345E-02, 1]  # Perry's 8th ed., Table 2-8, no. 255
     _enthalpy_constants = [7.3363e-7, 0.41735, 0.0, 0.0, 0.0]

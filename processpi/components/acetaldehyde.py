@@ -55,6 +55,6 @@ class Acetaldehyde(Component):
     _thermal_conductivity_constants = [0.311, -0.000436,0,0,0]
     # Perry's 8th ed., Table 2-8, p. 2-55: C2 is -8,036.7; the thousands comma
     # had turned it into 0.0.
-    _vapor_pressure_constants = [193.69, -8036.7, -29.502, 0.0437, 1.0]
+    _vapor_pressure_constants = [193.69, -8036.7, -29.502, 4.3678E-02, 1]  # Perry's 8th ed., Table 2-8, no. 1
     # Perry's 8th ed., Table 2-150, p. 2-150 prints C1 x 1E-07 = 3.8366 (J/kmol).
     _enthalpy_constants = [3.8366E7, 0.40081,0,0,0]

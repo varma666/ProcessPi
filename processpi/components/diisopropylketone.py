@@ -53,5 +53,5 @@ class DiisopropylKetone(Component):
     _specific_heat_constants = [179270,28.37,0.5375,0,0]
     _viscosity_constants = [-15.097, 1426.9, 0.51512,0,0]
     _thermal_conductivity_constants = [0.22076, -0.00027624,0,0,0]
-    _vapor_pressure_constants = [50.868, -6063.50, -4.066, 1.13e-06, 2.0]
+    _vapor_pressure_constants = [50.868, -6036.5, -4.066, 1.1326E-06, 2]  # Perry's 8th ed., Table 2-8, no. 102
     _enthalpy_constants = [5.0256e-7, 0.29611,0,0,0]

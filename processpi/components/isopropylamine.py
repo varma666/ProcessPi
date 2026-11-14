@@ -53,5 +53,5 @@ class IsopropylAmine(Component):
     _specific_heat_constants = [-32469,1977.10, -7.0145, 0.0086913, 0.0]
     _viscosity_constants = [-31.157, 1926.0, 2.925, 0, 0]
     _thermal_conductivity_constants = [0.237, -0.000332, 0.0, 0.0, 0.0]
-    _vapor_pressure_constants = [136.66, -7201.50, -18.934, 0.0223, 1.0]
+    _vapor_pressure_constants = [136.66, -7201.5, -18.934, 2.2255E-02, 1]  # Perry's 8th ed., Table 2-8, no. 190
     _enthalpy_constants = [4.4041e-7, 0.43325, 0.0, 0.0, 0.0]

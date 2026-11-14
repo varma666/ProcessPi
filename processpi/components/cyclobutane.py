@@ -53,5 +53,5 @@ class Cyclobutane(Component):
     _specific_heat_constants = [101920,-215.81,0.8103,0,0]
     _viscosity_constants = [-3.4968, 397.94, -1.1087,0,0]
     _thermal_conductivity_constants = [0.22262, -0.00034082,0,0,0]
-    _vapor_pressure_constants = [85.899, -4884.40, -10.883, 0.0149, 1.0]
+    _vapor_pressure_constants = [85.899, -4884.4, -10.883, 1.4934E-02, 1]  # Perry's 8th ed., Table 2-8, no. 64
     _enthalpy_constants = [3.334e-7, 0.3395,0,0,0]

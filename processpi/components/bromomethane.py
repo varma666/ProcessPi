@@ -53,5 +53,5 @@ class Bromomethane(Component):
     _specific_heat_constants = [129730,-596.54,2.16,-0.0024234,0]
     _viscosity_constants = [-8.103, 570.8, -0.32958,0,0]
     _thermal_conductivity_constants = [0.1912, -0.000299,0,0,0]
-    _vapor_pressure_constants = [72.586, -4698.60, -7.9966, 1.16e-05, 2.0]
+    _vapor_pressure_constants = [72.586, -4698.6, -7.9966, 1.1553E-05, 2]  # Perry's 8th ed., Table 2-8, no. 28
     _enthalpy_constants = [3.169e-7, 0.3015,0,0,0]

@@ -53,5 +53,5 @@ class Formaldehyde(Component):
     _specific_heat_constants = [61900, 28.3, 0.0, 0.0, 0.0]
     _viscosity_constants = [-11.24, 751.69, -0.024579, 0.0, 0.0]
     _thermal_conductivity_constants = [0.37329, -0.00065, 0.0, 0.0, 0.0]
-    _vapor_pressure_constants = [101.51, -4917.20, -13.765, 0.022, 1.0]
+    _vapor_pressure_constants = [101.51, -4917.2, -13.765, 2.2031E-02, 1]  # Perry's 8th ed., Table 2-8, no. 153
     _enthalpy_constants = [3.076e-7, 0.2954, 0.0, 0.0, 0.0]

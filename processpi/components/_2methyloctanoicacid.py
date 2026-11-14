@@ -54,4 +54,4 @@ class _2MethyloctanoicAcid(Component):
     _viscosity_constants = [-12.579, 2224.2, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20911, -0.00021852, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [105.7, -12458, -11.234, 4.46e-18, 6.0]
-    _enthalpy_constants = [10.53e-7, 0.7454, -0.39297, 0.047214]
+    _enthalpy_constants = [10.53E7, 0.7454, -0.39297, 0.047214, 0]  # Perry's 8th ed., Table 2-150, no. 233

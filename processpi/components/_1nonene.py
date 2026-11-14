@@ -54,4 +54,4 @@ class _1Nonene(Component):
     _viscosity_constants = [-21.921, 1603.9, 1.5971, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20468, -0.00025738, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [63.313, -7040.40, -5.8055, 7.58e-18, 6.0]
-    _enthalpy_constants = [5.9054e-7, 0.61039, -0.54533, 0.30683]
+    _enthalpy_constants = [5.9054E7, 0.61039, -0.54533, 0.30683, 0]  # Perry's 8th ed., Table 2-150, no. 260

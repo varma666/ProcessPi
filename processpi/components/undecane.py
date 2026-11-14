@@ -51,7 +51,7 @@ class Undecane(Component):
 
     _density_constants = [0.36703, 0.24876, 639.0, 0.28571]
     _specific_heat_constants = [293980, -114.98, 0.96936, 0.0, 0.0]
-    _viscosity_constants = [52.176, -4951.9, -8.5676, 0.0, -2.0]
+    _viscosity_constants = [52.176, -4951.9, -8.5676, 570980, -2]  # Perry's 8th ed., Table 2-313, no. 336
     _thermal_conductivity_constants = [0.20515, -0.00023933, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [131.0, -11143, -15.855, 8.19e-06, 2.0]
     _enthalpy_constants = [7.2284e-7, 0.40607, 0.0, 0.0, 0.0]

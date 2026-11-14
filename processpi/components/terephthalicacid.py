@@ -53,5 +53,5 @@ class TerephthalicAcid(Component):
     _specific_heat_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
-    _vapor_pressure_constants = [248.72, -32283, -30.009, 4.8e-06, 2.0]
-    _enthalpy_constants = [8.824e-7, 298.15, 8.824e-7, 0.0, 0.0]
+    _vapor_pressure_constants = [248.72, -32238, -30.009, 4.7950E-06, 2]  # Perry's 8th ed., Table 2-8, no. 317
+    _enthalpy_constants = [8.824E7, 0, 0, 0, 0]  # Perry's 8th ed., Table 2-150, no. 317: one value, 8.824E7 J/kmol at 298.15 K

@@ -53,5 +53,5 @@ class _2Methyl1Butene3Yne(Component):
     _specific_heat_constants = [81919, 181.01, 0.0, 0.0, 0.0]
     _viscosity_constants = [-3.6585, 441.1, -1.0547, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20385, -0.0002874, 0.0, 0.0, 0.0]
-    _vapor_pressure_constants = [95.453, -5448.80, -12.384, 0.0156, 1.0]
+    _vapor_pressure_constants = [95.453, -5448.8, -12.384, 1.5643E-02, 1]  # Perry's 8th ed., Table 2-8, no. 207
     _enthalpy_constants = [3.648e-7, 0.3863, 0.0, 0.0, 0.0]

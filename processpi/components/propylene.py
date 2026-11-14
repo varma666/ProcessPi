@@ -54,4 +54,4 @@ class Propylene(Component):
     _viscosity_constants = [-92.082, 1907.3, 15.639, -0.043098, 1.0]
     _thermal_conductivity_constants = [0.24719, -0.00048824, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [43.905, -3097.80, -3.4425, 1e-16, 6.0]
-    _enthalpy_constants = [2.5216e-7, 0.33721, -0.18399, 0.22377]
+    _enthalpy_constants = [2.5216E7, 0.33721, -0.18399, 0.22377, 0]  # Perry's 8th ed., Table 2-150, no. 305

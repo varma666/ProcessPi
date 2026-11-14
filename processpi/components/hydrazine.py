@@ -54,4 +54,4 @@ class Hydrazine(Component):
     _viscosity_constants = [-75.781, 4175.4, 9.6508, -7.27e-09, 3.0]
     _thermal_conductivity_constants = [1.3675, -0.0015895, 0, 0, 0]
     _vapor_pressure_constants = [76.858, -7245.20, -8.22, 0.00616, 1.0]
-    _enthalpy_constants = [5.9794e-7, 0.9424, -1.398, 0.8862]
+    _enthalpy_constants = [5.9794E7, 0.9424, -1.398, 0.8862, 0]  # Perry's 8th ed., Table 2-150, no. 182

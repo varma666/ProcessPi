@@ -50,7 +50,7 @@ class Propionitrile(Component):
     _critical_acentric_factor = 0.3243
 
     _density_constants = [1.0224, 0.23452, 564.4, 0.2804]
-    _specific_heat_constants = [181190, -120.98, 0.42075, 0.0, 0.0]
+    _specific_heat_constants = [118190, -120.98, 0.42075, 0, 0]  # Perry's 8th ed., Table 2-153, no. 301
     _viscosity_constants = [-5.7136, 703.62, -0.78123, 0.0, 0.0]
     _thermal_conductivity_constants = [0.26626, -0.0003307, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [82.699, -6703.50, -9.1506, 7.54e-06, 2.0]

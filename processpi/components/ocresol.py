@@ -53,5 +53,5 @@ class Ocresol(Component):
     _specific_heat_constants = [-185150,3148,-8.0367,0.007254,0]
     _viscosity_constants = [-0.033937, 390.77, -1.4547, 5020000000000.0, -5.0]
     _thermal_conductivity_constants = [0.19186, -0.0001303,0,0,0]
-    _vapor_pressure_constants = [210.88, -13928, -29.483, 0.0252, 1.0]
+    _vapor_pressure_constants = [210.88, -13928, -29.483, 2.5182E-02, 1]  # Perry's 8th ed., Table 2-8, no. 60
     _enthalpy_constants = [7.1979e-7, 0.40317,0,0,0]

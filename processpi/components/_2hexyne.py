@@ -50,7 +50,7 @@ class _2Hexyne(Component):
     _critical_acentric_factor = 0.2214
 
     _density_constants = [0.76277, 0.25248, 549.0, 0.31611]
-    _specific_heat_constants = [94860, 0.0, 0.0, 0.0, 0.0]
+    _specific_heat_constants = [94860, 254.15, 0, 0, 0]  # Perry's 8th ed., Table 2-153, no. 181
     _viscosity_constants = [-3.7464, 624.2, -1.084, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2119, -0.00027048, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [123.71, -7639, -16.451, 0.0165, 1.0]

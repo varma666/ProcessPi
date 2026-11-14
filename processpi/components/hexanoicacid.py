@@ -54,4 +54,4 @@ class HexanoicAcid(Component):
     _viscosity_constants = [-46.402, 3448.6, 5.0849, 0, 0]
     _thermal_conductivity_constants = [0.1855, -0.000146, 0, 0, 0]
     _vapor_pressure_constants = [114.05, -12332, -12.45, 5.63e-18, 6.0]
-    _enthalpy_constants = [9.0746e-7, 0.8926, -0.75172, 0.34378]
+    _enthalpy_constants = [9.0746E7, 0.8926, -0.75172, 0.34378, 0]  # Perry's 8th ed., Table 2-150, no. 172

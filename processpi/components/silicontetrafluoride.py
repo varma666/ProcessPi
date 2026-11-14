@@ -50,7 +50,7 @@ class SiliconTetrafluoride(Component):
     _critical_acentric_factor = 0.3858
 
     _density_constants = [1.1945, 0.24128, 259.0, 0.16693]
-    _specific_heat_constants = [829380, -7311.50, 19.203, 0.0, 0.0]
+    _specific_heat_constants = [829380, -7331.5, 19.203, 0, 0]  # Perry's 8th ed., Table 2-153, no. 311
     _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [272.85, -9548.90, -40.089, 6.37e-15, 6.0]
