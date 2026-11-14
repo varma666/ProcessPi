@@ -51,6 +51,9 @@ class _3Heptanone(Component):
 
     _density_constants = [0.59268, 0.25663, 606.6, 0.27766]
     _specific_heat_constants = [270730, -399.89, 1.0601, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 164, 3-Heptanone).
+    _ideal_gas_heat_capacity_constants = [1.2768E5, 3.381E5, 1.3831E3, 1.888E5, 650.3]
     _viscosity_constants = [-9.3874, 1204.9, -0.32618, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2026, -0.0002234, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [78.463, -8077.20, -7.9062, 8.05e-18, 6.0]

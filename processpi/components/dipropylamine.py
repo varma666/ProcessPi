@@ -51,6 +51,9 @@ class DipropylAmine(Component):
 
     _density_constants = [0.659, 0.26428, 550.0, 0.2766]
     _specific_heat_constants = [49120, 562.24, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 122, Dipropyl amine).
+    _ideal_gas_heat_capacity_constants = [1.2114E5, 2.6127E5, 0.78956E3, 1.6903E5, 2394.4]
     _viscosity_constants = [-15.404, 1390.0, 0.5564, 0, 0]
     _thermal_conductivity_constants = [0.2224, -0.000314, 0, 0, 0]
     _vapor_pressure_constants = [54.0, -6018.50, -4.4981, 9.97e-18, 6.0]

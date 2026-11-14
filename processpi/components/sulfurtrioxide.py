@@ -51,6 +51,9 @@ class SulfurTrioxide(Component):
 
     _density_constants = [1.4969, 0.19013, 490.85, 0.4359]
     _specific_heat_constants = [258090, 0.0, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 316, Sulfur trioxide).
+    _ideal_gas_heat_capacity_constants = [0.33408E5, 0.49677E5, 0.87322E3, 0.28563E5, 393.74]
     _viscosity_constants = [-88.793, 6400.7, 10.709, 0.0, 0.0]
     _thermal_conductivity_constants = [0.92882, -0.0030803, 2.66e-06, 0.0, 0.0]
     _vapor_pressure_constants = [180.99, -12060, -22.839, 7.24e-17, 6.0]

@@ -51,6 +51,9 @@ class _2Methyl2Propanol(Component):
 
     _density_constants = [0.92128, 0.25442, 506.2, 0.27586]
     _specific_heat_constants = [-925460, 7894.90, -17.661, 0.013617, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 237, 2-Methyl-2-propanol).
+    _ideal_gas_heat_capacity_constants = [0.7704E5, 2.539E5, 1.5502E3, 1.669E5, 679.3]
     _viscosity_constants = [51.356, -1249.5, -9.4593, 3.69e+24, -9.8759]
     _thermal_conductivity_constants = [0.21258, -0.00029864, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [172.27, -11589, -22.113, 1.37e-05, 2.0]

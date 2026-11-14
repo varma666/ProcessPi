@@ -51,6 +51,9 @@ class NonylMercaptan(Component):
 
     _density_constants = [0.47377, 0.27052, 681.0, 0.30284]
     _specific_heat_constants = [265350, -46.22, 0.79154, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 261, Nonyl mercaptan).
+    _ideal_gas_heat_capacity_constants = [1.7646E5, 5.044E5, 1.6182E3, 3.3857E5, 755.48]
     _viscosity_constants = [-11.319, 1428.0, -0.022545, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20244, -0.00021343, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [106.2, -10982, -11.696, 8.9e-18, 6.0]

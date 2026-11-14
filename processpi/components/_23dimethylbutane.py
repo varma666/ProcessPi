@@ -51,6 +51,9 @@ class _23Dimethylbutane(Component):
 
     _density_constants = [0.7565, 0.27305, 500.0, 0.27408]
     _specific_heat_constants = [129450, 18.5, 0.608, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 107, 2,3-Dimethylbutane).
+    _ideal_gas_heat_capacity_constants = [0.7772E5, 4.032E5, 1.544E3, 2.508E5, 649.95]
     _viscosity_constants = [7.2565, 221.4, -2.7946, 0.0, 0.0]
     _thermal_conductivity_constants = [0.1774, -0.0002436, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [77.161, -5691.10, -8.501, 8.03e-06, 2.0]

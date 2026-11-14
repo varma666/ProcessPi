@@ -51,6 +51,9 @@ class Trans12Dimethylcyclohexane(Component):
 
     _density_constants = [0.54405, 0.25026, 596.15, 0.2658]
     _specific_heat_constants = [155560, -145.26, 1.0932, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 110, trans-1,2-Dimethylcyclohexane).
+    _ideal_gas_heat_capacity_constants = [1.0991E5, 4.6401E5, 1.6679E3, 3.3736E5, 781.97]
     _viscosity_constants = [-11.344, 1168.9, 0.04513, 0.0, 0.0]
     _thermal_conductivity_constants = [0.17675, -0.0002077, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [78.429, -6882.10, -8.4129, 4.98e-06, 2.0]

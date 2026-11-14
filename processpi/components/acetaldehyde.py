@@ -51,6 +51,9 @@ class Acetaldehyde(Component):
 
     _density_constants = [1.6994, 0.26167, 466.0, 0.2913]
     _specific_heat_constants = [115100,-433,1.425,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 1, Acetaldehyde).
+    _ideal_gas_heat_capacity_constants = [0.4451E5, 1.0687E5, 1.6141E3, 0.6135E5, 737.8]
     _viscosity_constants = [-5.895, 668.21, -0.84323,0,0]
     _thermal_conductivity_constants = [0.311, -0.000436,0,0,0]
     # Perry's 8th ed., Table 2-8, p. 2-55: C2 is -8,036.7; the thousands comma

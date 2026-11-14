@@ -51,6 +51,9 @@ class Butylbenzene(Component):
 
     _density_constants = [0.50812, 0.25238, 660.5, 0.29373]
     _specific_heat_constants = [182470,-13.912,0.72897,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 40, Butylbenzene).
+    _ideal_gas_heat_capacity_constants = [1.138E5, 4.454E5, 1.5507E3, 3.0497E5, 708.86]
     _viscosity_constants = [-23.802, 1887.2, 1.8479,0,0,0]
     _thermal_conductivity_constants = [0.18707, -0.00020037,0,0,0]
     _vapor_pressure_constants = [101.22, -9255.40, -11.538, 5.92e-06, 2.0]

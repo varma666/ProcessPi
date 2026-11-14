@@ -51,6 +51,9 @@ class DiphenylEther(Component):
 
     _density_constants = [0.52133, 0.26218, 766.8, 0.31033]
     _specific_heat_constants = [134160, 447.67, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 121, Diphenyl ether).
+    _ideal_gas_heat_capacity_constants = [1.0985E5, 4.3412E5, 1.6222E3, 3.6455E5, 743.62]
     _viscosity_constants = [-12.373, 2017.5, 0, 0, 0]
     _thermal_conductivity_constants = [0.18686, -0.00014953, 0, 0, 0]
     _vapor_pressure_constants = [59.969, -8585.50, -5.1538, 2e-18, 6.0]

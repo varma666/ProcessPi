@@ -51,6 +51,9 @@ class VinylAcetylene(Component):
 
     _density_constants = [1.2703, 0.26041, 454.0, 0.297]
     _specific_heat_constants = [68720, 135.0, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 339, Vinyl acetylene).
+    _ideal_gas_heat_capacity_constants = [0.55978E5, 1.2141E5, 1.6102E3, 0.89079E5, 710.4]
     _viscosity_constants = [-2.2333, 320.37, -1.2915, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22838, -0.00035173, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [55.682, -4439.30, -5.0136, 1.97e-17, 6.0]

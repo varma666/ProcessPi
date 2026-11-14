@@ -51,6 +51,9 @@ class Deuterium(Component):
 
     _density_constants = [5.2115, 0.315, 38.35, 0.28571]
     _specific_heat_constants = [0,0,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 80, Deuterium).
+    _ideal_gas_heat_capacity_constants = [0.3029E5, 0.0975E5, 2.515E3, -0.0275E5, 368]
     _viscosity_constants = [1.348e-06,0,0,0,0]
     _thermal_conductivity_constants = [1.264,0,0,0,0]
     _vapor_pressure_constants = [18.947, -154.47, -0.5723, 0.0389, 1.0]

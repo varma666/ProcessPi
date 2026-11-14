@@ -51,6 +51,9 @@ class BenzylMercaptan(Component):
 
     _density_constants = [0.70797, 0.25982, 718.0, 0.32144]
     _specific_heat_constants = [1000320,346.89,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 23, Benzyl mercaptan).
+    _ideal_gas_heat_capacity_constants = [0.99192E5, 2.9633E5, 1.5583E3, 2.2116E5, 719.16]
     _viscosity_constants = [-11.459, 1334.4, 0.00049694,0,0,0]
     _thermal_conductivity_constants = [0.20316, -0.00019912,0,0,0]
     _vapor_pressure_constants = [118.02, -10527, -13.91, 6.48e-06, 2.0]

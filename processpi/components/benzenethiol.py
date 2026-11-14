@@ -51,6 +51,9 @@ class Benzenethiol(Component):
 
     _density_constants = [0.83573, 0.26326, 689.0, 0.30798]
     _specific_heat_constants = [119780,180.34,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 17, Benzenethiol).
+    _ideal_gas_heat_capacity_constants = [0.6895E5, 2.3275E5, 1.512E3, 1.7516E5, 697.9]
     _viscosity_constants = [-8.4562, 1024.4, -0.30635,0,0]
     _thermal_conductivity_constants = [0.20996, -0.0002146,0,0,0]
     _vapor_pressure_constants = [77.765, -8455.10, -7.7404, 4.31e-18, 6.0]

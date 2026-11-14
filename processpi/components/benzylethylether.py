@@ -51,6 +51,9 @@ class BenzylEthylEther(Component):
 
     _density_constants = [0.60917, 0.26925, 662.0, 0.2632]
     _specific_heat_constants = [87500,480,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 22, Benzyl ethyl ether).
+    _ideal_gas_heat_capacity_constants = [0.9521E5, 2.8868E5, 0.70207E3, 1.6385E5, 2002.6]
     _viscosity_constants = [-11.46, 1497.0, -0.043397,0,0]
     _thermal_conductivity_constants = [0.2029, -0.0002226,0,0,0]
     _vapor_pressure_constants = [68.541, -7886.20, -6.5804, 2.43e-06, 2.0]

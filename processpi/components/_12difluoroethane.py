@@ -51,6 +51,9 @@ class _12Difluoroethane(Component):
 
     _density_constants = [1.173, 0.22856, 445.0, 0.28571]
     _specific_heat_constants = [82577, 109.85, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 98, 1,2-Difluoroethane).
+    _ideal_gas_heat_capacity_constants = [0.51889E5, 1.2431E5, 1.5048E3, 0.76269E5, 697.51]
     _viscosity_constants = [-10.072, 710.48, -0.14677, 0.0, 0.0]
     _thermal_conductivity_constants = [0.23171, -0.00038503, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [84.625, -5217.40, -9.871, 1.31e-05, 2.0]

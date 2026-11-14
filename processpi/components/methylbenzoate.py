@@ -51,6 +51,9 @@ class MethylBenzoate(Component):
 
     _density_constants = [0.53382, 0.23274, 693.0, 0.28147]
     _specific_heat_constants = [125630, 279.75, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 200, Methyl benzoate).
+    _ideal_gas_heat_capacity_constants = [0.9396E5, 2.559E5, 0.825E3, 1.36E5, 3000]
     _viscosity_constants = [-21.971, 2267.4, 1.4173, 0, 0]
     _thermal_conductivity_constants = [0.22142, -0.00022759, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [84.828, -9334.70, -8.7063, 6.17e-18, 6.0]

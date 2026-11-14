@@ -51,6 +51,9 @@ class Tetrahydrofuran(Component):
 
     _density_constants = [1.2543, 0.28084, 540.15, 0.2912]
     _specific_heat_constants = [171730, -800.47, 2.8934, -0.0025015, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 320, Tetrahydrofuran).
+    _ideal_gas_heat_capacity_constants = [0.46905E5, 2.5314E5, 1.5998E3, 1.7051E5, 740.64]
     _viscosity_constants = [-10.321, 900.92, -0.069128, 0.0, 0.0]
     _thermal_conductivity_constants = [0.19428, -0.000249, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [54.898, -5305.4, -4.7627, 1.4291E-17, 6]

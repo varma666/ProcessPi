@@ -51,6 +51,9 @@ class Pcresol(Component):
 
     _density_constants = [1.1503, 0.31861, 704.65, 0.30104]
     _specific_heat_constants = [259980,-1112.30,4.9427,-0.0054376,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 61, p-Cresol).
+    _ideal_gas_heat_capacity_constants = [0.7384E5, 2.908E5, 1.4559E3, 2.091E5, 650.42]
     _viscosity_constants = [-1.6355, 1052.9, -1.3891, 3.68e+17, -7.0]
     _thermal_conductivity_constants = [0.17971, -0.00012037,0,0,0]
     _vapor_pressure_constants = [118.53, -11957, -13.293, 8.7e-18, 6.0]

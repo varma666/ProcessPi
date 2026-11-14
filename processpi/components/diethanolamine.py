@@ -51,6 +51,9 @@ class DiethanolAmine(Component):
 
     _density_constants = [0.68184, 0.23796, 736.6, 0.2062]
     _specific_heat_constants = [184200,286,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500.1 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 93, Diethanol amine).
+    _ideal_gas_heat_capacity_constants = [1.208E5, 3.066E5, 2.089E3, 2.343E5, 891]
     _viscosity_constants = [-375.21, 17177.0, 66.66, -3.6367, 0.5]
     _thermal_conductivity_constants = [0.0218, 0.0010315, -1.355e-06,0,0]
     _vapor_pressure_constants = [106.38, -13714, -11.06, 3.26e-18, 6.0]

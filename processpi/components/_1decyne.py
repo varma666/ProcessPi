@@ -51,6 +51,9 @@ class _1Decyne(Component):
 
     _density_constants = [0.46877, 0.25875, 619.85, 0.29479]
     _specific_heat_constants = [276900, -371.23, 1.5774, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 79, 1-Decyne).
+    _ideal_gas_heat_capacity_constants = [1.5045E5, 4.3794E5, 1.3291E3, 2.5557E5, 632.01]
     _viscosity_constants = [-2.3633, 791.93, -1.2272, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20839, -0.00023622, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [142.94, -11119, -17.818, 1.1e-05, 2.0]

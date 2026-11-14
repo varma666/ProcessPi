@@ -51,6 +51,9 @@ class _12Dichloropropane(Component):
 
     _density_constants = [0.89833, 0.26142, 572.0, 0.2868]
     _specific_heat_constants = [111560, 149.44, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 92, 1,2-Dichloropropane).
+    _ideal_gas_heat_capacity_constants = [0.78658E5, 1.7429E5, 1.7157E3, 1.2627E5, 765.1]
     _viscosity_constants = [-11.269, 1195.3, 0.012736, 0.0, 0.0]
     _thermal_conductivity_constants = [0.19653, -0.00025012, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [65.955, -6015.60, -6.5509, 4.32e-06, 2.0]

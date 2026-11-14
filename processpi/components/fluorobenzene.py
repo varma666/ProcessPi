@@ -17,6 +17,9 @@ class FluoroBenzene(Component):
     _critical_acentric_factor = 0.2472  # Placeholder for critical acentric factor
     _density_constants = [1.0146,0.27277,560.09,0.28291]
     _specific_heat_constants = [-991200,11734,-40.669,0.047333,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 150, Fluorobenzene).
+    _ideal_gas_heat_capacity_constants = [0.62653E5, 2.1646E5, 1.564E3, 1.7278E5, 724.29]
     _viscosity_constants = [-10.064,1058.7,-0.17162,0,0] 
     _thermal_conductivity_constants = [0.20962,-0.00028034,0,0,0]
     _vapor_pressure_constants = [51.915,-5439,-4.2896,8.7527E-18,6] 

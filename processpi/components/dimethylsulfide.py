@@ -51,6 +51,9 @@ class DimethylSulfide(Component):
 
     _density_constants = [1.4029, 0.27991, 503.04, 0.2741]
     _specific_heat_constants = [146950,-380.06,1.2035,-0.00084787,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 117, Dimethyl sulfide).
+    _ideal_gas_heat_capacity_constants = [0.6037E5, 1.3747E5, 1.641E3, 0.7988E5, 743.5]
     _viscosity_constants = [-17.641, 1067.5, 1.0317, 0, 0]
     _thermal_conductivity_constants = [0.23942, -0.0003311, 0, 0, 0]
     _vapor_pressure_constants = [84.39, -5740.20, -9.6454, 1.01e-05, 2.0]

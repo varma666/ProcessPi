@@ -51,6 +51,9 @@ class MethylVinylEther(Component):
 
     _density_constants = [1.2587, 0.26433, 437.0, 0.25819]
     _specific_heat_constants = [73600, 184.7, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 245, Methyl vinyl ether).
+    _ideal_gas_heat_capacity_constants = [0.60865E5, 1.5965E5, 1.619E3, 0.93783E5, 739.55]
     _viscosity_constants = [-10.34, 519.61, -0.013899, 0.0, 0.0]
     _thermal_conductivity_constants = [0.28035, -0.0004646, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [51.085, -4271, -4.307, 3.05e-17, 6.0]

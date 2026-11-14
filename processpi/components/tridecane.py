@@ -51,6 +51,9 @@ class Tridecane(Component):
 
     _density_constants = [0.29934, 0.2433, 675.0, 0.28571]
     _specific_heat_constants = [350180, -104.7, 1.0022, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 327, Tridecane).
+    _ideal_gas_heat_capacity_constants = [2.1496E5, 7.3045E5, 1.6695E3, 4.9998E5, 741.02]
     _viscosity_constants = [-4.1103, 1005.3, -1.0188, 1e+19, -8.0]
     _thermal_conductivity_constants = [0.20447, -0.00022612, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [137.45, -12549, -16.543, 7.13e-06, 2.0]

@@ -19,6 +19,9 @@ class BenzoicAcid(Component):
     _critical_acentric_factor = 0.6028  # Placeholder for critical acentric factor
     _density_constants = [0.71587, 0.24812, 751,0.2857]
     _specific_heat_constants = [-5480,647.12,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 18, Benzoic acid).
+    _ideal_gas_heat_capacity_constants = [0.77594E5, 2.6455E5, 1.7925E3, 2.2382E5, 835.9]
     _viscosity_constants = [-12.947,2557.9,0,0, 0] 
     _thermal_conductivity_constants = [0.2391, -0.0002325, 0,0,0]
     _vapor_pressure_constants = [88.513, -11829, -8.6826, 2.32E-19, 6] 

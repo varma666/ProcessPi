@@ -51,6 +51,9 @@ class Tetradecane(Component):
 
     _density_constants = [0.27248, 0.24007, 693.0, 0.28571]
     _specific_heat_constants = [353140, 29.13, 0.86116, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 319, Tetradecane).
+    _ideal_gas_heat_capacity_constants = [2.3082E5, 7.8678E5, 1.6823E3, 5.4486E5, 743.1]
     _viscosity_constants = [-14.493, 1710.8, 0.4417, 3.09e+28, -12.0]
     _thermal_conductivity_constants = [0.20293, -0.00021798, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [140.47, -13231, -16.859, 6.59e-06, 2.0]

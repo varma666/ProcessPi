@@ -51,6 +51,9 @@ class Nitromethane(Component):
 
     _density_constants = [1.3728, 0.23793, 588.15, 0.29601]
     _specific_heat_constants = [116270, -135.3, 0.345, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 251, Nitromethane).
+    _ideal_gas_heat_capacity_constants = [0.42267E5, 1.0842E5, 1.4885E3, 0.68603E5, 683.57]
     _viscosity_constants = [-9.5556, 981.64, -0.19453, 0.0, 0.0]
     _thermal_conductivity_constants = [0.3276, -0.000405, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [57.278, -6089, -4.9821, 1.22e-17, 6.0]

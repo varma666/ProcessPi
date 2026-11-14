@@ -51,6 +51,9 @@ class TerephthalicAcid(Component):
 
     _density_constants = [0.42685, 0.181, 1113.0, 0.28571]
     _specific_heat_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 317, Terephthalic acid).
+    _ideal_gas_heat_capacity_constants = [0.945E5, 2.526E5, 0.829E3, 0.5E5, 2010]
     _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [248.72, -32283, -30.009, 4.8e-06, 2.0]

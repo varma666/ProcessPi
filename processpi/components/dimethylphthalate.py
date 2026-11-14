@@ -51,6 +51,9 @@ class DimethylPhthalate(Component):
 
     _density_constants = [0.47977, 0.25428, 766.0, 0.30722]
     _specific_heat_constants = [206560,325.75,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 115, Dimethyl phthalate).
+    _ideal_gas_heat_capacity_constants = [1.396E5, 4.78E5, 2.19E3, 3.9705E5, 900.6]
     _viscosity_constants = [16.961, -423.16, -3.8178, 1360000000000000.0, -6.0]
     _thermal_conductivity_constants = [0.13905, 0.0001509, -3.98e-07,0,0]
     _vapor_pressure_constants = [72.517, -10415, -6.755, 1.33e-06, 2.0]

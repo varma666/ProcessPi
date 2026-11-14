@@ -51,6 +51,9 @@ class _1Pentanol(Component):
 
     _density_constants = [0.81754, 0.26732, 588.1, 0.25348]
     _specific_heat_constants = [201200, -651.3, 2.275, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 281, 1-Pentanol).
+    _ideal_gas_heat_capacity_constants = [0.906E5, 3.062E5, 1.6054E3, 2.115E5, 717.97]
     _viscosity_constants = [-36.561, 3542.2, 3.3364, -8.05e-37, 12.84]
     _thermal_conductivity_constants = [0.2006, -0.0001603,0,0,0]
     _vapor_pressure_constants = [114.748,-10643, -12.858, 1.25e-17, 6.0]

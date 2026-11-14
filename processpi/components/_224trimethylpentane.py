@@ -51,6 +51,9 @@ class _224Trimethylpentane(Component):
 
     _density_constants = [0.59059, 0.27424, 543.8, 0.2847]
     _specific_heat_constants = [95275, 696.7, -1.3765, 0.0021734, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 332, 2,2,4-Trimethylpentane).
+    _ideal_gas_heat_capacity_constants = [1.139E5, 5.286E5, 1.594E3, 3.351E5, 677.94]
     _viscosity_constants = [-12.928, 1137.5, 0.25725, -3.69e-28, 10.0]
     _thermal_conductivity_constants = [0.1659, -0.00022686,0,0,0]
     _vapor_pressure_constants = [84.912, -6722.20, -9.5157, 7.22e-06, 2.0]

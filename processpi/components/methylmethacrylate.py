@@ -51,6 +51,9 @@ class MethylMethacrylate(Component):
 
     _density_constants = [0.7761, 0.25068, 566.0, 0.29773]
     _specific_heat_constants = [255100, -938.4, 2.413, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 232, Methyl methacrylate).
+    _ideal_gas_heat_capacity_constants = [0.864E5, 1.811E5, 0.7543E3, 0.8E5, 2160]
     _viscosity_constants = [-0.099, 496.0, -1.5939, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2583, -0.000379, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [107.36, -8085.30, -12.72, 8.33e-06, 2.0]

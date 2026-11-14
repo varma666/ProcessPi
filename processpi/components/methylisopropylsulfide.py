@@ -51,6 +51,9 @@ class MethylisopropylSulfide(Component):
 
     _density_constants = [0.78912, 0.25915, 553.1, 0.26512]
     _specific_heat_constants = [211170, -661.97, 2.4216, -0.0021383, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 273-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 230, Methylisopropyl sulfide).
+    _ideal_gas_heat_capacity_constants = [0.99247E5, 2.7275E5, 2.003E3, 1.8974E5, 849.64]
     _viscosity_constants = [-11.075, 990.72, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20978, -0.00026468, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [52.82, -5437.70, -4.442, 9.51e-18, 6.0]

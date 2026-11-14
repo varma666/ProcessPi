@@ -51,6 +51,9 @@ class _12PropyleneGlycol(Component):
 
     _density_constants = [1.0923, 0.26106, 626.0, 0.20459]
     _specific_heat_constants = [58080, 445.2, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1000.15 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 309, 1,2-Propylene glycol).
+    _ideal_gas_heat_capacity_constants = [2.0114E5, 0.8082E5, 1.8656E3, -2.4404E5, 279.98]
     _viscosity_constants = [-804.54, 30487.0, 130.79, -0.15449, 1.0]
     _thermal_conductivity_constants = [0.2152, -4.97e-05,0,0,0]
     _vapor_pressure_constants = [212.8, -15420, -28.109, 2.16e-05, 2.0]

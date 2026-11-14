@@ -51,6 +51,9 @@ class Trans2Butene(Component):
 
     _density_constants = [1.1448, 0.27154, 428.6, 0.28419]
     _specific_heat_constants = [112760,-104.7,0.5214,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 38, trans-2-Butene).
+    _ideal_gas_heat_capacity_constants = [0.6592E5, 2.07E5, 1.6733E3, 1.251E5, 742.2]
     _viscosity_constants = [-10.335, 521.39, -0.013184,0,0]
     _thermal_conductivity_constants = [0.21153, -0.00035056,0,0,0]
     _vapor_pressure_constants = [71.704, -4563.10, -7.9053, 1.13e-05, 2.0]

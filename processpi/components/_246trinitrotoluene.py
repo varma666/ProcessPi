@@ -51,6 +51,9 @@ class _246Trinitrotoluene(Component):
 
     _density_constants = [0.37378, 0.21379, 828.0, 0.29905]
     _specific_heat_constants = [133530, 514.64, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 335, 2,4,6-Trinitrotoluene).
+    _ideal_gas_heat_capacity_constants = [2.154E5, 2.4432E5, 1.1126E3, 0.58651E5, 950.59]
     _viscosity_constants = [-11.504, 3301.0, -0.39102,0,0]
     _thermal_conductivity_constants = [-1.5128, 0.0079553, -1.0066e-05,0,0]
     _vapor_pressure_constants = [302.0, -24324, -40.13, 1.74e-05, 2.0]

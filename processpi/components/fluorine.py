@@ -17,6 +17,9 @@ class Fluorine(Component):
     _critical_acentric_factor = 0.053  # Placeholder for critical acentric factor
     _density_constants = [4.2895,0.28587,144.12,0.28776]
     _specific_heat_constants = [-94585,7529.9,-139.6,1.1301,-0.0033241]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 149, Fluorine).
+    _ideal_gas_heat_capacity_constants = [0.29122E5, 0.10132E5, 1.453E3, 0.094101E5, 662.91]
     _viscosity_constants = [8.18,-75.6,-3.5148,0,0] 
     _thermal_conductivity_constants = [0.2758,-0.0016297,0,0,0]
     _vapor_pressure_constants = [42.393,-1103.3,-4.1203,0.000057815,2] 

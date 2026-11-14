@@ -51,6 +51,9 @@ class _2Methyl1Butene3Yne(Component):
 
     _density_constants = [1.1157, 0.27671, 492.0, 0.30821]
     _specific_heat_constants = [81919, 181.01, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500.15 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 207, 2-Methyl -1-butene-3-yne).
+    _ideal_gas_heat_capacity_constants = [0.7906E5, 1.656E5, 1.6926E3, 1.2167E5, 788.4]
     _viscosity_constants = [-3.6585, 441.1, -1.0547, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20385, -0.0002874, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [95.453, -5448.80, -12.384, 0.0156, 1.0]

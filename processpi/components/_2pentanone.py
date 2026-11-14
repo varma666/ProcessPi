@@ -51,6 +51,9 @@ class _2Pentanone(Component):
 
     _density_constants = [0.90411, 0.27207, 561.08, 0.30669]
     _specific_heat_constants = [194590, -263.86, 0.76808, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 283, 2-Pentanone).
+    _ideal_gas_heat_capacity_constants = [0.90053E5, 2.7085E5, 1.6592E3, 1.8012E5, 743.96]
     _viscosity_constants = [-11.055, 1005.3, 0.0039301,0,0]
     _thermal_conductivity_constants = [0.2161, -0.00024866,0,0,0]
     _vapor_pressure_constants = [84.635, -7078.40, -9.3, 6.27e-06, 2.0]

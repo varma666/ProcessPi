@@ -51,6 +51,9 @@ class _1Nonyne(Component):
 
     _density_constants = [0.52152, 0.25918, 598.05, 0.29177]
     _specific_heat_constants = [253580, -366.3, 1.4881, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 262, 1-Nonyne).
+    _ideal_gas_heat_capacity_constants = [1.6289E5, 3.9708E5, 1.8928E3, 3.2136E5, 855.52]
     _viscosity_constants = [-2.3409, 715.52, -1.222, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20954, -0.00024588, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [114.77, -9430.80, -13.631, 8.19e-06, 2.0]

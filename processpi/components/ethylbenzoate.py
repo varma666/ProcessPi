@@ -51,6 +51,9 @@ class EthylBenzoate(Component):
 
     _density_constants = [0.48864, 0.23894, 698.0, 0.28421]
     _specific_heat_constants = [124500, 370.6, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 130, Ethyl benzoate).
+    _ideal_gas_heat_capacity_constants = [1.0944E5, 4.1794E5, 0.88375E3, -1.609E5, 1183.1]
     _viscosity_constants = [-40.706, 3035.0, 4.2655, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20771, -0.00021265, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [52.923, -7531.70, -4.2347, 1.18e-06, 2.0]

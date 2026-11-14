@@ -55,6 +55,9 @@ class _1Propanol(Component):
     # comma had turned it into 0.0, and the table's Cp at Tmin and Tmax
     # (1.0797E5, 2.198E5) had been appended as two more constants.
     _specific_heat_constants = [158760, -635.0, 1.969, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 296, 1-Propanol).
+    _ideal_gas_heat_capacity_constants = [0.619E5, 2.0213E5, 1.6293E3, 1.2956E5, 727.4]
     _viscosity_constants = [23.467, 116.07, -5.3372, 2880000000.0, -4.0267]
     _thermal_conductivity_constants = [0.2203, -0.0002155]
     # Vapour pressure, Pa: Perry's 8th ed., Table 2-8, p. 2-59. C2 is

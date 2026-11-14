@@ -51,6 +51,9 @@ class Octanal(Component):
 
     _density_constants = [0.53636, 0.26174, 638.9, 0.26348]
     _specific_heat_constants = [130650, 463.61, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 264, Octanal).
+    _ideal_gas_heat_capacity_constants = [1.6088E5, 4.218E5, 1.9126E3, 3.278E5, 869]
     _viscosity_constants = [-10.191, 1072.4, -0.030553, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20143, -0.00021102, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [83.601, -8865.80, -8.5711, 7.94e-18, 6.0]

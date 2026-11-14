@@ -51,6 +51,9 @@ class _2233Tetramethylbutane(Component):
 
     _density_constants = [0.58988, 0.27201, 568.0, 0.27341]
     _specific_heat_constants = [43326, 630.73, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 323, 2,2,3,3-Tetramethylbutane).
+    _ideal_gas_heat_capacity_constants = [1.1352E5, 5.6331E5, 1.6211E3, 3.3829E5, 681.9]
     _viscosity_constants = [5.5351, 632.38, -2.6576,0,0]
     _thermal_conductivity_constants = [0.17835, -0.00023704,0,0,0]
     _vapor_pressure_constants = [57.963, -5901.50, -5.2048, 9.13e-18, 6.0]

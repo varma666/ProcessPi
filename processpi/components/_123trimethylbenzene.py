@@ -51,6 +51,9 @@ class _123Trimethylbenzene(Component):
 
     _density_constants = [0.6531, 0.27002, 664.5, 0.26268]
     _specific_heat_constants = [119450, 324.54, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 330, 1,2,3-Trimethylbenzene).
+    _ideal_gas_heat_capacity_constants = [1.052E5, 3.79E5, 1.4814E3, 2.331E5, 667.3]
     _viscosity_constants = [-11.756, 1483.1, -0.040387,0,0]
     _thermal_conductivity_constants = [0.18854, -0.0001963,0,0,0]
     _vapor_pressure_constants = [78.341, -8019.80, -8.1458, 3.9e-06, 2.0]

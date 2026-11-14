@@ -51,6 +51,9 @@ class Pentanal(Component):
 
     _density_constants = [0.83871, 0.26252, 566.1, 0.29444]
     _specific_heat_constants = [112050, 257.78, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 278, Pentanal).
+    _ideal_gas_heat_capacity_constants = [1.0743E5, 2.8363E5, 1.9549E3, 2.0146E5, 890.44]
     _viscosity_constants = [-10.846, 980.01, -0.0054565, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22697, -0.00033227, 1.18e-07, 0.0, 0.0]
     _vapor_pressure_constants = [149.58, -8890, -20.697, 0.0221, 1.0]

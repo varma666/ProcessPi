@@ -51,6 +51,9 @@ class SulfurHexafluoride(Component):
 
     _density_constants = [1.3587, 0.2701, 318.69, 0.2921]
     _specific_heat_constants = [119500, 0.0, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 315, Sulfur hexafluoride).
+    _ideal_gas_heat_capacity_constants = [0.35256E5, 1.227E5, 0.67938E3, 0.78407E5, 351.27]
     _viscosity_constants = [3.8305, 41.21, -2.1342, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2544, -0.0006595, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [29.16, -2383.60, -1.1342, 0.0, 0.0]

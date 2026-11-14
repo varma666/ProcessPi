@@ -51,6 +51,9 @@ class DimethylAmine(Component):
 
     _density_constants = [1.5436, 0.27784, 437.2, 0.2572]
     _specific_heat_constants = [-214870,3787.20,-13.781,0.016924,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 106, Dimethyl amine).
+    _ideal_gas_heat_capacity_constants = [0.5565E5, 1.6384E5, 1.7341E3, 1.0899E5, 793.04]
     _viscosity_constants = [-10.93, 699.5,0,0,0]
     _thermal_conductivity_constants = [0.2454, -0.000338,0,0,0]
     _vapor_pressure_constants = [71.738, -5302, -7.3324, 6.42e-17, 6.0]

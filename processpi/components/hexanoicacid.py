@@ -51,6 +51,9 @@ class HexanoicAcid(Component):
 
     _density_constants = [0.62833, 0.25598, 660.2, 0.25304]
     _specific_heat_constants = [161980, 44.116, 0.709, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 172, Hexanoic acid).
+    _ideal_gas_heat_capacity_constants = [1.1622E5, 2.0708E5, 0.68661E3, 1.5355E5, 1932.5]
     _viscosity_constants = [-46.402, 3448.6, 5.0849, 0, 0]
     _thermal_conductivity_constants = [0.1855, -0.000146, 0, 0, 0]
     _vapor_pressure_constants = [114.05, -12332, -12.45, 5.63e-18, 6.0]

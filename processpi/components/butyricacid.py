@@ -51,6 +51,9 @@ class ButyricAcid(Component):
 
     _density_constants = [0.88443, 0.25828, 615.7, 0.248]
     _specific_heat_constants = [237700,-746.4,1.829,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 45, Butyric acid).
+    _ideal_gas_heat_capacity_constants = [1.488E5, 1.3522E5, 1.146E3, -678E5, 6.98]
     _viscosity_constants = [-9.817, 1388.0, -0.238,0,0]
     _thermal_conductivity_constants = [0.1967, -0.000168,0,0,0]
     _vapor_pressure_constants = [93.815, -9942.20, -9.8019, 9.31e-18, 6.0]

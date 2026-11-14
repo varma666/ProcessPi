@@ -51,6 +51,9 @@ class _1Heptene(Component):
 
     _density_constants = [0.66016, 0.26657, 537.4, 0.28571]
     _specific_heat_constants = [267950, -1315.90, 6.5242, -0.011994, 9.38e-06]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 166, 1-Heptene).
+    _ideal_gas_heat_capacity_constants = [1.1851E5, 3.6362E5, 1.7359E3, 2.5048E5, 785.73]
     _viscosity_constants = [-10.819, 841.33, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.19664, -0.00016623, -2.52e-07, 0.0, 0.0]
     _vapor_pressure_constants = [65.922, -6189, -6.3629, 2.01e-17, 6.0]

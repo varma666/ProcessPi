@@ -51,6 +51,9 @@ class _1Hexanol(Component):
 
     _density_constants = [0.70093, 0.26776, 611.3, 0.24919]
     _specific_heat_constants = [1638600, -17261, 71.721, -0.12026, 7.1087e-05]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 173, 1-Hexanol).
+    _ideal_gas_heat_capacity_constants = [1.0625E5, 3.521E5, 1.5835E3, 2.462E5, 715.75]
     _viscosity_constants = [-39.324, 3841.0, 3.6933, -2.12e-30, 10.485]
     _thermal_conductivity_constants = [0.2193, -0.00022, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [135.421, -12288, -15.732, 1.27e-17, 6.0]

@@ -51,6 +51,9 @@ class Argon(Component):
 
     _density_constants = [3.8469, 0.2881, 150.86, 0.29783]
     _specific_heat_constants = [134390,-1989.40,11.043,0,0]
+    # Ideal-gas Cp, polynomial, J/(kmol K), 100-1500 K: Table 2-155, p. 2-175
+    # (cmpd. no. 14, Argon; Table 2-156 has no row for it).
+    _ideal_gas_heat_capacity_polynomial = [20786, 0, 0, 0, 0]
     _viscosity_constants = [-8.8685, 204.29, -0.38305, -1.29e-22, 10.0]
     _thermal_conductivity_constants = [0.1819, -0.0003176, -4.11e-06,0,0]
     _vapor_pressure_constants = [42.127, -1093.10, -4.1425, 5.73e-05, 2.0]

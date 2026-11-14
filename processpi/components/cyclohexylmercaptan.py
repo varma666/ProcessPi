@@ -51,6 +51,9 @@ class CyclohexylMercaptan(Component):
 
     _density_constants = [0.78578, 0.27882, 664.0, 0.31067]
     _specific_heat_constants = [177560,-179.12,0.76723,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 72, Cyclohexyl mercaptan).
+    _ideal_gas_heat_capacity_constants = [0.54305E5, 3.9962E5, 1.3575E3, 2.5623E5, 618.54]
     _viscosity_constants = [-11.338, 1304.1, 9.2396e-05,0,0]
     _thermal_conductivity_constants = [0.18374, -0.0001925,0,0,0]
     _vapor_pressure_constants = [85.146,-7843.70, -9.2982, 5.18e-06, 2.0]

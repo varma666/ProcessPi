@@ -51,6 +51,9 @@ class Hexane(Component):
 
     _density_constants = [0.70824, 0.26411, 507.6, 0.27537]
     _specific_heat_constants = [172120, -183.78, 0.88734, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 171, Hexane).
+    _ideal_gas_heat_capacity_constants = [1.044E5, 3.523E5, 1.6946E3, 2.369E5, 761.6]
     _viscosity_constants = [-6.3276, 640.0, -0.694, 5.69e+21, -10.0]
     _thermal_conductivity_constants = [0.22492, -0.0003533, 0, 0, 0]
     _vapor_pressure_constants = [104.65, -6995.50, -12.702, 1.24e-05, 2.0]

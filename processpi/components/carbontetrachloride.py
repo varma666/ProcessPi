@@ -17,6 +17,9 @@ class CarbonTetrachloride(Component):
     _critical_acentric_factor = 0.1926  # Placeholder for critical acentric factor
     _density_constants = [0.99835, 0.274,556.35,0.287]
     _specific_heat_constants = [-752700,8966.10,-30.394,0.034455,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 50, Carbon tetrachloride).
+    _ideal_gas_heat_capacity_constants = [0.37582E5, 0.7054E5, 0.5121E3, 0.485E5, 236.1]
     _viscosity_constants = [-8.0738,1121.1,-0.4726,0, 0] 
     _thermal_conductivity_constants = [0.1589, -0.0001987,0,0,0]
     _vapor_pressure_constants = [78.441,-6128.10,-8.5766,6.85E-06, 2] 

@@ -51,6 +51,9 @@ class _3Methyl1Butyne(Component):
 
     _density_constants = [0.94575, 0.26008, 463.2, 0.30807]
     _specific_heat_constants = [105200, 191.1, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 210, 3-Methyl-1-butyne).
+    _ideal_gas_heat_capacity_constants = [0.8274E5, 2.1377E5, 1.755E3, 1.5149E5, 782]
     _viscosity_constants = [-1.8842, 433.58, -1.3238, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20348, -0.0003106, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [69.459, -5250.0, -7.1125, 7.93e-17, 6.0]

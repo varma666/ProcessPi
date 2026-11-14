@@ -51,6 +51,9 @@ class IsopropylAmine(Component):
 
     _density_constants = [1.2801, 0.2828, 471.85, 0.2972]
     _specific_heat_constants = [-32469,1977.10, -7.0145, 0.0086913, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 190, Isopropyl amine).
+    _ideal_gas_heat_capacity_constants = [0.68545E5, 2.1876E5, 1.5831E3, 1.3855E5, 691.76]
     _viscosity_constants = [-31.157, 1926.0, 2.925, 0, 0]
     _thermal_conductivity_constants = [0.237, -0.000332, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [136.66, -7201.50, -18.934, 0.0223, 1.0]

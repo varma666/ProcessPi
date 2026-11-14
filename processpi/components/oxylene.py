@@ -51,6 +51,9 @@ class Oxylene(Component):
 
     _density_constants = [0.69962, 0.26143, 630.3, 0.27365]
     _specific_heat_constants = [36500, 1017.50, -2.63, 0.00302, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 344, o-Xylene).
+    _ideal_gas_heat_capacity_constants = [0.8521E5, 3.2954E5, 1.4944E3, 2.115E5, 675.8]
     _viscosity_constants = [-15.489, 1393.5, 0.63711,0,0]
     _thermal_conductivity_constants = [0.19989, -0.0002299,0,0,0]
     _vapor_pressure_constants = [90.405, -7955.20, -10.086, 5.96e-06, 2.0]

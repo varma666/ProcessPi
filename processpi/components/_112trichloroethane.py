@@ -51,6 +51,9 @@ class _112Trichloroethane(Component):
 
     _density_constants = [0.9062, 0.25475, 602.0, 0.31]
     _specific_heat_constants = [103350, 159.3, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 326, 1,1,2-Trichloroethane).
+    _ideal_gas_heat_capacity_constants = [0.66554E5, 1.1257E5, 1.5454E3, 0.97196E5, 717.04]
     _viscosity_constants = [0.388, 736.5, -1.7063,0,0]
     _thermal_conductivity_constants = [0.20731, -0.00024997,0,0,0]
     _vapor_pressure_constants = [54.153,-6041.80, -4.5383, 4.98e-18, 6.0]

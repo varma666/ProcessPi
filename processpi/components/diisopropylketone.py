@@ -51,6 +51,9 @@ class DiisopropylKetone(Component):
 
     _density_constants = [0.64619, 0.26881, 576.0, 0.28036]
     _specific_heat_constants = [179270,28.37,0.5375,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 102, Di-isopropyl ketone).
+    _ideal_gas_heat_capacity_constants = [1.0869E5, 4.054E5, 1.7802E3, 2.9786E5, 791.6]
     _viscosity_constants = [-15.097, 1426.9, 0.51512,0,0]
     _thermal_conductivity_constants = [0.22076, -0.00027624,0,0,0]
     _vapor_pressure_constants = [50.868, -6063.50, -4.066, 1.13e-06, 2.0]

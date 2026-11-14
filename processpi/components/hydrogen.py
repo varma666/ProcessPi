@@ -1,4 +1,4 @@
-from .base import Component
+from .base import Component, PropertyMethod
 from processpi.units import *
 
 class Hydrogen(Component):
@@ -51,45 +51,27 @@ class Hydrogen(Component):
 
     _density_constants = [5.414, 0.34893, 33.19, 0.2706]
     _specific_heat_constants = [66.653, 6765.90, -123.63, 478.27, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 250-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 183, Hydrogen).
+    _ideal_gas_heat_capacity_constants = [0.27617E5, 0.0956E5, 2.466E3, 0.0376E5, 567.6]
     _viscosity_constants = [-11.661, 24.7, -0.261, -4.1e-16, 10.0]
     _thermal_conductivity_constants = [-0.0917, 0.017678, -0.000382, -3.33e-06, 1.03e-07]
     _vapor_pressure_constants = [12.69, -94.896, 1.1125, 0.000329, 2.0]
     _enthalpy_constants = [0.10127e-7, 0.698, -1.817, 1.447,0.0]
 
-    @property
-    def specific_heat(self):
-                """
-                Calculates the specific heat of Benzene at a given temperature.
-        
-                The calculation uses a polynomial fit for specific heat ($C_p$) as a
-                function of temperature. The function selects a set of constants
-                based on the provided temperature value to ensure accuracy.
-        
-                Args:
-                    temperature (Temperature): The temperature at which to calculate
-                                               the specific heat, in Kelvin.
-        
-                Returns:
-                    SpecificHeat: The calculated specific heat in units of J/kgK.
-                """
-                T = self.temperature.value
-                # Use a conditional to select the correct set of polynomial constants.
-                if T <= 353.24:
-                    constants = self._specific_heat_constants_1
-                else:
-                    constants = self._specific_heat_constants_2
-        
-                # Calculate Cp using the polynomial fit. The result is in J/kmol K.
-                cp_kmol = (constants[0] +
-                           constants[1] * T +
-                           constants[2] * T**2 +
-                           constants[3] * T**3 +
-                           constants[4] * T**4)
-        
-                # Convert the specific heat from J/kmol K to J/kg K by dividing by
-                # the molecular weight (g/mol), since 1 kmol is 1000 mol and 1 kg
-                # is 1000 g.
-                cp_kg = cp_kmol / self.molecular_weight
-                
-                return SpecificHeat(cp_kg, "J/kgK")
+    @PropertyMethod
+    def specific_heat(self) -> SpecificHeat:
+        if self._specific_heat is not None:
+            return self._specific_heat
+        cp_gas = self._ideal_gas_specific_heat()
+        if cp_gas is not None:
+            return cp_gas
+        # Liquid: Perry's 8th ed., Table 2-153, Eq. (2), J/(kmol K):
+        # Cp = C1^2/t + C2 - 2*C1*C3*t - C1*C4*t^2 - C3^2*t^3/3 - C3*C4*t^4/2 - C4^2*t^5/5
+        # with t = 1 - T/Tc.
+        C1, C2, C3, C4 = self._specific_heat_constants[:4]
+        T = self.temperature.to("K").value
+        t = 1 - T / self._critical_temperature.to("K").value
+        cp = (C1 ** 2 / t) + C2 - (2 * C1 * C3 * t) - (C1 * C4 * t ** 2) - (C3 ** 2 * t ** 3 / 3) - (C3 * C4 * t ** 4 / 2) - (C4 ** 2 * t ** 5 / 5)
+        return SpecificHeat(cp / self.molecular_weight, "J/kgK")
     

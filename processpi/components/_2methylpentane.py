@@ -51,6 +51,9 @@ class _2Methylpentane(Component):
 
     _density_constants = [0.72701, 0.26754, 497.7, 0.28268]
     _specific_heat_constants = [142220, -47.83, 0.739, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 234, 2-Methylpentane).
+    _ideal_gas_heat_capacity_constants = [0.903E5, 3.801E5, 1.602E3, 2.453E5, 691.6]
     _viscosity_constants = [-12.86, 946.91, 0.26191, 0.0, 0.0]
     _thermal_conductivity_constants = [0.19334, -0.00028038, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [53.579, -5041.20, -4.6404, 1.94e-17, 6.0]

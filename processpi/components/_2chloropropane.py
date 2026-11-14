@@ -51,6 +51,9 @@ class _2Chloropropane(Component):
 
     _density_constants = [1.1202, 0.27669, 489.0, 0.27646]
     _specific_heat_constants = [69362,215.01,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 58, 2-Chloropropane).
+    _ideal_gas_heat_capacity_constants = [0.61809E5, 1.8023E5, 1.5438E3, 1.1893E5, 685.93]
     _viscosity_constants = [-15.458, 1086.0, 0.654,0,0]
     _thermal_conductivity_constants = [0.21232, -0.0003149,0,0,0]
     _vapor_pressure_constants = [46.854, -4445.50, -3.6533, 1.33e-17, 6.0]

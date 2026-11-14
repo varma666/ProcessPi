@@ -51,6 +51,9 @@ class Benzophenone(Component):
 
     _density_constants = [0.43743, 0.24833, 830.0, 0.27555]
     _specific_heat_constants = [156130,454.49,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 20, Benzophenone).
+    _ideal_gas_heat_capacity_constants = [1.0099E5, 4.4898E5, 1.311E3, 2.8395E5, 627.4]
     _viscosity_constants = [13.354, -232.91, -3.2685, 1.75e+20, -8.052]
     _thermal_conductivity_constants = [0.25867, -0.00022516,0,0,0]
     _vapor_pressure_constants = [88.404, -11769, -8.9014, 1.93e-18, 6.0]

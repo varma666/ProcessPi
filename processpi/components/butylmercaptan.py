@@ -51,6 +51,9 @@ class ButylMercaptan(Component):
 
     _density_constants = [0.89458, 0.27463, 570.1, 0.28512]
     _specific_heat_constants = [232190,-804.35,2.7063,-0.0023017,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 41, Butyl mercaptan).
+    _ideal_gas_heat_capacity_constants = [0.92478E5, 2.7795E5, 1.6837E3, 1.5974E5, 758.68]
     _viscosity_constants = [-10.807, 966.74, -0.014851,0,0]
     _thermal_conductivity_constants = [0.21143, -0.000258,0,0,0]
     _vapor_pressure_constants = [65.382, -6262.40, -6.2585, 1.49e-17, 6.0]

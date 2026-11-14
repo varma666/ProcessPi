@@ -51,6 +51,9 @@ class _1Pentyne(Component):
 
     _density_constants = [0.8491, 0.2352, 481.2, 0.353]
     _specific_heat_constants = [86200, 256.6, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 288, 1-Pentyne).
+    _ideal_gas_heat_capacity_constants = [0.753E5, 2.0905E5, 1.5307E3, 1.378E5, 672.8]
     _viscosity_constants = [-1.7273, 424.34, -1.342,0,0]
     _thermal_conductivity_constants = [0.22102, -0.000322,0,0,0]
     _vapor_pressure_constants = [82.805, -5683.80, -9.4301, 1.08e-05, 2.0]

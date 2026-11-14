@@ -51,6 +51,9 @@ class _12Dichloroethane(Component):
 
     _density_constants = [1.2591, 0.27698, 561.6, 0.30492]
     _specific_heat_constants = [179170, -444.74, 0.93009, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 89, 1,2-Dichloroethane).
+    _ideal_gas_heat_capacity_constants = [0.65271E5, 1.1254E5, 1.7376E3, 0.878E5, 795.45]
     _viscosity_constants = [15.312, -41.12, -3.919, 0.0, 0.0]
     _thermal_conductivity_constants = [0.214, -0.000266, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [92.355, -6920.40, -10.651, 9.14e-06, 2.0]

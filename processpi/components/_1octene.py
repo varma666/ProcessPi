@@ -51,6 +51,9 @@ class _1Octene(Component):
 
     _density_constants = [0.55449, 0.25952, 566.9, 0.28571]
     _specific_heat_constants = [509420, -4279.10, 21.477, -0.044462, 3.5e-05]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 271, 1-Octene).
+    _ideal_gas_heat_capacity_constants = [1.3599E5, 4.1605E5, 1.7317E3, 2.8675E5, 784.47]
     _viscosity_constants = [-11.19, 1057.4, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20467, -0.0002675, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [74.936, -7155.90, -7.5843, 1.71e-17, 6.0]

@@ -51,6 +51,9 @@ class Propylbenzene(Component):
 
     _density_constants = [0.57233, 0.25171, 638.35, 0.29616]
     _specific_heat_constants = [174380, -101.8, 0.79, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 304, Propylbenzene).
+    _ideal_gas_heat_capacity_constants = [0.96885E5, 3.7954E5, 1.5168E3, 2.6618E5, 694.3]
     _viscosity_constants = [-18.282, 1549.7, 1.0454, 0.0, 0.0]
     _thermal_conductivity_constants = [0.18707, -0.00019846, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [91.379, -8276.80, -10.176, 5.62e-06, 2.0]

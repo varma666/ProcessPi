@@ -51,6 +51,9 @@ class _1Decanol(Component):
 
     _density_constants = [0.38208, 0.24645, 688.0, 0.26125]
     _specific_heat_constants = [4988500, -52898, 216.35, -0.37538, 0.00023674]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 76, 1-Decanol).
+    _ideal_gas_heat_capacity_constants = [1.6984E5, 5.392E5, 1.568E3, 3.938E5, 720.5]
     _viscosity_constants = [-69.985, 5818.8, 8.0715,0,0]
     _thermal_conductivity_constants = [0.228, -0.000223, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [156.239, -15212, -18.424, 8.5e-18, 6.0]

@@ -51,6 +51,9 @@ class MethylAcetate(Component):
 
     _density_constants = [1.13, 0.2593, 506.55, 0.2764]
     _specific_heat_constants = [61260, 270.9, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 196, Methyl acetate).
+    _ideal_gas_heat_capacity_constants = [0.555E5, 1.782E5, 1.26E3, 0.853E5, 562]
     _viscosity_constants = [13.557, -187.3, -3.6592, 0, 0]
     _thermal_conductivity_constants = [0.2777, -0.000417, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [61.267, -5618.60, -5.6473, 2.11e-17, 6.0]

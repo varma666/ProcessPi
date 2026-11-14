@@ -54,6 +54,9 @@ class AcrylicAcid(Component):
     # Constants for various property correlations
     _density_constants = [1.2414, 0.25822, 615,0.30701]
     _specific_heat_constants = [55300,300,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 250-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 9, Acrylic acid).
+    _ideal_gas_heat_capacity_constants = [0.6059E5, 1.3703E5, 1.6475E3, 1.0446E5, 751.49]
     _viscosity_constants = [-28.12, 2280.2, 2.3956, 0, 0] 
     _thermal_conductivity_constants = [0.2441, -0.0002904, 0,0,0]
     _vapor_pressure_constants = [46.745, -6587.1, -3.2208, 0.00000052253, 2] 

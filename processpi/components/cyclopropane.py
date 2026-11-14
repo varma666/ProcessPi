@@ -51,6 +51,9 @@ class Cyclopropane(Component):
 
     _density_constants = [1.7411, 0.28205, 398.0, 0.29598]
     _specific_heat_constants = [89952,-196.63,0.65237,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 71, Cyclopropane).
+    _ideal_gas_heat_capacity_constants = [0.338E5, 1.6894E5, 1.6135E3, 1.1768E5, 722.8]
     _viscosity_constants = [-3.524, 342.54, -1.1599,0,0]
     _thermal_conductivity_constants = [0.24348, -0.00042568,0,0,0]
     _vapor_pressure_constants = [40.608, -3179.60, -2.8937, 5.61e-17, 6.0]

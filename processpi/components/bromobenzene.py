@@ -51,6 +51,9 @@ class Bromobenzene(Component):
 
     _density_constants = [0.8226, 0.26632, 670.15, 0.2821]
     _specific_heat_constants = [121600,-9.45,0.358,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 26, Bromobenzene).
+    _ideal_gas_heat_capacity_constants = [0.721E5, 2.064E5, 1.6504E3, 1.687E5, 765.3]
     _viscosity_constants = [-20.611, 1656.5, 1.4415,0,0]
     _thermal_conductivity_constants = [0.16983, -0.0001981,0,0,0]
     _vapor_pressure_constants = [63.749,-7130.20, -5.879, 5.21e-18, 6.0]

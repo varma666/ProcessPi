@@ -51,6 +51,9 @@ class PhenylIsocyanate(Component):
 
     _density_constants = [0.63163, 0.23373, 653.0, 0.28571]
     _specific_heat_constants = [60834, 215.89, 0.29552, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 292, Phenyl isocyanate).
+    _ideal_gas_heat_capacity_constants = [0.59683E5, 2.5533E5, 1.2397E3, 1.5519E5, 576.78]
     _viscosity_constants = [-11.31, 1280.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.16326, -0.00017777, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [86.779, -8101.80, -9.5303, 6.14e-06, 2.0]

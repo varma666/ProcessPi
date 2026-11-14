@@ -51,6 +51,9 @@ class _1Butanol(Component):
 
     _density_constants = [0.98279, 0.2683, 563.1, 0.25488]
     _specific_heat_constants = [191200,-730.4,2.2998,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 34, 1-Butanol).
+    _ideal_gas_heat_capacity_constants = [0.7454E5, 2.5907E5, 1.6073E3, 1.732E5, 712.4]
     _viscosity_constants = [0.87669, 1602.9, -2.1475, 3.39e+22, -9.9231]
     _thermal_conductivity_constants = [0.2136, -0.0002034,0,0,0]
     _vapor_pressure_constants = [106.295, -9866.40, -11.655, 1.08e-17, 6.0]

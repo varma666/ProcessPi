@@ -51,6 +51,9 @@ class Decane(Component):
 
     _density_constants = [0.41084, 0.25175, 617.7, 0.28571]
     _specific_heat_constants = [278620,-197.91,1.0737,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 74, Decane).
+    _ideal_gas_heat_capacity_constants = [1.672E5, 5.353E5, 1.6141E3, 3.782E5, 742]
     _viscosity_constants = [-9.6489, 1181.1, -0.24367, 9.05e+34, -15.0]
     _thermal_conductivity_constants = [0.2063, -0.00025,0,0,0]
     _vapor_pressure_constants = [112.73, -9749.60, -13.245, 7.13e-06, 2.0]

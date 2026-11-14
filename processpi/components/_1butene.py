@@ -51,6 +51,9 @@ class _1Butene(Component):
 
     _density_constants = [1.0877, 0.26454, 419.5, 0.2843]
     _specific_heat_constants = [182050,-1611,11.963,-0.03745,4.5e-5]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 250-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 36, 1-Butene).
+    _ideal_gas_heat_capacity_constants = [0.64257E5, 2.0618E5, 1.6768E3, 1.3324E5, 757.06]
     _viscosity_constants = [-10.773, 591.61,0,0,0]
     _thermal_conductivity_constants = [0.22153, -0.00035023,0,0,0]
     _vapor_pressure_constants = [51.836, -4019.20, -4.5229, 4.88e-17, 6.0]

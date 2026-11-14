@@ -51,6 +51,9 @@ class MethylFormate(Component):
 
     _density_constants = [1.525, 0.2634, 487.2, 0.2806]
     _specific_heat_constants = [130200, -396.0, 1.21, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 250-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 224, Methyl formate).
+    _ideal_gas_heat_capacity_constants = [0.506E5, 1.219E5, 1.637E3, 0.894E5, 743]
     _viscosity_constants = [-39.641, 2113.3, 4.308, 0.0, 0.0]
     _thermal_conductivity_constants = [0.3246, -0.000468, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [77.184, -5606.10, -8.392, 7.85e-06, 2.0]

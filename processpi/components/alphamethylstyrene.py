@@ -51,6 +51,9 @@ class AlphaMethylStyrene(Component):
 
     _density_constants = [0.64856, 0.25877, 654.0, 0.31444]
     _specific_heat_constants = [76822, 421.6, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 243, alpha-Methyl styrene).
+    _ideal_gas_heat_capacity_constants = [0.78548E5, 3.5969E5, 1.4342E3, 2.5336E5, 651.69]
     _viscosity_constants = [-11.632, 1251.6, 0.071692, 0.0, 0.0]
     _thermal_conductivity_constants = [0.19657, -0.0002118, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [56.485, -6954.20, -4.7889, 2.78e-18, 6.0]

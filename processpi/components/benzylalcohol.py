@@ -51,6 +51,9 @@ class BenzylAlcohol(Component):
 
     _density_constants = [0.59867, 0.22849, 720.15, 0.23567]
     _specific_heat_constants = [-334997,3644.21,-7.77514,0.00591102,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 21, Benzyl alcohol).
+    _ideal_gas_heat_capacity_constants = [0.84115E5, 3.1428E5, 1.9539E3, 2.5743E5, 850.06]
     _viscosity_constants = [-14.152, 2652.0,0,0,0]
     _thermal_conductivity_constants = [0.17847, -6.5843e-05,0,0,0]
     _vapor_pressure_constants = [100.68, -11059, -10.709, 3.06e-18, 6.0]

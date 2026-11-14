@@ -51,6 +51,9 @@ class _1Heptyne(Component):
 
     _density_constants = [0.67304, 0.26045, 547.0, 0.28388]
     _specific_heat_constants = [46798, 761.13, -0.62882, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 168, 1-Heptyne).
+    _ideal_gas_heat_capacity_constants = [1.0712E5, 3.0258E5, 1.5273E3, 2.0975E5, 689.62]
     _viscosity_constants = [-2.7947, 563.86, -1.1636, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21098, -0.00026652, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [59.083, -6031.80, -5.3072, 1.44e-17, 6.0]

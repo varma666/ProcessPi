@@ -51,6 +51,9 @@ class Cis2Methylcyclohexanol(Component):
 
     _density_constants = [0.70973, 0.26544, 614.0, 0.26016]
     _specific_heat_constants = [118600, 447.07, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 215, cis-2-Methylcyclohexanol).
+    _ideal_gas_heat_capacity_constants = [0.92279E5, 2.6709E5, 0.68784E3, 1.9847E5, 1732.4]
     _viscosity_constants = [-6.6904, 3150.5, -1.392, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21839, -0.00025776, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [125.1, -10288, -15.157, 1.09e-05, 2.0]

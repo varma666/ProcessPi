@@ -51,6 +51,9 @@ class _2MethylbutanoicAcid(Component):
 
     _density_constants = [0.72762, 0.25244, 643.0, 0.28571]
     _specific_heat_constants = [74200, 417.4, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 203, 2-Methylbutanoic acid).
+    _ideal_gas_heat_capacity_constants = [1.8458E5, 1.743E5, 1.22E3, -56.11E5, 31.2]
     _viscosity_constants = [-1.035, 1048.5, -1.5474, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22284, -0.0002516, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [85.383, -9575.40, -8.6164, 5.61e-18, 6.0]

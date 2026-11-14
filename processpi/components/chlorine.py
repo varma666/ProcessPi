@@ -17,6 +17,9 @@ class Chlorine(Component):
     _critical_acentric_factor = 0.0688  # Placeholder for critical acentric factor
     _density_constants = [2.23,0.27645,417.15,0.2926]
     _specific_heat_constants = [63936,46.35,-0.1623,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 52, Chlorine).
+    _ideal_gas_heat_capacity_constants = [0.29142E5, 0.09176E5, 0.949E3, 0.1003E5, 425]
     _viscosity_constants = [-9.5412,456.62,0,0,0] 
     _thermal_conductivity_constants = [0.2246, -0.000064,-0.000000788,0,0]
     _vapor_pressure_constants = [71.334,-3855,-8.5171,1.24E-02, 1] 

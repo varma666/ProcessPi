@@ -51,6 +51,9 @@ class Hexadecane(Component):
 
     _density_constants = [0.23289, 0.23659, 723.0, 0.28571]
     _specific_heat_constants = [370350, 231.47, 0.68632, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 169, Hexadecane).
+    _ideal_gas_heat_capacity_constants = [2.6283E5, 8.9733E5, 1.6912E3, 6.264E5, 744.41]
     _viscosity_constants = [-20.182, 2203.5, 1.2289, 0, 0]
     _thermal_conductivity_constants = [0.20749, -0.00021917, 0, 0, 0]
     _vapor_pressure_constants = [156.06, -15015, -18.941, 6.82e-06, 2.0]

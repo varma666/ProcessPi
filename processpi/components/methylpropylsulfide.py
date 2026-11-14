@@ -51,6 +51,9 @@ class MethylpropylSulfide(Component):
 
     _density_constants = [0.87496, 0.26862, 565.0, 0.30259]
     _specific_heat_constants = [179850, -264.1, 0.79202, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 241, Methylpropyl sulfide).
+    _ideal_gas_heat_capacity_constants = [0.93775E5, 2.6178E5, 1.7291E3, 1.6236E5, 783.23]
     _viscosity_constants = [-10.569, 952.38, -0.063873, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21103, -0.00025985, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [83.711, -6786.90, -9.2526, 6.67e-06, 2.0]

@@ -53,6 +53,9 @@ class _13Butanediol(Component):
     # Liquid Cp, Perry's Chemical Engineers' Handbook, 8th ed., Table 2-153,
     # p. 2-165, "use Eq. (2)", 196.15-670 K (see specific_heat below).
     _specific_heat_constants = [42.152,324580,517.35,1449.50,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500.15 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 33, 1,3-Butanediol).
+    _ideal_gas_heat_capacity_constants = [1.066E5, 2.575E5, 1.967E3, 1.951E5, 860.5]
     _viscosity_constants = [-390.03, 18609.0, 60.014, -0.055844, 1.0]
     _thermal_conductivity_constants = [-0.0032865, 0.0011463, -1.55e-06,0,0]
     _vapor_pressure_constants = [123.22, -12620, -13.986, 3.93e-06, 2.0]
@@ -63,6 +66,9 @@ class _13Butanediol(Component):
     def specific_heat(self) -> SpecificHeat:
         if self._specific_heat is not None:
             return self._specific_heat
+        cp_gas = self._ideal_gas_specific_heat()
+        if cp_gas is not None:
+            return cp_gas
         # Liquid: Perry's 8th ed., Table 2-153, Eq. (2), J/(kmol K):
         # Cp = C1^2/t + C2 - 2*C1*C3*t - C1*C4*t^2 - C3^2*t^3/3 - C3*C4*t^4/2 - C4^2*t^5/5
         # with t = 1 - T/Tc. Gives the table's 0.6251E5 at 196.15 K and 5.2437E5 at 670 K.

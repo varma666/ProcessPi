@@ -51,6 +51,9 @@ class MalonicAcid(Component):
 
     _density_constants = [0.84266, 0.217, 805.0, 0.28571]
     _specific_heat_constants = [157850, -41.619, 0.42817, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 191, Malonic acid).
+    _ideal_gas_heat_capacity_constants = [0.49522E5, 1.8718E5, 1.2958E3, 1.4852E5, 569.96]
     _viscosity_constants = [-19.834, 2784.5, 1.1161, 0, 0]
     _thermal_conductivity_constants = [0.28918, -0.0002614, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [122.92, -16258, -13.113, 2.06e-18, 6.0]

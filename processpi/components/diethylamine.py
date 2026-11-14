@@ -51,6 +51,9 @@ class DiethylAmine(Component):
 
     _density_constants = [0.85379, 0.25675, 496.6, 0.27027]
     _specific_heat_constants = [101330,243.18,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 94, Diethyl amine).
+    _ideal_gas_heat_capacity_constants = [0.9102E5, 2.674E5, 1.719E3, 1.7926E5, 794.94]
     _viscosity_constants = [-17.57, 1385.7, 0.85647,0,0]
     _thermal_conductivity_constants = [0.2587, -0.00054343, 4.21e-07,0,0]
     _vapor_pressure_constants = [49.314, -4949, -3.9256, 9.2e-18, 6.0]

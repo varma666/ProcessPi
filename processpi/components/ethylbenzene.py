@@ -51,6 +51,9 @@ class Ethylbenzene(Component):
 
     _density_constants = [0.70041, 0.26162, 617.15, 0.28454]
     _specific_heat_constants = [154040, -142.29, 0.80539, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 129, Ethylbenzene).
+    _ideal_gas_heat_capacity_constants = [0.7844E5, 3.399E5, 1.559E3, 2.426E5, 702]
     _viscosity_constants = [-13.563, 1208.6, 0.377,0.0, 0.0]
     _thermal_conductivity_constants = [0.1999, -0.00023823, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [89.063, -7733.30, -9.917, 5.99e-06, 2.0]

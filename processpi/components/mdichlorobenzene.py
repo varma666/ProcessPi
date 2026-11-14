@@ -51,6 +51,9 @@ class Mdichlorobenzene(Component):
 
     _density_constants = [0.74495, 0.26147, 683.95, 0.31526]
     _specific_heat_constants = [114880, 187.25, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 85, m-Dichlorobenzene).
+    _ideal_gas_heat_capacity_constants = [0.7E5, 2.0746E5, 1.3664E3, 1.5983E5, 620.16]
     _viscosity_constants = [-1.9265, 387.67, -1.1335, 150000000000000.0, -6.0]
     _thermal_conductivity_constants = [0.16694, -0.0001667, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [53.187, -6827.50, -4.3233, 2.31e-18, 6.0]

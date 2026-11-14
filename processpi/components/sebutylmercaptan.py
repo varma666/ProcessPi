@@ -51,6 +51,9 @@ class SeButylmercaptan(Component):
 
     _density_constants = [0.89137, 0.27365, 554.0, 0.2953]
     _specific_heat_constants = [197890,-491.54,1.7219,-0.0012499,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 42, sec-Butyl mercaptan).
+    _ideal_gas_heat_capacity_constants = [0.92367E5, 2.5166E5, 1.6109E3, 1.5641E5, 739.2]
     _viscosity_constants = [-10.903, 932.82, 0.023034,0,0]
     _thermal_conductivity_constants = [0.2069, -0.0002568,0,0,0]
     _vapor_pressure_constants = [60.649, -5785.90, -5.6113, 1.59e-17, 6.0]

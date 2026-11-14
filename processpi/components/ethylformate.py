@@ -51,6 +51,9 @@ class EthylFormate(Component):
 
     _density_constants = [1.1343, 0.26168, 508.4, 0.2791]
     _specific_heat_constants = [80000, 223.6, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 140, Ethyl formate).
+    _ideal_gas_heat_capacity_constants = [0.537E5, 1.886E5, 1.207E3, 0.864E5, 496]
     _viscosity_constants = [-9.8417, 876.4, -0.1708, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2587, -0.00033, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [73.833, -5817.0, -7.809, 6.32e-06, 2.0]

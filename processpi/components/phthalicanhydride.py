@@ -51,6 +51,9 @@ class PhthalicAnhydride(Component):
 
     _density_constants = [0.5393, 0.22704, 791.0, 0.248]
     _specific_heat_constants = [145400, 252.4, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1000.15 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 293, Phthalic anhydride).
+    _ideal_gas_heat_capacity_constants = [0.7364E5, 2.544E5, 1.0852E3, 0.808E5, 573]
     _viscosity_constants = [195.25, -11072.0, -29.084, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22946, -0.00021345, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [126.5, -12551, -15.002, 7.75e-06, 2.0]

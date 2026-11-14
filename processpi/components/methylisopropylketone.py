@@ -51,6 +51,9 @@ class MethylisopropylKetone(Component):
 
     _density_constants = [0.86567, 0.26836, 553.4, 0.28364]
     _specific_heat_constants = [191170, -331.04, 0.98445, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 229, Methylisopropyl ketone).
+    _ideal_gas_heat_capacity_constants = [1.5914E5, 1.764E5, 1.2076E3, -407.4E5, 10.503]
     _viscosity_constants = [-11.272, 1048.9, 0.00030493, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2332, -0.0003044, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [45.242, -5324.40, -3.2551, 3.04e-18, 6.0]

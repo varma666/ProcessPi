@@ -51,6 +51,9 @@ class Fluoroethane(Component):
 
     _density_constants = [1.6525, 0.27099, 375.31, 0.2442]
     _specific_heat_constants = [85663, -118.56, 0.55459, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 151, Fluoroethane).
+    _ideal_gas_heat_capacity_constants = [0.44373E5, 1.3119E5, 1.6422E3, 0.85441E5, 738.77]
     _viscosity_constants = [-10.758, 558.81, -0.016459, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2595, -0.0005008, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [56.639, -3576.70, -5.5801, 9.9e-06, 2.0]

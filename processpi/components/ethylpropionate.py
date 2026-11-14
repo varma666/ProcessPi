@@ -51,6 +51,9 @@ class EthylPropionate(Component):
 
     _density_constants = [0.7405, 0.25563, 546.0, 0.2795]
     _specific_heat_constants = [76330, 400.1, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 146, Ethyl propionate).
+    _ideal_gas_heat_capacity_constants = [0.937E5, 2.829E5, 1.648E3, 2.155E5, 724.7]
     _viscosity_constants = [-8.9215, 950.8, -0.32687, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2137, -0.0002515, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [105.64, -8007, -12.477, 9e-06, 2.0]

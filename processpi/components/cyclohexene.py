@@ -51,6 +51,9 @@ class Cyclohexene(Component):
 
     _density_constants = [0.92997, 0.27056, 560.4, 0.28943]
     _specific_heat_constants = [105850,-60,0.68,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 150-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 68, Cyclohexene).
+    _ideal_gas_heat_capacity_constants = [0.58171E5, 3.1717E5, 1.5435E3, 2.1273E5, 701.62]
     _viscosity_constants = [-11.641, 1154.3, 0.066511,0,0]
     _thermal_conductivity_constants = [0.20926, -0.00026037,0,0,0]
     _vapor_pressure_constants = [88.184, -6624.90, -10.059, 8.26e-06, 2.0]

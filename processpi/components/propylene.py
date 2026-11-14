@@ -51,6 +51,9 @@ class Propylene(Component):
 
     _density_constants = [1.4403, 0.26852, 364.85, 0.28775]
     _specific_heat_constants = [114140, -343.72, 1.0905, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 130-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 305, Propylene).
+    _ideal_gas_heat_capacity_constants = [0.43852E5, 1.506E5, 1.3988E3, 0.74754E5, 616.46]
     _viscosity_constants = [-92.082, 1907.3, 15.639, -0.043098, 1.0]
     _thermal_conductivity_constants = [0.24719, -0.00048824, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [43.905, -3097.80, -3.4425, 1e-16, 6.0]

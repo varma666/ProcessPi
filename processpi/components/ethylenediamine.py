@@ -51,6 +51,9 @@ class Ethylenediamine(Component):
 
     _density_constants = [0.7842, 0.20702, 593.0, 0.20254]
     _specific_heat_constants = [184440, -150.2, 0.37044, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 136, Ethylenediamine).
+    _ideal_gas_heat_capacity_constants = [0.7286E5, 1.8436E5, 1.688E3, 1.199E5, 767.3]
     _viscosity_constants = [-53.908, 4030.8, 5.9704, 0.0, 0.0]
     _thermal_conductivity_constants = [0.36434, -0.0004433, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [73.51, -7572.70, -7.1435, 1.21e-17, 6.0]

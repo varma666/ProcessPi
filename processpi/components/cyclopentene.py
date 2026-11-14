@@ -51,6 +51,9 @@ class Cyclopentene(Component):
 
     _density_constants = [1.1035, 0.27035, 507.0, 0.28699]
     _specific_heat_constants = [125380,-349.7,1.143,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 150-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 70, Cyclopentene).
+    _ideal_gas_heat_capacity_constants = [0.48074E5, 2.5159E5, 1.5803E3, 1.7454E5, 718.37]
     _viscosity_constants = [-4.1508, 599.77, -1.0308,0,0]
     _thermal_conductivity_constants = [0.21776, -0.00027783,0,0,0]
     _vapor_pressure_constants = [67.952, -5187.50, -7.0785, 6.82e-06, 2.0]

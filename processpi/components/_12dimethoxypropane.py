@@ -51,6 +51,9 @@ class _12Dimethoxypropane(Component):
 
     _density_constants = [0.76327, 0.26742, 543.0, 0.28571]
     _specific_heat_constants = [199930, -191.5, 0.87664, 0.0, 0.0, 2.0145, 2.4734]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 104, 1,2-Dimethoxypropane).
+    _ideal_gas_heat_capacity_constants = [1.0113E5, 3.2393E5, 1.5611E3, 2.1501E5, 689.3]
     _viscosity_constants = [-10.631, 1086.4, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22998, -0.00030372, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [62.097, -6174.90, -5.715, 1.23e-17, 6.0]

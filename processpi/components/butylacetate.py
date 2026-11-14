@@ -51,6 +51,9 @@ class ButylAcetate(Component):
 
     _density_constants = [0.67794, 0.2637, 575.4, 0.29318]
     _specific_heat_constants = [111850,384.52,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 39, Butyl acetate).
+    _ideal_gas_heat_capacity_constants = [1.1684E5, 3.769E5, 1.956E3, 2.818E5, 811.2]
     _viscosity_constants = [-17.488, 1478.2, 0.91828,0,0]
     _thermal_conductivity_constants = [0.21721, -0.00026563,0,0,0]
     _vapor_pressure_constants = [122.82, -9253.20, -14.99, 1.05e-05, 2.0]

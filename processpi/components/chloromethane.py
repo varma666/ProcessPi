@@ -17,6 +17,9 @@ class ChloroMethane(Component):
     _critical_acentric_factor = 0.1531  # Placeholder for critical acentric factor
     _density_constants = [1.817,0.25877,416.25,0.2833]
     _specific_heat_constants = [96910,-207.9,0.37456,0.000488,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 150-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 56, Chloromethane).
+    _ideal_gas_heat_capacity_constants = [0.3409E5, 0.7246E5, 1.723E3, 0.448E5, 780.5]
     _viscosity_constants = [-25.132,1381.9,2.0811,-4.50E-27,10] 
     _thermal_conductivity_constants = [0.41067, -0.0008478,0,0,0]
     _vapor_pressure_constants = [64.697,-4048.10,-6.8066,1.04E-05, 2] 

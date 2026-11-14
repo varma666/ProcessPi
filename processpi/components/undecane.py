@@ -51,6 +51,9 @@ class Undecane(Component):
 
     _density_constants = [0.36703, 0.24876, 639.0, 0.28571]
     _specific_heat_constants = [293980, -114.98, 0.96936, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 336, Undecane).
+    _ideal_gas_heat_capacity_constants = [1.9529E5, 6.0998E5, 1.7087E3, 4.1302E5, 775.4]
     _viscosity_constants = [52.176, -4951.9, -8.5676, 0.0, -2.0]
     _thermal_conductivity_constants = [0.20515, -0.00023933, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [131.0, -11143, -15.855, 8.19e-06, 2.0]

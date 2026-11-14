@@ -19,6 +19,9 @@ class Butane(Component):
     _critical_acentric_factor = 0.2002  # Placeholder for critical acentric factor
     _density_constants = [1.0677, 0.27188,425.12,0.28688]
     _specific_heat_constants = [191030,-1675,12.5,-0.03874,4.61E-05]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 31, Butane).
+    _ideal_gas_heat_capacity_constants = [0.7134E5, 2.43E5, 1.63E3, 1.5033E5, 730.42]
     _viscosity_constants = [-7.2471,534.82,-0.57469,-4.66E-27, 0] 
     _thermal_conductivity_constants = [0.27349, -0.00071267,5.16E-07,0,0]
     _vapor_pressure_constants = [66.343,-4363.20,-7.046,9.45E-06, 2] 

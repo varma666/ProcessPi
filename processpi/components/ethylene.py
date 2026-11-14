@@ -19,6 +19,9 @@ class Ethylene(Component):
     _critical_acentric_factor = 0.0862  # Placeholder for critical acentric factor
     _density_constants = [2.0961,0.27657,282.34,0.29174]
     _specific_heat_constants = [247390,-4428,40.936,-0.1697,0.00026816]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 60-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 135, Ethylene).
+    _ideal_gas_heat_capacity_constants = [0.3338E5, 0.9479E5, 1.596E3, 0.551E5, 740.8]
     _viscosity_constants = [1.8878,78.865,-2.1554,0,0] 
     _thermal_conductivity_constants = [0.4194,-0.001591,0.000001306,0,0]
     _vapor_pressure_constants = [53.963,-2443,-5.5643,0.000019079,2] 

@@ -51,6 +51,9 @@ class OxalicAcid(Component):
 
     _density_constants = [1.0501, 0.215, 804.0, 0.28571]
     _specific_heat_constants = [175510, -381.36, 0.64623, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1000.1 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 274, Oxalic acid).
+    _ideal_gas_heat_capacity_constants = [0.25751E5, 1.1734E5, 2.7969E3, 0.65788E5, 878.91]
     _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.3074, -0.00028101, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [122.04, -16050, -12.986, 2.09e-18, 6.0]

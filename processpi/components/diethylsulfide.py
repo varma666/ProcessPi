@@ -51,6 +51,9 @@ class DiethylSulfide(Component):
 
     _density_constants = [0.82227, 0.26314, 557.15, 0.27369]
     _specific_heat_constants = [238520,-1038.40,4.0587,-0.0044691,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 96, Diethyl sulfide).
+    _ideal_gas_heat_capacity_constants = [0.91273E5, 2.41E5, 1.6686E3, 1.652E5, 771.08]
     _viscosity_constants = [-5.135, 667.5, -0.8553,0,0]
     _thermal_conductivity_constants = [0.21065, -0.0002623,0,0,0]
     _vapor_pressure_constants = [46.705, -5177.40, -3.5985, 1.71e-06, 2.0]

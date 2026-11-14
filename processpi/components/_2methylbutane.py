@@ -51,6 +51,9 @@ class _2Methylbutane(Component):
 
     _density_constants = [0.91991, 0.27815, 460.4, 0.28667]
     _specific_heat_constants = [108300, 146.0, -0.292, 0.00151, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 202, 2-Methylbutane).
+    _ideal_gas_heat_capacity_constants = [0.746E5, 3.265E5, 1.545E3, 1.923E5, 666.7]
     _viscosity_constants = [-12.596, 889.11, 0.20469, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21246, -0.00033581, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [71.308, -4976, -7.7169, 8.73e-06, 2.0]

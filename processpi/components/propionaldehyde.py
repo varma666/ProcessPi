@@ -51,6 +51,9 @@ class Propionaldehyde(Component):
 
     _density_constants = [1.296, 0.26439, 504.4, 0.29471]
     _specific_heat_constants = [99306, 115.73, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 299, Propionaldehyde).
+    _ideal_gas_heat_capacity_constants = [0.7174E5, 1.914E5, 2.0144E3, 1.1708E5, 930.6]
     _viscosity_constants = [-9.9177, 839.53, -0.16735, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2498, -0.00030075, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [80.581, -5896.10, -8.9301, 8.22e-06, 2.0]

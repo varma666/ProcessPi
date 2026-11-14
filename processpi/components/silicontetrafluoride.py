@@ -51,6 +51,9 @@ class SiliconTetrafluoride(Component):
 
     _density_constants = [1.1945, 0.24128, 259.0, 0.16693]
     _specific_heat_constants = [829380, -7311.50, 19.203, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 311, Silicon tetrafluoride).
+    _ideal_gas_heat_capacity_constants = [0.3681E5, 0.71245E5, 0.65201E3, 0.46721E5, 286.03]
     _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [272.85, -9548.90, -40.089, 6.37e-15, 6.0]

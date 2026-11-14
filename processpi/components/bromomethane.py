@@ -51,6 +51,9 @@ class Bromomethane(Component):
 
     _density_constants = [1.6762, 0.26141, 467.0, 0.28402]
     _specific_heat_constants = [129730,-596.54,2.16,-0.0024234,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 28, Bromomethane).
+    _ideal_gas_heat_capacity_constants = [0.3377E5, 0.715E5, 1.578E3, 0.4175E5, 691.4]
     _viscosity_constants = [-8.103, 570.8, -0.32958,0,0]
     _thermal_conductivity_constants = [0.1912, -0.000299,0,0,0]
     _vapor_pressure_constants = [72.586, -4698.60, -7.9966, 1.16e-05, 2.0]

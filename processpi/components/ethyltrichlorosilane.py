@@ -51,6 +51,9 @@ class Ethyltrichlorosilane(Component):
 
     _density_constants = [0.58579, 0.24246, 559.95, 0.29509]
     _specific_heat_constants = [105150, 85.318, 0.46693, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 167-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 148, Ethyltrichlorosilane).
+    _ideal_gas_heat_capacity_constants = [0.85105E5, 1.0378E5, 0.59737E3, 0.94745E5, 2122.7]
     _viscosity_constants = [7.8744, -106.34, -2.6884, 42800000000000.0, -6.0]
     _thermal_conductivity_constants = [0.19769, -0.00017713, -1.54e-07, 0.0, 0.0]
     _vapor_pressure_constants = [62.614, -6148.20, -5.84, 1.09e-17, 6.0]
