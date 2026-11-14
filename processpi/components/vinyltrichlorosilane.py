@@ -51,6 +51,9 @@ class VinylTrichlorosilane(Component):
 
     _density_constants = [0.59595, 0.24314, 543.15, 0.24856]
     _specific_heat_constants = [49516, 420.35, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 341, Vinyl trichlorosilane).
+    _ideal_gas_heat_capacity_constants = [0.84894E5, 1.1471E5, 1.38E3, 0.9E5, 644.61]
     _viscosity_constants = [-10.37, 823.31, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21831, -0.00029122, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [54.571, -5561.50, -4.712, 1.07e-17, 6.0]

@@ -51,6 +51,9 @@ class _2Heptanone(Component):
 
     _density_constants = [0.58247, 0.25279, 611.4, 0.29818]
     _specific_heat_constants = [265040, -375.68, 1.0024, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 150-1200 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 165, 2-Heptanone).
+    _ideal_gas_heat_capacity_constants = [1.2507E5, 2.148E5, 0.6912E3, 1.619E5, 1759.3]
     _viscosity_constants = [-13.929, 1321.9, 0.40382, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2108, -0.000246, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [75.494, -7896.50, -7.5047, 8.91e-18, 6.0]

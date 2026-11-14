@@ -51,6 +51,9 @@ class MethacrylicAcid(Component):
 
     _density_constants = [0.87025, 0.24383, 662.0, 0.28571]
     _specific_heat_constants = [146290, -58.59, 0.3582, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1200.1 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 192, Methacrylic acid).
+    _ideal_gas_heat_capacity_constants = [0.7251E5, 2.089E5, 1.8516E3, 1.6483E5, 798.43]
     _viscosity_constants = [-14.527, 1497.7, 0.51747, 0, 0]
     _thermal_conductivity_constants = [0.2306, -0.00025201, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [109.53, -10410, -12.289, 3.2e-06, 2.0]

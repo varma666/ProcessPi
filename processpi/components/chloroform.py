@@ -17,6 +17,9 @@ class Chloroform(Component):
     _critical_acentric_factor = 0.2219  # Placeholder for critical acentric factor
     _density_constants = [1.0841,0.2581,536.4,0.2741]
     _specific_heat_constants = [124850,-166.34,0.43209,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 55, Chloroform).
+    _ideal_gas_heat_capacity_constants = [0.3942E5, 0.6573E5, 0.928E3, 0.493E5, 399.6]
     _viscosity_constants = [-14.109,1049.2,0.5377,0,0] 
     _thermal_conductivity_constants = [0.1778, -0.0002023,0,0,0]
     _vapor_pressure_constants = [146.43,-7792.30,-20.614,2.46E-02, 1] 

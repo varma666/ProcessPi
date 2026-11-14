@@ -51,6 +51,9 @@ class _3Pentanone(Component):
 
     _density_constants = [0.71811, 0.24129, 560.95, 0.27996]
     _specific_heat_constants = [193020, -176.43, 0.5669, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 284, 3-Pentanone).
+    _ideal_gas_heat_capacity_constants = [0.96896E5, 2.4907E5, 1.4177E3, 1.301E5, 646.7]
     _viscosity_constants = [-2.8695, 596.32, -1.2025,0,0]
     _thermal_conductivity_constants = [0.21569, -0.00024081,0,0,0]
     _vapor_pressure_constants = [44.286, -5415.10, -3.0913, 1.86e-18, 6.0]

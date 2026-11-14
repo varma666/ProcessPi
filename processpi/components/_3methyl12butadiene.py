@@ -51,6 +51,9 @@ class _3Methyl12Butadiene(Component):
 
     _density_constants = [0.84623, 0.24625, 490.0, 0.29041]
     _specific_heat_constants = [135370, -133.34, 0.63868, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 150-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 201, 3-Methyl-1,2-butadiene).
+    _ideal_gas_heat_capacity_constants = [0.671E5, 2.222E5, 1.421E3, 1.194E5, 614.7]
     _viscosity_constants = [-10.481, 648.37, -0.041947, 0.0, 0.0]
     _thermal_conductivity_constants = [0.1983, -0.0002822, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [66.575, -5213.40, -6.7693, 4.81e-06, 2.0]

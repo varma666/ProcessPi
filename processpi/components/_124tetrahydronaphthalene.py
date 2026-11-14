@@ -51,6 +51,9 @@ class _1234Tetrahydronaphthalene(Component):
 
     _density_constants = [0.67717, 0.27772, 720.0, 0.2878]
     _specific_heat_constants = [81760, 455.38, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 321, 1,2,3,4-Tetrahydronaphthalene).
+    _ideal_gas_heat_capacity_constants = [0.8145E5, 4.395E5, 1.471E3, 3.065E5, 666.4]
     _viscosity_constants = [-11.167, 1193.2, 0.096226, 960000000000.0, -5.0]
     _thermal_conductivity_constants = [0.14563, -5.36e-05,0,0,0]
     _vapor_pressure_constants = [137.23, -10620, -17.908, 0.0145, 1.0]

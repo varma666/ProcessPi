@@ -51,6 +51,9 @@ class Formaldehyde(Component):
 
     _density_constants = [1.9415, 0.22309, 408.0, 0.28571]
     _specific_heat_constants = [61900, 28.3, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 153, Formaldehyde).
+    _ideal_gas_heat_capacity_constants = [0.3327E5, 0.49542E5, 1.8666E3, 0.28075E5, 934.9]
     _viscosity_constants = [-11.24, 751.69, -0.024579, 0.0, 0.0]
     _thermal_conductivity_constants = [0.37329, -0.00065, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [101.51, -4917.20, -13.765, 0.022, 1.0]

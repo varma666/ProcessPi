@@ -51,6 +51,9 @@ class Dichloromethane(Component):
 
     _density_constants = [1.3897, 0.25678, 510.0, 0.2902]
     _specific_heat_constants = [98968,-62.9410,0.23265,0,0,]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 90, Dichloromethane).
+    _ideal_gas_heat_capacity_constants = [0.3628E5, 0.6804E5, 1.256E3, 0.4275E5, 548]
     _viscosity_constants = [-13.071, 940.03, 0.3733,0,0]
     _thermal_conductivity_constants = [0.23847, -0.00033366,0,0,0]
     _vapor_pressure_constants = [101.6, -6541.60, -12.247, 1.23e-05, 2.0]

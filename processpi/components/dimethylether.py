@@ -51,6 +51,9 @@ class DimethylEther(Component):
 
     _density_constants = [1.5693, 0.2679, 400.1, 0.2882]
     _specific_heat_constants = [110100,-157.47,0.51853,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 112, Dimethyl ether).
+    _ideal_gas_heat_capacity_constants = [0.5148E5, 1.442E5, 1.6034E3, 0.7747E5, 725.4]
     _viscosity_constants = [-10.62, 448.99, 8.3967e-05,0,0]
     _thermal_conductivity_constants = [0.31174, -0.0005638,0,0,0]
     _vapor_pressure_constants = [44.704, -3525.60, -3.4444, 5.46e-17, 6.0]

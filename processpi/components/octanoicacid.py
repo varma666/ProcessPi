@@ -51,6 +51,9 @@ class OctanoicAcid(Component):
 
     _density_constants = [0.48251, 0.25196, 694.26, 0.26842]
     _specific_heat_constants = [205260, 44.392, 0.8956, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 266, Octanoic acid).
+    _ideal_gas_heat_capacity_constants = [1.4082E5, 4.3436E5, 1.4662E3, 2.7687E5, 659.38]
     _viscosity_constants = [-60.795, 4617.8, 7.028, 0.0, 0.0]
     _thermal_conductivity_constants = [0.203, -0.0002, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [140.16, -14813, -16.004, 6.42e-18, 6.0]

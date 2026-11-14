@@ -51,6 +51,9 @@ class Methyldichlorosilane(Component):
 
     _density_constants = [0.97608, 0.28209, 483.0, 0.22529]
     _specific_heat_constants = [27030, 413.0, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 220, Methyldichlorosilane).
+    _ideal_gas_heat_capacity_constants = [0.7283E5, 1.0307E5, 1.5429E3, 0.7811E5, 668.94]
     _viscosity_constants = [-10.517, 745.32, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21956, -0.00032153, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [79.788, -5420, -9.0702, 1.15e-05, 2.0]

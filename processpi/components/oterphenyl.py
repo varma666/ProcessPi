@@ -51,6 +51,9 @@ class Oterphenyl(Component):
 
     _density_constants = [0.3448, 0.25116, 857.0, 0.29268]
     _specific_heat_constants = [182900, 635.09, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 318, o-Terphenyl).
+    _ideal_gas_heat_capacity_constants = [2.0719E5, 6.2668E5, 2.4044E3, 6.345E5, 967.71]
     _viscosity_constants = [-215.09, 11612.0, 31.849, -0.026882, 1.0]
     _thermal_conductivity_constants = [0.16853, -0.00010817,0,0,0]
     _vapor_pressure_constants = [110.52, -14045, -11.861, 2.21e-18, 6.0]

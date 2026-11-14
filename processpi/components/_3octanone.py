@@ -51,6 +51,9 @@ class _3Octanone(Component):
 
     _density_constants = [0.5108, 0.25386, 627.7, 0.26735]
     _specific_heat_constants = [289980, -417.27, 1.2218, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 270, 3-Octanone).
+    _ideal_gas_heat_capacity_constants = [1.4952E5, 4.4103E5, 0.80211E3, -2.0958E5, 981.95]
     _viscosity_constants = [-20.804, 1834.6, 1.3403, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21732, -0.00024969, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [72.382, -8054.80, -7.0002, 5.83e-18, 6.0]

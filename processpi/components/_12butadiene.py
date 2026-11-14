@@ -51,6 +51,9 @@ class _12Butadiene(Component):
 
     _density_constants = [1.187, 0.26114, 452.0, 0.3065]
     _specific_heat_constants = [135150,-311.14,0.97007,-0.0001523,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 29, 1,2-Butadiene).
+    _ideal_gas_heat_capacity_constants = [0.575E5, 1.6476E5, 1.527E3, 0.99E5, 677.3]
     _viscosity_constants = [-10.143, 472.79, -0.028241,0,0]
     _thermal_conductivity_constants = [0.21966, -0.0003436,0,0,0]
     _vapor_pressure_constants = [39.714, -3769.90, -2.6407, 6.94e-18, 6.0]

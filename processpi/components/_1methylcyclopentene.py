@@ -51,6 +51,9 @@ class _1Methylcyclopentene(Component):
 
     _density_constants = [0.88824, 0.26914, 542.0, 0.27874]
     _specific_heat_constants = [53271, 327.92, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 218, 1-Methylcyclopentene).
+    _ideal_gas_heat_capacity_constants = [0.69411E5, 3.0209E5, 1.6903E3, 2.1209E5, 781.56]
     _viscosity_constants = [-4.8515, 679.07, -0.93238, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20023, -0.00025581, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [52.732, -5286.90, -4.4509, 1.09e-17, 6.0]

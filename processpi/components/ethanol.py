@@ -20,6 +20,9 @@ class Ethanol(Component):
     _critical_acentric_factor = 0.6436  # Placeholder for critical acentric factor
     _density_constants = [1.6288, 0.27469, 514, 0.23178]
     _specific_heat_constants = [102640,-139.63,-0.030341,0.0020386,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 126, Ethanol).
+    _ideal_gas_heat_capacity_constants = [0.492E5, 1.4577E5, 1.6628E3, 0.939E5, 744.7]
     _viscosity_constants = [7.875, 781.98, -3.0418, 0, 0] 
     _thermal_conductivity_constants = [0.2468, -0.000264, 0,0,0]
     _vapor_pressure_constants = [73.304, -7122.3, -7.1424, 0.0000028853, 2] 

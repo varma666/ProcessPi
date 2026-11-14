@@ -51,6 +51,9 @@ class _1Undecanol(Component):
 
     _density_constants = [0.33113, 0.23676, 703.9, 0.2762]
     _specific_heat_constants = [129450, -3039.50, 27.927, -0.061847, 4.3e-05]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 337, 1-Undecanol).
+    _ideal_gas_heat_capacity_constants = [1.859E5, 5.869E5, 1.5718E3, 4.326E5, 722.7]
     _viscosity_constants = [-69.778, 5905.2, 8.0214,0,0]
     _thermal_conductivity_constants = [0.21211, -0.00021815,0,0,0]
     _vapor_pressure_constants = [182.571, -17112, -22.125, 1.13e-17, 6.0]

@@ -51,6 +51,9 @@ class _1Heptanol(Component):
 
     _density_constants = [0.55687, 0.24725, 632.3, 0.31471]
     _specific_heat_constants = [2416800, -26105, 110.03, -0.19172, 0.00011968]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 162, 1-Heptanol).
+    _ideal_gas_heat_capacity_constants = [1.2215E5, 3.991E5, 1.58E3, 2.835E5, 717.7]
     _viscosity_constants = [-66.654, 5325.8, 7.66, -2.25e-28, 9.9041]
     _thermal_conductivity_constants = [0.2239, -0.000226, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [147.41, -13466, -17.353, 1.13e-17, 6.0]

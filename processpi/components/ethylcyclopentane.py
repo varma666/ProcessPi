@@ -51,6 +51,9 @@ class Ethylcyclopentane(Component):
 
     _density_constants = [0.71751, 0.26903, 569.5, 0.27733]
     _specific_heat_constants = [178520, -518.35, 2.3255, -0.0016818, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 134, Ethylcyclopentane).
+    _ideal_gas_heat_capacity_constants = [0.82052E5, 4.0342E5, 1.567E3, 2.6697E5, 715.52]
     _viscosity_constants = [-6.894, 818.6, -0.5941, 0.0, 0.0]
     _thermal_conductivity_constants = [0.18334, -0.0002228, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [88.671, -7012.70, -10.045, 7.46e-06, 2.0]

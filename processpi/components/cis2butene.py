@@ -51,6 +51,9 @@ class Cis2Butene(Component):
 
     _density_constants = [1.1591, 0.27085, 435.5, 0.28116]
     _specific_heat_constants = [126680,-65.47,-0.64,0.002912,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 37, cis-2-Butene).
+    _ideal_gas_heat_capacity_constants = [0.5765E5, 2.115E5, 1.6299E3, 1.2872E5, 739.1]
     _viscosity_constants = [-10.346, 522.3, -0.011847,0,0]
     _thermal_conductivity_constants = [0.21378, -0.00035445,0,0,0]
     _vapor_pressure_constants = [72.541, -4691.20, -7.9776, 1.04e-05, 2.0]

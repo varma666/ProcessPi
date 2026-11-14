@@ -51,6 +51,9 @@ class DimethylTerephthalate(Component):
 
     _density_constants = [0.50824, 0.26885, 772.0, 0.2612]
     _specific_heat_constants = [190020, 431.04, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1000.15 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 119, Dimethyl terephthalate).
+    _ideal_gas_heat_capacity_constants = [1.174E5, 5.32E5, 2.105E3, 4.1E5, 818]
     _viscosity_constants = [-11.488, 1922.6, 0, 0, 0]
     _thermal_conductivity_constants = [0.21593, -0.00020805, 0, 0, 0]
     _vapor_pressure_constants = [43.541, -8204.80, -2.7519, 1.05e-18, 6.0]

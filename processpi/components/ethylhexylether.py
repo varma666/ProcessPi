@@ -51,6 +51,9 @@ class EthylhexylEther(Component):
 
     _density_constants = [0.55729, 0.2714, 583.0, 0.29538]
     _specific_heat_constants = [146040, 458.22, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1200 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 142, Ethylhexyl ether).
+    _ideal_gas_heat_capacity_constants = [1.634E5, 4.5119E5, 1.7532E3, 3.1032E5, 809.75]
     _viscosity_constants = [-11.311, 1337.2, -0.02982, 0.0, 0.0]
     _thermal_conductivity_constants = [0.19356, -0.00024102, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [77.523, -7978.80, -7.7757, 1.01e-17, 6.0]

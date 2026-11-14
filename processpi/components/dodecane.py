@@ -51,6 +51,9 @@ class Dodecane(Component):
 
     _density_constants = [0.33267, 0.24664, 658.0, 0.28571]
     _specific_heat_constants = [508210, -1368.70, 3.1015, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 123, Dodecane).
+    _ideal_gas_heat_capacity_constants = [2.1295E5, 6.633E5, 1.7155E3, 4.5161E5, 777.5]
     _viscosity_constants = [-7.8244, 1191.9, -0.49963, 3.96e+23, -10.0]
     _thermal_conductivity_constants = [0.2047, -0.0002326, 0, 0, 0]
     _vapor_pressure_constants = [137.47, -11976, -16.698, 8.09e-06, 2.0]

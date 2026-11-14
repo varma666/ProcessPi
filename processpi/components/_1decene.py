@@ -51,6 +51,9 @@ class _1Decene(Component):
 
     _density_constants = [0.43981, 0.25661, 616.6, 0.29148]
     _specific_heat_constants = [417440, -1616.50, 5.3948, -0.004348, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 77, 1-Decene).
+    _ideal_gas_heat_capacity_constants = [1.7101E5, 5.2089E5, 1.7265E3, 3.5935E5, 782.92]
     _viscosity_constants = [-15.868, 1434.8, 0.68071, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20237, -0.00024187, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [68.401, -7776.90, -6.4637, 6.38e-18, 6.0]

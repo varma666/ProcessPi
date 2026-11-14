@@ -51,6 +51,9 @@ class Acetylene(Component):
 
     _density_constants = [2.4507, 0.27448, 308.3, 0.28752]
     _specific_heat_constants = [-122020,3082.70,-15.894,0.02773,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 7, Acetylene).
+    _ideal_gas_heat_capacity_constants = [0.3199E5, 0.5424E5, 1.594E3, 0.4325E5, 607.1]
     _viscosity_constants = [6.224, -151.8, -2.6554,0,0]
     _thermal_conductivity_constants = [0.33363, -0.00083655,0,0,0]
     _vapor_pressure_constants = [39.63,-2552.20,-2.78, 2.39e-16, 6.0]

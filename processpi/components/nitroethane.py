@@ -51,6 +51,9 @@ class Nitroethane(Component):
 
     _density_constants = [1.0024, 0.23655, 593.0, 0.278]
     _specific_heat_constants = [187740, -497.6, 1.0691, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 248, Nitroethane).
+    _ideal_gas_heat_capacity_constants = [0.54619E5, 1.6492E5, 1.4803E3, 1.0635E5, 666.94]
     _viscosity_constants = [-4.438, 746.5, -0.9385, 0.0, 0.0]
     _thermal_conductivity_constants = [0.247, -0.0002814, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [75.632, -7202.30, -7.6464, 1.83e-17, 6.0]

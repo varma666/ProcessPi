@@ -51,6 +51,9 @@ class MethylPentylEther(Component):
 
     _density_constants = [0.71004, 0.26981, 546.49, 0.29974]
     _specific_heat_constants = [251890, -468.32, 1.2209, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 235, Methyl pentyl ether).
+    _ideal_gas_heat_capacity_constants = [0.94326E5, 3.5965E5, 1.3533E3, 2.0569E5, 599.92]
     _viscosity_constants = [-11.391, 1090.8, 1.08e-07, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21698, -0.00028998, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [61.907, -6188.90, -5.706, 1.18e-17, 6.0]

@@ -17,6 +17,9 @@ class FormicAcid(Component):
     _critical_acentric_factor = 0.3173  # Placeholder for critical acentric factor
     _density_constants = [1.938,0.24225,588,0.24435]
     _specific_heat_constants = [78060,71.54,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 155, Formic acid).
+    _ideal_gas_heat_capacity_constants = [0.3381E5, 0.7593E5, 1.1925E3, 0.318E5, 550]
     _viscosity_constants = [-48.529,3394.7,5.3903,0,0] 
     _thermal_conductivity_constants = [0.302,-0.000108,0,0,0]
     _vapor_pressure_constants = [50.323,-5378.2,-4.203,0.0000034697,2] 

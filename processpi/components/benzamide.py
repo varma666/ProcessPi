@@ -51,6 +51,9 @@ class Benzamide(Component):
 
     _density_constants = [0.7371, 0.25487, 824.0, 0.28571]
     _specific_heat_constants = [161440,260.66,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 15, Benzamide).
+    _ideal_gas_heat_capacity_constants = [1.9581E5, 1.7019E5, 1.3257E3, -37.417E5, 41.232]
     _viscosity_constants = [-12.632, 2668.2,0,0,0]
     _thermal_conductivity_constants = [0.28485, -0.00025225,0,0,0]
     _vapor_pressure_constants = [85.474, -11932, -8.3348, 1.2850E-18, 6]

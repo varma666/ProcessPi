@@ -51,6 +51,9 @@ class TriethylAmine(Component):
 
     _density_constants = [0.7035, 0.27386, 535.15, 0.2872]
     _specific_heat_constants = [111480, 368.13, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 328, Triethyl amine).
+    _ideal_gas_heat_capacity_constants = [1.2766E5, 2.5559E5, 0.80937E3, 1.4829E5, 2231.7]
     _viscosity_constants = [-3.7067, 585.78, -1.0926, 0.0, 0.0]
     _thermal_conductivity_constants = [0.1918, -0.0002453, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [56.55, -5681.90, -4.9815, 1.24e-17, 6.0]

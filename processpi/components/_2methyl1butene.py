@@ -51,6 +51,9 @@ class _2Methyl1Butene(Component):
 
     _density_constants = [0.91619, 0.26752, 465.0, 0.28164]
     _specific_heat_constants = [149510, -247.63, 0.91849, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 205, 2-Methyl-1-butene).
+    _ideal_gas_heat_capacity_constants = [0.87026E5, 2.5556E5, 1.7757E3, 1.7636E5, 807.82]
     _viscosity_constants = [-10.755, 705.48, -0.011113, 0.0, 0.0]
     _thermal_conductivity_constants = [0.19447, -0.0002901, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [93.131, -5525.40, -11.852, 0.0142, 1.0]

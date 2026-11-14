@@ -51,6 +51,9 @@ class MethylethylSulfide(Component):
 
     _density_constants = [1.067, 0.27102, 533.0, 0.29364]
     _specific_heat_constants = [161240, -288.61, 0.78179, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 273.16-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 223, Methylethyl sulfide).
+    _ideal_gas_heat_capacity_constants = [0.75083E5, 1.9577E5, 1.6424E3, 1.1949E5, 749.19]
     _viscosity_constants = [-10.842, 863.65, -0.00074603, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22136, -0.00028938, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [79.07, -6114.10, -8.631, 6.53e-06, 2.0]

@@ -51,6 +51,9 @@ class _3Methyl1Butanol(Component):
 
     _density_constants = [0.80828, 0.26783, 577.2, 0.23588]
     _specific_heat_constants = [247870, -1145, 3.4223, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 204, 3-Methyl-1-butanol).
+    _ideal_gas_heat_capacity_constants = [0.92165E5, 3.3371E5, 1.8365E3, 2.4645E5, 757.99]
     _viscosity_constants = [-25.882, 3359.4, 1.5787, 0.0, 0.0]
     _thermal_conductivity_constants = [0.17471, -0.0001256, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [121.85, -10976, -13.869, 1.43e-17, 6.0]

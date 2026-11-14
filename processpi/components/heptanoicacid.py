@@ -51,6 +51,9 @@ class HeptanoicAcid(Component):
 
     _density_constants = [0.53066, 0.24729, 677.3, 0.28289]
     _specific_heat_constants = [194570, -23.206, 0.88395, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 161, Heptanoic acid).
+    _ideal_gas_heat_capacity_constants = [1.3135E5, 2.3317E5, 0.67567E3, 1.824E5, 1846]
     _viscosity_constants = [-40.543, 3328.3, 4.1804,0,0]
     _thermal_conductivity_constants = [0.202, -0.0002, 0, 0, 0]
     _vapor_pressure_constants = [120.47, -13106, -13.31, 5.84e-18, 6.0]

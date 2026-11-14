@@ -51,6 +51,9 @@ class _12Dibromoethane(Component):
 
     _density_constants = [1.0132, 0.26634, 650.15, 0.28571]
     _specific_heat_constants = [200560, -491.44, 0.9187, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 82, 1,2-Dibromoethane).
+    _ideal_gas_heat_capacity_constants = [0.74906E5, 1.2725E5, 1.981E3, 0.9437E5, 845.2]
     _viscosity_constants = [-17.582, 1635.4, 0.9932, 0.0, 0.0]
     _thermal_conductivity_constants = [0.13622, -0.0001179, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [43.751, -5587.70, -3.0891, 8.27e-07, 2.0]

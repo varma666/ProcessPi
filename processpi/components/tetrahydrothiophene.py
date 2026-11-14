@@ -51,6 +51,9 @@ class Tetrahydrothiophene(Component):
 
     _density_constants = [1.1628, 0.28954, 631.95, 0.28674]
     _specific_heat_constants = [123300, -130.1, 0.6229, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 322, Tetrahydrothiophene).
+    _ideal_gas_heat_capacity_constants = [0.51848E5, 2.4535E5, 1.5018E3, 1.6871E5, 665.31]
     _viscosity_constants = [-10.843, 1165.2, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20414, -0.00021217, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [75.881, -6910.60, -7.9499, 4.43e-06, 2.0]

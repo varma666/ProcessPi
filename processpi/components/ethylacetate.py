@@ -19,6 +19,9 @@ class EthylAcetate(Component):
     _critical_acentric_factor = 0.3664  # Placeholder for critical acentric factor
     _density_constants = [0.8996,0.25856,523.3,0.278]
     _specific_heat_constants = [226230,-624.8,1.472,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 127, Ethyl acetate).
+    _ideal_gas_heat_capacity_constants = [0.9981E5, 2.0931E5, 2.0226E3, 1.803E5, 928.05]
     _viscosity_constants = [14.354,-154.6,-3.7887,0,0] 
     _thermal_conductivity_constants = [0.2501, -0.0003563,0,0,0]
     _vapor_pressure_constants = [66.824,-6227.60,-6.41,1.79E-17, 6] 

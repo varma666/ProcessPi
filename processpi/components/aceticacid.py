@@ -54,6 +54,9 @@ class AceticAcid(Component):
     # Constants for various property correlations
     _density_constants = [1.4486, 0.25892, 591.95, 0.2529]
     _specific_heat_constants = [139640,-320.8,0.8985,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 3, Acetic acid).
+    _ideal_gas_heat_capacity_constants = [0.402E5, 1.3675E5, 1.262E3, 0.7003E5, 569.7]
     _viscosity_constants = [-9.03, 1212.3, -0.322, 0, 0] 
     _thermal_conductivity_constants = [0.214, -0.0001834, 0,0,0]
     _vapor_pressure_constants = [53.27, -6304.5, -4.2985, 8.8865E-18, 6] 

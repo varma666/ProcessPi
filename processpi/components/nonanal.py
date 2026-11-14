@@ -51,6 +51,9 @@ class Nonanal(Component):
 
     _density_constants = [0.49587, 0.26135, 658.0, 0.30736]
     _specific_heat_constants = [136820, 531.29, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 255, Nonanal).
+    _ideal_gas_heat_capacity_constants = [1.7347E5, 4.5115E5, 1.712E3, 3.3256E5, 810.96]
     _viscosity_constants = [-12.94, 1257.6, 0.37191, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21523, -0.0002799, 9.57e-08, 0.0, 0.0]
     _vapor_pressure_constants = [337.71, -18506, -50.224, 0.0473, 1.0]

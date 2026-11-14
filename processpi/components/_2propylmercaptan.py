@@ -51,6 +51,9 @@ class _2PropylMercaptan(Component):
 
     _density_constants = [1.093, 0.27762, 517.0, 0.29781]
     _specific_heat_constants = [138390, -117.11, 0.47059, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 307, 2-Propyl mercaptan).
+    _ideal_gas_heat_capacity_constants = [0.73815E5, 1.9529E5, 1.5954E3, 1.2356E5, 730.5]
     _viscosity_constants = [-5.7244, 638.2, -0.76415,0,0]
     _thermal_conductivity_constants = [0.21706, -0.00028952,0,0,0]
     _vapor_pressure_constants = [60.43, -5276.90, -5.6572, 2.6e-17, 6.0]

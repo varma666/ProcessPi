@@ -51,6 +51,9 @@ class Methylcyclohexane(Component):
 
     _density_constants = [0.73109, 0.26971, 572.1, 0.29185]
     _specific_heat_constants = [131340, -63.1, 0.8125, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 213, Methylcyclohexane).
+    _ideal_gas_heat_capacity_constants = [0.9227E5, 4.115E5, 1.6504E3, 2.9006E5, 779.48]
     _viscosity_constants = [-11.358, 1213.1, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.1791, -0.0002291, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [92.684, -7080.80, -10.695, 8.14e-06, 2.0]

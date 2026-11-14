@@ -51,6 +51,9 @@ class Furan(Component):
 
     _density_constants = [1.1339, 0.24741, 490.15, 0.2612]
     _specific_heat_constants = [114370, -215.69, 0.72691, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 156, Furan).
+    _ideal_gas_heat_capacity_constants = [0.3727E5, 1.6606E5, 1.5112E3, 1.3145E5, 686]
     _viscosity_constants = [-10.923, 894.63, -0.00068418, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2198, -0.00031405, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [74.738, -5417, -8.0636, 7.47e-06, 2.0]

@@ -26,6 +26,9 @@ class Benzene(Component):
     # These constants are for Cp in J/kmol K.
     _specific_heat_constants_1 = [129440, -169.5, 0.64781, 0, 0]
     _specific_heat_constants_2 = [162940, -344.94, 0.85562, 0, 0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 16, Benzene).
+    _ideal_gas_heat_capacity_constants = [0.44767E5, 2.3085E5, 1.4792E3, 1.6836E5, 677.66]
     _viscosity_constants = [7.5117, 294.68, -2.794, 0, 0]
     _thermal_conductivity_constants = [0.23444, -0.00030572, 0, 0, 0]
     _vapor_pressure_constants = [83.107, -6486.2, -9.2194, 0.0000069844, 2]
@@ -47,6 +50,11 @@ class Benzene(Component):
         Returns:
             SpecificHeat: The calculated specific heat in units of J/kgK.
         """
+        if self._specific_heat is not None:
+            return self._specific_heat
+        cp_gas = self._ideal_gas_specific_heat()
+        if cp_gas is not None:
+            return cp_gas
         T = self.temperature.value
         # Use a conditional to select the correct set of polynomial constants.
         if T <= 353.24:

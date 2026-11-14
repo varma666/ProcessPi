@@ -51,6 +51,9 @@ class _3Hexyne(Component):
 
     _density_constants = [0.78045, 0.26065, 544.0, 0.28571]
     _specific_heat_constants = [82795, 283.4, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 178, 3-Hexyne).
+    _ideal_gas_heat_capacity_constants = [0.9376E5, 3.015E5, 1.9057E3, 1.986E5, 817]
     _viscosity_constants = [-4.2684, 647.6, -1.0087, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20996, -0.0002692, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [47.091, -5104, -3.6371, 0.000516, 1.0]

@@ -51,6 +51,9 @@ class DibutylEther(Component):
 
     _density_constants = [0.55941, 0.27243, 584.1, 0.29932]
     _specific_heat_constants = [270720,-259.83,0.95247,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 84, Dibutyl ether).
+    _ideal_gas_heat_capacity_constants = [1.6122E5, 4.4777E5, 1.6831E3, 2.918E5, 781.6]
     _viscosity_constants = [10.027, 206.0, -3.1607,0,0]
     _thermal_conductivity_constants = [0.19418, -0.00022246,0,0,0]
     _vapor_pressure_constants = [72.227, -7537.60, -7.0596, 9.14e-18, 6.0]

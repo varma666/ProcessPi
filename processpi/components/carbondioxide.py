@@ -19,6 +19,9 @@ class Carbondioxide(Component):
     _critical_acentric_factor = 0.2236  # Placeholder for critical acentric factor
     _density_constants = [2.768, 0.26212,304.21,0.2908]
     _specific_heat_constants = [-8304300,104370,-433.33,0.60052,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-5000 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 47, Carbon dioxide).
+    _ideal_gas_heat_capacity_constants = [0.2937E5, 0.3454E5, 1.428E3, 0.264E5, 588]
     _viscosity_constants = [18.775,-402.92,-4.6854,-6.92E-26, 10] 
     _thermal_conductivity_constants = [0.4406, -0.0012175,0,0,0]
     _vapor_pressure_constants = [140.54,-4735,-21.268,4.09E-02, 1] 

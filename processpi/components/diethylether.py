@@ -51,6 +51,9 @@ class DiethylEther(Component):
 
     _density_constants = [0.9554, 0.26847, 466.7, 0.2814]
     _specific_heat_constants = [44400,1301,-5.5,0.008763,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 95, Diethyl ether).
+    _ideal_gas_heat_capacity_constants = [0.8621E5, 2.551E5, 1.5413E3, 1.437E5, 688.9]
     _viscosity_constants = [10.197, -63.8, -3.226,0,0]
     _thermal_conductivity_constants = [0.2495, -0.000407,0,0,0]
     _vapor_pressure_constants = [136.9, -6954.30, -19.254, 0.0245, 1.0]

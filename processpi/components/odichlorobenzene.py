@@ -51,6 +51,9 @@ class Odichlorobenzene(Component):
 
     _density_constants = [0.74404, 0.26112, 705.0, 0.30815]
     _specific_heat_constants = [93093, 183.97, 0.2314, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 86, o-Dichlorobenzene).
+    _ideal_gas_heat_capacity_constants = [0.6948E5, 2.0804E5, 1.3632E3, 1.594E5, 619.2]
     _viscosity_constants = [-30.6, 2153.4, 2.9371, 0.0, 0.0]
     _thermal_conductivity_constants = [0.16994, -0.0001637, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [77.105, -8111.10, -7.8886, 2.73e-06, 2.0]

@@ -51,6 +51,9 @@ class HydrogenFluoride(Component):
 
     _density_constants = [2.5635, 0.1766, 461.15, 0.3733]
     _specific_heat_constants = [62520, -223.02, 0.6297, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 187, Hydrogen fluoride).
+    _ideal_gas_heat_capacity_constants = [0.29134E5, 0.093252E5, 2.905E3, 195.0, 1.33E+03]
     _viscosity_constants = [353.99, 13928.0, -41.717, 0.0, -0.5]
     _thermal_conductivity_constants = [0.7516, -0.0010874, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [59.544, -4143.80, -6.1764, 1.42e-05, 2.0]

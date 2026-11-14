@@ -51,6 +51,9 @@ class _135Trinitrobenzene(Component):
 
     _density_constants = [0.48195, 0.23093, 846.0, 0.28571]
     _specific_heat_constants = [40364, 664.46, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 334, 1,3,5-Trinitrobenzene).
+    _ideal_gas_heat_capacity_constants = [2.0367E5, 1.8181E5, 1.2089E3, 0.79777E5, 1060.8]
     _viscosity_constants = [-10.707, 1818.5,0,0,0]
     _thermal_conductivity_constants = [0.18421, -0.00016097,0,0,0]
     _vapor_pressure_constants = [506.33, -37483, -69.22, 2.74e-05, 2.0]

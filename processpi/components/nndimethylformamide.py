@@ -51,6 +51,9 @@ class NndimethylFormamide(Component):
 
     _density_constants = [0.89615, 0.23478, 649.6, 0.28091]
     _specific_heat_constants = [147900, -106.0, 0.384, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 113, N,N-Dimethyl formamide).
+    _ideal_gas_heat_capacity_constants = [0.722E5, 1.783E5, 1.532E3, 1.31E5, 762]
     _viscosity_constants = [-20.425, 1515.5, 1.4444, 0.0, 0.0]
     _thermal_conductivity_constants = [0.26, -0.000255, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [82.762, -7955.50, -8.8038, 4.24e-06, 2.0]

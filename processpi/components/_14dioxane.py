@@ -51,6 +51,9 @@ class _14Dioxane(Component):
 
     _density_constants = [1.1819, 0.2813, 587.0, 0.3047]
     _specific_heat_constants = [956860, -5559.90, 9.6124, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 120, 1,4-Dioxane).
+    _ideal_gas_heat_capacity_constants = [0.56184E5, 2.7034E5, 1.5171E3, 1.7658E5, 700.76]
     _viscosity_constants = [-46.166, 3086.2, 5.104, 0.0, 0.0]
     _thermal_conductivity_constants = [0.3027, -0.0004827, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [44.494, -5406.70, -3.1287, 2.89e-18, 6.0]

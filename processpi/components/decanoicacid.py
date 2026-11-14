@@ -51,6 +51,9 @@ class DecanoicAcid(Component):
 
     _density_constants = [0.39348, 0.2492, 722.1, 0.28571]
     _specific_heat_constants = [219840,140.41,0.9968,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 75, Decanoic acid).
+    _ideal_gas_heat_capacity_constants = [0.24457E5, 6.546E5, 1.0899E3, 4.8642E5, 424]
     _viscosity_constants = [-12.305, 2324.1, -0.055494,0,0,0]
     _thermal_conductivity_constants = [0.206, -0.0002,0,0,0]
     _vapor_pressure_constants = [123.36, -14680, -13.474, 1.95e-18, 6.0]

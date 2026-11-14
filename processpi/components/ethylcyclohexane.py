@@ -51,6 +51,9 @@ class Ethylcyclohexane(Component):
 
     _density_constants = [0.61587, 0.26477, 609.15, 0.28054]
     _specific_heat_constants = [132360, 72.74, 0.64738, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 133, Ethylcyclohexane).
+    _ideal_gas_heat_capacity_constants = [1.1059E5, 4.6306E5, 1.6628E3, 3.299E5, 781.1]
     _viscosity_constants = [-22.11, 1673.0, 1.641, 0.0, 0.0]
     _thermal_conductivity_constants = [0.17662, -0.0002014, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [80.208, -7203.20, -8.6023, 4.59e-06, 2.0]

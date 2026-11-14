@@ -51,6 +51,9 @@ class Chloroethane(Component):
 
     _density_constants = [1.3, 0.26019, 460.35, 0.27155]
     _specific_heat_constants = [127900,-345.15,0.915,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 54, Chloroethane).
+    _ideal_gas_heat_capacity_constants = [0.4568E5, 1.2967E5, 1.5992E3, 0.859E5, 708.8]
     _viscosity_constants = [-10.216, 702.0, -0.072,0,0]
     _thermal_conductivity_constants = [0.2438, -0.000419,0,0,0]
     _vapor_pressure_constants = [65.988, -4661.30, -6.8586, 7.94e-06, 2.0]

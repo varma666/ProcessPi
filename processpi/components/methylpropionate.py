@@ -51,6 +51,9 @@ class MethylPropionate(Component):
 
     _density_constants = [0.9147, 0.2594, 530.6, 0.2774]
     _specific_heat_constants = [71140, 335.5, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 239, Methyl propionate).
+    _ideal_gas_heat_capacity_constants = [0.7765E5, 2.442E5, 1.714E3, 1.818E5, 716]
     _viscosity_constants = [-4.841, 696.7, -0.9194, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22534, -0.0002683, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [70.717, -6439.7, -6.9845, 2.0129E-17, 6]

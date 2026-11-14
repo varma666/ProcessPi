@@ -51,6 +51,9 @@ class MethylButyrate(Component):
 
     _density_constants = [0.76983, 0.26173, 554.5, 0.26879]
     _specific_heat_constants = [102930, 129.1, 0.62516, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298-1200 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 211, Methyl butyrate).
+    _ideal_gas_heat_capacity_constants = [0.894E5, 2.91E5, 1.57E3, 2.073E5, 678.3]
     _viscosity_constants = [-12.206, 1141.7, 0.15014, 0, 0]
     _thermal_conductivity_constants = [0.21748, -0.00025913, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [71.87, -6885.70, -7.0944, 1.49e-17, 6.0]

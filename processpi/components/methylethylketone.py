@@ -51,6 +51,9 @@ class MethylethylKetone(Component):
 
     _density_constants = [0.93767, 0.25035, 535.5, 0.29964]
     _specific_heat_constants = [132300, 200.87, -0.9597, 0.0019533, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 222, Methylethyl ketone).
+    _ideal_gas_heat_capacity_constants = [0.784E5, 2.1032E5, 1.5488E3, 1.1855E5, 693]
     _viscosity_constants = [-1.0598, 520.68, -1.4961, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2197, -0.0002505, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [72.698, -6143.60, -7.5779, 5.65e-06, 2.0]

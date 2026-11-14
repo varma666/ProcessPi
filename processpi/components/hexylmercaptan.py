@@ -51,6 +51,9 @@ class HexylMercaptan(Component):
 
     _density_constants = [0.66372, 0.27345, 623.0, 0.29185]
     _specific_heat_constants = [303320, 0.0, 3.3885, -0.002762, 0.0, 2.1495, 2.7639]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 179, Hexyl mercaptan).
+    _ideal_gas_heat_capacity_constants = [1.2662E5, 3.7294E5, 1.6574E3, 2.308E5, 757.8]
     _viscosity_constants = [-10.073, 1123.3, -0.16515, 0, 0]
     _thermal_conductivity_constants = [0.2058, -0.0002324, 0, 0, 0]
     _vapor_pressure_constants = [68.467, -7390.50, -6.5456, 7.76e-18, 6.0]

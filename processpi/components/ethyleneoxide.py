@@ -51,6 +51,9 @@ class EthyleneOxide(Component):
 
     _density_constants = [1.836, 0.26024, 469.15, 0.2696]
     _specific_heat_constants = [144710, -758.87, 2.8261, -0.003064, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 139, Ethylene oxide).
+    _ideal_gas_heat_capacity_constants = [0.3346E5, 1.2116E5, 1.6084E3, 0.8241E5, 737.3]
     _viscosity_constants = [-8.521, 634.2, -0.3314, 0.0, 0.0]
     _thermal_conductivity_constants = [0.26957, -0.0003984, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [91.944, -5293.40, -11.682, 0.0149, 1.0]

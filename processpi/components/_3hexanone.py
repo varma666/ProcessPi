@@ -51,6 +51,9 @@ class _3Hexanone(Component):
 
     _density_constants = [0.67666, 0.25578, 582.82, 0.27746]
     _specific_heat_constants = [235960, -345.94, 0.94278, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 150-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 176, 3-Hexanone).
+    _ideal_gas_heat_capacity_constants = [1.1237E5, 2.936E5, 1.401E3, 1.601E5, 650.5]
     _viscosity_constants = [-13.684, 1283.4, 0.33755, 0.0, 0.0]
     _thermal_conductivity_constants = [0.23493, -0.0002912, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [73.155, -7242.90, -7.2569, 1.27e-17, 6.0]

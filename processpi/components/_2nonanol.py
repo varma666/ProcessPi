@@ -51,6 +51,9 @@ class _2Nonanol(Component):
 
     _density_constants = [0.41687, 0.24056, 649.5, 0.2916]
     _specific_heat_constants = [329641, -1046.78, 3.61823, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 259, 2-Nonanol).
+    _ideal_gas_heat_capacity_constants = [1.8197E5, 3.5542E5, 0.81514E3, 2.1974E5, 2508.8]
     _viscosity_constants = [-98.854, 7183.8, 12.283, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20829, -0.00022922, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [146.46, -13813, -17.158, 8.63e-40, 14.0]

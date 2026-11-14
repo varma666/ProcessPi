@@ -51,6 +51,9 @@ class _1Hexene(Component):
 
     _density_constants = [0.76925, 0.26809, 504.0, 0.28571]
     _specific_heat_constants = [164640, -200.37, 0.8784, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 177, 1-Hexene).
+    _ideal_gas_heat_capacity_constants = [1.0434E5, 3.0749E5, 1.7459E3, 2.0728E5, 793.53]
     _viscosity_constants = [-10.36, 775.85, -0.082348, 0.0, 0.0]
     _thermal_conductivity_constants = [0.19112, -8.3519e-05, -5.14e-07, 0.0, 0.0]
     _vapor_pressure_constants = [51.024, -4986.40, -4.2463, 1.68e-17, 6.0]

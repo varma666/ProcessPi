@@ -51,6 +51,9 @@ class NitrogenTrifluoride(Component):
 
     _density_constants = [2.3736, 0.2817, 234.0, 0.29529]
     _specific_heat_constants = [101400, -682.11, 3.8912, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 250, Nitrogen trifluoride).
+    _ideal_gas_heat_capacity_constants = [0.33284E5, 0.49837E5, 0.7093E3, 0.23264E5, 372.91]
     _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [68.149, -2257.90, -8.9118, 0.0232, 1.0]

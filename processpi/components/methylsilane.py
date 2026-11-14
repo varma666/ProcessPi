@@ -51,6 +51,9 @@ class Methylsilane(Component):
 
     _density_constants = [1.3052, 0.26757, 352.5, 0.28799]
     _specific_heat_constants = [113470, 0.0, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 242, Methylsilane).
+    _ideal_gas_heat_capacity_constants = [0.46149E5, 1.2781E5, 1.4565E3, 0.79115E5, 643.23]
     _viscosity_constants = [0,0,0,0,0]
     _thermal_conductivity_constants = [0.2774, -0.00054608, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [37.205, -2590.30, -2.5993, 6.05e-06, 2.0]

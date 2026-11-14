@@ -51,6 +51,9 @@ class Benzonitrile(Component):
 
     _density_constants = [0.8552, 0.26785, 699.35, 0.30523]
     _specific_heat_constants = [93383,242.61,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 19, Benzonitrile).
+    _ideal_gas_heat_capacity_constants = [0.7186E5, 2.27E5, 1.4669E3, 1.693E5, 680.77]
     _viscosity_constants = [-20.236, 1737.4, 1.3531,0,0]
     _thermal_conductivity_constants = [0.21284, -0.00021587,0,0,0]
     _vapor_pressure_constants = [138.5, -11195, -17.085, 9.56e-06, 2.0]

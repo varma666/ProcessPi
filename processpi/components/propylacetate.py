@@ -51,6 +51,9 @@ class PropylAcetate(Component):
 
     _density_constants = [0.73041, 0.25456, 549.73, 0.27666]
     _specific_heat_constants = [83400, 384.1, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 302, Propyl acetate).
+    _ideal_gas_heat_capacity_constants = [1.7994E5, 1.753E5, 1.196E3, -4.12E5, 108.2]
     _viscosity_constants = [17.797, -252.43, -4.291, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2332, -0.0003096, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [115.16, -8433.90, -13.934, 1.03e-05, 2.0]

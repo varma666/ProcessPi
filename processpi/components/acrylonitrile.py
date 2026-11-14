@@ -51,6 +51,9 @@ class Acrylonitrile(Component):
 
     _density_constants = [1.0816, 0.2293, 535.0, 0.28939]
     _specific_heat_constants = [109900,-109.75,0.35441,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 10, Acrylonitrile).
+    _ideal_gas_heat_capacity_constants = [0.4678E5, 1.0366E5, 1.3998E3, 0.6536E5, 629.35]
     _viscosity_constants = [2.019, 239.7, -1.8975,0,0]
     _thermal_conductivity_constants = [0.28941, -0.00041691,0,0,0]
     _vapor_pressure_constants = [87.604,-6392.70,-10.101,1.09e-5,2]

@@ -51,6 +51,9 @@ class _2MethyloctanoicAcid(Component):
 
     _density_constants = [0.4416, 0.2521, 694.0, 0.28532]
     _specific_heat_constants = [226650, 15.421, 1.0578, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 233, 2-Methyloctanoic acid).
+    _ideal_gas_heat_capacity_constants = [1.7483E5, 4.9288E5, 1.7384E3, 3.5897E5, 788.01]
     _viscosity_constants = [-12.579, 2224.2, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20911, -0.00021852, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [105.7, -12458, -11.234, 4.46e-18, 6.0]

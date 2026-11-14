@@ -51,6 +51,9 @@ class Heptanal(Component):
 
     _density_constants = [0.59006, 0.25609, 616.8, 0.28384]
     _specific_heat_constants = [222360, -105.17, 0.65074, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 159, Heptanal).
+    _ideal_gas_heat_capacity_constants = [1.404E5, 2.5907E5, 0.8315E3, 1.312E5, 2201]
     _viscosity_constants = [-10.443, 1063.2, -0.031488, 0, 0]
     _thermal_conductivity_constants = [0.21816, -0.0003015, 1.03e-07, 0, 0]
     _vapor_pressure_constants = [92.252, -8349, -10.274, 5.93e-06, 2.0]

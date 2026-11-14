@@ -51,6 +51,9 @@ class Butyraldehyde(Component):
 
     _density_constants = [1.0361, 0.26731, 537.2, 0.28397]
     _specific_heat_constants = [65682,1329.10,-7.1579,0.012755,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 44, Butyraldehyde).
+    _ideal_gas_heat_capacity_constants = [0.89657E5, 2.3731E5, 1.9754E3, 1.5866E5, 904.13]
     _viscosity_constants = [-10.057, 903.73, -0.13186,0,0]
     _thermal_conductivity_constants = [0.21915, -0.00024846,0,0,0]
     _vapor_pressure_constants = [99.33, -7083.60, -11.733, 1e-05, 2.0]

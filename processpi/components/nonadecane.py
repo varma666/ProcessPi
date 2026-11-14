@@ -51,6 +51,9 @@ class Nonadecane(Component):
 
     _density_constants = [0.19199, 0.23337, 758.0, 0.28571]
     _specific_heat_constants = [342570, 762.08, 0.20481, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 254, Nonadecane).
+    _ideal_gas_heat_capacity_constants = [3.1062E5, 10.575E5, 0.76791E3, -4.5661E5, 912.03]
     _viscosity_constants = [-16.403, 2119.5, 0.6881, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21229, -0.00022, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [182.54, -17897, -22.498, 7.4e-06, 2.0]

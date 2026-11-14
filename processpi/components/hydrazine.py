@@ -51,6 +51,9 @@ class Hydrazine(Component):
 
     _density_constants = [1.0516, 0.16613, 653.15, 0.1898]
     _specific_heat_constants = [79815, 50.929, 0.043379, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 182, Hydrazine).
+    _ideal_gas_heat_capacity_constants = [0.38711E5, 0.8576E5, 1.7228E3, 0.56635E5, 733.53]
     _viscosity_constants = [-75.781, 4175.4, 9.6508, -7.27e-09, 3.0]
     _thermal_conductivity_constants = [1.3675, -0.0015895, 0, 0, 0]
     _vapor_pressure_constants = [76.858, -7245.20, -8.22, 0.00616, 1.0]

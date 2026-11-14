@@ -51,6 +51,9 @@ class _2EthylButanoicAcid(Component):
 
     _density_constants = [0.66085, 0.25707, 655.0, 0.31103]
     _specific_heat_constants = [56359, 603.02, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200.15 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 131, 2-Ethyl butanoic acid).
+    _ideal_gas_heat_capacity_constants = [1.0455E5, 2.3148E5, 0.71E3, 1.471E5, 2061.6]
     _viscosity_constants = [-12.24, 1836.4, 0.021868, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2175, -0.0002407, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [90.464, -10243, -9.2836, 5.26e-18, 6.0]

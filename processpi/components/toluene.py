@@ -15,6 +15,9 @@ class Toluene(Component):
     _critical_acentric_factor = 0.264  # Placeholder for critical acentric factor
     _density_constants = [0.8792, 0.27136, 591.75, 0.29241]
     _specific_heat_constants = [140140,-152.3,0.695,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 325, Toluene).
+    _ideal_gas_heat_capacity_constants = [0.5814E5, 2.863E5, 1.4406E3, 1.898E5, 650.43]
    
     _viscosity_constants = [-226.08, 6805.7,37.542,-0.060853, 1] 
     _thermal_conductivity_constants = [0.20463, -0.00024252, 0,0,0]

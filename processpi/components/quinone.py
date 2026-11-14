@@ -51,6 +51,9 @@ class Quinone(Component):
 
     _density_constants = [0.83228, 0.25385, 683.0, 0.23658]
     _specific_heat_constants = [45810, 368.33, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 310, Quinone).
+    _ideal_gas_heat_capacity_constants = [0.6487E5, 2.1227E5, 1.3491E3, 1.514E5, 614.8]
     _viscosity_constants = [-14.846, 1829.4, 0.3729, 0.0, 0.0]
     _thermal_conductivity_constants = [0.26524, -0.00028676, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [48.651, -7289.50, -3.4453, 1.01e-18, 6.0]

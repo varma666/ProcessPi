@@ -51,6 +51,9 @@ class MethylAcetylene(Component):
 
     _density_constants = [1.6085, 0.26436, 402.4, 0.27987]
     _specific_heat_constants = [79791, 89.49, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 197, Methyl acetylene).
+    _ideal_gas_heat_capacity_constants = [0.4478E5, 1.0917E5, 1.5508E3, 0.675E5, 658.2]
     _viscosity_constants = [-2.8737, 301.35, -1.2271, 0, 0]
     _thermal_conductivity_constants = [0.23648, -0.00041639, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [50.242, -3811.90, -4.2526, 6.53e-17, 6.0]

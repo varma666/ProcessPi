@@ -51,6 +51,9 @@ class Fluoromethane(Component):
 
     _density_constants = [2.1854, 0.24725, 317.42, 0.27558]
     _specific_heat_constants = [74746, -132.32, 0.53772, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 152, Fluoromethane).
+    _ideal_gas_heat_capacity_constants = [0.33289E5, 0.73989E5, 1.8639E3, 0.46079E5, 891.16]
     _viscosity_constants = [-10.501, 427.78, 0.0086309, 0.0, 0.0]
     _thermal_conductivity_constants = [0.445, -0.001023, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [59.123, -3043.70, -6.1845, 1.66e-05, 2.0]

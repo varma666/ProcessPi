@@ -51,6 +51,9 @@ class Decanal(Component):
 
     _density_constants = [0.46802, 0.27146, 674.2, 0.26869]
     _specific_heat_constants = [150460,586.63, 0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 73, Decanal).
+    _ideal_gas_heat_capacity_constants = [1.9641E5, 5.1412E5, 1.8989E3, 4.1278E5, 862.51]
     _viscosity_constants = [-10.115, 1111.9, -0.015659,0,0,0]
     _thermal_conductivity_constants = [0.20383, -0.0002,0,0,0]
     _vapor_pressure_constants = [201.64, -15133, -26.264, 1.46e-05, 2.0]

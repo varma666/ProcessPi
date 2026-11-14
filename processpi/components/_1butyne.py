@@ -51,6 +51,9 @@ class _1Butyne(Component):
 
     _density_constants = [1.3409, 0.27892, 440.0, 0.29661]
     _specific_heat_constants = [136340,-300.4,1.0216,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 43, 1-Butyne).
+    _ideal_gas_heat_capacity_constants = [0.5587E5, 1.6694E5, 1.5328E3, 1.07E5, 656]
     _viscosity_constants = [-3.4644, 334.5, -1.0811,0,0]
     _thermal_conductivity_constants = [0.22334, -0.0003515,0,0,0]
     _vapor_pressure_constants = [77.004, -5054.50, -8.5665, 1.02e-05, 2.0]

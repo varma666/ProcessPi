@@ -51,6 +51,9 @@ class OctylMercaptan(Component):
 
     _density_constants = [0.52577, 0.27234, 667.3, 0.30063]
     _specific_heat_constants = [240040, -33.198, 0.67889, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 272, Octyl mercaptan).
+    _ideal_gas_heat_capacity_constants = [1.5981E5, 4.6063E5, 1.6295E3, 3.0301E5, 756.28]
     _viscosity_constants = [-11.498, 1362.1, 0.015575, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2012, -0.0002142, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [78.368, -8855.40, -7.8202, 5.66e-18, 6.0]

@@ -51,6 +51,9 @@ class MethylIsocyanate(Component):
 
     _density_constants = [1.0228, 0.20692, 488.0, 0.28571]
     _specific_heat_constants = [149770, -529.82, 1.3499, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 227, Methyl Isocyanate).
+    _ideal_gas_heat_capacity_constants = [0.474E5, 1.226E5, 2.188E3, 0.85983E5, 1008.2]
     _viscosity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2822, -0.00042037, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [57.612, -5197.90, -5.1269, 2.17e-17, 6.0]

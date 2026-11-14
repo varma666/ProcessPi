@@ -51,6 +51,9 @@ class _23Dimethylpentane(Component):
 
     _density_constants = [0.72352, 0.28629, 537.3, 0.27121]
     _specific_heat_constants = [146420, 59.2, 0.604, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 114, 2,3-Dimethylpentane).
+    _ideal_gas_heat_capacity_constants = [0.85438E5, 4.5772E5, 1.5181E3, 2.974E5, 641.01]
     _viscosity_constants = [-12.08, 1112.2, 0.09654, 0.0, 0.0]
     _thermal_conductivity_constants = [0.17964, -0.000246, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [78.335, -6348.70, -8.5105, 6.43e-06, 2.0]

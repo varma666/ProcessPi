@@ -51,6 +51,9 @@ class Cumene(Component):
 
     _density_constants = [0.58711, 0.25583, 631.0, 0.28498]
     _specific_heat_constants = [61723,494.81,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 62, Cumene).
+    _ideal_gas_heat_capacity_constants = [1.081E5, 3.7932E5, 1.7505E3, 3.0027E5, 794.8]
     _viscosity_constants = [-24.988, 1807.9, 2.0556,0,0]
     _thermal_conductivity_constants = [0.1855, -0.00020895,0,0,0]
     _vapor_pressure_constants = [102.81, -8674.60, -11.922, 7e-06, 2.0]

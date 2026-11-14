@@ -51,6 +51,9 @@ class Formamide(Component):
 
     _density_constants = [1.2486, 0.20352, 771.0, 0.25178]
     _specific_heat_constants = [63400, 150.6, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 150-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 154, Formamide).
+    _ideal_gas_heat_capacity_constants = [0.3822E5, 0.93E5, 1.845E3, 0.69E5, 850]
     _viscosity_constants = [40.153, -912.39, -7.5664, 1.69e+24, -10.0]
     _thermal_conductivity_constants = [0.3847, -0.0001065, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [100.3, -10763, -10.946, 3.85e-06, 2.0]

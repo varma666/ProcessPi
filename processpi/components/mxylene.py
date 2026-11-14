@@ -51,6 +51,9 @@ class Mxylene(Component):
 
     _density_constants = [0.68902, 0.26086, 617.0, 0.27479]
     _specific_heat_constants = [133860, 7.8754, 0.52265, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 343, m-Xylene).
+    _ideal_gas_heat_capacity_constants = [0.7568E5, 3.3924E5, 1.496E3, 2.247E5, 675.9]
     _viscosity_constants = [-11.91, 1094.9, 0.13825,0,0,0]
     _thermal_conductivity_constants = [0.20044, -0.00023544,0,0,0]
     _vapor_pressure_constants = [85.099, -7615.90, -9.3072, 5.56e-06, 2.0]

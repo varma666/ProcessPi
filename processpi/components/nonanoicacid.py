@@ -51,6 +51,9 @@ class NonanoicAcid(Component):
 
     _density_constants = [0.41582, 0.24284, 710.7, 0.30036]
     _specific_heat_constants = [224336, 49.726, 0.9813, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 257, Nonanoic acid).
+    _ideal_gas_heat_capacity_constants = [0.1266E5, 6.011E5, 1.0815E3, 4.5946E5, 418.2]
     _viscosity_constants = [-48.851, 4095.0, 5.294, 0.0, 0.0]
     _thermal_conductivity_constants = [0.204, -0.0002, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [137.6, -14948, -15.618, 5.57e-18, 6.0]

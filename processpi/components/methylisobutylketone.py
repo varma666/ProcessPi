@@ -51,6 +51,9 @@ class MethylisobutylKetone(Component):
 
     _density_constants = [0.71687, 0.26453, 574.6, 0.28918]
     _specific_heat_constants = [183650, -79.862, 0.60769, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500.15 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 226, Methylisobutyl ketone).
+    _ideal_gas_heat_capacity_constants = [1.227E5, 2.195E5, 0.842E3, 1.191E5, 2460]
     _viscosity_constants = [-11.394, 1168.7, -0.007539, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2301, -0.00028899, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [80.503, -7421.80, -8.379, 1.81e-17, 6.0]

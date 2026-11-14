@@ -51,6 +51,9 @@ class Thiophene(Component):
 
     _density_constants = [1.2874, 0.28194, 579.35, 0.30781]
     _specific_heat_constants = [84864, 91.725, 0.13243, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 324, Thiophene).
+    _ideal_gas_heat_capacity_constants = [0.40399E5, 1.627E5, 1.4562E3, 1.322E5, 648.81]
     _viscosity_constants = [-16.671, 1342.5, 0.8388, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20571, -0.00020028, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [93.193, -7001.50, -10.738, 8.23e-06, 2.0]

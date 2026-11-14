@@ -51,6 +51,9 @@ class _11Dimethoxyethane(Component):
 
     _density_constants = [0.89368, 0.26599, 507.8, 0.28571]
     _specific_heat_constants = [187790, -313.41, 1.1023, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 103, 1,1-Dimethoxyethane).
+    _ideal_gas_heat_capacity_constants = [1.1556E5, 1.8305E5, 0.95919E3, 0.99605E5, 2826.3]
     _viscosity_constants = [-10.968, 885.49, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.22078, -0.00031271, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [53.637,-5251.20, -4.5649, 1.68e-17, 6.0]

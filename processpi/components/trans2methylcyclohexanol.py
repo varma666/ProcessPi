@@ -51,6 +51,9 @@ class Trans2Methylcyclohexanol(Component):
 
     _density_constants = [0.72836, 0.27241, 617.0, 0.2478]
     _specific_heat_constants = [118170, 447.99, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 216, trans-2-Methylcyclohexanol).
+    _ideal_gas_heat_capacity_constants = [0.92279E5, 2.6709E5, 0.68784E3, 1.9847E5, 1732.4]
     _viscosity_constants = [-6.6915, 3173.2, -1.3046, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21828, -0.0002557, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [54.179, -7477.20, -4.22, 3.52e-18, 6.0]

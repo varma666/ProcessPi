@@ -51,6 +51,9 @@ class SuccinicAcid(Component):
 
     _density_constants = [0.70284, 0.22268, 806.0, 0.28571]
     _specific_heat_constants = [244770, -236.96, 0.63148, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 313, Succinic acid).
+    _ideal_gas_heat_capacity_constants = [0.71806E5, 2.2669E5, 1.2739E3, 1.7342E5, 537.65]
     _viscosity_constants = [-13.422, 3431.8, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.28215, -0.0002585, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [128.65, -16958, -13.872, 2.16e-18, 6.0]

@@ -51,6 +51,9 @@ class VinylChloride(Component):
 
     _density_constants = [1.5115, 0.2707, 432.0, 0.2716]
     _specific_heat_constants = [-10320, 322.8, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 340, Vinyl chloride).
+    _ideal_gas_heat_capacity_constants = [0.42364E5, 0.8735E5, 1.6492E3, 0.6556E5, 739.07]
     _viscosity_constants = [0.26297, 276.55, -1.7282, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2333, -0.00039223, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [91.432, -5141.70, -10.981, 1.43e-05, 2.0]

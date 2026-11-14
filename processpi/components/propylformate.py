@@ -51,6 +51,9 @@ class PropylFormate(Component):
 
     _density_constants = [0.915, 0.26134, 538.0, 0.28]
     _specific_heat_constants = [75700, 326.1, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 306, Propyl formate).
+    _ideal_gas_heat_capacity_constants = [0.871E5, 2.447E5, 1.9254E3, 1.888E5, 821.3]
     _viscosity_constants = [-73.735, 2668.2, 10.993, -0.018364, 1.0]
     _thermal_conductivity_constants = [0.2247, -0.000264, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [104.08, -7535.90, -12.348, 9.6e-06, 2.0]

@@ -51,6 +51,9 @@ class MethylbutylEther(Component):
 
     _density_constants = [0.8363, 0.27514, 512.74, 0.27553]
     _specific_heat_constants = [177850, -171.57, 0.74379, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 208, Methylbutyl ether).
+    _ideal_gas_heat_capacity_constants = [0.82051E5, 3.0869E5, 1.3864E3, 1.7886E5, 613.87]
     _viscosity_constants = [-11.278, 949.12, -0.00012343, 0, 0]
     _thermal_conductivity_constants = [0.22235, -0.0003044, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [60.164, -5621.70, -5.53, 1.86e-17, 6.0]

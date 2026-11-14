@@ -51,6 +51,9 @@ class EthylMercaptan(Component):
 
     _density_constants = [1.3047, 0.2694, 499.15, 0.27866]
     _specific_heat_constants = [134670, -234.39, 0.59656, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 145, Ethyl mercaptan).
+    _ideal_gas_heat_capacity_constants = [0.5576E5, 1.3617E5, 1.5221E3, 0.8073E5, 687.5]
     _viscosity_constants = [-9.7574, 729.43, -0.14912, 0.0, 0.0]
     _thermal_conductivity_constants = [0.23392, -0.0003206, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [65.551, -5027.40, -6.6853, 6.32e-06, 2.0]

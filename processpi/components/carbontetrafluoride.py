@@ -51,6 +51,9 @@ class CarbonTetrafluoride(Component):
 
     _density_constants = [1.955, 0.27884, 227.51, 0.28571]
     _specific_heat_constants = [104600,-500.6,2.2851,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 51, Carbon tetrafluoride).
+    _ideal_gas_heat_capacity_constants = [0.92004E5, 0.16446E5, 1.0764E3, -5083.8E5, 2.3486]
     _viscosity_constants = [-9.9212, 300.5,0,0,0]
     _thermal_conductivity_constants = [0.20771, -0.00078883,0,0,0]
     _vapor_pressure_constants = [61.89,-2296.30, -7.086, 3.47e-05, 2.0]

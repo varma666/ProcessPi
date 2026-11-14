@@ -51,6 +51,9 @@ class MethylpropylEther(Component):
 
     _density_constants = [0.96145, 0.26536, 476.25, 0.30088]
     _specific_heat_constants = [140110, -102.09, 0.58113, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298-1200 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 240, Methylpropyl ether).
+    _ideal_gas_heat_capacity_constants = [0.92151E5, 2.3943E5, 1.6936E3, 1.4896E5, 797.79]
     _viscosity_constants = [-10.705, 788.94, -0.048383, 0.0, 0.0]
     _thermal_conductivity_constants = [0.24817, -0.0003774, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [67.942, -5419.10, -6.8067, 4.78e-17, 6.0]

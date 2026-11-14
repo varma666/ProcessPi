@@ -51,6 +51,9 @@ class Naphthalene(Component):
 
     _density_constants = [0.6348, 0.25838, 748.4, 0.27727]
     _specific_heat_constants = [29800, 527.5, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 246, Naphthalene).
+    _ideal_gas_heat_capacity_constants = [0.6805E5, 3.5494E5, 1.4262E3, 2.5984E5, 650.1]
     _viscosity_constants = [-19.308, 1822.5, 1.218, 0.0, 0.0]
     _thermal_conductivity_constants = [0.17096, -0.00010059, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [62.964, -8137.50, -5.6317, 2.27e-18, 6.0]

@@ -54,6 +54,9 @@ class Acetone(Component):
     # Constants for various property correlations
     _density_constants = [1.2332, 0.25886, 508.2, 0.2913]
     _specific_heat_constants = [135600,-177,0.2837,0.000689,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 5, Acetone).
+    _ideal_gas_heat_capacity_constants = [0.5704E5, 1.632E5, 1.607E3, 0.968E5, 731.5]
     _viscosity_constants = [-14.918, 1023.4, 0.5961, 0, 0] 
     _thermal_conductivity_constants = [0.2878, -0.000427, 0,0,0]
     _vapor_pressure_constants = [69.006, -5599.6, -7.0985, 0.0000062237, 2] 

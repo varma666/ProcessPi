@@ -51,6 +51,9 @@ class Eicosane(Component):
 
     _density_constants = [0.18166, 0.23351, 768.0, 0.28571]
     _specific_heat_constants = [352720, 807.32, 0.2122, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 124, Eicosane).
+    _ideal_gas_heat_capacity_constants = [3.2481E5, 11.09E5, 1.636E3, 7.45E5, 726.27]
     _viscosity_constants = [-18.315, 2283.5, 0.95485, 0, 0]
     _thermal_conductivity_constants = [0.2178, -0.0002233, 0, 0, 0]
     _vapor_pressure_constants = [203.66, -19441, -25.525, 8.84e-06, 2.0]

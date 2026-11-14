@@ -51,6 +51,9 @@ class _2PentylMercaptan(Component):
 
     _density_constants = [0.65858, 0.25367, 584.3, 0.28571]
     _specific_heat_constants = [188200, -140.84, 0.63581, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 286, 2-Pentyl mercaptan).
+    _ideal_gas_heat_capacity_constants = [1.1327E5, 2.947E5, 1.7418E3, 2.0987E5, 795.78]
     _viscosity_constants = [-6.9168, 818.76, -0.59628,0,0]
     _thermal_conductivity_constants = [0.20597, -0.00024518,0,0,0]
     _vapor_pressure_constants = [58.985, -6193.10, -5.2746, 7.4e-18, 6.0]

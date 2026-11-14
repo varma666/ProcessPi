@@ -51,6 +51,9 @@ class MethylAcrylate(Component):
 
     _density_constants = [0.97286, 0.26267, 536.0, 0.2508]
     _specific_heat_constants = [275500, -1147, 2.568, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1200.1 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 198, Methyl acrylate).
+    _ideal_gas_heat_capacity_constants = [0.1206E5, 2.3766E5, 1.0543E3, 1.8186E5, 418.8]
     _viscosity_constants = [10.848, 75.0, -3.297, 0, 0]
     _thermal_conductivity_constants = [0.26082, -0.0003506, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [107.69, -7027.20, -13.916, 0.0152, 1.0]

@@ -51,6 +51,9 @@ class EthylisopropylEther(Component):
 
     _density_constants = [0.8185, 0.26929, 489.0, 0.30621]
     _specific_heat_constants = [106520, 292.15, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1200 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 143, Ethylisopropyl ether).
+    _ideal_gas_heat_capacity_constants = [1.0953E5, 3.0032E5, 1.7988E3, 2.1311E5, 817.35]
     _viscosity_constants = [-11.331, 908.46, 0.00042478, 0.0, 0.0]
     _thermal_conductivity_constants = [0.21928, -0.00032568, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [57.723, -5236.90, -5.2136, 2.3e-17, 6.0]

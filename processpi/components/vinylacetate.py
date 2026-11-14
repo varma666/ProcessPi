@@ -51,6 +51,9 @@ class VinylAcetate(Component):
 
     _density_constants = [0.9591, 0.2593, 519.13, 0.27448]
     _specific_heat_constants = [136300, -106.17, 0.75175, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-181 (cmpd. no. 338, Vinyl acetate).
+    _ideal_gas_heat_capacity_constants = [0.536E5, 2.119E5, 1.198E3, 1.147E5, 510]
     _viscosity_constants = [-22.407, 1462.8, 1.7006, 0.0, 0.0]
     _thermal_conductivity_constants = [0.256, -0.0003542, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [57.406, -5702.80, -5.0307, 1.1e-17, 6.0]

@@ -51,6 +51,9 @@ class Pentane(Component):
 
     _density_constants = [0.84947, 0.26726, 469.7, 0.27789]
     _specific_heat_constants = [159080, -270.5, 0.99537, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 279, Pentane).
+    _ideal_gas_heat_capacity_constants = [0.8805E5, 3.011E5, 1.6502E3, 1.892E5, 747.6]
     _viscosity_constants = [-53.509, 1836.6, 7.1409, -1.9627e-05, 2.0]
     _thermal_conductivity_constants = [0.2537, -0.000576, 3.44e-07]
     _vapor_pressure_constants = [78.741, -5420.30, -8.8253, 9.62e-06, 2.0]

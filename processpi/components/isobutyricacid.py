@@ -51,6 +51,9 @@ class IsobutyricAcid(Component):
 
     _density_constants = [0.88575, 0.25736, 605.0, 0.26265]
     _specific_heat_constants = [127540, -65.35, 0.82867, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1200 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 189, Isobutyric acid).
+    _ideal_gas_heat_capacity_constants = [0.74694E5, 2.4356E5, 1.715E3, 1.8484E5, 757.75]
     _viscosity_constants = [-11.497, 1365.7, 0.036966, 0, 0]
     _thermal_conductivity_constants = [0.21668, -0.0002556, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [110.38, -10540, -12.262, 1.43e-17, 6.0]

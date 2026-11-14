@@ -51,6 +51,9 @@ class Butyronitrile(Component):
 
     _density_constants = [0.87533, 0.24331, 582.25, 0.28586]
     _specific_heat_constants = [104000,174,0,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 46, Butyronitrile).
+    _ideal_gas_heat_capacity_constants = [0.6906E5, 1.9996E5, 1.5494E3, 1.3146E5, 675]
     _viscosity_constants = [-10.136, 1006.4, -0.1337,0,0]
     _thermal_conductivity_constants = [0.2597, -0.00031,0,0,0]
     _vapor_pressure_constants = [66.32, -6714.90, -6.3087, 1.35e-17, 6.0]

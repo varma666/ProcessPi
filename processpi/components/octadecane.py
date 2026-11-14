@@ -51,6 +51,9 @@ class Octadecane(Component):
 
     _density_constants = [0.20448, 0.23474, 747.0, 0.28571]
     _specific_heat_constants = [399430, 374.64, 0.58156, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 263, Octadecane).
+    _ideal_gas_heat_capacity_constants = [2.9502E5, 10.034E5, 0.77107E3, -4.3012E5, 916.73]
     _viscosity_constants = [-22.688, 2466.0, 1.5703, 0.0, 0.0]
     _thermal_conductivity_constants = [0.2137, -0.0002252, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [157.68, -16093, -18.954, 5.93e-06, 2.0]

@@ -51,6 +51,9 @@ class CarbonDisulfide(Component):
 
     _density_constants = [1.7968, 0.28749, 552.0, 0.3226]
     _specific_heat_constants = [85600,-122,0.5605,-0.001452,2.01e-6]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
+    # Table 2-156, p. 2-176 (cmpd. no. 48, Carbon disulfide).
+    _ideal_gas_heat_capacity_constants = [0.301E5, 0.3338E5, 0.896E3, 0.2893E5, 374.7]
     _viscosity_constants = [-10.306, 703.01,0,0,0]
     _thermal_conductivity_constants = [0.2333, -0.000275,0,0,0]
     _vapor_pressure_constants = [67.114, -4820.40, -7.5303, 0.00917, 1.0]

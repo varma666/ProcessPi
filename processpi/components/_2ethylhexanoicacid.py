@@ -51,6 +51,9 @@ class _2EthylHexanoicAcid(Component):
 
     _density_constants = [0.47428, 0.25028, 674.6, 0.25442]
     _specific_heat_constants = [207670, -17.907, 1.0493, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 141, 2-Ethyl hexanoic acid).
+    _ideal_gas_heat_capacity_constants = [1.5777E5, 4.4017E5, 1.7494E3, 3.2378E5, 792.34]
     _viscosity_constants = [-13.037, 2346.0, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.20954, -0.00022251, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [117.52, -12991, -12.895, 6.13e-18, 6.0]

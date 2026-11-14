@@ -51,6 +51,9 @@ class HydrogenBromide(Component):
 
     _density_constants = [2.832, 0.2832, 363.15, 0.28571]
     _specific_heat_constants = [57720,9.9,0.0,0.0,0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 184, Hydrogen bromide).
+    _ideal_gas_heat_capacity_constants = [0.2912E5, 0.0953E5, 2.142E3, 0.0157E5, 1400]
     _viscosity_constants = [-11.633, 316.38, 0.56191,0,0]
     _thermal_conductivity_constants = [0.234, -0.0004636,0,0,0]
     _vapor_pressure_constants = [29.315, -2424.50, -1.1354, 2.38e-18, 6.0]

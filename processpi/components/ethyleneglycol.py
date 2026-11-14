@@ -51,6 +51,9 @@ class EthyleneGlycol(Component):
 
     _density_constants = [1.315, 0.25125, 720.0, 0.21868]
     _specific_heat_constants = [35540, 436.78, -0.18486, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 137, Ethylene glycol).
+    _ideal_gas_heat_capacity_constants = [0.63012E5, 1.4584E5, 1.673E3, 0.97296E5, 773.65]
     _viscosity_constants = [-20.515, 2468.5, 1.2435, 2500000000000.0, -5.0]
     _thermal_conductivity_constants = [0.088067, 0.00094712, -1.31e-06, 0.0, 0.0]
     _vapor_pressure_constants = [84.09, -10411, -8.1976, 1.6536E-18, 6]
