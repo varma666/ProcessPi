@@ -161,7 +161,12 @@ def test_propanol_enthalpy_matches_nist():
 @pytest.mark.parametrize("T, cp_kmol", [(146.95, 1.0797e5), (400.00, 2.1980e5)])
 def test_propanol_cp_matches_perry_table_2_153(T, cp_kmol):
     # Used to raise "too many values to unpack (expected 5)".
-    c3 = _propanol(T)
+    # Table 2-153 is the liquid Cp; at 400 K and 1 atm 1-propanol (normal
+    # boiling point 370.3 K) is a gas and gets its ideal-gas Cp, so the
+    # liquid phase is given.
+    from processpi.components import _1Propanol
+
+    c3 = _1Propanol(temperature=Temperature(T, "K"), phase="liquid")
     assert _cp_kmol(c3) == pytest.approx(cp_kmol, rel=5e-4)
 
 
