@@ -59,7 +59,7 @@ class _2Hexanone(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.00-1000 K:
     # Table 2-314, p. 2-435 (cmpd. no. 175, 2-Hexanone).
     _vapor_thermal_conductivity_constants = [-1.2158, 0.026637, -1711.6, -13176000]
-    _vapor_pressure_constants = [107.44, -8258.60, -12.679, 8.46e-06, 2.0]
+    _vapor_pressure_constants = [107.44, -8528.6, -12.679, 8.4606E-06, 2]  # Perry's 8th ed., Table 2-8, no. 175
     _enthalpy_constants = [5.6231e-7, 0.38207, 0.0, 0.0, 0.0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 217.35-1000 K:
     # Table 2-312, p. 2-423 (cmpd. no. 175, 2-Hexanone).

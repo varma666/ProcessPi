@@ -59,7 +59,7 @@ class PropylAcetate(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 374.65-1000 K:
     # Table 2-314, p. 2-438 (cmpd. no. 302, Propyl acetate).
     _vapor_thermal_conductivity_constants = [1325.3, 1, 12235000000, 0]
-    _vapor_pressure_constants = [115.16, -8433.90, -13.934, 1.03e-05, 2.0]
+    _vapor_pressure_constants = [115.16, -8433.9, -13.934, 1.0346E-05, 2]  # Perry's 8th ed., Table 2-8, no. 302
     _enthalpy_constants = [5.4327e-7, 0.407, 0.0, 0.0, 0.0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 178.15-1000 K:
     # Table 2-312, p. 2-425 (cmpd. no. 302, Propyl acetate).

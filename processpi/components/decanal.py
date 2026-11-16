@@ -59,7 +59,7 @@ class Decanal(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 488.15-1000 K:
     # Table 2-314, p. 2-434 (cmpd. no. 73, Decanal).
     _vapor_thermal_conductivity_constants = [-4.9825, 0.04928, -1107, -67349000]
-    _vapor_pressure_constants = [201.64, -15133, -26.264, 1.46e-05, 2.0]
+    _vapor_pressure_constants = [201.64, -15133, -26.264, 1.4625E-05, 2]  # Perry's 8th ed., Table 2-8, no. 73
     _enthalpy_constants = [7.9073e-7, 0.4129,0,0,0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 267.15-1000 K:
     # Table 2-312, p. 2-422 (cmpd. no. 73, Decanal).

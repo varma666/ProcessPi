@@ -16,7 +16,7 @@ class Cyanogen(Component):
     _critical_zc = 0.351  # Placeholder for critical compressibility factor
     _critical_acentric_factor = 0.279  # Placeholder for critical acentric factor
     _density_constants = [1.0743,0.20948,400.15,0.20724]
-    _specific_heat_constants = [65516,-144.7,0.063229,0,0]
+    _specific_heat_constants = [65516, 144.7, 0.063229, 0, 0]  # Perry's 8th ed., Table 2-153, no. 63
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
     # Table 2-156, p. 2-177 (cmpd. no. 63, Cyanogen).
     _ideal_gas_heat_capacity_constants = [0.3545E5, 0.5015E5, 1.057E3, 0.452E5, 396]

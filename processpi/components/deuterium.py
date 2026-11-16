@@ -54,7 +54,7 @@ class Deuterium(Component):
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
     # Table 2-156, p. 2-177 (cmpd. no. 80, Deuterium).
     _ideal_gas_heat_capacity_constants = [0.3029E5, 0.0975E5, 2.515E3, -0.0275E5, 368]
-    _viscosity_constants = [1.348e-06,0,0,0,0]
+    _viscosity_constants = [-13.516889, 0, 0, 0, 0]  # Perry's 8th ed., Table 2-313, no. 80: one value, 1.348E-06 Pa s at 20.35 K, so C1 = ln(1.348E-06)
     _thermal_conductivity_constants = [1.264,0,0,0,0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 233.15-1500 K:
     # Table 2-314, p. 2-434 (cmpd. no. 80, Deuterium).

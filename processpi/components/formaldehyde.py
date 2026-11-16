@@ -59,7 +59,7 @@ class Formaldehyde(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 254.05-994.05 K:
     # Table 2-314, p. 2-435 (cmpd. no. 153, Formaldehyde).
     _vapor_thermal_conductivity_constants = [44.847, -0.7096, -3493.5, 5353200]
-    _vapor_pressure_constants = [101.51, -4917.20, -13.765, 0.022, 1.0]
+    _vapor_pressure_constants = [101.51, -4917.2, -13.765, 2.2031E-02, 1]  # Perry's 8th ed., Table 2-8, no. 153
     _enthalpy_constants = [3.076e-7, 0.2954, 0.0, 0.0, 0.0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 181.15-1000 K:
     # Table 2-312, p. 2-423 (cmpd. no. 153, Formaldehyde).

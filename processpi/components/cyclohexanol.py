@@ -54,12 +54,12 @@ class Cyclohexanol(Component):
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
     # Table 2-156, p. 2-177 (cmpd. no. 66, Cyclohexanol).
     _ideal_gas_heat_capacity_constants = [0.9043E5, 2.5771E5, 0.7882E3, 1.3068E5, 1952.2]
-    _viscosity_constants = [280.87, -31869.0, -38.837, 0.0, -2.002]
+    _viscosity_constants = [280.87, -31869, -38.837, 3994500, -2.002]  # Perry's 8th ed., Table 2-313, no. 66
     _thermal_conductivity_constants = [0.1715, -0.0001255,0,0,0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 434.00-1000 K:
     # Table 2-314, p. 2-434 (cmpd. no. 66, Cyclohexanol).
     _vapor_thermal_conductivity_constants = [0.0032207, 0.5991, 608.69, 509290]
-    _vapor_pressure_constants = [189.19, -14337, -24.148, 1.07e-05, 2.0]
+    _vapor_pressure_constants = [189.19, -14337, -24.148, 1.0740E-05, 2]  # Perry's 8th ed., Table 2-8, no. 66
     _enthalpy_constants = [9.1791e-7, 0.6382,0,0,0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 296.60-1000 K:
     # Table 2-312, p. 2-422 (cmpd. no. 66, Cyclohexanol).

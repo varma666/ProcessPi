@@ -50,7 +50,7 @@ class _12Dimethoxypropane(Component):
     _critical_acentric_factor = 0.3522
 
     _density_constants = [0.76327, 0.26742, 543.0, 0.28571]
-    _specific_heat_constants = [199930, -191.5, 0.87664, 0.0, 0.0, 2.0145, 2.4734]
+    _specific_heat_constants = [199930, -191.5, 0.87664, 0, 0]  # Perry's 8th ed., Table 2-153, no. 104
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298.15-1500 K:
     # Table 2-156, p. 2-177 (cmpd. no. 104, 1,2-Dimethoxypropane).
     _ideal_gas_heat_capacity_constants = [1.0113E5, 3.2393E5, 1.5611E3, 2.1501E5, 689.3]

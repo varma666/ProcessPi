@@ -60,7 +60,7 @@ class Propylene(Component):
     # Table 2-314, p. 2-438 (cmpd. no. 305, Propylene).
     _vapor_thermal_conductivity_constants = [0.0000449, 1.2018, 421, 0]
     _vapor_pressure_constants = [43.905, -3097.80, -3.4425, 1e-16, 6.0]
-    _enthalpy_constants = [2.5216e-7, 0.33721, -0.18399, 0.22377]
+    _enthalpy_constants = [2.5216E7, 0.33721, -0.18399, 0.22377, 0]  # Perry's 8th ed., Table 2-150, no. 305
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 87.89-1000 K:
     # Table 2-312, p. 2-426 (cmpd. no. 305, Propylene).
     _vapor_viscosity_constants = [7.3919E-07, 0.5423, 263.73, 0]

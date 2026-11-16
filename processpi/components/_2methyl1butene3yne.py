@@ -59,7 +59,7 @@ class _2Methyl1Butene3Yne(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 305.40-1000 K:
     # Table 2-314, p. 2-436 (cmpd. no. 207, 2-Methyl-1-butene-3-yne).
     _vapor_thermal_conductivity_constants = [0.00015498, 0.9364, 15.366, 137400]
-    _vapor_pressure_constants = [95.453, -5448.80, -12.384, 0.0156, 1.0]
+    _vapor_pressure_constants = [95.453, -5448.8, -12.384, 1.5643E-02, 1]  # Perry's 8th ed., Table 2-8, no. 207
     _enthalpy_constants = [3.648e-7, 0.3863, 0.0, 0.0, 0.0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 160.15-1000 K:
     # Table 2-312, p. 2-424 (cmpd. no. 207, 2-Methyl-1-butene-3-yne).

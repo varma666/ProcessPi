@@ -23,11 +23,11 @@ class Bromine(Component):
     # Table 2-156, p. 2-176 (cmpd. no. 25, Bromine).
     _ideal_gas_heat_capacity_constants = [0.30113E5, 0.08009E5, 0.7514E3, 0.1078E5, 314.6]
     _viscosity_constants = [16.775,-314,-3.9763,0, 0] 
-    _thermal_conductivity_constants = [-0.2185, 0.0042143,-0.000017753,3.10E-08,-2.01E-11]
+    _thermal_conductivity_constants = [-0.2185, 0.0042143, -0.000017753, 3.1041E-08, -2.0108E-11]  # Perry's 8th ed., Table 2-315, no. 25
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 300.00-500 K:
     # Table 2-314, p. 2-433 (cmpd. no. 25, Bromine).
     _vapor_thermal_conductivity_constants = [1.0404E-06, 1.4685, 0, 0]
-    _vapor_pressure_constants = [108.26, -6592, -14.16,1.60E-02, 1] 
+    _vapor_pressure_constants = [108.26, -6592, -14.16, 1.6043E-02, 1]  # Perry's 8th ed., Table 2-8, no. 25
     _enthalpy_constants = [4E-7, 0.351, 0,0, 0]  # Placeholder for enthalpy constants
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 265.85-600 K:
     # Table 2-312, p. 2-421 (cmpd. no. 25, Bromine).

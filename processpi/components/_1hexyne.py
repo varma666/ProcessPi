@@ -59,7 +59,7 @@ class _1Hexyne(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 344.48-1000 K:
     # Table 2-314, p. 2-436 (cmpd. no. 180, 1-Hexyne).
     _vapor_thermal_conductivity_constants = [0.000058116, 1.0724, -77.165, 123900]
-    _vapor_pressure_constants = [133.2, -7492.90, -18.405, 0.0221, 1.0]
+    _vapor_pressure_constants = [133.2, -7492.9, -18.405, 2.2062E-02, 1]  # Perry's 8th ed., Table 2-8, no. 180
     _enthalpy_constants = [4.574e-7, 0.3698, 0.0, 0.0, 0.0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 141.25-1000 K:
     # Table 2-312, p. 2-423 (cmpd. no. 180, 1-Hexyne).

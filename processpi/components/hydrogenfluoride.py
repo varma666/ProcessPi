@@ -54,7 +54,7 @@ class HydrogenFluoride(Component):
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 50-1500 K:
     # Table 2-156, p. 2-179 (cmpd. no. 187, Hydrogen fluoride).
     _ideal_gas_heat_capacity_constants = [0.29134E5, 0.093252E5, 2.905E3, 195.0, 1.33E+03]
-    _viscosity_constants = [353.99, 13928.0, -41.717, 0.0, -0.5]
+    _viscosity_constants = [353.99, 13928, -41.717, -2962, -0.5]  # Perry's 8th ed., Table 2-313, no. 187
     _thermal_conductivity_constants = [0.7516, -0.0010874, 0.0, 0.0, 0.0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 350.00-450 K:
     # Table 2-314, p. 2-436 (cmpd. no. 187, Hydrogen fluoride).
