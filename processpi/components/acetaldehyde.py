@@ -53,6 +53,9 @@ class Acetaldehyde(Component):
     _specific_heat_constants = [115100,-433,1.425,0,0]
     _viscosity_constants = [-5.895, 668.21, -0.84323,0,0]
     _thermal_conductivity_constants = [0.311, -0.000436,0,0,0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.15-994 K:
+    # Table 2-314, p. 2-433 (cmpd. no. 1, Acetaldehyde).
+    _vapor_thermal_conductivity_constants = [3.7272E-07, 1.8129, 0, 0]
     # Perry's 8th ed., Table 2-8, p. 2-55: C2 is -8,036.7; the thousands comma
     # had turned it into 0.0.
     _vapor_pressure_constants = [193.69, -8036.7, -29.502, 0.0437, 1.0]

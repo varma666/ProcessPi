@@ -53,6 +53,9 @@ class Mdichlorobenzene(Component):
     _specific_heat_constants = [114880, 187.25, 0.0, 0.0, 0.0]
     _viscosity_constants = [-1.9265, 387.67, -1.1335, 150000000000000.0, -6.0]
     _thermal_conductivity_constants = [0.16694, -0.0001667, 0.0, 0.0, 0.0]
+    # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 446.23-1000 K:
+    # Table 2-314, p. 2-434 (cmpd. no. 85, m-Dichlorobenzene).
+    _vapor_thermal_conductivity_constants = [-1067.8, 0.754, -3.0361E+09, 0]
     _vapor_pressure_constants = [53.187, -6827.50, -4.3233, 2.31e-18, 6.0]
     _enthalpy_constants = [5.6899e-7, 0.35765, 0.0, 0.0, 0.0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 248.39-1000 K:
