@@ -66,7 +66,7 @@ def test_the_fixed_components_are_liquids_at_25_c(name):
 
 
 def _components():
-    return [name for name in components.__all__ if name != "Component"]
+    return [name for name in components.__all__ if name not in {"Component", "Mixture"}]
 
 
 def test_every_vapour_pressure_reaches_the_critical_pressure_at_tc():

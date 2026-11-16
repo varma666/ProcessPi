@@ -9,6 +9,7 @@ Example:
     from processpi.components import Water, Ethanol, Acetone
 """
 from .base import Component
+from .mixture import Mixture
 from ._12butadiene import _12Butadiene
 from ._12butanediol import _12Butanediol
 from ._12dibromoethane import _12Dibromoethane
@@ -362,6 +363,7 @@ from .organic_liquid import OrganicLiquid
 from .steam import Steam
 from .vapor import Vapor
 __all__ = [
+    "Mixture",
     "Component",
     "_112Trichloroethane",
     "_11Dibromoethane",
