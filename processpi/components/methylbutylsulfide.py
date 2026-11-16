@@ -51,6 +51,9 @@ class MethylbutylSulfide(Component):
 
     _density_constants = [0.75509, 0.27183, 593.0, 0.29127]
     _specific_heat_constants = [198390, -220.35, 0.76096, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 273.15-1200 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 209, Methylbutyl sulfide).
+    _ideal_gas_heat_capacity_constants = [1.0785E5, 2.7388E5, 1.5885E3, 1.9067E5, 749.6]
     _viscosity_constants = [-10.97, 1067.3, -0.017484, 0, 0]
     _thermal_conductivity_constants = [0.20698, -0.00024439, 0.0, 0.0, 0.0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 396.58-1000 K:

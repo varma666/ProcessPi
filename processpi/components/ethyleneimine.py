@@ -51,6 +51,9 @@ class Ethyleneimine(Component):
 
     _density_constants = [1.3462, 0.23289, 537.0, 0.23357]
     _specific_heat_constants = [46848, 205.35, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 150-1500 K:
+    # Table 2-156, p. 2-178 (cmpd. no. 138, Ethyleneimine).
+    _ideal_gas_heat_capacity_constants = [0.343E5, 1.427E5, 1.638E3, 1.037E5, 744.7]
     _viscosity_constants = [-11.012, 967.4, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.3097, -0.0004023, 0.0, 0.0, 0.0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 329.00-1000 K:

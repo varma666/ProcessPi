@@ -51,6 +51,9 @@ class DecylMercaptan(Component):
 
     _density_constants = [0.44289, 0.27636, 696.0, 0.27668]
     _specific_heat_constants = [314570,-160.93,0.95561,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-177 (cmpd. no. 78, Decyl mercaptan).
+    _ideal_gas_heat_capacity_constants = [1.931E5, 5.4815E5, 1.6085E3, 3.74E5, 754.75]
     _viscosity_constants = [-11.464, 1510.1, -0.012754,0,0]
     _thermal_conductivity_constants = [0.20134, -0.00020826,0,0,0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 512.35-1000 K:

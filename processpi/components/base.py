@@ -231,23 +231,32 @@ class Component(ABC):
 
     def _ideal_gas_specific_heat(self):
         """
-        Ideal-gas Cp from DIPPR Eq. 107 (Aly-Lee), used in the gas phase when
-        the component defines `_ideal_gas_heat_capacity_constants`:
+        Ideal-gas Cp, used in the gas phase. Cp in J/(kmol K), T in K, from
+        Perry's Chemical Engineers' Handbook, 8th ed.:
 
-            Cp = C1 + C2*[(C3/T)/sinh(C3/T)]^2 + C4*[(C5/T)/cosh(C5/T)]^2
+        - `_ideal_gas_heat_capacity_constants`: DIPPR Eq. 107 (Aly-Lee),
+          Table 2-156,
+              Cp = C1 + C2*[(C3/T)/sinh(C3/T)]^2 + C4*[(C5/T)/cosh(C5/T)]^2
+        - `_ideal_gas_heat_capacity_polynomial`: Table 2-155, for the few
+          compounds Table 2-156 has no row for (argon, helium-4, neon, nitric
+          oxide),
+              Cp = C1 + C2*T + C3*T^2 + C4*T^3 + C5*T^4
 
-        Cp in J/(kmol K), T in K. This is the form of Perry's Chemical
-        Engineers' Handbook, 8th ed., Table 2-156. `_specific_heat_constants`
-        hold the liquid polynomial (Table 2-153), which is only valid between
-        the liquid Tmin and Tmax. Returns None when the correlation does not
-        apply, so the caller falls back to the liquid polynomial.
+        `_specific_heat_constants` hold the liquid correlation (Table 2-153),
+        which is only valid between the liquid Tmin and Tmax. Returns None in
+        the liquid phase or when the component gives neither set, so the
+        caller falls back to the liquid correlation.
         """
         constants = getattr(self, "_ideal_gas_heat_capacity_constants", None)
-        if not constants or self.phase.value != "gas":
+        polynomial = getattr(self, "_ideal_gas_heat_capacity_polynomial", None)
+        if not (constants or polynomial) or self.phase.value != "gas":
             return None
         T = self.temperature.to("K").value
-        C1, C2, C3, C4, C5 = constants
-        cp_kmol = C1 + C2 * ((C3 / T) / sinh(C3 / T)) ** 2 + C4 * ((C5 / T) / cosh(C5 / T)) ** 2
+        if constants:
+            C1, C2, C3, C4, C5 = constants
+            cp_kmol = C1 + C2 * ((C3 / T) / sinh(C3 / T)) ** 2 + C4 * ((C5 / T) / cosh(C5 / T)) ** 2
+            return SpecificHeat(cp_kmol / self.molecular_weight, "J/kgK")
+        cp_kmol = sum(c * T ** i for i, c in enumerate(polynomial))
         return SpecificHeat(cp_kmol / self.molecular_weight, "J/kgK")
 
 

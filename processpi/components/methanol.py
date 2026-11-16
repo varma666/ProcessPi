@@ -20,6 +20,9 @@ class Methanol(Component):
     _critical_acentric_factor = 0.5658  # Placeholder for critical acentric factor
     _density_constants = [2.3267, 0.27073, 512.5, 0.24713]
     _specific_heat_constants = [105800,-362.23,0.9379,0,0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 194, Methanol).
+    _ideal_gas_heat_capacity_constants = [0.39252E5, 0.879E5, 1.9165E3, 0.53654E5, 896.7]
     _viscosity_constants = [-25.317, 1789.2, 2.069, 0, 0] 
     _thermal_conductivity_constants = [0.2837, -0.000281, 0,0,0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.00-684.37 K:

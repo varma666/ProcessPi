@@ -51,6 +51,9 @@ class NmethylAcetamide(Component):
 
     _density_constants = [0.88268, 0.23568, 718.0, 0.27379]
     _specific_heat_constants = [62600, 243.4, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-179 (cmpd. no. 195, N-Methyl acetamide).
+    _ideal_gas_heat_capacity_constants = [0.6116E5, 2.029E5, 1.7683E3, 1.3302E5, 835.5]
     _viscosity_constants = [-4.648, 1832.0, -1.2191, 0.0, 0.0]
     _thermal_conductivity_constants = [0.23743, -0.0002362, 0.0, 0.0, 0.0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 478.15-1000 K:

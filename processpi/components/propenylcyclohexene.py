@@ -51,6 +51,9 @@ class Propenylcyclohexene(Component):
 
     _density_constants = [0.61255, 0.26769, 636.0, 0.28571]
     _specific_heat_constants = [201400, -450.6, 1.7053, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 298, Propenylcyclohexene).
+    _ideal_gas_heat_capacity_constants = [1.0563E5, 4.3397E5, 1.6098E3, 3.181E5, 729.66]
     _viscosity_constants = [-11.208, 1079.8, 0.0, 0.0, 0.0]
     _thermal_conductivity_constants = [0.1831, -0.00020275, 0.0, 0.0, 0.0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 431.65-1000 K:

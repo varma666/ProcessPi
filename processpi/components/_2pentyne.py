@@ -51,6 +51,9 @@ class _2Pentyne(Component):
 
     _density_constants = [0.92099, 0.25419, 519.0, 0.31077]
     _specific_heat_constants = [68671, 246.66, 0.0, 0.0, 0.0]
+    # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
+    # Table 2-156, p. 2-180 (cmpd. no. 289, 2-Pentyne).
+    _ideal_gas_heat_capacity_constants = [0.70737E5, 2.2229E5, 1.557E3, 1.3125E5, 690.78]
     _viscosity_constants = [-3.7241, 516.54, -1.1167,0,0]
     _thermal_conductivity_constants = [0.21282, -0.0002856,0,0,0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 329.27-1000 K:
