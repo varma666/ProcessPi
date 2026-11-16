@@ -55,3 +55,6 @@ class ButylMercaptan(Component):
     _thermal_conductivity_constants = [0.21143, -0.000258,0,0,0]
     _vapor_pressure_constants = [65.382, -6262.40, -6.2585, 1.49e-17, 6.0]
     _enthalpy_constants = [4.9702e-7, 0.41199,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 157.46-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 41, Butyl mercaptan).
+    _vapor_viscosity_constants = [5.4539E-08, 0.88896, 43.687, 0]

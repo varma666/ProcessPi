@@ -14,7 +14,7 @@ class SulfurDioxide(Component):
     Section 2, compound no. 314, in the equation forms `Component` uses.
     At 25 C and 1 atm sulfur dioxide is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
 
     **Properties:**
     - `name`: The common name of the compound.
@@ -82,3 +82,6 @@ class SulfurDioxide(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 250-900 K:
     # Table 2-314, p. 2-438.
     _vapor_thermal_conductivity_constants = [10.527, -0.7732, -1333, 1506400]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 197.67-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 314, Sulfur dioxide).
+    _vapor_viscosity_constants = [6.863E-07, 0.6112, 217, 0]

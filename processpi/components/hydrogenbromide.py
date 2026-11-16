@@ -55,3 +55,6 @@ class HydrogenBromide(Component):
     _thermal_conductivity_constants = [0.234, -0.0004636,0,0,0]
     _vapor_pressure_constants = [29.315, -2424.50, -1.1354, 2.38e-18, 6.0]
     _enthalpy_constants = [2.485e-7, 0.39, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 206.45-800 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 184, Hydrogen bromide).
+    _vapor_viscosity_constants = [9.17E-08, 0.9273, 0, 0]

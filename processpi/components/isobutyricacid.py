@@ -55,3 +55,6 @@ class IsobutyricAcid(Component):
     _thermal_conductivity_constants = [0.21668, -0.0002556, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [110.38, -10540, -12.262, 1.43e-17, 6.0]
     _enthalpy_constants = [4.0385e-7, 0.82698, -2.033, 1.4769, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 227.15-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 189, Isobutyric acid).
+    _vapor_viscosity_constants = [1.1202E-07, 0.7822, 100.3, 0]

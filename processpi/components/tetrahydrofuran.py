@@ -55,3 +55,6 @@ class Tetrahydrofuran(Component):
     _thermal_conductivity_constants = [0.19428, -0.000249, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [54.898, -5305.4, -4.7627, 1.4291E-17, 6]
     _enthalpy_constants = [4.3021e-7, 0.36972, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 164.65-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 320, Tetrahydrofuran).
+    _vapor_viscosity_constants = [3.778E-07, 0.6533, 271.01, 0]

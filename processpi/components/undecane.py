@@ -55,3 +55,6 @@ class Undecane(Component):
     _thermal_conductivity_constants = [0.20515, -0.00023933, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [131.0, -11143, -15.855, 8.19e-06, 2.0]
     _enthalpy_constants = [7.2284e-7, 0.40607, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 247.57-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 336, Undecane).
+    _vapor_viscosity_constants = [3.594E-08, 0.9052, 125, 0]

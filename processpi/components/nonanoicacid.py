@@ -55,3 +55,6 @@ class NonanoicAcid(Component):
     _thermal_conductivity_constants = [0.204, -0.0002, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [137.6, -14948, -15.618, 5.57e-18, 6.0]
     _enthalpy_constants = [12.38e-7, 0.69869, 0.097854, -0.35082, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 285.65-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 257, Nonanoic acid).
+    _vapor_viscosity_constants = [7.0165E-08, 0.8062, 100.36, 0]

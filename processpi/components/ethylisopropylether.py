@@ -55,3 +55,6 @@ class EthylisopropylEther(Component):
     _thermal_conductivity_constants = [0.21928, -0.00032568, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [57.723, -5236.90, -5.2136, 2.3e-17, 6.0]
     _enthalpy_constants = [4.258e-7, 0.37221, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 140.00-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 143, Ethylisopropyl ether).
+    _vapor_viscosity_constants = [1.3974E-07, 0.74266, 98.58, 0]

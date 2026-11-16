@@ -55,3 +55,6 @@ class _14Dioxane(Component):
     _thermal_conductivity_constants = [0.3027, -0.0004827, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [44.494, -5406.70, -3.1287, 2.89e-18, 6.0]
     _enthalpy_constants = [5.051e-7, 0.3791, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 284.95-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 120, 1,4-Dioxane).
+    _vapor_viscosity_constants = [2.7334E-07, 0.7393, 129.93, 0]

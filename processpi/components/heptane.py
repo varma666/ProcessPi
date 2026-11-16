@@ -55,6 +55,9 @@ class Heptane(Component):
     _thermal_conductivity_constants = [0.215, -0.000303, 0, 0, 0]
     _vapor_pressure_constants = [87.829, -6996.40, -9.8802, 7.21e-06, 2.0]
     _enthalpy_constants = [5.0014e-7, 0.38795, 0, 0, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 182.57-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 160, Heptane).
+    _vapor_viscosity_constants = [6.672E-08, 0.82837, 85.752, 0]
 
     @PropertyMethod
     def specific_heat(self):

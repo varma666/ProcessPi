@@ -14,7 +14,7 @@ class Nitrogen(Component):
     Section 2, compound no. 249, in the equation forms `Component` uses.
     At 25 C and 1 atm nitrogen is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
 
     **Properties:**
     - `name`: The common name of the compound.
@@ -82,3 +82,6 @@ class Nitrogen(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 63.15-2000 K:
     # Table 2-314, p. 2-437.
     _vapor_thermal_conductivity_constants = [0.00033143, 0.7722, 16.323, 373.72]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 63.15-1970 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 249, Nitrogen).
+    _vapor_viscosity_constants = [6.5592E-07, 0.6081, 54.714, 0]

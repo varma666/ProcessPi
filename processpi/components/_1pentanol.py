@@ -55,3 +55,6 @@ class _1Pentanol(Component):
     _thermal_conductivity_constants = [0.2006, -0.0001603,0,0,0]
     _vapor_pressure_constants = [114.748,-10643, -12.858, 1.25e-17, 6.0]
     _enthalpy_constants = [7.39e-7, -0.1464, 1.4751, -0.9208,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 410.95-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 281, 1-Pentanol).
+    _vapor_viscosity_constants = [1.8903E-07, 0.7031, 175.9, 0]

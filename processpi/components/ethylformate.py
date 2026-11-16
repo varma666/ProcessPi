@@ -55,3 +55,6 @@ class EthylFormate(Component):
     _thermal_conductivity_constants = [0.2587, -0.00033, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [73.833, -5817.0, -7.809, 6.32e-06, 2.0]
     _enthalpy_constants = [4.5909e-7, 0.4123, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 193.55-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 140, Ethyl formate).
+    _vapor_viscosity_constants = [6.761E-07, 0.5804, 354.9, 0]

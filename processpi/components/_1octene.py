@@ -55,3 +55,6 @@ class _1Octene(Component):
     _thermal_conductivity_constants = [0.20467, -0.0002675, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [74.936, -7155.90, -7.5843, 1.71e-17, 6.0]
     _enthalpy_constants = [5.4859e-7, 0.26207, 0.50642, -0.43873, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 171.45-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 271, 1-Octene).
+    _vapor_viscosity_constants = [5.0324E-05, 0.077611, 3604.6, 0]

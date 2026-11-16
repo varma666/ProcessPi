@@ -14,7 +14,7 @@ class Methane(Component):
     Section 2, compound no. 193, in the equation forms `Component` uses.
     At 25 C and 1 atm methane is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
 
     **Properties:**
     - `name`: The common name of the compound.
@@ -83,6 +83,9 @@ class Methane(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 111.63-600 K:
     # Table 2-314, p. 2-436.
     _vapor_thermal_conductivity_constants = [8.3983E-06, 1.4268, -49.654, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 90.69-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 193, Methane).
+    _vapor_viscosity_constants = [5.2546E-07, 0.59006, 105.67, 0]
 
     @PropertyMethod
     def specific_heat(self) -> SpecificHeat:

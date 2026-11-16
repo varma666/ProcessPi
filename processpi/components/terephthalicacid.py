@@ -55,3 +55,6 @@ class TerephthalicAcid(Component):
     _thermal_conductivity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [248.72, -32283, -30.009, 4.8e-06, 2.0]
     _enthalpy_constants = [8.824e-7, 298.15, 8.824e-7, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 700.15-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 317, Terephthalic acid).
+    _vapor_viscosity_constants = [2.2452E-08, 0.97631, 0, 0]

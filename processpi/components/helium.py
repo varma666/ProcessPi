@@ -14,7 +14,7 @@ class Helium(Component):
     Section 2, compound no. 157, in the equation forms `Component` uses.
     At 25 C and 1 atm helium is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
     Helium-4 has two liquid Cp rows in Table 2-153; the 2.20-4.60 K row
     (above the lambda point, the range of Table 2-32) is used. Helium is not
     in Table 2-156, so the ideal-gas Cp is Table 2-155's polynomial, which
@@ -85,6 +85,9 @@ class Helium(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 30-2000 K:
     # Table 2-314, p. 2-435.
     _vapor_thermal_conductivity_constants = [0.00226, 0.7305, -18.63, 440]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 20.00-2000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 157, Helium-4).
+    _vapor_viscosity_constants = [3.253E-07, 0.7162, -9.6, 107]
 
     def _ideal_gas_specific_heat(self):
         """Ideal-gas Cp from Table 2-155's polynomial, in the gas phase:

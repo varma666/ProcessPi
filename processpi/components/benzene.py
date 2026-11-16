@@ -30,6 +30,9 @@ class Benzene(Component):
     _thermal_conductivity_constants = [0.23444, -0.00030572, 0, 0, 0]
     _vapor_pressure_constants = [83.107, -6486.2, -9.2194, 0.0000069844, 2]
     _enthalpy_constants = [4.5346E-7, 0.39053, 0, 0, 0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 278.68-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 16, Benzene).
+    _vapor_viscosity_constants = [3.134E-08, 0.9676, 7.9, 0]
     
     @PropertyMethod
     def specific_heat(self):

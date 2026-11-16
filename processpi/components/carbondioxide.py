@@ -23,3 +23,6 @@ class Carbondioxide(Component):
     _thermal_conductivity_constants = [0.4406, -0.0012175,0,0,0]
     _vapor_pressure_constants = [140.54,-4735,-21.268,4.09E-02, 1] 
     _enthalpy_constants = [2.173E-7, 0.382, -0.4339,0.42213, 0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 194.67-1500 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 47, Carbon dioxide).
+    _vapor_viscosity_constants = [2.148E-06, 0.46, 290, 0]

@@ -55,3 +55,6 @@ class SulfurTrioxide(Component):
     _thermal_conductivity_constants = [0.92882, -0.0030803, 2.66e-06, 0.0, 0.0]
     _vapor_pressure_constants = [180.99, -12060, -22.839, 7.24e-17, 6.0]
     _enthalpy_constants = [7.337e-7, 0.5647, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 297.93-694.19 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 316, Sulfur trioxide).
+    _vapor_viscosity_constants = [3.9067E-06, 0.3845, 470.1, 0]

@@ -14,7 +14,7 @@ class Ozone(Component):
     Section 2, compound no. 276, in the equation forms `Component` uses.
     At 25 C and 1 atm ozone is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
 
     **Properties:**
     - `name`: The common name of the compound.
@@ -84,3 +84,6 @@ class Ozone(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 161.85-1000 K:
     # Table 2-314, p. 2-437.
     _vapor_thermal_conductivity_constants = [0.0043147, 0.47999, 700.09, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 80.15-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 276, Ozone).
+    _vapor_viscosity_constants = [1.196E-07, 0.84797, 0, 0]

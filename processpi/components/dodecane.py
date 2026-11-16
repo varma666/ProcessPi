@@ -55,3 +55,6 @@ class Dodecane(Component):
     _thermal_conductivity_constants = [0.2047, -0.0002326, 0, 0, 0]
     _vapor_pressure_constants = [137.47, -11976, -16.698, 8.09e-06, 2.0]
     _enthalpy_constants = [7.7337e-7, 0.40681, 0, 0, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 263.57-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 123, Dodecane).
+    _vapor_viscosity_constants = [6.344E-08, 0.8287, 219.5, 0]

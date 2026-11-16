@@ -55,3 +55,6 @@ class Cyclohexene(Component):
     _thermal_conductivity_constants = [0.20926, -0.00026037,0,0,0]
     _vapor_pressure_constants = [88.184, -6624.90, -10.059, 8.26e-06, 2.0]
     _enthalpy_constants = [4.4405e-7, 0.37479,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 169.67-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 68, Cyclohexene).
+    _vapor_viscosity_constants = [1.3326E-06, 0.4537, 445, 0]

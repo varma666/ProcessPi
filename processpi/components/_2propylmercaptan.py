@@ -55,3 +55,6 @@ class _2PropylMercaptan(Component):
     _thermal_conductivity_constants = [0.21706, -0.00028952,0,0,0]
     _vapor_pressure_constants = [60.43, -5276.90, -5.6572, 2.6e-17, 6.0]
     _enthalpy_constants = [4.2191e-7, 0.41161,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 142.61-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 307, 2-Propyl mercaptan).
+    _vapor_viscosity_constants = [3.5532E-08, 0.95654, 0, 0]

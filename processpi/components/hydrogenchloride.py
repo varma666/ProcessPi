@@ -14,7 +14,7 @@ class HydrogenChloride(Component):
     Section 2, compound no. 185, in the equation forms `Component` uses.
     At 25 C and 1 atm hydrogen chloride is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
 
     **Properties:**
     - `name`: The common name of the compound.
@@ -82,3 +82,6 @@ class HydrogenChloride(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 190-700 K:
     # Table 2-314, p. 2-436.
     _vapor_thermal_conductivity_constants = [0.001865, 0.49755, 358, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 200.00-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 185, Hydrogen chloride).
+    _vapor_viscosity_constants = [4.924E-07, 0.6702, 157.7, 0]

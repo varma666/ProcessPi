@@ -55,3 +55,6 @@ class DiethylSulfide(Component):
     _thermal_conductivity_constants = [0.21065, -0.0002623,0,0,0]
     _vapor_pressure_constants = [46.705, -5177.40, -3.5985, 1.71e-06, 2.0]
     _enthalpy_constants = [4.7659e-7, 0.37987,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 169.20-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 96, Diethyl sulfide).
+    _vapor_viscosity_constants = [6.5492E-08, 0.86232, 59.455, 0]

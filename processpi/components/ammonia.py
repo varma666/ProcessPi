@@ -71,6 +71,9 @@ class Ammonia(Component):
     # vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 200-900 K: Perry's
     # 8th ed., Table 2-314, p. 2-433 (C3, C4 blank). 0.0253 W/mK at 300 K.
     _vapor_thermal_conductivity_constants = [9.6608E-06, 1.3799, 0, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 195.41-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 12, Ammonia).
+    _vapor_viscosity_constants = [4.1855E-08, 0.9806, 30.8, 0]
 
 
     @PropertyMethod

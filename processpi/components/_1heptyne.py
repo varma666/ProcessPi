@@ -55,3 +55,6 @@ class _1Heptyne(Component):
     _thermal_conductivity_constants = [0.21098, -0.00026652, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [59.083, -6031.80, -5.3072, 1.44e-17, 6.0]
     _enthalpy_constants = [4.8222e-7, 0.33858, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 192.22-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 168, 1-Heptyne).
+    _vapor_viscosity_constants = [5.9501E-07, 0.52758, 274.02, 0]

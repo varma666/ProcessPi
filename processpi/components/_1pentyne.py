@@ -55,3 +55,6 @@ class _1Pentyne(Component):
     _thermal_conductivity_constants = [0.22102, -0.000322,0,0,0]
     _vapor_pressure_constants = [82.805, -5683.80, -9.4301, 1.08e-05, 2.0]
     _enthalpy_constants = [3.954e-7, 0.3512,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 167.45-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 288, 1-Pentyne).
+    _vapor_viscosity_constants = [4.1022E-08, 0.90585, 0, 0]

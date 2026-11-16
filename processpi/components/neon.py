@@ -14,7 +14,7 @@ class Neon(Component):
     Section 2, compound no. 247, in the equation forms `Component` uses.
     At 25 C and 1 atm neon is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
     Neon is not in Table 2-156, so the ideal-gas Cp is Table 2-155's
     polynomial, which is the constant 5/2 R = 20,786 J/(kmol K).
 
@@ -83,6 +83,9 @@ class Neon(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 30-3273.1 K:
     # Table 2-314, p. 2-437.
     _vapor_thermal_conductivity_constants = [0.0011385, 0.6646, 8.7, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 30.00-3273.1 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 247, Neon).
+    _vapor_viscosity_constants = [7.19E-07, 0.6659, 5.3, 0]
 
     def _ideal_gas_specific_heat(self):
         """Ideal-gas Cp from Table 2-155's polynomial, in the gas phase:

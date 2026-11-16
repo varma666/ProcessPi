@@ -55,3 +55,6 @@ class _2Pentanol(Component):
     _thermal_conductivity_constants = [0.21875, -0.00027849,0,0,0]
     _vapor_pressure_constants = [122.26, -10774, -13.943, 1.07e-42, 15.0]
     _enthalpy_constants = [11.111e-7, 1.8011, -2.1801, 1.0641,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 200.00-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 282, 2-Pentanol).
+    _vapor_viscosity_constants = [1.1749E-07, 0.7649, 103.78, 0]

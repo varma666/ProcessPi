@@ -80,3 +80,6 @@ class Cyclohexane(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 325-1000 K:
     # Table 2-314, p. 2-434.
     _vapor_thermal_conductivity_constants = [8.59E-7, 1.7709, 243, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 279.69-900 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 65, Cyclohexane).
+    _vapor_viscosity_constants = [6.77E-08, 0.8367, 36.7, 0]

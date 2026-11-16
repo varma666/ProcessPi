@@ -55,3 +55,6 @@ class _1Heptanol(Component):
     _thermal_conductivity_constants = [0.2239, -0.000226, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [147.41, -13466, -17.353, 1.13e-17, 6.0]
     _enthalpy_constants = [7.0236e-7, -1.3652, 3.987, -2.2545, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 239.15-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 162, 1-Heptanol).
+    _vapor_viscosity_constants = [2.572E-07, 0.6502, 248.6, 0]

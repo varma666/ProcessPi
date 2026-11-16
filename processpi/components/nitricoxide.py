@@ -14,7 +14,7 @@ class NitricOxide(Component):
     Section 2, compound no. 253, in the equation forms `Component` uses.
     At 25 C and 1 atm nitric oxide is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
     Nitric oxide is not in Table 2-156, so the ideal-gas Cp is Table 2-155's
     polynomial.
 
@@ -88,6 +88,9 @@ class NitricOxide(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 121.38-750 K:
     # Table 2-314, p. 2-437.
     _vapor_thermal_conductivity_constants = [0.0004096, 0.7509, 45.6, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 110.00-1500 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 253, Nitric oxide).
+    _vapor_viscosity_constants = [1.467E-06, 0.5123, 125.4, 0]
 
     def _ideal_gas_specific_heat(self):
         """Ideal-gas Cp from Table 2-155's polynomial, in the gas phase:

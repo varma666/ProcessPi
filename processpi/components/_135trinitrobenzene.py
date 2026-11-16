@@ -55,3 +55,6 @@ class _135Trinitrobenzene(Component):
     _thermal_conductivity_constants = [0.18421, -0.00016097,0,0,0]
     _vapor_pressure_constants = [506.33, -37483, -69.22, 2.74e-05, 2.0]
     _enthalpy_constants = [10.687e-7, 0.38,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 398.40-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 334, 1,3,5-Trinitrobenzene).
+    _vapor_viscosity_constants = [3.4066E-08, 0.95252, 43.528, 0]

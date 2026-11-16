@@ -55,3 +55,6 @@ class _3Heptanone(Component):
     _thermal_conductivity_constants = [0.2026, -0.0002234, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [78.463, -8077.20, -7.9062, 8.05e-18, 6.0]
     _enthalpy_constants = [6.3357e-7, 0.42167, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 234.15-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 164, 3-Heptanone).
+    _vapor_viscosity_constants = [8.9656E-08, 0.78236, 100.14, 0]

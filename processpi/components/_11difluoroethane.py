@@ -55,6 +55,9 @@ class _11Difluoroethane(Component):
     _thermal_conductivity_constants = [0.27019, -0.000661, 3.44e-07, 0.0, 0.0]
     _vapor_pressure_constants = [73.491, -4385.90, -8.1851, 1.3e-05, 2.0]
     _enthalpy_constants = [3.2312e-7, 0.37653, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 154.56-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 97, 1,1-Difluoroethane).
+    _vapor_viscosity_constants = [2.7228E-06, 0.39531, 445.07, 0]
 
     @PropertyMethod
     def specific_heat(self):

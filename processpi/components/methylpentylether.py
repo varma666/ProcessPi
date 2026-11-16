@@ -55,3 +55,6 @@ class MethylPentylEther(Component):
     _thermal_conductivity_constants = [0.21698, -0.00028998, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [61.907, -6188.90, -5.706, 1.18e-17, 6.0]
     _enthalpy_constants = [5.0002e-7, 0.3781, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 176.00-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 235, Methyl pentyl ether).
+    _vapor_viscosity_constants = [1.0546E-07, 0.77106, 93.745, 0]

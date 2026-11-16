@@ -55,3 +55,6 @@ class DiethanolAmine(Component):
     _thermal_conductivity_constants = [0.0218, 0.0010315, -1.355e-06,0,0]
     _vapor_pressure_constants = [106.38, -13714, -11.06, 3.26e-18, 6.0]
     _enthalpy_constants = [10.154e-7, 0.3403,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 301.15-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 93, Diethanol amine).
+    _vapor_viscosity_constants = [3.3628E-08, 0.9426, 39.587, 0]

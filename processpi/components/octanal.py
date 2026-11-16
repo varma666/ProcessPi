@@ -55,3 +55,6 @@ class Octanal(Component):
     _thermal_conductivity_constants = [0.20143, -0.00021102, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [83.601, -8865.80, -8.5711, 7.94e-18, 6.0]
     _enthalpy_constants = [6.7735e-7, 0.40607, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 246.00-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 264, Octanal).
+    _vapor_viscosity_constants = [1.0321E-07, 0.7589, 121.26, 0]

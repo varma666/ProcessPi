@@ -35,6 +35,9 @@ class CarbonMonoxide(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 70-1500 K: Perry's
     # 8th ed., Table 2-314, p. 2-433. 0.0251 W/mK at 300 K.
     _vapor_thermal_conductivity_constants = [0.00059882, 0.6863, 57.13, 501.92]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 68.15-1250 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 49, Carbon monoxide).
+    _vapor_viscosity_constants = [1.1127E-06, 0.5338, 94.7, 0]
 
 
     @PropertyMethod

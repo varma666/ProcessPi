@@ -21,3 +21,6 @@ class CarbonTetrachloride(Component):
     _thermal_conductivity_constants = [0.1589, -0.0001987,0,0,0]
     _vapor_pressure_constants = [78.441,-6128.10,-8.5766,6.85E-06, 2] 
     _enthalpy_constants = [4.3252E-7, 0.37688, 0,0, 0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 250.33-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 50, Carbon tetrachloride).
+    _vapor_viscosity_constants = [3.137E-06, 0.3742, 491.5, 0]

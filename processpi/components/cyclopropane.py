@@ -55,3 +55,6 @@ class Cyclopropane(Component):
     _thermal_conductivity_constants = [0.24348, -0.00042568,0,0,0]
     _vapor_pressure_constants = [40.608, -3179.60, -2.8937, 5.61e-17, 6.0]
     _enthalpy_constants = [2.7672e-7, 0.35588,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 145.59-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 71, Cyclopropane).
+    _vapor_viscosity_constants = [1.7578E-06, 0.4265, 370.34, 0]

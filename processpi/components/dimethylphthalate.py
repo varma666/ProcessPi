@@ -55,3 +55,6 @@ class DimethylPhthalate(Component):
     _thermal_conductivity_constants = [0.13905, 0.0001509, -3.98e-07,0,0]
     _vapor_pressure_constants = [72.517, -10415, -6.755, 1.33e-06, 2.0]
     _enthalpy_constants = [8.1578e-7, 0.29346,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 274.18-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 115, Dimethyl phthalate).
+    _vapor_viscosity_constants = [5.2195E-08, 0.85584, 69.036, 0]

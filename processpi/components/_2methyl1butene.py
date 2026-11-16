@@ -55,3 +55,6 @@ class _2Methyl1Butene(Component):
     _thermal_conductivity_constants = [0.19447, -0.0002901, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [93.131, -5525.40, -11.852, 0.0142, 1.0]
     _enthalpy_constants = [3.9091e-7, 0.39866, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 135.58-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 205, 2-Methyl-1-butene).
+    _vapor_viscosity_constants = [5.0602E-07, 0.55258, 199.82, 0]

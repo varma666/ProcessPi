@@ -55,3 +55,6 @@ class Tetradecane(Component):
     _thermal_conductivity_constants = [0.20293, -0.00021798, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [140.47, -13231, -16.859, 6.59e-06, 2.0]
     _enthalpy_constants = [9.0539e-7, 0.44467, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 279.01-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 319, Tetradecane).
+    _vapor_viscosity_constants = [5.1567E-09, 1.1561, 0, 0]

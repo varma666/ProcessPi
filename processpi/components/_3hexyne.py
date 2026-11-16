@@ -55,3 +55,6 @@ class _3Hexyne(Component):
     _thermal_conductivity_constants = [0.20996, -0.0002692, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [47.091, -5104, -3.6371, 0.000516, 1.0]
     _enthalpy_constants = [4.808e-7, 0.436, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 170.05-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 178, 3-Hexyne).
+    _vapor_viscosity_constants = [5.2127E-07, 0.5444, 237.01, 0]

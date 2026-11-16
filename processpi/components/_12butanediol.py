@@ -57,6 +57,9 @@ class _12Butanediol(Component):
     _thermal_conductivity_constants = [0.064621, 0.00067625, -1.05e-06,0,0]
     _vapor_pressure_constants = [103.28, -11548, -10.925, 4.26e-18, 6.0]
     _enthalpy_constants = [8.9754e-7, 0.45316,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 220.00-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 32, 1,2-Butanediol).
+    _vapor_viscosity_constants = [7.5626E-08, 0.83521, 71.798, 0]
 
 
     @PropertyMethod

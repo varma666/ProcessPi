@@ -55,3 +55,6 @@ class BenzylMercaptan(Component):
     _thermal_conductivity_constants = [0.20316, -0.00019912,0,0,0]
     _vapor_pressure_constants = [118.02, -10527, -13.91, 6.48e-06, 2.0]
     _enthalpy_constants = [6.9642e-7, 0.44354,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 243.95-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 23, Benzyl mercaptan).
+    _vapor_viscosity_constants = [4.0138E-08, 0.90735, 34.714, 0]

@@ -55,3 +55,6 @@ class Acrolein(Component):
     _thermal_conductivity_constants = [0.2703, -0.0003764,0,0,0]
     _vapor_pressure_constants = [138.4, -7122.70, -19.638, 0.0264, 1.0]
     _enthalpy_constants = [3.8736e-7, 0.29335,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 185.45-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 8, Acrolein).
+    _vapor_viscosity_constants = [6.523E-07, 0.579, 410.8, 0]

@@ -55,3 +55,6 @@ class NitrogenTrifluoride(Component):
     _thermal_conductivity_constants = [0.0, 0.0, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [68.149, -2257.90, -8.9118, 0.0232, 1.0]
     _enthalpy_constants = [1.6402e-7, 0.36494, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 66.46-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 250, Nitrogen trifluoride).
+    _vapor_viscosity_constants = [8.2005E-07, 0.61423, 114.58, 0]

@@ -55,3 +55,6 @@ class _2Propanol(Component):
     _thermal_conductivity_constants = [0.20161, -0.00021529,0,0,0]
     _vapor_pressure_constants = [96.094, -8575.40, -10.292, 1.67e-17, 6.0]
     _enthalpy_constants = [7.2542e-7, 0.79137, -0.66092, 0.34223,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 187.35-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 297, 2-Propanol).
+    _vapor_viscosity_constants = [1.2003E-06, 0.494, 479.78, 0]

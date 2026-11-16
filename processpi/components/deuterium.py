@@ -55,3 +55,6 @@ class Deuterium(Component):
     _thermal_conductivity_constants = [1.264,0,0,0,0]
     _vapor_pressure_constants = [18.947, -154.47, -0.5723, 0.0389, 1.0]
     _enthalpy_constants = [0.1657e-7, 0.352,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 60.00-480 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 80, Deuterium).
+    _vapor_viscosity_constants = [2.4999E-07, 0.6878, 0.5962, 0]

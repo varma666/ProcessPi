@@ -55,3 +55,6 @@ class _3Hexanone(Component):
     _thermal_conductivity_constants = [0.23493, -0.0002912, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [73.155, -7242.90, -7.2569, 1.27e-17, 6.0]
     _enthalpy_constants = [5.6232e-7, 0.39972, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 217.50-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 176, 3-Hexanone).
+    _vapor_viscosity_constants = [9.8882E-08, 0.7755, 99.825, 0]

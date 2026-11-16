@@ -55,3 +55,6 @@ class _11Dichloropropane(Component):
     _thermal_conductivity_constants = [0.18, -0.00023144, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [83.495, -6661.40, -9.2386, 6.77e-06, 2.0]
     _enthalpy_constants = [4.774e-7, 0.39204, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 200.00-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 91, 1,1-Dichloropropane).
+    _vapor_viscosity_constants = [1.4906E-07, 0.7617, 105.9, 0]

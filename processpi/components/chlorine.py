@@ -21,4 +21,7 @@ class Chlorine(Component):
     _thermal_conductivity_constants = [0.2246, -0.000064,-0.000000788,0,0]
     _vapor_pressure_constants = [71.334,-3855,-8.5171,1.24E-02, 1] 
     _enthalpy_constants = [3.068E-7, 0.8458, -0.9001,0.453, 0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 200.00-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 52, Chlorine).
+    _vapor_viscosity_constants = [2.60E-07, 0.7423, 98.3, 0]
 

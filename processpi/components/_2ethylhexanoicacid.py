@@ -55,3 +55,6 @@ class _2EthylHexanoicAcid(Component):
     _thermal_conductivity_constants = [0.20954, -0.00022251, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [117.52, -12991, -12.895, 6.13e-18, 6.0]
     _enthalpy_constants = [11.184e-7, 0.86189, -0.47845, 0.048646]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 235.00-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 141, 2-Ethyl hexanoic acid).
+    _vapor_viscosity_constants = [2.5704E-08, 0.94738, 0, 0]

@@ -55,3 +55,6 @@ class _2Hexanol(Component):
     _thermal_conductivity_constants = [0.21391, -0.00026042, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [109.42, -10449, -12.051, 2.61e-46, 16.0]
     _enthalpy_constants = [11.55, 2.2877, -3.6724, 2.1326, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 223.00-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 174, 2-Hexanol).
+    _vapor_viscosity_constants = [1.0652E-07, 0.77022, 105.85, 0]

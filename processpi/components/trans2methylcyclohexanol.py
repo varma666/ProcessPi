@@ -55,3 +55,6 @@ class Trans2Methylcyclohexanol(Component):
     _thermal_conductivity_constants = [0.21828, -0.0002557, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [54.179, -7477.20, -4.22, 3.52e-18, 6.0]
     _enthalpy_constants = [7.8995e-7, 0.42479, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 269.15-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 216, trans-2-Methylcyclohexanol).
+    _vapor_viscosity_constants = [2.00E-07, 0.704, 187, 0]

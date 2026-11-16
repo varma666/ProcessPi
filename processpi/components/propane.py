@@ -14,7 +14,7 @@ class Propane(Component):
     Section 2, compound no. 295, in the equation forms `Component` uses.
     At 25 C and 1 atm propane is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
 
     **Properties:**
     - `name`: The common name of the compound.
@@ -83,6 +83,9 @@ class Propane(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 231.11-1000 K:
     # Table 2-314, p. 2-437.
     _vapor_thermal_conductivity_constants = [-1.12, 0.10972, -9834.6, -7535800]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 85.47-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 295, Propane).
+    _vapor_viscosity_constants = [4.9054E-08, 0.90125, 0, 0]
 
     @PropertyMethod
     def specific_heat(self) -> SpecificHeat:

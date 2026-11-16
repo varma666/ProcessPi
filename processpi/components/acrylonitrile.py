@@ -56,3 +56,6 @@ class Acrylonitrile(Component):
     _vapor_pressure_constants = [87.604,-6392.70,-10.101,1.09e-5,2]
     # Perry's 8th ed., Table 2-150, p. 2-150 prints C1 x 1E-07 = 4.155 (J/kmol).
     _enthalpy_constants = [4.155E7, 0.2733,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 189.63-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 10, Acrylonitrile).
+    _vapor_viscosity_constants = [4.302E-08, 0.9114, 54.3, 0]

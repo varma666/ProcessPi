@@ -14,7 +14,7 @@ class HydrogenSulfide(Component):
     Section 2, compound no. 188, in the equation forms `Component` uses.
     At 25 C and 1 atm hydrogen sulfide is a gas: `specific_heat()` and
     `thermal_conductivity()` then use the ideal-gas Cp and the vapour k below,
-    and `viscosity()` the base class's Sutherland fallback (air constants).
+    and `viscosity()` the vapour viscosity below.
 
     **Properties:**
     - `name`: The common name of the compound.
@@ -84,6 +84,9 @@ class HydrogenSulfide(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 212.8-600 K:
     # Table 2-314, p. 2-436.
     _vapor_thermal_conductivity_constants = [1.381E-07, 1.8379, -352.09, 46041]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 250.00-480 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 188, Hydrogen sulfide).
+    _vapor_viscosity_constants = [3.9314E-08, 1.0134, 0, 0]
 
     @PropertyMethod
     def specific_heat(self) -> SpecificHeat:

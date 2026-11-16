@@ -81,3 +81,6 @@ class HydrogenCyanide(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 273.15-673.15 K:
     # Table 2-314, p. 2-436.
     _vapor_thermal_conductivity_constants = [4.6496E-06, 1.3669, -210.76, 58295]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 300.00-425 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 186, Hydrogen cyanide).
+    _vapor_viscosity_constants = [1.278E-08, 1.0631, 340, 0]

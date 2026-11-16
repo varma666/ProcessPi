@@ -55,3 +55,6 @@ class NndimethylFormamide(Component):
     _thermal_conductivity_constants = [0.26, -0.000255, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [82.762, -7955.50, -8.8038, 4.24e-06, 2.0]
     _enthalpy_constants = [5.9217e-7, 0.37996, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 212.72-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 113, N,N-Dimethyl formamide).
+    _vapor_viscosity_constants = [3.5538E-06, 0.3766, 1176.1, 0]

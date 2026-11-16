@@ -55,3 +55,6 @@ class MethylisopropylSulfide(Component):
     _thermal_conductivity_constants = [0.20978, -0.00026468, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [52.82, -5437.70, -4.442, 9.51e-18, 6.0]
     _enthalpy_constants = [4.5052e-7, 0.36493, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 171.64-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 230, Methylisopropyl sulfide).
+    _vapor_viscosity_constants = [8.6077E-08, 0.81669, 71.294, 0]

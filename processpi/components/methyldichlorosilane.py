@@ -55,3 +55,6 @@ class Methyldichlorosilane(Component):
     _thermal_conductivity_constants = [0.21956, -0.00032153, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [79.788, -5420, -9.0702, 1.15e-05, 2.0]
     _enthalpy_constants = [3.6756e-7, 0.31266, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 182.55-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 220, Methyldichlorosilane).
+    _vapor_viscosity_constants = [1.977E-07, 0.7453, 131.22, 0]

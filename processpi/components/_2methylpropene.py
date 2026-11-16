@@ -55,3 +55,6 @@ class _2MethylPropene(Component):
     _thermal_conductivity_constants = [0.2802, -0.000786, 6.52e-07, 0.0, 0.0]
     _vapor_pressure_constants = [78.01, -4634.10, -8.9575, 1.34e-05, 2.0]
     _enthalpy_constants = [3.2614e-7, 0.38073, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 132.81-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 238, 2-Methyl propene).
+    _vapor_viscosity_constants = [9.0981E-07, 0.49288, 260.08, 0]

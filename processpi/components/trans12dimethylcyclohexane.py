@@ -55,3 +55,6 @@ class Trans12Dimethylcyclohexane(Component):
     _thermal_conductivity_constants = [0.17675, -0.0002077, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [78.429, -6882.10, -8.4129, 4.98e-06, 2.0]
     _enthalpy_constants = [5.1194e-7, 0.405, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 396.58-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 110, trans-1,2-Dimethylcyclohexane).
+    _vapor_viscosity_constants = [9.9104E-07, 0.4723, 436.89, 0]

@@ -55,3 +55,6 @@ class AlphaMethylStyrene(Component):
     _thermal_conductivity_constants = [0.19657, -0.0002118, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [56.485, -6954.20, -4.7889, 2.78e-18, 6.0]
     _enthalpy_constants = [5.8071e-7, 0.37009, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 249.95-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 243, alpha-Methyl styrene).
+    _vapor_viscosity_constants = [7.1455E-07, 0.49832, 303.31, 0]

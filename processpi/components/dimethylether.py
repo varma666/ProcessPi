@@ -55,3 +55,6 @@ class DimethylEther(Component):
     _thermal_conductivity_constants = [0.31174, -0.0005638,0,0,0]
     _vapor_pressure_constants = [44.704, -3525.60, -3.4444, 5.46e-17, 6.0]
     _enthalpy_constants = [2.994e-7, 0.3505,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 131.65-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 112, Dimethyl ether).
+    _vapor_viscosity_constants = [0.00000268, 0.3975, 534, 0]

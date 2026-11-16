@@ -55,3 +55,6 @@ class Pxylene(Component):
     _thermal_conductivity_constants = [0.20003, -0.00023573,0,0,0]
     _vapor_pressure_constants = [88.72, -7741.20, -9.8693, 6.08e-06, 2.0]
     _enthalpy_constants = [5.3819e-7, 0.36695,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 286.41-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 345, p-Xylene).
+    _vapor_viscosity_constants = [9.3485E-07, 0.47683, 371.96, 0]

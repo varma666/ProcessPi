@@ -55,3 +55,6 @@ class Naphthalene(Component):
     _thermal_conductivity_constants = [0.17096, -0.00010059, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [62.964, -8137.50, -5.6317, 2.27e-18, 6.0]
     _enthalpy_constants = [7.0911e-7, 0.46468, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 353.43-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 246, Naphthalene).
+    _vapor_viscosity_constants = [6.4318E-07, 0.5389, 400.16, 0]

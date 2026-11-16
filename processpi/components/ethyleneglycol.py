@@ -55,3 +55,6 @@ class EthyleneGlycol(Component):
     _thermal_conductivity_constants = [0.088067, 0.00094712, -1.31e-06, 0.0, 0.0]
     _vapor_pressure_constants = [84.09, -10411, -8.1976, 1.6536E-18, 6]
     _enthalpy_constants = [8.3518e-7, 0.42625, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 260.15-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 137, Ethylene glycol).
+    _vapor_viscosity_constants = [8.6706E-08, 0.83923, 75.512, 0]

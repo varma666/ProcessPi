@@ -55,3 +55,6 @@ class EthylPropionate(Component):
     _thermal_conductivity_constants = [0.2137, -0.0002515, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [105.64, -8007, -12.477, 9e-06, 2.0]
     _enthalpy_constants = [5.3325e-7, 0.401, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 199.25-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 146, Ethyl propionate).
+    _vapor_viscosity_constants = [5.53E-07, 0.6061, 273.66, 0]

@@ -20,6 +20,9 @@ class Toluene(Component):
     _thermal_conductivity_constants = [0.20463, -0.00024252, 0,0,0]
     _vapor_pressure_constants = [76.945, -6729.8, -8.179, 0.0000053017, 2] 
     _enthalpy_constants = [4.9507E-7, 0.37742, 0, 0, 0]  # Placeholder for enthalpy constants
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 178.18-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 325, Toluene).
+    _vapor_viscosity_constants = [8.7268E-07, 0.49397, 323.79, 0]
 
     def hx_data(self):
         p = self.pressure.to("Pa").value

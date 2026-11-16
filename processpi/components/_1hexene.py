@@ -55,3 +55,6 @@ class _1Hexene(Component):
     _thermal_conductivity_constants = [0.19112, -8.3519e-05, -5.14e-07, 0.0, 0.0]
     _vapor_pressure_constants = [51.024, -4986.40, -4.2463, 1.68e-17, 6.0]
     _enthalpy_constants = [4.1429e-7, 0.49118, -0.44821, 0.32105, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 133.39-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 177, 1-Hexene).
+    _vapor_viscosity_constants = [8.006E-08, 0.81293, 65.274, 0]

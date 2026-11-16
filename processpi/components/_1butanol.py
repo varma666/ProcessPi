@@ -55,3 +55,6 @@ class _1Butanol(Component):
     _thermal_conductivity_constants = [0.2136, -0.0002034,0,0,0]
     _vapor_pressure_constants = [106.295, -9866.40, -11.655, 1.08e-17, 6.0]
     _enthalpy_constants = [7.1274e-7, 0.0483, 0.8966, -0.5116,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 183.85-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 34, 1-Butanol).
+    _vapor_viscosity_constants = [1.4031E-06, 0.4611, 537, 0]

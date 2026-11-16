@@ -55,3 +55,6 @@ class _1Decene(Component):
     _thermal_conductivity_constants = [0.20237, -0.00024187, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [68.401, -7776.90, -6.4637, 6.38e-18, 6.0]
     _enthalpy_constants = [6.6985e-7, 0.76944, -0.79975, 0.42379, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 206.89-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 77, 1-Decene).
+    _vapor_viscosity_constants = [6.1192E-08, 0.82546, 77.434, 0]

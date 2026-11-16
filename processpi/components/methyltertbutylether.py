@@ -55,3 +55,6 @@ class MethylTertButylEther(Component):
     _thermal_conductivity_constants = [0.2253, -0.00037273, 1.17e-07, 0.0, 0.0]
     _vapor_pressure_constants = [57.1511, -5201.70, -5.1429, 1.65e-17, 6.0]
     _enthalpy_constants = [3.872e-7, 0.044, 0.448, -0.112, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 164.55-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 244, Methyl tert-butyl ether).
+    _vapor_viscosity_constants = [1.571E-07, 0.733, 111.578, 0]

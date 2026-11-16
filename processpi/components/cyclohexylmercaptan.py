@@ -55,3 +55,6 @@ class CyclohexylMercaptan(Component):
     _thermal_conductivity_constants = [0.18374, -0.0001925,0,0,0]
     _vapor_pressure_constants = [85.146,-7843.70, -9.2982, 5.18e-06, 2.0]
     _enthalpy_constants = [5.6067e-7, 0.38729,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 189.64-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 72, Cyclohexyl mercaptan).
+    _vapor_viscosity_constants = [3.915E-08, 0.91427, 22.264, 0]

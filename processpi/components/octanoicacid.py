@@ -55,3 +55,6 @@ class OctanoicAcid(Component):
     _thermal_conductivity_constants = [0.203, -0.0002, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [140.16, -14813, -16.004, 6.42e-18, 6.0]
     _enthalpy_constants = [12.23e-7, 0.69294, 0.12287, -0.36132]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 289.65-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 266, Octanoic acid).
+    _vapor_viscosity_constants = [7.9611E-08, 0.7948, 106.6, 0]

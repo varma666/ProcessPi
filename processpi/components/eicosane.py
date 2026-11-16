@@ -55,3 +55,6 @@ class Eicosane(Component):
     _thermal_conductivity_constants = [0.2178, -0.0002233, 0, 0, 0]
     _vapor_pressure_constants = [203.66, -19441, -25.525, 8.84e-06, 2.0]
     _enthalpy_constants = [12.86e-7, 0.50351, 0.32986, -0.42184, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 309.58-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 124, Eicosane).
+    _vapor_viscosity_constants = [2.9236E-07, 0.62458, 702.84, 0]

@@ -55,3 +55,6 @@ class DimethylSulfide(Component):
     _thermal_conductivity_constants = [0.23942, -0.0003311, 0, 0, 0]
     _vapor_pressure_constants = [84.39, -5740.20, -9.6454, 1.01e-05, 2.0]
     _enthalpy_constants = [3.9022e-7, 0.37731, 0, 0, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 174.88-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 117, Dimethyl sulfide).
+    _vapor_viscosity_constants = [5.2854E-07, 0.6112, 302.85, 0]

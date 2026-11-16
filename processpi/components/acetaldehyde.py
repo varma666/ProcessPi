@@ -58,3 +58,6 @@ class Acetaldehyde(Component):
     _vapor_pressure_constants = [193.69, -8036.7, -29.502, 0.0437, 1.0]
     # Perry's 8th ed., Table 2-150, p. 2-150 prints C1 x 1E-07 = 3.8366 (J/kmol).
     _enthalpy_constants = [3.8366E7, 0.40081,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 150.15-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 1, Acetaldehyde).
+    _vapor_viscosity_constants = [1.222E-07, 0.787, 77, 0]

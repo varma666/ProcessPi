@@ -55,3 +55,6 @@ class OctylMercaptan(Component):
     _thermal_conductivity_constants = [0.2012, -0.0002142, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [78.368, -8855.40, -7.8202, 5.66e-18, 6.0]
     _enthalpy_constants = [6.8907e-7, 0.40017, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 223.95-1000 K:
+    # Table 2-312, p. 2-425 (cmpd. no. 272, Octyl mercaptan).
+    _vapor_viscosity_constants = [3.3253E-08, 0.9351, 32.426, 0]

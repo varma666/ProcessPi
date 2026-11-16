@@ -55,3 +55,6 @@ class _12Dimethoxypropane(Component):
     _thermal_conductivity_constants = [0.22998, -0.00030372, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [62.097, -6174.90, -5.715, 1.23e-17, 6.0]
     _enthalpy_constants = [4.7999e-7, 0.30724, -0.024545, 0.091361, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 226.10-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 104, 1,2-Dimethoxypropane).
+    _vapor_viscosity_constants = [3.9833E-08, 0.91566, 0, 0]

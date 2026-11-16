@@ -55,3 +55,6 @@ class Cumene(Component):
     _thermal_conductivity_constants = [0.1855, -0.00020895,0,0,0]
     _vapor_pressure_constants = [102.81, -8674.60, -11.922, 7e-06, 2.0]
     _enthalpy_constants = [5.766e-7, 0.38939,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 177.14-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 62, Cumene).
+    _vapor_viscosity_constants = [3.3699E-07, 0.60751, 221.17, 0]

@@ -55,3 +55,6 @@ class _233Trimethylpentane(Component):
     _thermal_conductivity_constants = [0.16815, -0.00020535,0,0,0]
     _vapor_pressure_constants = [83.105, -6903.70, -9.1858, 6.47e-06, 2.0]
     _enthalpy_constants = [4.991e-7, 0.383,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 387.91-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 333, 2,3,3-Trimethylpentane).
+    _vapor_viscosity_constants = [8.2418E-07, 0.4931, 371.44, 0]

@@ -55,3 +55,6 @@ class MethacrylicAcid(Component):
     _thermal_conductivity_constants = [0.2306, -0.00025201, 0.0, 0.0, 0.0]
     _vapor_pressure_constants = [109.53, -10410, -12.289, 3.2e-06, 2.0]
     _enthalpy_constants = [4.6095e-7, 0.23331, 0.0, 0.0, 0.0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 288.15-1000 K:
+    # Table 2-312, p. 2-424 (cmpd. no. 192, Methacrylic acid).
+    _vapor_viscosity_constants = [9.113E-08, 0.8222, 93.57, 0]

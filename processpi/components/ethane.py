@@ -34,6 +34,9 @@ class Ethane(Component):
     # vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 184.55-1000 K:
     # Perry's 8th ed., Table 2-314, p. 2-435 (C4 blank). 0.0218 W/mK at 300 K.
     _vapor_thermal_conductivity_constants = [0.000073869, 1.1689, 500.73, 0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 90.35-1000 K:
+    # Table 2-312, p. 2-423 (cmpd. no. 125, Ethane).
+    _vapor_viscosity_constants = [2.5906E-07, 0.67988, 98.902, 0]
 
     @PropertyMethod
     def specific_heat(self) -> SpecificHeat:

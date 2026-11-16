@@ -55,3 +55,6 @@ class Butyronitrile(Component):
     _thermal_conductivity_constants = [0.2597, -0.00031,0,0,0]
     _vapor_pressure_constants = [66.32, -6714.90, -6.3087, 1.35e-17, 6.0]
     _enthalpy_constants = [5.22e-7, 0.165, 0.6692, -0.539,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 161.25-1000 K:
+    # Table 2-312, p. 2-421 (cmpd. no. 46, Butyronitrile).
+    _vapor_viscosity_constants = [8.0223E-08, 0.80561, 75.207, 0]

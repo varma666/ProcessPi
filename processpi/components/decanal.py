@@ -55,3 +55,6 @@ class Decanal(Component):
     _thermal_conductivity_constants = [0.20383, -0.0002,0,0,0]
     _vapor_pressure_constants = [201.64, -15133, -26.264, 1.46e-05, 2.0]
     _enthalpy_constants = [7.9073e-7, 0.4129,0,0,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 267.15-1000 K:
+    # Table 2-312, p. 2-422 (cmpd. no. 73, Decanal).
+    _vapor_viscosity_constants = [1.2638E-07, 0.7248, 176.88, 0]

@@ -55,3 +55,6 @@ class _1Undecanol(Component):
     _thermal_conductivity_constants = [0.21211, -0.00021815,0,0,0]
     _vapor_pressure_constants = [182.571, -17112, -22.125, 1.13e-17, 6.0]
     _enthalpy_constants = [8.7274e-7, -1.5834, 5.0913, -3.2171,0]
+    # Vapour viscosity, DIPPR Eq. 102, Pa s, 288.45-1000 K:
+    # Table 2-312, p. 2-426 (cmpd. no. 337, 1-Undecanol).
+    _vapor_viscosity_constants = [5.9537E-08, 0.81842, 90.245, 0]
