@@ -59,7 +59,7 @@ class _12PropyleneGlycol(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 460.75-1000 K:
     # Table 2-314, p. 2-438 (cmpd. no. 309, 1,2-Propylene glycol).
     _vapor_thermal_conductivity_constants = [0.0001666, 0.9765, 706, 0]
-    _vapor_pressure_constants = [212.8, -15420, -28.109, 2.16e-05, 2.0]
+    _vapor_pressure_constants = [212.8, -15420, -28.109, 2.1564E-05, 2]  # Perry's 8th ed., Table 2-8, no. 309
     _enthalpy_constants = [8.07e-7, 0.295,0,0,0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 213.15-1000 K:
     # Table 2-312, p. 2-426 (cmpd. no. 309, 1,2-Propylene glycol).

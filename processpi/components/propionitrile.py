@@ -50,7 +50,7 @@ class Propionitrile(Component):
     _critical_acentric_factor = 0.3243
 
     _density_constants = [1.0224, 0.23452, 564.4, 0.2804]
-    _specific_heat_constants = [181190, -120.98, 0.42075, 0.0, 0.0]
+    _specific_heat_constants = [118190, -120.98, 0.42075, 0, 0]  # Perry's 8th ed., Table 2-153, no. 301
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
     # Table 2-156, p. 2-180 (cmpd. no. 301, Propionitrile).
     _ideal_gas_heat_capacity_constants = [0.5357E5, 1.4617E5, 1.553E3, 0.91197E5, 678.2]

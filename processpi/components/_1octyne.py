@@ -50,7 +50,7 @@ class _1Octyne(Component):
     _critical_acentric_factor = 0.4233
 
     _density_constants = [0.58945, 0.26052, 574.0, 0.28532]
-    _specific_heat_constants = [42642, 886.67, -0.69315, 0.0, 0.0, 1.9225, 2.8619]
+    _specific_heat_constants = [42642, 886.67, -0.69315, 0, 0]  # Perry's 8th ed., Table 2-153, no. 273
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
     # Table 2-156, p. 2-180 (cmpd. no. 273, 1-Octyne).
     _ideal_gas_heat_capacity_constants = [1.2307E5, 3.4942E5, 1.528E3, 2.4617E5, 694.81]

@@ -59,7 +59,7 @@ class Acrolein(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 325.84-1000 K:
     # Table 2-314, p. 2-433 (cmpd. no. 8, Acrolein).
     _vapor_thermal_conductivity_constants = [0.024098, 0.3285, 1325.3, 577830]
-    _vapor_pressure_constants = [138.4, -7122.70, -19.638, 0.0264, 1.0]
+    _vapor_pressure_constants = [138.4, -7122.7, -19.638, 2.6447E-02, 1]  # Perry's 8th ed., Table 2-8, no. 8
     _enthalpy_constants = [3.8736e-7, 0.29335,0,0,0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 185.45-1000 K:
     # Table 2-312, p. 2-421 (cmpd. no. 8, Acrolein).

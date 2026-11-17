@@ -50,7 +50,7 @@ class BenzylMercaptan(Component):
     _critical_acentric_factor = 0.3126
 
     _density_constants = [0.70797, 0.25982, 718.0, 0.32144]
-    _specific_heat_constants = [1000320,346.89,0,0,0]
+    _specific_heat_constants = [100320, 346.89, 0, 0, 0]  # Perry's 8th ed., Table 2-153, no. 23
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 300-1200 K:
     # Table 2-156, p. 2-176 (cmpd. no. 23, Benzyl mercaptan).
     _ideal_gas_heat_capacity_constants = [0.99192E5, 2.9633E5, 1.5583E3, 2.2116E5, 719.16]

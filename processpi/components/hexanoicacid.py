@@ -60,7 +60,7 @@ class HexanoicAcid(Component):
     # Table 2-314, p. 2-435 (cmpd. no. 172, Hexanoic acid).
     _vapor_thermal_conductivity_constants = [0.00021014, 0.91616, 727.64, 0]
     _vapor_pressure_constants = [114.05, -12332, -12.45, 5.63e-18, 6.0]
-    _enthalpy_constants = [9.0746e-7, 0.8926, -0.75172, 0.34378]
+    _enthalpy_constants = [9.0746E7, 0.8926, -0.75172, 0.34378, 0]  # Perry's 8th ed., Table 2-150, no. 172
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 269.25-1000 K:
     # Table 2-312, p. 2-423 (cmpd. no. 172, Hexanoic acid).
     _vapor_viscosity_constants = [8.4032E-08, 0.80073, 96.779, 0]

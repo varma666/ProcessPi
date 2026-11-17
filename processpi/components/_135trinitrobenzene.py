@@ -59,7 +59,7 @@ class _135Trinitrobenzene(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 629.60-1000 K:
     # Table 2-314, p. 2-438 (cmpd. no. 334, 1,3,5-Trinitrobenzene).
     _vapor_thermal_conductivity_constants = [0.00020544, 0.87137, 807.3, 0]
-    _vapor_pressure_constants = [506.33, -37483, -69.22, 2.74e-05, 2.0]
+    _vapor_pressure_constants = [506.33, -37483, -69.22, 2.7381E-05, 2]  # Perry's 8th ed., Table 2-8, no. 334
     _enthalpy_constants = [10.687e-7, 0.38,0,0,0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 398.40-1000 K:
     # Table 2-312, p. 2-426 (cmpd. no. 334, 1,3,5-Trinitrobenzene).

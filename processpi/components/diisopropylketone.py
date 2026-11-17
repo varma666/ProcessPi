@@ -59,7 +59,7 @@ class DiisopropylKetone(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 397.55-1000 K:
     # Table 2-314, p. 2-434 (cmpd. no. 102, Di-isopropyl ketone).
     _vapor_thermal_conductivity_constants = [-8.5357, -0.0056423, 1882.1, -65622000]
-    _vapor_pressure_constants = [50.868, -6063.50, -4.066, 1.13e-06, 2.0]
+    _vapor_pressure_constants = [50.868, -6036.5, -4.066, 1.1326E-06, 2]  # Perry's 8th ed., Table 2-8, no. 102
     _enthalpy_constants = [5.0256e-7, 0.29611,0,0,0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 204.81-1000 K:
     # Table 2-312, p. 2-422 (cmpd. no. 102, Di-isopropyl ketone).

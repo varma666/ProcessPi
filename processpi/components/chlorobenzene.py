@@ -20,7 +20,7 @@ class ChloroBenzene(Component):
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
     # Table 2-156, p. 2-176 (cmpd. no. 53, Chlorobenzene).
     _ideal_gas_heat_capacity_constants = [0.8011E5, 2.31E5, 2.157E3, 2.046E5, 897.6]
-    _viscosity_constants = [0.15772,540.5,-1.6075,1.50E+14,-6.00E+00] 
+    _viscosity_constants = [0.15772, 540.5, -1.6075, 0, 0]  # Perry's 8th ed., Table 2-313, no. 53
     _thermal_conductivity_constants = [0.1841, -0.0001917,0,0,0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 400.00-1000 K:
     # Table 2-314, p. 2-433 (cmpd. no. 53, Chlorobenzene).

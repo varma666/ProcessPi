@@ -50,7 +50,7 @@ class HexylMercaptan(Component):
     _critical_acentric_factor = 0.3681
 
     _density_constants = [0.66372, 0.27345, 623.0, 0.29185]
-    _specific_heat_constants = [303320, 0.0, 3.3885, -0.002762, 0.0, 2.1495, 2.7639]
+    _specific_heat_constants = [303320, -1009, 3.3885, -0.002762, 0]  # Perry's 8th ed., Table 2-153, no. 179
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
     # Table 2-156, p. 2-178 (cmpd. no. 179, Hexyl mercaptan).
     _ideal_gas_heat_capacity_constants = [1.2662E5, 3.7294E5, 1.6574E3, 2.308E5, 757.8]

@@ -22,7 +22,7 @@ class Butane(Component):
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
     # Table 2-156, p. 2-176 (cmpd. no. 31, Butane).
     _ideal_gas_heat_capacity_constants = [0.7134E5, 2.43E5, 1.63E3, 1.5033E5, 730.42]
-    _viscosity_constants = [-7.2471,534.82,-0.57469,-4.66E-27, 0] 
+    _viscosity_constants = [-7.2471, 534.82, -0.57469, -4.6625E-27, 10]  # Perry's 8th ed., Table 2-313, no. 31
     _thermal_conductivity_constants = [0.27349, -0.00071267,5.16E-07,0,0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 272.65-1000 K:
     # Table 2-314, p. 2-433 (cmpd. no. 31, Butane).

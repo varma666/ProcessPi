@@ -59,7 +59,7 @@ class Nonanal(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 468.15-1000 K:
     # Table 2-314, p. 2-437 (cmpd. no. 255, Nonanal).
     _vapor_thermal_conductivity_constants = [-11.621, 0.025653, 2248.3, -135100000]
-    _vapor_pressure_constants = [337.71, -18506, -50.224, 0.0473, 1.0]
+    _vapor_pressure_constants = [337.71, -18506, -50.224, 4.7345E-02, 1]  # Perry's 8th ed., Table 2-8, no. 255
     _enthalpy_constants = [7.3363e-7, 0.41735, 0.0, 0.0, 0.0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 255.15-1000 K:
     # Table 2-312, p. 2-425 (cmpd. no. 255, Nonanal).

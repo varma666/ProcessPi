@@ -59,7 +59,7 @@ class IsopropylAmine(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 304.92-1000 K:
     # Table 2-314, p. 2-436 (cmpd. no. 190, Isopropyl amine).
     _vapor_thermal_conductivity_constants = [0.00028183, 0.92094, 619.17, 0]
-    _vapor_pressure_constants = [136.66, -7201.50, -18.934, 0.0223, 1.0]
+    _vapor_pressure_constants = [136.66, -7201.5, -18.934, 2.2255E-02, 1]  # Perry's 8th ed., Table 2-8, no. 190
     _enthalpy_constants = [4.4041e-7, 0.43325, 0.0, 0.0, 0.0]
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 177.95-1000 K:
     # Table 2-312, p. 2-424 (cmpd. no. 190, Isopropyl amine).

@@ -54,7 +54,7 @@ class Undecane(Component):
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 200-1500 K:
     # Table 2-156, p. 2-181 (cmpd. no. 336, Undecane).
     _ideal_gas_heat_capacity_constants = [1.9529E5, 6.0998E5, 1.7087E3, 4.1302E5, 775.4]
-    _viscosity_constants = [52.176, -4951.9, -8.5676, 0.0, -2.0]
+    _viscosity_constants = [52.176, -4951.9, -8.5676, 570980, -2]  # Perry's 8th ed., Table 2-313, no. 336
     _thermal_conductivity_constants = [0.20515, -0.00023933, 0.0, 0.0, 0.0]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 469.08-1000 K:
     # Table 2-314, p. 2-438 (cmpd. no. 336, Undecane).

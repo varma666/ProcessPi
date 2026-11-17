@@ -50,17 +50,17 @@ class Acetonitrile(Component):
     _critical_acentric_factor = 0.3379
 
     _density_constants = [1.3064, 0.22597, 545.5, 0.28678]
-    _specific_heat_constants = [0.0, -122.2, 0.34085, 0.0, 0.0, 0.8748, 0.9713]
+    _specific_heat_constants = [97582, -122.2, 0.34085, 0, 0]  # Perry's 8th ed., Table 2-153, no. 6
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 100-1500 K:
     # Table 2-156, p. 2-176 (cmpd. no. 6, Acetonitrile).
     _ideal_gas_heat_capacity_constants = [0.41914E5, 0.8876E5, 1.5818E3, 0.5032E5, 699.8]
-    _viscosity_constants = [-10.906, 872.02]
+    _viscosity_constants = [-10.906, 872.02, 0, 0, 0]  # Perry's 8th ed., Table 2-313, no. 6
     _thermal_conductivity_constants = [0.33192, -0.00043243]
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 354.75-994.75 K:
     # Table 2-314, p. 2-433 (cmpd. no. 6, Acetonitrile).
     _vapor_thermal_conductivity_constants = [4.901E-08, 2.1091, 0, 0]
     _vapor_pressure_constants = [58.302, -5385.6, -5.4954, 5.3634E-06, 2]
-    _enthalpy_constants = [4.3511, 0.34765]
+    _enthalpy_constants = [4.3511E7, 0.34765, 0, 0, 0]  # Perry's 8th ed., Table 2-150, no. 6
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 229.32-1000 K:
     # Table 2-312, p. 2-421 (cmpd. no. 6, Acetonitrile).
     _vapor_viscosity_constants = [5.1964E-08, 0.8857, 38.805, 0]

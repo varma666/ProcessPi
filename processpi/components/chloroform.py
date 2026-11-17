@@ -25,7 +25,7 @@ class Chloroform(Component):
     # Vapour thermal conductivity, DIPPR Eq. 102, W/(m K), 334.33-1000 K:
     # Table 2-314, p. 2-433 (cmpd. no. 55, Chloroform).
     _vapor_thermal_conductivity_constants = [0.00043073, 0.83878, 1874.5, 0]
-    _vapor_pressure_constants = [146.43,-7792.30,-20.614,2.46E-02, 1] 
+    _vapor_pressure_constants = [146.43, -7792.3, -20.614, 2.4578E-02, 1]  # Perry's 8th ed., Table 2-8, no. 55
     _enthalpy_constants = [4.186E-7,0.3584, 0,0, 0]  # Placeholder for enthalpy constants
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 209.63-1000 K:
     # Table 2-312, p. 2-421 (cmpd. no. 55, Chloroform).

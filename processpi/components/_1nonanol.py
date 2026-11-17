@@ -60,7 +60,7 @@ class _1Nonanol(Component):
     # Table 2-314, p. 2-437 (cmpd. no. 258, 1-Nonanol).
     _vapor_thermal_conductivity_constants = [-30.715, -0.1075, 8107, -156830000]
     _vapor_pressure_constants = [162.854, -15205, -19.424, 1.07e-17, 6.0]
-    _enthalpy_constants = [7.5429e-7, -1.5966, 4.6489, -2.7229]
+    _enthalpy_constants = [7.5429E7, -1.5966, 4.6489, -2.7229, 0]  # Perry's 8th ed., Table 2-150, no. 258
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 268.15-1000 K:
     # Table 2-312, p. 2-425 (cmpd. no. 258, 1-Nonanol).
     _vapor_viscosity_constants = [1.20E-07, 0.74, 180, 0]

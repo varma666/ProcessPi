@@ -60,7 +60,7 @@ class _2MethyloctanoicAcid(Component):
     # Table 2-314, p. 2-436 (cmpd. no. 233, 2-Methyloctanoic acid).
     _vapor_thermal_conductivity_constants = [0.0001813, 0.92912, 793.45, 0]
     _vapor_pressure_constants = [105.7, -12458, -11.234, 4.46e-18, 6.0]
-    _enthalpy_constants = [10.53e-7, 0.7454, -0.39297, 0.047214]
+    _enthalpy_constants = [10.53E7, 0.7454, -0.39297, 0.047214, 0]  # Perry's 8th ed., Table 2-150, no. 233
     # Vapour viscosity, DIPPR Eq. 102, Pa s, 240.00-1000 K:
     # Table 2-312, p. 2-424 (cmpd. no. 233, 2-Methyloctanoic acid).
     _vapor_viscosity_constants = [7.2131E-08, 0.80319, 99.437, 0]

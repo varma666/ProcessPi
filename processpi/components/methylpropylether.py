@@ -50,7 +50,7 @@ class MethylpropylEther(Component):
     _critical_acentric_factor = 0.277
 
     _density_constants = [0.96145, 0.26536, 476.25, 0.30088]
-    _specific_heat_constants = [140110, -102.09, 0.58113, 0.0, 0.0]
+    _specific_heat_constants = [144110, -102.09, 0.58113, 0, 0]  # Perry's 8th ed., Table 2-153, no. 240
     # Ideal-gas Cp, DIPPR Eq. 107, J/(kmol K), 298-1200 K:
     # Table 2-156, p. 2-179 (cmpd. no. 240, Methylpropyl ether).
     _ideal_gas_heat_capacity_constants = [0.92151E5, 2.3943E5, 1.6936E3, 1.4896E5, 797.79]
